@@ -1,11 +1,4 @@
 
-/*
- * TODO:
- * - do we need to call uv_init with multiple loops?
- * - Loop is not a singleton anymore!
- *
- */
-
 static PyObject *
 Loop_func_run(Loop *self)
 {
@@ -34,12 +27,13 @@ Loop_func_unref(Loop *self)
 
 
 static int
-Loop_tp_init(PyObject *self, PyObject *args, PyObject *kwargs)
+Loop_tp_init(Loop *self, PyObject *args, PyObject *kwargs)
 {
     if (PyTuple_GET_SIZE(args) || (kwargs && PyDict_Check(kwargs) && PyDict_Size(kwargs))) {
         PyErr_SetString(PyExc_TypeError, "Loop.__init__() takes no parameters");
 	return -1;
     }
+    self->uv_loop = uv_loop_new();
     return 0;
 }
 
@@ -47,18 +41,17 @@ Loop_tp_init(PyObject *self, PyObject *args, PyObject *kwargs)
 static PyObject *
 Loop_tp_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
 {
-    static Loop *self = NULL;   /* Loop is a singleton */
+    static Bool uv_initialized = False;
 
-    if (!self) {
-        self = (Loop *)PyType_GenericNew(type, args, kwargs);
-        if (!self) {
-            return NULL;
-        }
-        self->uv_loop = uv_loop_new();
+    if (!uv_initialized) {
         /* Initialize libuv */
         uv_init();
-    } else {
-        Py_INCREF(self);
+        uv_initialized = True;
+    }
+
+    Loop *self = (Loop *)PyType_GenericNew(type, args, kwargs);
+    if (!self) {
+        return NULL;
     }
     return (PyObject *)self;
 }
