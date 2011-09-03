@@ -1,0 +1,22 @@
+--- config-mingw.mk
++++ config-mingw.mk
+@@ -24,7 +24,7 @@ CC = $(PREFIX)gcc
+ AR = $(PREFIX)ar
+ E=.exe
+ 
+-CFLAGS=$(CPPFLAGS) -g --std=gnu89 -D_WIN32_WINNT=0x0501 -Isrc/ares/config_win32
++CFLAGS=$(CPPFLAGS) -g -fPIC --std=gnu89 -D_WIN32_WINNT=0x0501 -Isrc/ares/config_win32
+ LINKFLAGS=-lm
+ 
+ CARES_OBJS += src/ares/windows_port.o
+--- config-unix.mk
++++ config-unix.mk
+@@ -22,7 +22,7 @@ CC = $(PREFIX)gcc
+ AR = $(PREFIX)ar
+ E=
+ CSTDFLAG=--std=c89 -pedantic -Wall -Wextra -Wno-unused-parameter
+-CFLAGS=-g
++CFLAGS=-g -fPIC
+ CPPFLAGS += -Isrc/unix/ev
+ LINKFLAGS=-lm
+ 
