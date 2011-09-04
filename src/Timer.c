@@ -2,7 +2,6 @@
 /*
  * TODO
  * - make repeat a property ?
- * - support float
  */
 
 static PyObject* PyExc_TimerError;
@@ -105,12 +104,12 @@ Timer_tp_init(Timer *self, PyObject *args, PyObject *kwargs)
     PyObject *tmp = NULL;
     PyObject *callback;
     PyObject *data = NULL;
-    int timeout;
-    int repeat = 0;
+    double timeout;
+    double repeat;
 
     static char *kwlist[] = {"loop", "callback", "timeout", "repeat", "data", NULL};
 
-    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!Oi|iO:__init__", kwlist, &LoopType, &loop, &callback, &timeout, &repeat, &data)) {
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!Odd|O:__init__", kwlist, &LoopType, &loop, &callback, &timeout, &repeat, &data)) {
         return -1;
     }
 
