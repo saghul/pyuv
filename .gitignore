@@ -1,0 +1,14 @@
+#python specific
+*.pyc
+*.so
+build/*
+dist/*
+MANIFEST
+
+## generic files to ignore
+*~
+*.lock
+*.DS_Store
+*.swp
+*.out
+
