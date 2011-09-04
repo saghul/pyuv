@@ -2,6 +2,7 @@
 #include "pyuv.h"
 
 #include "Loop.c"
+#include "Async.c"
 #include "Timer.c"
 #include "TCPConnection.c"
 #include "TCPServer.c"
@@ -21,6 +22,10 @@ initpyuv(void)
     PyModule_AddType(pyuv, "UVError", (PyTypeObject *)PyExc_UVError);
 
     PyModule_AddType(pyuv, "Loop", &LoopType);
+
+    PyModule_AddType(pyuv, "Async", &AsyncType);
+    PyExc_AsyncError = PyErr_NewException("pyuv.AsyncError", PyExc_UVError, NULL);
+    PyModule_AddType(pyuv, "AsyncError", (PyTypeObject *)PyExc_AsyncError);
 
     PyModule_AddType(pyuv, "Timer", &TimerType);
     PyExc_TimerError = PyErr_NewException("pyuv.TimerError", PyExc_UVError, NULL);

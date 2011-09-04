@@ -12,7 +12,7 @@ static PyObject* PyExc_TimerError;
 
 
 static void
-on_close(uv_handle_t *handle)
+on_timer_close(uv_handle_t *handle)
 {
     PyGILState_STATE gstate = PyGILState_Ensure();
     assert(handle);
@@ -108,7 +108,7 @@ Timer_func_destroy(Timer *self)
     }
 
     self->uv_timer->data = NULL;
-    uv_close((uv_handle_t *)self->uv_timer, on_close);
+    uv_close((uv_handle_t *)self->uv_timer, on_timer_close);
     self->uv_timer = NULL;
 
     Py_RETURN_NONE;
@@ -265,7 +265,7 @@ Timer_tp_dealloc(Timer *self)
 {
     if (self->uv_timer) {
         self->uv_timer->data = NULL;
-        uv_close((uv_handle_t *)self->uv_timer, on_close);
+        uv_close((uv_handle_t *)self->uv_timer, on_timer_close);
         self->uv_timer = NULL;
     }
     Timer_tp_clear(self);

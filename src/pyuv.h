@@ -24,6 +24,17 @@ typedef struct {
 
 static PyTypeObject LoopType;
 
+/* Async */
+typedef struct {
+    PyObject_HEAD
+    Loop *loop;
+    PyObject *callback;
+    PyObject *data;
+    uv_async_t *uv_async;
+} Async;
+
+static PyTypeObject AsyncType;
+
 /* Timer */
 typedef struct {
     PyObject_HEAD
