@@ -56,27 +56,12 @@ on_timer_callback(uv_timer_t *timer, int status)
 static PyObject *
 Timer_func_start(Timer *self)
 {
-    int r;
-
-    if (self->uv_timer) {
-        PyErr_SetString(PyExc_TimerError, "timer already started");
+    if (!self->uv_timer) {
+        PyErr_SetString(PyExc_TimerError, "timer was destroyed");
         return NULL;
     }
 
-    uv_timer_t *uv_timer = PyMem_Malloc(sizeof(uv_timer_t));
-    if (!uv_timer) {
-        return PyErr_NoMemory();
-    }
-    r = uv_timer_init(TIMER_LOOP, uv_timer);
-    if (r) {
-        uv_err_t err = uv_last_error(TIMER_LOOP);
-        PyErr_SetString(PyExc_TimerError, uv_strerror(err));
-        return NULL;
-    }
-    uv_timer->data = (void *)self;
-    self->uv_timer = uv_timer;
-
-    r = uv_timer_start(self->uv_timer, on_timer_callback, self->timeout, self->repeat);
+    int r = uv_timer_start(self->uv_timer, on_timer_callback, self->timeout, self->repeat);
     if (r) {
         TIMER_ERROR();
     }
@@ -88,11 +73,32 @@ Timer_func_start(Timer *self)
 static PyObject *
 Timer_func_stop(Timer *self)
 {
-    if (self->uv_timer) {
-        self->uv_timer->data = NULL;
-        uv_close((uv_handle_t *)self->uv_timer, on_close);
-        self->uv_timer = NULL;
+    if (!self->uv_timer) {
+        PyErr_SetString(PyExc_TimerError, "timer was destroyed");
+        return NULL;
     }
+
+    int r = uv_timer_stop(self->uv_timer);
+    if (r) {
+        TIMER_ERROR();
+    }
+
+    Py_RETURN_NONE;
+}
+
+
+static PyObject *
+Timer_func_destroy(Timer *self)
+{
+    if (!self->uv_timer) {
+        PyErr_SetString(PyExc_TimerError, "timer was already destroyed");
+        return NULL;
+    }
+
+    self->uv_timer->data = NULL;
+    uv_close((uv_handle_t *)self->uv_timer, on_close);
+    self->uv_timer = NULL;
+
     Py_RETURN_NONE;
 }
 
@@ -149,6 +155,20 @@ Timer_tp_init(Timer *self, PyObject *args, PyObject *kwargs)
         Py_XDECREF(tmp);
     }
 
+    uv_timer_t *uv_timer = PyMem_Malloc(sizeof(uv_timer_t));
+    if (!uv_timer) {
+        PyErr_NoMemory();
+        return -1;
+    }
+    int r = uv_timer_init(TIMER_LOOP, uv_timer);
+    if (r) {
+        uv_err_t err = uv_last_error(TIMER_LOOP);
+        PyErr_SetString(PyExc_TimerError, uv_strerror(err));
+        return -1;
+    }
+    uv_timer->data = (void *)self;
+    self->uv_timer = uv_timer;
+
     return 0;
 }
 
@@ -201,6 +221,7 @@ static PyMethodDef
 Timer_tp_methods[] = {
     { "start", (PyCFunction)Timer_func_start, METH_NOARGS, "Start the Timer." },
     { "stop", (PyCFunction)Timer_func_stop, METH_NOARGS, "Stop the Timer." },
+    { "destroy", (PyCFunction)Timer_func_destroy, METH_NOARGS, "Destroy the Timer." },
     { NULL }
 };
 

@@ -2,6 +2,7 @@
 
 - What about the mallocs libuv may do on its own?
 
+- Something feels weird about timer stop / destroy
 - UDP support
 
 - Timer fixes
