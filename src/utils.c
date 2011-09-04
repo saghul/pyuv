@@ -1,5 +1,8 @@
 /* Some random utility functions */
 
+#define _macro_str(x) #x
+#define macro_str(x) _macro_str(x)
+
 /* Add a type to a module */
 int
 PyModule_AddType(PyObject *module, const char *name, PyTypeObject *type)

@@ -10,6 +10,8 @@ from distutils.core import setup, Extension
 from distutils.errors import DistutilsError
 
 
+__version__ = "0.0.0"
+
 class pyuv_build_ext(build_ext):
     libuv_repo = 'https://github.com/joyent/libuv.git'
     libuv_revision = 'b89f4f34a48594dbb36e1c45eb7879bf5a6ee77f'
@@ -83,9 +85,9 @@ class pyuv_build_ext(build_ext):
 
 
 setup(name = 'pyuv',
-      version = '0.0.0',
+      version = __version__,
       description = 'Python bindings for libuv',
       cmdclass={'build_ext': pyuv_build_ext},
-      ext_modules = [Extension('pyuv', sources = ['src/pyuv.c'])]
+      ext_modules = [Extension('pyuv', sources = ['src/pyuv.c'], define_macros=[('MODULE_VERSION', __version__)])]
      )
 

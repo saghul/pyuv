@@ -33,6 +33,9 @@ initpyuv(void)
     PyModule_AddType(pyuv, "TCPServer", &TCPServerType);
     PyExc_TCPServerError = PyErr_NewException("pyuv.TCPServerError", PyExc_UVError, NULL);
     PyModule_AddType(pyuv, "TCPServerError", (PyTypeObject *)PyExc_TCPServerError);
+
+    /* Module version (the MODULE_VERSION macro is defined by setup.py) */
+    PyModule_AddStringConstant(pyuv, "__version__", macro_str(MODULE_VERSION));
 }
 
 

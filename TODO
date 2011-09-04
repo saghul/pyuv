@@ -2,8 +2,6 @@
 
 - What about the mallocs libuv may do on its own?
 
-- Set version on setup.py and pass it so that we have pyuv.__version__
-
 - UDP support
 
 - Timer fixes
