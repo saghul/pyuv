@@ -1,9 +1,4 @@
 
-/*
- * TODO
- * - make repeat a property ?
- */
-
 static PyObject* PyExc_TimerError;
 
 #define TIMER_LOOP self->loop->uv_loop
@@ -88,6 +83,23 @@ Timer_func_stop(Timer *self)
 
 
 static PyObject *
+Timer_func_again(Timer *self)
+{
+    if (!self->uv_timer) {
+        PyErr_SetString(PyExc_TimerError, "timer was destroyed");
+        return NULL;
+    }
+
+    int r = uv_timer_again(self->uv_timer);
+    if (r) {
+        TIMER_ERROR();
+    }
+
+    Py_RETURN_NONE;
+}
+
+
+static PyObject *
 Timer_func_destroy(Timer *self)
 {
     if (!self->uv_timer) {
@@ -100,6 +112,50 @@ Timer_func_destroy(Timer *self)
     self->uv_timer = NULL;
 
     Py_RETURN_NONE;
+}
+
+
+static PyObject *
+Timer_repeat_get(Timer *self, void *closure)
+{
+    if (!self->uv_timer) {
+        PyErr_SetString(PyExc_TimerError, "timer was destroyed");
+        return NULL;
+    }
+
+    return PyFloat_FromDouble(uv_timer_get_repeat(self->uv_timer)/1000.0);
+}
+
+
+static int
+Timer_repeat_set(Timer *self, PyObject *value, void *closure)
+{
+    double repeat;
+
+    if (!self->uv_timer) {
+        PyErr_SetString(PyExc_TimerError, "timer was destroyed");
+        return -1;
+    }
+
+    if (!value) {
+        PyErr_SetString(PyExc_TypeError, "cannot delete attribute");
+        return -1;
+    }
+
+    repeat = PyFloat_AsDouble(value);
+    if (repeat == -1 && PyErr_Occurred()) {
+        return -1;
+    }
+
+    if (repeat < 0.0) {
+        PyErr_SetString(PyExc_ValueError, "a positive float or 0.0 is required");
+        return -1;
+    }
+
+    self->repeat = (int64_t)(repeat * 1000);
+    uv_timer_set_repeat(self->uv_timer, self->repeat);
+
+    return 0;
 }
 
 
@@ -138,14 +194,14 @@ Timer_tp_init(Timer *self, PyObject *args, PyObject *kwargs)
         PyErr_SetString(PyExc_ValueError, "a positive value or zero is required");
         return -1;
     } else {
-        self->timeout = timeout * 1000;
+        self->timeout = (int64_t)(timeout * 1000);
     }
 
     if (repeat < 0) {
         PyErr_SetString(PyExc_ValueError, "a positive value or zero is required");
         return -1;
     } else {
-        self->repeat = repeat * 1000;
+        self->repeat = (int64_t)(repeat * 1000);
     }
 
     if (data) {
@@ -221,6 +277,7 @@ static PyMethodDef
 Timer_tp_methods[] = {
     { "start", (PyCFunction)Timer_func_start, METH_NOARGS, "Start the Timer." },
     { "stop", (PyCFunction)Timer_func_stop, METH_NOARGS, "Stop the Timer." },
+    { "again", (PyCFunction)Timer_func_again, METH_NOARGS, "Stop the timer, and if it is repeating restart it using the repeat value as the timeout." },
     { "destroy", (PyCFunction)Timer_func_destroy, METH_NOARGS, "Destroy the Timer." },
     { NULL }
 };
@@ -229,6 +286,12 @@ Timer_tp_methods[] = {
 static PyMemberDef Timer_tp_members[] = {
     {"loop", T_OBJECT_EX, offsetof(Timer, loop), READONLY, "Loop where this Timer is running on."},
     {"data", T_OBJECT_EX, offsetof(Timer, data), 0, "Arbitrary data."},
+    {NULL}
+};
+
+
+static PyGetSetDef Timer_tp_getsets[] = {
+    {"repeat", (getter)Timer_repeat_get, (setter)Timer_repeat_set, "Timer repeat value.", NULL},
     {NULL}
 };
 
@@ -263,7 +326,7 @@ static PyTypeObject TimerType = {
     0,                                                              /*tp_iternext*/
     Timer_tp_methods,                                               /*tp_methods*/
     Timer_tp_members,                                               /*tp_members*/
-    0,                                                              /*tp_getsets*/
+    Timer_tp_getsets,                                               /*tp_getsets*/
     0,                                                              /*tp_base*/
     0,                                                              /*tp_dict*/
     0,                                                              /*tp_descr_get*/

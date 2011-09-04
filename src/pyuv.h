@@ -31,8 +31,8 @@ typedef struct {
     PyObject *callback;
     PyObject *data;
     uv_timer_t *uv_timer;
-    int timeout;
-    int repeat;
+    int64_t timeout;
+    int64_t repeat;
 } Timer;
 
 static PyTypeObject TimerType;
