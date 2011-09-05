@@ -2,6 +2,7 @@
 
 #define _macro_str(x) #x
 #define macro_str(x) _macro_str(x)
+#define UNUSED_ARG(arg)  (void)arg
 
 /* Add a type to a module */
 int

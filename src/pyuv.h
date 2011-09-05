@@ -74,6 +74,21 @@ typedef struct {
 
 static PyTypeObject TCPConnectionType;
 
+/* UDPServer */
+typedef struct {
+    PyObject_HEAD
+    Loop *loop;
+    PyObject *listen_address;
+    PyObject *on_read_cb;
+    PyObject *on_write_cb;
+    uv_udp_t *uv_udp_server;
+    char *listen_ip;
+    int listen_port;
+    int address_type;
+} UDPServer;
+
+static PyTypeObject UDPServerType;
+
 #endif
 
 

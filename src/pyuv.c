@@ -1,13 +1,15 @@
 
 #include "pyuv.h"
 
+#include "utils.c"
+
 #include "Loop.c"
 #include "Async.c"
 #include "Timer.c"
 #include "TCPConnection.c"
 #include "TCPServer.c"
+#include "UDPServer.c"
 
-#include "utils.c"
 
 
 static PyObject* PyExc_UVError;
@@ -38,6 +40,10 @@ initpyuv(void)
     PyModule_AddType(pyuv, "TCPServer", &TCPServerType);
     PyExc_TCPServerError = PyErr_NewException("pyuv.TCPServerError", PyExc_UVError, NULL);
     PyModule_AddType(pyuv, "TCPServerError", (PyTypeObject *)PyExc_TCPServerError);
+
+    PyModule_AddType(pyuv, "UDPServer", &UDPServerType);
+    PyExc_UDPServerError = PyErr_NewException("pyuv.UDPServerError", PyExc_UVError, NULL);
+    PyModule_AddType(pyuv, "UDPServerError", (PyTypeObject *)PyExc_UDPServerError);
 
     /* Module version (the MODULE_VERSION macro is defined by setup.py) */
     PyModule_AddStringConstant(pyuv, "__version__", macro_str(MODULE_VERSION));
