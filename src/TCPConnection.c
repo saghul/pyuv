@@ -93,6 +93,7 @@ on_read(uv_tcp_t* handle, int nread, uv_buf_t buf)
     } else if (nread < 0) { 
         uv_err_t err = uv_last_error(TCPCONNECTION_LOOP);
         assert(err.code == UV_EOF);
+        UNUSED_ARG(err);
         uv_shutdown_t* req = (uv_shutdown_t*) PyMem_Malloc(sizeof *req);
         if (!req) {
             PyErr_NoMemory();
