@@ -6,4 +6,6 @@
 
 - TCP and UDP client support
 
+- Create some macros not to have XXX_LOOP and XXX_ERROR
+
 
