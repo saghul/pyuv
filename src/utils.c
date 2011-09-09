@@ -4,9 +4,10 @@
 #define macro_str(x) _macro_str(x)
 #define UNUSED_ARG(arg)  (void)arg
 
+
 /* Add a type to a module */
 int
-PyModule_AddType(PyObject *module, const char *name, PyTypeObject *type)
+__PyModule_AddType(PyObject *module, const char *name, PyTypeObject *type)
 {
     if (PyType_Ready(type)) {
         return -1;
@@ -18,4 +19,18 @@ PyModule_AddType(PyObject *module, const char *name, PyTypeObject *type)
     }
     return 0;
 }
+
+
+/* Add a type to a module */
+int
+__PyModule_AddObject(PyObject *module, const char *name, PyObject *value)
+{
+    Py_INCREF(value);
+    if (PyModule_AddObject(module, name, value)) {
+        Py_DECREF(value);
+        return -1;
+    }
+    return 0;
+}
+
 
