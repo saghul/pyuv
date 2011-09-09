@@ -1,8 +1,4 @@
 
-#include <arpa/inet.h>
-#include <sys/socket.h>
-
-
 static PyObject* PyExc_TCPServerError;
 
 

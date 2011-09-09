@@ -2,12 +2,16 @@
 #ifndef PYUV_H
 #define PYUV_H
 
-/* Python */
+/* python */
 #include "Python.h"
 #include "structmember.h"
 
-#include "assert.h"
+/* system */
+#include <assert.h>
+#include <arpa/inet.h>
+#include <sys/socket.h>
 
+/* libuv */
 #include "uv.h"
 
 
