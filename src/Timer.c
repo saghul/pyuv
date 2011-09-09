@@ -1,15 +1,6 @@
 
 static PyObject* PyExc_TimerError;
 
-#define TIMER_LOOP self->loop->uv_loop
-
-#define TIMER_ERROR()                                           \
-    do {                                                        \
-        uv_err_t err = uv_last_error(TIMER_LOOP);               \
-        PyErr_SetString(PyExc_TimerError, uv_strerror(err));    \
-        return NULL;                                            \
-    } while (0)                                                 \
-
 
 static void
 on_timer_close(uv_handle_t *handle)
@@ -58,7 +49,7 @@ Timer_func_start(Timer *self)
 
     int r = uv_timer_start(self->uv_timer, on_timer_callback, self->timeout, self->repeat);
     if (r) {
-        TIMER_ERROR();
+        RAISE_ERROR(SELF_LOOP, PyExc_TimerError, NULL);
     }
 
     Py_RETURN_NONE;
@@ -75,7 +66,7 @@ Timer_func_stop(Timer *self)
 
     int r = uv_timer_stop(self->uv_timer);
     if (r) {
-        TIMER_ERROR();
+        RAISE_ERROR(SELF_LOOP, PyExc_TimerError, NULL);
     }
 
     Py_RETURN_NONE;
@@ -92,7 +83,7 @@ Timer_func_again(Timer *self)
 
     int r = uv_timer_again(self->uv_timer);
     if (r) {
-        TIMER_ERROR();
+        RAISE_ERROR(SELF_LOOP, PyExc_TimerError, NULL);
     }
 
     Py_RETURN_NONE;
@@ -216,11 +207,9 @@ Timer_tp_init(Timer *self, PyObject *args, PyObject *kwargs)
         PyErr_NoMemory();
         return -1;
     }
-    int r = uv_timer_init(TIMER_LOOP, uv_timer);
+    int r = uv_timer_init(SELF_LOOP, uv_timer);
     if (r) {
-        uv_err_t err = uv_last_error(TIMER_LOOP);
-        PyErr_SetString(PyExc_TimerError, uv_strerror(err));
-        return -1;
+        RAISE_ERROR(SELF_LOOP, PyExc_TimerError, -1);
     }
     uv_timer->data = (void *)self;
     self->uv_timer = uv_timer;

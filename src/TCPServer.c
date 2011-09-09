@@ -5,15 +5,6 @@
 
 static PyObject* PyExc_TCPServerError;
 
-#define TCPSERVER_LOOP self->loop->uv_loop
-
-#define TCPSERVER_ERROR()                                           \
-    do {                                                            \
-        uv_err_t err = uv_last_error(TCPSERVER_LOOP);               \
-        PyErr_SetString(PyExc_TCPServerError, uv_strerror(err));    \
-        return NULL;                                                \
-    } while (0)                                                     \
-
 
 static void
 on_tcp_connection(uv_stream_t* server, int status)
@@ -27,7 +18,7 @@ on_tcp_connection(uv_stream_t* server, int status)
     Py_INCREF(self);
 
     if (status != 0) {
-        uv_err_t err = uv_last_error(TCPSERVER_LOOP);
+        uv_err_t err = uv_last_error(SELF_LOOP);
         PyErr_SetString(PyExc_TCPServerError, uv_strerror(err));
         PyErr_WriteUnraisable(PyExc_TCPServerError);
     } else {
@@ -75,12 +66,12 @@ TCPServer_func_listen(TCPServer *self, PyObject *args)
         r = uv_tcp_bind6(self->uv_tcp_server, uv_ip6_addr(self->listen_ip, self->listen_port));
     }
     if (r) {
-        TCPSERVER_ERROR();
+        RAISE_ERROR(SELF_LOOP, PyExc_TCPServerError, NULL);
     }
 
     r = uv_listen((uv_stream_t *)self->uv_tcp_server, backlog, on_tcp_connection);
     if (r) { 
-        TCPSERVER_ERROR();
+        RAISE_ERROR(SELF_LOOP, PyExc_TCPServerError, NULL);
     }
 
     Py_RETURN_NONE;
@@ -115,7 +106,7 @@ TCPServer_func_accept(TCPServer *self, PyObject *args, PyObject *kwargs)
     tcp_connection = (TCPConnection *)PyObject_CallFunction((PyObject *)&TCPConnectionType, "OOOO", self, read_callback, write_callback, close_callback);
     int r = uv_accept((uv_stream_t *)self->uv_tcp_server, tcp_connection->uv_stream);
     if (r) {
-        TCPSERVER_ERROR();
+        RAISE_ERROR(SELF_LOOP, PyExc_TCPServerError, NULL);
     }
     TCPConnection_start_read(tcp_connection);
 
@@ -185,11 +176,9 @@ TCPServer_tp_init(TCPServer *self, PyObject *args, PyObject *kwargs)
         PyErr_NoMemory();
         return -1;
     }
-    int r = uv_tcp_init(TCPSERVER_LOOP, uv_tcp_server);
+    int r = uv_tcp_init(SELF_LOOP, uv_tcp_server);
     if (r) {
-        uv_err_t err = uv_last_error(TCPSERVER_LOOP);
-        PyErr_SetString(PyExc_TCPServerError, uv_strerror(err));
-        return -1;
+        RAISE_ERROR(SELF_LOOP, PyExc_TCPServerError, -1);
     }
     uv_tcp_server->data = (void *)self;
     self->uv_tcp_server = uv_tcp_server;

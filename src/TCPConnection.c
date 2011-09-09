@@ -1,14 +1,6 @@
 
 static PyObject* PyExc_TCPConnectionError;
 
-#define TCPCONNECTION_LOOP self->server->loop->uv_loop
-
-#define TCPCONNECTION_ERROR()                                           \
-    do {                                                                \
-        uv_err_t err = uv_last_error(TCPCONNECTION_LOOP);               \
-        PyErr_SetString(PyExc_TCPConnectionError, uv_strerror(err));    \
-        return NULL;                                                    \
-    } while (0)                                                         \
 
 typedef struct {
     uv_write_t req;
@@ -85,7 +77,7 @@ on_tcp_read(uv_tcp_t* handle, int nread, uv_buf_t buf)
         }
         Py_XDECREF(result);
     } else if (nread < 0) { 
-        uv_err_t err = uv_last_error(TCPCONNECTION_LOOP);
+        uv_err_t err = uv_last_error(SERVER_LOOP);
         assert(err.code == UV_EOF);
         UNUSED_ARG(err);
         uv_shutdown_t* req = (uv_shutdown_t*) PyMem_Malloc(sizeof *req);
@@ -173,7 +165,7 @@ TCPConnection_func_write(TCPConnection *self, PyObject *args)
     int r = uv_write(&wr->req, self->uv_stream, &wr->buf, 1, on_write);
     if (r) {
         wr->data = NULL;
-        TCPCONNECTION_ERROR();
+        RAISE_ERROR(SERVER_LOOP, PyExc_TCPConnectionError, NULL);
     }
 
     Py_RETURN_NONE;
@@ -236,11 +228,9 @@ TCPConnection_tp_init(TCPConnection *self, PyObject *args, PyObject *kwargs)
         PyErr_NoMemory();
         return -1;
     }
-    int r = uv_tcp_init(TCPCONNECTION_LOOP, (uv_tcp_t *)uv_stream);
+    int r = uv_tcp_init(SERVER_LOOP, (uv_tcp_t *)uv_stream);
     if (r) {
-        uv_err_t err = uv_last_error(TCPCONNECTION_LOOP);
-        PyErr_SetString(PyExc_TCPConnectionError, uv_strerror(err));
-        return -1;
+        RAISE_ERROR(SERVER_LOOP, PyExc_TCPConnectionError, -1);
     }
     uv_stream->data = (void *)self;
     self->uv_stream = uv_stream;

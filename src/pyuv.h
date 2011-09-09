@@ -10,10 +10,24 @@
 
 #include "uv.h"
 
+
 /* Custom types */
 typedef int Bool;
 #define True  1
 #define False 0
+
+
+/* Utility macros */
+#define SELF_LOOP self->loop->uv_loop
+#define SERVER_LOOP self->server->loop->uv_loop
+
+#define RAISE_ERROR(loop, exc, ret)                 \
+    do {                                            \
+        uv_err_t err = uv_last_error(loop);         \
+        PyErr_SetString(exc, uv_strerror(err));     \
+        return ret;                                 \
+    } while (0)                                     \
+
 
 /* Python types definitions */
 /* Loop */

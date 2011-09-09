@@ -5,15 +5,6 @@
 
 static PyObject* PyExc_UDPServerError;
 
-#define UDPSERVER_LOOP self->loop->uv_loop
-
-#define UDPSERVER_ERROR()                                           \
-    do {                                                            \
-        uv_err_t err = uv_last_error(UDPSERVER_LOOP);               \
-        PyErr_SetString(PyExc_UDPServerError, uv_strerror(err));    \
-        return NULL;                                                \
-    } while (0)                                                     \
-
 
 typedef struct {
     uv_udp_send_t req;
@@ -169,12 +160,12 @@ UDPServer_func_listen(UDPServer *self, PyObject *args, PyObject *kwargs)
         r = uv_udp_bind6(self->uv_udp_server, uv_ip6_addr(self->listen_ip, self->listen_port), UV_UDP_IPV6ONLY);
     }
     if (r) {
-        TCPSERVER_ERROR();
+        RAISE_ERROR(SELF_LOOP, PyExc_UDPServerError, NULL);
     }
 
     r = uv_udp_recv_start(self->uv_udp_server, (uv_alloc_cb)on_udp_alloc, (uv_udp_recv_cb)on_udp_read);
     if (r) {
-        TCPSERVER_ERROR();
+        RAISE_ERROR(SELF_LOOP, PyExc_UDPServerError, NULL);
     }
 
     Py_RETURN_NONE;
@@ -226,7 +217,7 @@ UDPServer_func_write(UDPServer *self, PyObject *args)
     }
     if (r) {
         wr->data = NULL;
-        UDPSERVER_ERROR();
+        RAISE_ERROR(SELF_LOOP, PyExc_UDPServerError, NULL);
     }
 
     Py_RETURN_NONE;
@@ -284,11 +275,9 @@ UDPServer_tp_init(UDPServer *self, PyObject *args, PyObject *kwargs)
         PyErr_NoMemory();
         return -1;
     }
-    int r = uv_udp_init(UDPSERVER_LOOP, uv_udp_server);
+    int r = uv_udp_init(SELF_LOOP, uv_udp_server);
     if (r) {
-        uv_err_t err = uv_last_error(UDPSERVER_LOOP);
-        PyErr_SetString(PyExc_UDPServerError, uv_strerror(err));
-        return -1;
+        RAISE_ERROR(SELF_LOOP, PyExc_UDPServerError, -1);
     }
     uv_udp_server->data = (void *)self;
     self->uv_udp_server = uv_udp_server;

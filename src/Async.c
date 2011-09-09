@@ -1,8 +1,6 @@
 
 static PyObject* PyExc_AsyncError;
 
-#define ASYNC_LOOP self->loop->uv_loop
-
 
 static void
 on_async_close(uv_handle_t *handle)
@@ -111,11 +109,9 @@ Async_tp_init(Async *self, PyObject *args, PyObject *kwargs)
         PyErr_NoMemory();
         return -1;
     }
-    int r = uv_async_init(ASYNC_LOOP, uv_async, on_async_callback);
+    int r = uv_async_init(SELF_LOOP, uv_async, on_async_callback);
     if (r) {
-        uv_err_t err = uv_last_error(ASYNC_LOOP);
-        PyErr_SetString(PyExc_AsyncError, uv_strerror(err));
-        return -1;
+        RAISE_ERROR(SELF_LOOP, PyExc_AsyncError, -1);
     }
     uv_async->data = (void *)self;
     self->uv_async = uv_async;
