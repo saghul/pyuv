@@ -16,7 +16,7 @@ static PyObject* PyExc_TCPServerError;
 
 
 static void
-on_connection(uv_stream_t* server, int status)
+on_tcp_connection(uv_stream_t* server, int status)
 {
     PyGILState_STATE gstate = PyGILState_Ensure();
     assert(server);
@@ -45,7 +45,7 @@ on_connection(uv_stream_t* server, int status)
 
 
 static void
-on_server_close(uv_handle_t *handle)
+on_tcp_server_close(uv_handle_t *handle)
 {
     PyGILState_STATE gstate = PyGILState_Ensure();
     assert(handle);
@@ -78,7 +78,7 @@ TCPServer_func_listen(TCPServer *self, PyObject *args)
         TCPSERVER_ERROR();
     }
 
-    r = uv_listen((uv_stream_t *)self->uv_tcp_server, backlog, on_connection);
+    r = uv_listen((uv_stream_t *)self->uv_tcp_server, backlog, on_tcp_connection);
     if (r) { 
         TCPSERVER_ERROR();
     }
@@ -92,7 +92,7 @@ TCPServer_func_stop_listening(TCPServer *self)
 {
     if (self->uv_tcp_server) {
         self->uv_tcp_server->data = NULL;
-        uv_close((uv_handle_t *)self->uv_tcp_server, on_server_close);
+        uv_close((uv_handle_t *)self->uv_tcp_server, on_tcp_server_close);
         self->uv_tcp_server = NULL;
     }
     Py_RETURN_NONE;
@@ -234,7 +234,7 @@ TCPServer_tp_dealloc(TCPServer *self)
 {
     if (self->uv_tcp_server) {
         self->uv_tcp_server->data = NULL;
-        uv_close((uv_handle_t *)self->uv_tcp_server, on_server_close);
+        uv_close((uv_handle_t *)self->uv_tcp_server, on_tcp_server_close);
         self->uv_tcp_server = NULL;
     }
     TCPServer_tp_clear(self);

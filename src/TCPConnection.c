@@ -1,10 +1,4 @@
 
-/*
- * TODO
- * - generalize this structure to something else when we add UDP ?
- */
-
-
 static PyObject* PyExc_TCPConnectionError;
 
 #define TCPCONNECTION_LOOP self->server->loop->uv_loop
@@ -20,11 +14,11 @@ typedef struct {
     uv_write_t req;
     uv_buf_t buf;
     void *data;
-} write_req_t;
+} tcp_write_req_t;
 
 
 static uv_buf_t
-on_alloc(uv_tcp_t* handle, size_t suggested_size)
+on_tcp_alloc(uv_tcp_t* handle, size_t suggested_size)
 {
     PyGILState_STATE gstate = PyGILState_Ensure();
     uv_buf_t buf;
@@ -36,7 +30,7 @@ on_alloc(uv_tcp_t* handle, size_t suggested_size)
 
 
 static void
-on_connection_closed(uv_handle_t *handle)
+on_tcp_connection_closed(uv_handle_t *handle)
 {
     PyGILState_STATE gstate = PyGILState_Ensure();
     assert(handle);
@@ -46,7 +40,7 @@ on_connection_closed(uv_handle_t *handle)
 
 
 static void
-on_shutdown(uv_shutdown_t* req, int status)
+on_tcp_shutdown(uv_shutdown_t* req, int status)
 {
     PyGILState_STATE gstate = PyGILState_Ensure();
 
@@ -62,7 +56,7 @@ on_shutdown(uv_shutdown_t* req, int status)
     Py_XDECREF(result);
 
     self->uv_stream->data = NULL;
-    uv_close((uv_handle_t*)req->handle, on_connection_closed);
+    uv_close((uv_handle_t*)req->handle, on_tcp_connection_closed);
     self->uv_stream = NULL;
     PyMem_Free(req);
 
@@ -72,7 +66,7 @@ on_shutdown(uv_shutdown_t* req, int status)
 
 
 static void
-on_read(uv_tcp_t* handle, int nread, uv_buf_t buf)
+on_tcp_read(uv_tcp_t* handle, int nread, uv_buf_t buf)
 {
     PyGILState_STATE gstate = PyGILState_Ensure();
     assert(handle);
@@ -99,7 +93,7 @@ on_read(uv_tcp_t* handle, int nread, uv_buf_t buf)
             PyErr_NoMemory();
             PyErr_WriteUnraisable(self->on_read_cb);
         } else {
-            uv_shutdown(req, (uv_stream_t *)handle, on_shutdown);
+            uv_shutdown(req, (uv_stream_t *)handle, on_tcp_shutdown);
         }
     }
     PyMem_Free(buf.base);
@@ -116,7 +110,7 @@ on_write(uv_write_t* req, int status)
     assert(req);
     assert(status == 0);
 
-    write_req_t* wr = (write_req_t*) req;
+    tcp_write_req_t* wr = (tcp_write_req_t*) req;
     TCPConnection *self = (TCPConnection *)(wr->data);
     assert(self);
     /* Object could go out of scope in the callback, increase refcount to avoid it */
@@ -141,7 +135,7 @@ on_write(uv_write_t* req, int status)
 void
 TCPConnection_start_read(TCPConnection *self)
 {
-    uv_read_start(self->uv_stream, (uv_alloc_cb)on_alloc, (uv_read_cb)on_read);
+    uv_read_start(self->uv_stream, (uv_alloc_cb)on_tcp_alloc, (uv_read_cb)on_tcp_read);
 }
 
 
@@ -151,7 +145,7 @@ TCPConnection_func_close(TCPConnection *self)
     if (self->uv_stream) {
         self->uv_stream->data = NULL;
         uv_read_stop(self->uv_stream);
-        uv_close((uv_handle_t *)self->uv_stream, on_connection_closed);
+        uv_close((uv_handle_t *)self->uv_stream, on_tcp_connection_closed);
         self->uv_stream = NULL;
     }
     Py_RETURN_NONE;
@@ -161,14 +155,14 @@ TCPConnection_func_close(TCPConnection *self)
 static PyObject *
 TCPConnection_func_write(TCPConnection *self, PyObject *args)
 {
-    write_req_t *wr;
+    tcp_write_req_t *wr;
     char *write_data;
 
     if (!PyArg_ParseTuple(args, "s:write", &write_data)) {
         return NULL;
     }
 
-    wr = (write_req_t*) PyMem_Malloc(sizeof *wr);
+    wr = (tcp_write_req_t*) PyMem_Malloc(sizeof *wr);
     if (!wr) {
         return PyErr_NoMemory();
     }
@@ -293,7 +287,7 @@ TCPConnection_tp_dealloc(TCPConnection *self)
     if (self->uv_stream) {
         self->uv_stream->data = NULL;
         uv_read_stop(self->uv_stream);
-        uv_close((uv_handle_t *)self->uv_stream, on_connection_closed);
+        uv_close((uv_handle_t *)self->uv_stream, on_tcp_connection_closed);
         self->uv_stream = NULL;
     }
     TCPConnection_tp_clear(self);
