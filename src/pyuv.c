@@ -3,12 +3,11 @@
 
 #include "utils.c"
 
-#include "Loop.c"
-#include "Async.c"
-#include "Timer.c"
-#include "TCPConnection.c"
-#include "TCPServer.c"
-#include "UDPServer.c"
+#include "loop.c"
+#include "async.c"
+#include "timer.c"
+#include "tcp.c"
+#include "udp.c"
 
 
 
