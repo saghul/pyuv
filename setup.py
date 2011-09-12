@@ -14,7 +14,7 @@ __version__ = "0.0.0"
 
 class pyuv_build_ext(build_ext):
     libuv_repo = 'https://github.com/joyent/libuv.git'
-    libuv_revision = 'b89f4f34a48594dbb36e1c45eb7879bf5a6ee77f'
+    libuv_revision = 'e7eeacb4ae69d4dee4af7787138cf476fc010b5d'
     libuv_patches = ['patches/compile_with_fpic.patch',
                      'patches/use_lib_prefix.patch']
 

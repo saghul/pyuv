@@ -4,8 +4,8 @@
  TESTS=test/echo-server.c test/test-*.c
  BENCHMARKS=test/echo-server.c test/dns-server.c test/benchmark-*.c
  
--all: uv.a test/run-tests test/run-benchmarks
-+all: libuv.a test/run-tests test/run-benchmarks
+-all: uv.a test/run-tests$(E) test/run-benchmarks$(E)
++all: libuv.a test/run-tests$(E) test/run-benchmarks$(E)
  
  $(CARES_OBJS): %.o: %.c
  	$(CC) -o $*.o -c $(CFLAGS) $(CPPFLAGS) $< -DHAVE_CONFIG_H
@@ -30,16 +30,16 @@
  RUNNER_LIBS=-lws2_32
  RUNNER_SRC=test/runner-win.c
  
--uv.a: $(WIN_OBJS) src/uv-common.o src/uv-eio.o src/eio/eio.o $(CARES_OBJS)
--	$(AR) rcs uv.a src/win/*.o src/uv-common.o src/uv-eio.o src/eio/eio.o $(CARES_OBJS)
-+libuv.a: $(WIN_OBJS) src/uv-common.o src/uv-eio.o src/eio/eio.o $(CARES_OBJS)
-+	$(AR) rcs libuv.a src/win/*.o src/uv-common.o src/uv-eio.o src/eio/eio.o $(CARES_OBJS)
+-uv.a: $(WIN_OBJS) src/uv-common.o $(CARES_OBJS)
+-	$(AR) rcs uv.a src/win/*.o src/uv-common.o $(CARES_OBJS)
++libuv.a: $(WIN_OBJS) src/uv-common.o $(CARES_OBJS)
++	$(AR) rcs libuv.a src/win/*.o src/uv-common.o $(CARES_OBJS)
  
  src/win/%.o: src/win/%.c src/win/internal.h
  	$(CC) $(CFLAGS) -o $@ -c $<
 --- config-unix.mk
 +++ config-unix.mk
-@@ -95,8 +95,8 @@ endif
+@@ -104,8 +104,8 @@ endif
  RUNNER_LIBS=
  RUNNER_SRC=test/runner-unix.c
  

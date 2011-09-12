@@ -1,6 +1,5 @@
 
 static Loop *default_loop = NULL;
-static Bool uv_initialized = False;
 
 
 static PyObject *
@@ -9,12 +8,6 @@ new_loop(PyTypeObject *type, PyObject *args, PyObject *kwargs, int is_default)
     if (PyTuple_GET_SIZE(args) || (kwargs && PyDict_Check(kwargs) && PyDict_Size(kwargs))) {
         PyErr_SetString(PyExc_TypeError, "Loop initialization takes no parameters");
         return NULL;
-    }
-
-    if (!uv_initialized) {
-        /* Initialize libuv */
-        uv_init();
-        uv_initialized = True;
     }
 
     if (is_default) {
