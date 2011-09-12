@@ -1,4 +1,46 @@
 
+static Loop *default_loop = NULL;
+static Bool uv_initialized = False;
+
+
+static PyObject *
+new_loop(PyTypeObject *type, PyObject *args, PyObject *kwargs, int is_default)
+{
+    if (PyTuple_GET_SIZE(args) || (kwargs && PyDict_Check(kwargs) && PyDict_Size(kwargs))) {
+        PyErr_SetString(PyExc_TypeError, "Loop initialization takes no parameters");
+        return NULL;
+    }
+
+    if (!uv_initialized) {
+        /* Initialize libuv */
+        uv_init();
+        uv_initialized = True;
+    }
+
+    if (is_default) {
+        if (!default_loop) {
+            default_loop = (Loop *)PyType_GenericNew(type, args, kwargs);
+            if (!default_loop) {
+                return NULL;
+            }
+            default_loop->uv_loop = uv_default_loop();
+            default_loop->is_default = 1;
+        } else {
+            Py_INCREF(default_loop);
+        }
+        return (PyObject *)default_loop;
+    } else {
+        Loop *self = (Loop *)PyType_GenericNew(type, args, kwargs);
+        if (!self) {
+            return NULL;
+        }
+        self->uv_loop = uv_loop_new();
+        self->is_default = 0;
+        return (PyObject *)self;
+    }
+}
+
+
 static PyObject *
 Loop_func_run(Loop *self)
 {
@@ -29,12 +71,7 @@ Loop_func_unref(Loop *self)
 static PyObject *
 Loop_func_default_loop(PyObject *cls, PyObject *args, PyObject *kwargs)
 {
-    PyObject *loop;
-    loop = PyObject_CallFunction(cls, "O", Py_True);
-    if (!loop) {
-        return NULL;
-    }
-    return loop;
+    return new_loop(&LoopType, args, kwargs, 1);
 }
 
 
@@ -49,62 +86,10 @@ Loop_default_get(Loop *self, void *closure)
 }
 
 
-static int
-Loop_tp_init(Loop *self, PyObject *args, PyObject *kwargs)
-{
-    PyObject *is_default = NULL;
-
-    static char *kwlist[] = {"default", NULL};
-
-    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "|O:__init__", kwlist, &is_default)) {
-        return -1;
-    }
-
-    if (PyObject_IsTrue(is_default)) {
-        self->uv_loop = uv_default_loop();
-        self->is_default = 1;
-    } else {
-        self->uv_loop = uv_loop_new();
-        self->is_default = 0;
-    }
-    return 0;
-}
-
-
 static PyObject *
 Loop_tp_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
 {
-    static Bool uv_initialized = False;
-    static Loop *default_loop = NULL;
-    PyObject *is_default = NULL;
-
-    static char *kwlist[] = {"default", NULL};
-
-    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "|O:__new__", kwlist, &is_default)) {
-        return NULL;
-    }
-
-    if (!uv_initialized) {
-        /* Initialize libuv */
-        uv_init();
-        uv_initialized = True;
-    }
-
-    if (PyObject_IsTrue(is_default)) {
-        if (!default_loop) {
-            default_loop = (Loop *)PyType_GenericNew(type, args, kwargs);
-            if (!default_loop) {
-                return NULL;
-            }
-        }
-        return (PyObject *)default_loop;
-    } else {
-        Loop *self = (Loop *)PyType_GenericNew(type, args, kwargs);
-        if (!self) {
-            return NULL;
-        }
-        return (PyObject *)self;
-    }
+    return new_loop(type, args, kwargs, 0);
 }
 
 
@@ -151,43 +136,43 @@ static PyGetSetDef Loop_tp_getsets[] = {
 
 static PyTypeObject LoopType = {
     PyVarObject_HEAD_INIT(NULL, 0)
-    "pyuv.Loop",                                /*tp_name*/
-    sizeof(Loop),                               /*tp_basicsize*/
-    0,                                          /*tp_itemsize*/
-    (destructor)Loop_tp_dealloc,                /*tp_dealloc*/
-    0,                                          /*tp_print*/
-    0,                                          /*tp_getattr*/
-    0,                                          /*tp_setattr*/
-    0,                                          /*tp_compare*/
-    0,                                          /*tp_repr*/
-    0,                                          /*tp_as_number*/
-    0,                                          /*tp_as_sequence*/
-    0,                                          /*tp_as_mapping*/
-    0,                                          /*tp_hash */
-    0,                                          /*tp_call*/
-    0,                                          /*tp_str*/
-    0,                                          /*tp_getattro*/
-    0,                                          /*tp_setattro*/
-    0,                                          /*tp_as_buffer*/
-    Py_TPFLAGS_DEFAULT|Py_TPFLAGS_HAVE_GC,      /*tp_flags*/
-    0,                                          /*tp_doc*/
-    (traverseproc)Loop_tp_traverse,             /*tp_traverse*/
-    (inquiry)Loop_tp_clear,                     /*tp_clear*/
-    0,                                          /*tp_richcompare*/
-    0,                                          /*tp_weaklistoffset*/
-    0,                                          /*tp_iter*/
-    0,                                          /*tp_iternext*/
-    Loop_tp_methods,                            /*tp_methods*/
-    0,                                          /*tp_members*/
-    Loop_tp_getsets,                            /*tp_getsets*/
-    0,                                          /*tp_base*/
-    0,                                          /*tp_dict*/
-    0,                                          /*tp_descr_get*/
-    0,                                          /*tp_descr_set*/
-    0,                                          /*tp_dictoffset*/
-    (initproc)Loop_tp_init,                     /*tp_init*/
-    0,                                          /*tp_alloc*/
-    Loop_tp_new,                                /*tp_new*/
+    "pyuv.Loop",                                                    /*tp_name*/
+    sizeof(Loop),                                                   /*tp_basicsize*/
+    0,                                                              /*tp_itemsize*/
+    (destructor)Loop_tp_dealloc,                                    /*tp_dealloc*/
+    0,                                                              /*tp_print*/
+    0,                                                              /*tp_getattr*/
+    0,                                                              /*tp_setattr*/
+    0,                                                              /*tp_compare*/
+    0,                                                              /*tp_repr*/
+    0,                                                              /*tp_as_number*/
+    0,                                                              /*tp_as_sequence*/
+    0,                                                              /*tp_as_mapping*/
+    0,                                                              /*tp_hash */
+    0,                                                              /*tp_call*/
+    0,                                                              /*tp_str*/
+    0,                                                              /*tp_getattro*/
+    0,                                                              /*tp_setattro*/
+    0,                                                              /*tp_as_buffer*/
+    Py_TPFLAGS_DEFAULT|Py_TPFLAGS_HAVE_GC|Py_TPFLAGS_BASETYPE,      /*tp_flags*/
+    0,                                                              /*tp_doc*/
+    (traverseproc)Loop_tp_traverse,                                 /*tp_traverse*/
+    (inquiry)Loop_tp_clear,                                         /*tp_clear*/
+    0,                                                              /*tp_richcompare*/
+    0,                                                              /*tp_weaklistoffset*/
+    0,                                                              /*tp_iter*/
+    0,                                                              /*tp_iternext*/
+    Loop_tp_methods,                                                /*tp_methods*/
+    0,                                                              /*tp_members*/
+    Loop_tp_getsets,                                                /*tp_getsets*/
+    0,                                                              /*tp_base*/
+    0,                                                              /*tp_dict*/
+    0,                                                              /*tp_descr_get*/
+    0,                                                              /*tp_descr_set*/
+    0,                                                              /*tp_dictoffset*/
+    0,                                                              /*tp_init*/
+    0,                                                              /*tp_alloc*/
+    Loop_tp_new,                                                    /*tp_new*/
 };
 
 
