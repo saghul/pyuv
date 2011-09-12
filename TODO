@@ -9,7 +9,5 @@
 
 - FS module with all filesystem related functions from libuv
 
-- default_loop classmethod on Loop, which returns the default loop instance (singleton)
-
 - Ability to destroy a loop
 

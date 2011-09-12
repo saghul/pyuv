@@ -38,6 +38,7 @@ typedef int Bool;
 typedef struct {
     PyObject_HEAD
     uv_loop_t *uv_loop;
+    int is_default;
 } Loop;
 
 static PyTypeObject LoopType;

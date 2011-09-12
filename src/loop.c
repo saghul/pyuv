@@ -26,14 +26,47 @@ Loop_func_unref(Loop *self)
 }
 
 
+static PyObject *
+Loop_func_default_loop(PyObject *cls, PyObject *args, PyObject *kwargs)
+{
+    PyObject *loop;
+    loop = PyObject_CallFunction(cls, "O", Py_True);
+    if (!loop) {
+        return NULL;
+    }
+    return loop;
+}
+
+
+static PyObject *
+Loop_default_get(Loop *self, void *closure)
+{
+    if (self->is_default) {
+        Py_RETURN_TRUE;
+    } else {
+        Py_RETURN_FALSE;
+    }
+}
+
+
 static int
 Loop_tp_init(Loop *self, PyObject *args, PyObject *kwargs)
 {
-    if (PyTuple_GET_SIZE(args) || (kwargs && PyDict_Check(kwargs) && PyDict_Size(kwargs))) {
-        PyErr_SetString(PyExc_TypeError, "Loop.__init__() takes no parameters");
-	return -1;
+    PyObject *is_default = NULL;
+
+    static char *kwlist[] = {"default", NULL};
+
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "|O:__init__", kwlist, &is_default)) {
+        return -1;
     }
-    self->uv_loop = uv_loop_new();
+
+    if (PyObject_IsTrue(is_default)) {
+        self->uv_loop = uv_default_loop();
+        self->is_default = 1;
+    } else {
+        self->uv_loop = uv_loop_new();
+        self->is_default = 0;
+    }
     return 0;
 }
 
@@ -42,6 +75,14 @@ static PyObject *
 Loop_tp_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
 {
     static Bool uv_initialized = False;
+    static Loop *default_loop = NULL;
+    PyObject *is_default = NULL;
+
+    static char *kwlist[] = {"default", NULL};
+
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "|O:__new__", kwlist, &is_default)) {
+        return NULL;
+    }
 
     if (!uv_initialized) {
         /* Initialize libuv */
@@ -49,11 +90,21 @@ Loop_tp_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
         uv_initialized = True;
     }
 
-    Loop *self = (Loop *)PyType_GenericNew(type, args, kwargs);
-    if (!self) {
-        return NULL;
+    if (PyObject_IsTrue(is_default)) {
+        if (!default_loop) {
+            default_loop = (Loop *)PyType_GenericNew(type, args, kwargs);
+            if (!default_loop) {
+                return NULL;
+            }
+        }
+        return (PyObject *)default_loop;
+    } else {
+        Loop *self = (Loop *)PyType_GenericNew(type, args, kwargs);
+        if (!self) {
+            return NULL;
+        }
+        return (PyObject *)self;
     }
-    return (PyObject *)self;
 }
 
 
@@ -75,7 +126,7 @@ static void
 Loop_tp_dealloc(Loop *self)
 {
     Loop_tp_clear(self);
-    if (self->uv_loop) {
+    if (self->uv_loop && !self->is_default) {
         uv_loop_delete(self->uv_loop);
     }
     Py_TYPE(self)->tp_free((PyObject *)self);
@@ -87,7 +138,14 @@ Loop_tp_methods[] = {
     { "run", (PyCFunction)Loop_func_run, METH_NOARGS, "Run the event loop." },
     { "ref", (PyCFunction)Loop_func_ref, METH_NOARGS, "Increase the event loop reference count." },
     { "unref", (PyCFunction)Loop_func_unref, METH_NOARGS, "Decrease the event loop reference count." },
+    { "default_loop", (PyCFunction)Loop_func_default_loop, METH_CLASS|METH_VARARGS|METH_KEYWORDS, "Instantiate the default loop." },
     { NULL }
+};
+
+
+static PyGetSetDef Loop_tp_getsets[] = {
+    {"default", (getter)Loop_default_get, NULL, "Is this the default loop?", NULL},
+    {NULL}
 };
 
 
@@ -121,7 +179,7 @@ static PyTypeObject LoopType = {
     0,                                          /*tp_iternext*/
     Loop_tp_methods,                            /*tp_methods*/
     0,                                          /*tp_members*/
-    0,                                          /*tp_getsets*/
+    Loop_tp_getsets,                            /*tp_getsets*/
     0,                                          /*tp_base*/
     0,                                          /*tp_dict*/
     0,                                          /*tp_descr_get*/
