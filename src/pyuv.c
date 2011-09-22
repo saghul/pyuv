@@ -1,7 +1,7 @@
 
 #include "pyuv.h"
 
-#include "utils.c"
+#include "util.c"
 
 #include "loop.c"
 #include "async.c"
