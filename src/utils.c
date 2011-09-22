@@ -1,7 +1,9 @@
 /* Some random utility functions */
 
-#define _macro_str(x) #x
-#define macro_str(x) _macro_str(x)
+#ifndef __STRING
+#define __STRING(x) #x
+#endif
+
 #define UNUSED_ARG(arg)  (void)arg
 
 

@@ -91,7 +91,7 @@ initpyuv(void)
     __PyModule_AddType(pyuv, "UDPServer", &UDPServerType);
 
     /* Module version (the MODULE_VERSION macro is defined by setup.py) */
-    PyModule_AddStringConstant(pyuv, "__version__", macro_str(MODULE_VERSION));
+    PyModule_AddStringConstant(pyuv, "__version__", __STRING(MODULE_VERSION));
 }
 
 
