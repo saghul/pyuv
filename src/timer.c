@@ -6,7 +6,7 @@ static void
 on_timer_close(uv_handle_t *handle)
 {
     PyGILState_STATE gstate = PyGILState_Ensure();
-    assert(handle);
+    ASSERT(handle);
     PyMem_Free(handle);
     PyGILState_Release(gstate);
 }
@@ -16,11 +16,11 @@ static void
 on_timer_callback(uv_timer_t *timer, int status)
 {
     PyGILState_STATE gstate = PyGILState_Ensure();
-    assert(timer);
-    assert(status == 0);
+    ASSERT(timer);
+    ASSERT(status == 0);
 
     Timer *self = (Timer *)(timer->data);
-    assert(self);
+    ASSERT(self);
     /* Object could go out of scope in the callback, increase refcount to avoid it */
     Py_INCREF(self);
 

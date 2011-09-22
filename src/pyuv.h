@@ -7,7 +7,6 @@
 #include "structmember.h"
 
 /* system */
-#include <assert.h>
 #include <arpa/inet.h>
 #include <sys/socket.h>
 
@@ -22,6 +21,21 @@ typedef int Bool;
 
 
 /* Utility macros */
+#ifndef __STRING
+#define __STRING(x) #x
+#endif
+
+#define UNUSED_ARG(arg)  (void)arg
+
+#define ASSERT(x)                                                           \
+    do {                                                                    \
+        if (!(x)) {                                                         \
+            fprintf (stderr, "%s:%u: %s: Assertion `" #x "' failed.\n",     \
+                     __FILE__, __LINE__, __func__);                         \
+            abort();                                                        \
+        }                                                                   \
+    } while(0)                                                              \
+
 #define SELF_LOOP self->loop->uv_loop
 #define SERVER_LOOP self->server->loop->uv_loop
 

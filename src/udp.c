@@ -1,4 +1,6 @@
 
+#define UDP_MAX_BUF_SIZE 65536
+
 static PyObject* PyExc_UDPServerError;
 
 
@@ -13,7 +15,7 @@ static void
 on_udp_server_close(uv_handle_t *handle)
 {
     PyGILState_STATE gstate = PyGILState_Ensure();
-    assert(handle);
+    ASSERT(handle);
     PyMem_Free(handle);
     PyGILState_Release(gstate);
 }
@@ -23,7 +25,7 @@ static uv_buf_t
 on_udp_alloc(uv_udp_t* handle, size_t suggested_size)
 {
     PyGILState_STATE gstate = PyGILState_Ensure();
-    assert(suggested_size <= UDP_MAX_BUF_SIZE);
+    ASSERT(suggested_size <= UDP_MAX_BUF_SIZE);
     uv_buf_t buf;
     buf.base = PyMem_Malloc(suggested_size);
     buf.len = suggested_size;
@@ -49,25 +51,25 @@ on_udp_read(uv_udp_t* handle, int nread, uv_buf_t buf, struct sockaddr* addr, un
 
     UNUSED_ARG(r);
 
-    assert(handle);
-    assert(flags == 0);
+    ASSERT(handle);
+    ASSERT(flags == 0);
 
     UDPServer *self = (UDPServer *)(handle->data);
-    assert(self);
+    ASSERT(self);
     /* Object could go out of scope in the callback, increase refcount to avoid it */
     Py_INCREF(self);
 
     if (nread > 0) {
-        assert(addr);
+        ASSERT(addr);
         if (addr->sa_family == AF_INET) {
             addr4 = *(struct sockaddr_in*)addr;
             r = uv_ip4_name(&addr4, ip4, INET_ADDRSTRLEN);
-            assert(r == 0);
+            ASSERT(r == 0);
             address_tuple = Py_BuildValue("(si)", ip4, ntohs(addr4.sin_port));
         } else {
             addr6 = *(struct sockaddr_in6*)addr;
             r = uv_ip6_name(&addr6, ip6, INET6_ADDRSTRLEN);
-            assert(r == 0);
+            ASSERT(r == 0);
             address_tuple = Py_BuildValue("(si)", ip6, ntohs(addr6.sin6_port));
         }
         data = PyString_FromStringAndSize(buf.base, nread);
@@ -80,7 +82,7 @@ on_udp_read(uv_udp_t* handle, int nread, uv_buf_t buf, struct sockaddr* addr, un
         PyErr_SetString(PyExc_UDPServerError, "unexpected recv error");
         PyErr_WriteUnraisable(self->on_read_cb);
     } else {
-        assert(addr == NULL);
+        ASSERT(addr == NULL);
     }
     PyMem_Free(buf.base);
 
@@ -93,12 +95,12 @@ static void
 on_udp_write(uv_udp_send_t* req, int status)
 {
     PyGILState_STATE gstate = PyGILState_Ensure();
-    assert(req);
-    assert(status == 0);
+    ASSERT(req);
+    ASSERT(status == 0);
 
     udp_write_req_t *wr = (udp_write_req_t *)req;
     UDPServer *self = (UDPServer *)(wr->data);
-    assert(self);
+    ASSERT(self);
     /* Object could go out of scope in the callback, increase refcount to avoid it */
     Py_INCREF(self);
   

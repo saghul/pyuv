@@ -1,11 +1,5 @@
 /* Some random utility functions */
 
-#ifndef __STRING
-#define __STRING(x) #x
-#endif
-
-#define UNUSED_ARG(arg)  (void)arg
-
 
 /* Add a type to a module */
 int

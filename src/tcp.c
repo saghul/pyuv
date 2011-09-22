@@ -29,7 +29,7 @@ static void
 on_tcp_connection_closed(uv_handle_t *handle)
 {
     PyGILState_STATE gstate = PyGILState_Ensure();
-    assert(handle);
+    ASSERT(handle);
     PyMem_Free(handle);
     PyGILState_Release(gstate);
 }
@@ -41,7 +41,7 @@ on_tcp_shutdown(uv_shutdown_t* req, int status)
     PyGILState_STATE gstate = PyGILState_Ensure();
 
     TCPConnection *self = (TCPConnection *)((uv_handle_t*)req->handle->data);
-    assert(self);
+    ASSERT(self);
     /* Object could go out of scope in the callback, increase refcount to avoid it */
     Py_INCREF(self);
 
@@ -65,10 +65,10 @@ static void
 on_tcp_read(uv_tcp_t* handle, int nread, uv_buf_t buf)
 {
     PyGILState_STATE gstate = PyGILState_Ensure();
-    assert(handle);
+    ASSERT(handle);
 
     TCPConnection *self = (TCPConnection *)(handle->data);
-    assert(self);
+    ASSERT(self);
     /* Object could go out of scope in the callback, increase refcount to avoid it */
     Py_INCREF(self);
    
@@ -82,7 +82,7 @@ on_tcp_read(uv_tcp_t* handle, int nread, uv_buf_t buf)
         Py_XDECREF(result);
     } else if (nread < 0) { 
         uv_err_t err = uv_last_error(SERVER_LOOP);
-        assert(err.code == UV_EOF);
+        ASSERT(err.code == UV_EOF);
         UNUSED_ARG(err);
         uv_shutdown_t* req = (uv_shutdown_t*) PyMem_Malloc(sizeof *req);
         if (!req) {
@@ -103,12 +103,12 @@ static void
 on_tcp_write(uv_write_t* req, int status)
 {
     PyGILState_STATE gstate = PyGILState_Ensure();
-    assert(req);
-    assert(status == 0);
+    ASSERT(req);
+    ASSERT(status == 0);
 
     tcp_write_req_t* wr = (tcp_write_req_t*) req;
     TCPConnection *self = (TCPConnection *)(wr->data);
-    assert(self);
+    ASSERT(self);
     /* Object could go out of scope in the callback, increase refcount to avoid it */
     Py_INCREF(self);
   
@@ -351,10 +351,10 @@ static void
 on_tcp_connection(uv_stream_t* server, int status)
 {
     PyGILState_STATE gstate = PyGILState_Ensure();
-    assert(server);
+    ASSERT(server);
 
     TCPServer *self = (TCPServer *)(server->data);
-    assert(self);
+    ASSERT(self);
     /* Object could go out of scope in the callback, increase refcount to avoid it */
     Py_INCREF(self);
 
@@ -380,7 +380,7 @@ static void
 on_tcp_server_close(uv_handle_t *handle)
 {
     PyGILState_STATE gstate = PyGILState_Ensure();
-    assert(handle);
+    ASSERT(handle);
     PyMem_Free(handle);
     PyGILState_Release(gstate);
 }
