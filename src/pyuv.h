@@ -24,6 +24,7 @@ typedef int Bool;
 #ifndef __STRING
 #define __STRING(x) #x
 #endif
+#define __MSTR(x) __STRING(x)
 
 #define UNUSED_ARG(arg)  (void)arg
 
