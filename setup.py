@@ -14,9 +14,8 @@ __version__ = "0.0.0"
 
 class pyuv_build_ext(build_ext):
     libuv_repo = 'https://github.com/joyent/libuv.git'
-    libuv_revision = 'e7eeacb4ae69d4dee4af7787138cf476fc010b5d'
-    libuv_patches = ['patches/compile_with_fpic.patch',
-                     'patches/use_lib_prefix.patch']
+    libuv_revision = '8f617b93bcb3e4b54fd4fa33883b14bad014dfc0'
+    libuv_patches = ['patches/use_lib_prefix.patch']
 
     @staticmethod
     def exec_process(cmdline, silent=True, input=None, **kwargs):
@@ -45,7 +44,6 @@ class pyuv_build_ext(build_ext):
         self.library_dirs.append(self.libuv_dir)
         self.libraries.append(os.path.join(self.libuv_dir, 'uv'))
         self.libraries.append('rt')
-        self.extra_compile_args = ['-fPIC']
 
     def get_libuv(self):
         self.libuv_dir = os.path.join(self.build_temp, 'libuv')
@@ -59,8 +57,11 @@ class pyuv_build_ext(build_ext):
             for patch_file in self.libuv_patches:
                 self.exec_process(['patch', '--forward', '-d', self.libuv_dir, '-p0', '-i', os.path.abspath(patch_file)])
         def build_libuv():
+            cflags = '-fPIC'
+            env = os.environ.copy()
+            env['CFLAGS'] = ' '.join(x for x in (cflags, env.get('CFLAGS', None)) if x)
             log.info('Building libuv...')
-            self.exec_process(['make', 'libuv.a'], cwd=self.libuv_dir)
+            self.exec_process(['make', 'libuv.a'], cwd=self.libuv_dir, env=env)
         def update_libuv():
             shutil.rmtree(self.libuv_dir)
             download_libuv()
