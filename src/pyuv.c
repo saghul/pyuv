@@ -8,7 +8,7 @@
 #include "timer.c"
 #include "tcp.c"
 #include "udp.c"
-
+#include "dns.c"
 
 
 static PyObject* PyExc_UVError;
@@ -67,6 +67,32 @@ initpyuv(void)
     PyModule_AddIntMacro(error, UV_EAISOCKTYPE);
     PyModule_AddIntMacro(error, UV_ESHUTDOWN);
 
+    PyModule_AddIntMacro(error, ARES_SUCCESS);
+    PyModule_AddIntMacro(error, ARES_ENODATA);
+    PyModule_AddIntMacro(error, ARES_EFORMERR);
+    PyModule_AddIntMacro(error, ARES_ESERVFAIL);
+    PyModule_AddIntMacro(error, ARES_ENOTFOUND);
+    PyModule_AddIntMacro(error, ARES_ENOTIMP);
+    PyModule_AddIntMacro(error, ARES_EREFUSED);
+    PyModule_AddIntMacro(error, ARES_EBADQUERY);
+    PyModule_AddIntMacro(error, ARES_EBADNAME);
+    PyModule_AddIntMacro(error, ARES_EBADFAMILY);
+    PyModule_AddIntMacro(error, ARES_EBADRESP);
+    PyModule_AddIntMacro(error, ARES_ECONNREFUSED);
+    PyModule_AddIntMacro(error, ARES_ETIMEOUT);
+    PyModule_AddIntMacro(error, ARES_EOF);
+    PyModule_AddIntMacro(error, ARES_EFILE);
+    PyModule_AddIntMacro(error, ARES_ENOMEM);
+    PyModule_AddIntMacro(error, ARES_EDESTRUCTION);
+    PyModule_AddIntMacro(error, ARES_EBADSTR);
+    PyModule_AddIntMacro(error, ARES_EBADFLAGS);
+    PyModule_AddIntMacro(error, ARES_ENONAME);
+    PyModule_AddIntMacro(error, ARES_EBADHINTS);
+    PyModule_AddIntMacro(error, ARES_ENOTINITIALIZED);
+    PyModule_AddIntMacro(error, ARES_ELOADIPHLPAPI);
+    PyModule_AddIntMacro(error, ARES_EADDRGETNETWORKPARAMS);
+    PyModule_AddIntMacro(error, ARES_ECANCELLED);
+
     PyExc_UVError = PyErr_NewException("pyuv.UVError", NULL, NULL);
     __PyModule_AddType(error, "UVError", (PyTypeObject *)PyExc_UVError);
     PyExc_AsyncError = PyErr_NewException("pyuv.AsyncError", PyExc_UVError, NULL);
@@ -79,8 +105,14 @@ initpyuv(void)
     __PyModule_AddType(error, "TCPServerError", (PyTypeObject *)PyExc_TCPServerError);
     PyExc_UDPServerError = PyErr_NewException("pyuv.UDPServerError", PyExc_UVError, NULL);
     __PyModule_AddType(error, "UDPServerError", (PyTypeObject *)PyExc_UDPServerError);
+    PyExc_DNSError = PyErr_NewException("pyuv.error.DNSError", NULL, NULL);
+    __PyModule_AddType(error, "DNSError", (PyTypeObject *)PyExc_DNSError);
 
     __PyModule_AddObject(pyuv, "error", error);
+
+    /* Macros */
+    PyModule_AddIntMacro(pyuv, AF_INET);
+    PyModule_AddIntMacro(pyuv, AF_INET6);
 
     /* Types */
     __PyModule_AddType(pyuv, "Loop", &LoopType);
@@ -89,6 +121,7 @@ initpyuv(void)
     __PyModule_AddType(pyuv, "TCPConnection", &TCPConnectionType);
     __PyModule_AddType(pyuv, "TCPServer", &TCPServerType);
     __PyModule_AddType(pyuv, "UDPServer", &UDPServerType);
+    __PyModule_AddType(pyuv, "DNSResolver", &DNSResolverType);
 
     /* Module version (the MODULE_VERSION macro is defined by setup.py) */
     PyModule_AddStringConstant(pyuv, "__version__", __MSTR(MODULE_VERSION));

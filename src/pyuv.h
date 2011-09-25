@@ -123,6 +123,15 @@ typedef struct {
 
 static PyTypeObject UDPServerType;
 
+/* DNSResolver */
+typedef struct {
+    PyObject_HEAD
+    Loop *loop;
+    ares_channel channel;
+} DNSResolver;
+
+static PyTypeObject DNSResolverType;
+
 #endif
 
 
