@@ -93,17 +93,17 @@ initpyuv(void)
     PyModule_AddIntMacro(error, ARES_EADDRGETNETWORKPARAMS);
     PyModule_AddIntMacro(error, ARES_ECANCELLED);
 
-    PyExc_UVError = PyErr_NewException("pyuv.UVError", NULL, NULL);
+    PyExc_UVError = PyErr_NewException("pyuv.error.UVError", NULL, NULL);
     __PyModule_AddType(error, "UVError", (PyTypeObject *)PyExc_UVError);
-    PyExc_AsyncError = PyErr_NewException("pyuv.AsyncError", PyExc_UVError, NULL);
+    PyExc_AsyncError = PyErr_NewException("pyuv.error.AsyncError", PyExc_UVError, NULL);
     __PyModule_AddType(error, "AsyncError", (PyTypeObject *)PyExc_AsyncError);
-    PyExc_TimerError = PyErr_NewException("pyuv.TimerError", PyExc_UVError, NULL);
+    PyExc_TimerError = PyErr_NewException("pyuv.error.TimerError", PyExc_UVError, NULL);
     __PyModule_AddType(error, "TimerError", (PyTypeObject *)PyExc_TimerError);
-    PyExc_TCPConnectionError = PyErr_NewException("pyuv.TCPConnectionError", PyExc_UVError, NULL);
+    PyExc_TCPConnectionError = PyErr_NewException("pyuv.error.TCPConnectionError", PyExc_UVError, NULL);
     __PyModule_AddType(error, "TCPConnectionError", (PyTypeObject *)PyExc_TCPConnectionError);
-    PyExc_TCPServerError = PyErr_NewException("pyuv.TCPServerError", PyExc_UVError, NULL);
+    PyExc_TCPServerError = PyErr_NewException("pyuv.error.TCPServerError", PyExc_UVError, NULL);
     __PyModule_AddType(error, "TCPServerError", (PyTypeObject *)PyExc_TCPServerError);
-    PyExc_UDPServerError = PyErr_NewException("pyuv.UDPServerError", PyExc_UVError, NULL);
+    PyExc_UDPServerError = PyErr_NewException("pyuv.error.UDPServerError", PyExc_UVError, NULL);
     __PyModule_AddType(error, "UDPServerError", (PyTypeObject *)PyExc_UDPServerError);
     PyExc_DNSError = PyErr_NewException("pyuv.error.DNSError", NULL, NULL);
     __PyModule_AddType(error, "DNSError", (PyTypeObject *)PyExc_DNSError);
