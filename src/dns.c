@@ -9,7 +9,7 @@ typedef struct {
 
 
 static void
-gethostbyname_cb(void *arg, int status, int timeouts, struct hostent *hostent)
+host_cb(void *arg, int status, int timeouts, struct hostent *hostent)
 {
     PyGILState_STATE gstate = PyGILState_Ensure();
     ASSERT(arg);
@@ -124,7 +124,7 @@ DNSResolver_func_gethostbyname(DNSResolver *self, PyObject *args, PyObject *kwar
     cb_data->resolver = self;
     cb_data->cb = callback;
 
-    ares_gethostbyname(self->channel, name, family, &gethostbyname_cb, (void *)cb_data);
+    ares_gethostbyname(self->channel, name, family, &host_cb, (void *)cb_data);
 
     Py_RETURN_NONE;
 }
@@ -175,7 +175,7 @@ DNSResolver_func_gethostbyaddr(DNSResolver *self, PyObject *args, PyObject *kwar
     cb_data->resolver = self;
     cb_data->cb = callback;
 
-    ares_gethostbyaddr(self->channel, address, length, family, &gethostbyname_cb, (void *)cb_data);
+    ares_gethostbyaddr(self->channel, address, length, family, &host_cb, (void *)cb_data);
 
     Py_RETURN_NONE;
 }
