@@ -15,7 +15,7 @@ __version__ = "0.0.0"
 class pyuv_build_ext(build_ext):
     libuv_repo = 'https://github.com/joyent/libuv.git'
     libuv_revision = '8f617b93bcb3e4b54fd4fa33883b14bad014dfc0'
-    libuv_patches = ['patches/use_lib_prefix.patch']
+    libuv_patches = []
 
     @staticmethod
     def exec_process(cmdline, silent=True, input=None, **kwargs):
@@ -42,8 +42,8 @@ class pyuv_build_ext(build_ext):
         self.get_libuv()
         self.include_dirs.append(os.path.join(self.libuv_dir, 'include'))
         self.library_dirs.append(self.libuv_dir)
-        self.libraries.append(os.path.join(self.libuv_dir, 'uv'))
         self.libraries.append('rt')
+        self.extensions[0].extra_objects = [os.path.join(self.libuv_dir, 'uv.a')]
 
     def get_libuv(self):
         self.libuv_dir = os.path.join(self.build_temp, 'libuv')
@@ -61,7 +61,7 @@ class pyuv_build_ext(build_ext):
             env = os.environ.copy()
             env['CFLAGS'] = ' '.join(x for x in (cflags, env.get('CFLAGS', None)) if x)
             log.info('Building libuv...')
-            self.exec_process(['make', 'libuv.a'], cwd=self.libuv_dir, env=env)
+            self.exec_process(['make', 'uv.a'], cwd=self.libuv_dir, env=env)
         def update_libuv():
             shutil.rmtree(self.libuv_dir)
             download_libuv()
@@ -72,7 +72,7 @@ class pyuv_build_ext(build_ext):
             patch_libuv()
             build_libuv()
         else:
-            if not os.path.exists(os.path.join(self.libuv_dir, 'libuv.a')):
+            if not os.path.exists(os.path.join(self.libuv_dir, 'uv.a')):
                 log.info('libuv needs to be compiled.')
                 update_libuv()
             else:
