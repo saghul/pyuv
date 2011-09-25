@@ -43,7 +43,7 @@ host_cb(void *arg, int status, int timeouts, struct hostent *hostent)
     if (!(dns_status && dns_timeouts && dns_name && dns_aliases && dns_result)) {
         PyErr_NoMemory();
         PyErr_WriteUnraisable(callback);
-        goto gethostbyname_end;
+        goto host_end;
     }
 
     if (hostent != NULL) {
@@ -60,7 +60,6 @@ host_cb(void *arg, int status, int timeouts, struct hostent *hostent)
                 }
             }
         }
-
         for (ptr = hostent->h_addr_list; *ptr != NULL; ptr++) {
             if (hostent->h_addrtype == AF_INET) {
                 inet_ntop(AF_INET, *ptr, ip4, INET_ADDRSTRLEN);
@@ -86,7 +85,7 @@ host_cb(void *arg, int status, int timeouts, struct hostent *hostent)
     }
     Py_XDECREF(result);
 
-gethostbyname_end:
+host_end:
 
     Py_DECREF(callback);
     PyMem_Free(data);
