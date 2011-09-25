@@ -5,9 +5,7 @@
 
 - TCP and UDP client support
 
-- DNS resolution module with c-ares and helpers provided by libuv
+- Support for using custom nameservers
 
 - FS module with all filesystem related functions from libuv
-
-- Ability to destroy a loop
 
