@@ -114,6 +114,22 @@ initpyuv(void)
     PyModule_AddIntMacro(pyuv, AF_INET);
     PyModule_AddIntMacro(pyuv, AF_INET6);
 
+    PyModule_AddIntMacro(pyuv, ARES_NI_NOFQDN);
+    PyModule_AddIntMacro(pyuv, ARES_NI_NUMERICHOST);
+    PyModule_AddIntMacro(pyuv, ARES_NI_NAMEREQD);
+    PyModule_AddIntMacro(pyuv, ARES_NI_NUMERICSERV);
+    PyModule_AddIntMacro(pyuv, ARES_NI_DGRAM);
+    PyModule_AddIntMacro(pyuv, ARES_NI_TCP);
+    PyModule_AddIntMacro(pyuv, ARES_NI_UDP);
+    PyModule_AddIntMacro(pyuv, ARES_NI_SCTP);
+    PyModule_AddIntMacro(pyuv, ARES_NI_DCCP);
+    PyModule_AddIntMacro(pyuv, ARES_NI_NUMERICSCOPE);
+    PyModule_AddIntMacro(pyuv, ARES_NI_LOOKUPHOST);
+    PyModule_AddIntMacro(pyuv, ARES_NI_LOOKUPSERVICE);
+    PyModule_AddIntMacro(pyuv, ARES_NI_IDN);
+    PyModule_AddIntMacro(pyuv, ARES_NI_IDN_ALLOW_UNASSIGNED);
+    PyModule_AddIntMacro(pyuv, ARES_NI_IDN_USE_STD3_ASCII_RULES);
+
     /* Types */
     __PyModule_AddType(pyuv, "Loop", &LoopType);
     __PyModule_AddType(pyuv, "Async", &AsyncType);

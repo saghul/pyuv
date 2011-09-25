@@ -96,6 +96,58 @@ gethostbyname_end:
 }
 
 
+static void
+nameinfo_cb(void *arg, int status, int timeouts, char *node, char *service)
+{
+    PyGILState_STATE gstate = PyGILState_Ensure();
+    ASSERT(arg);
+
+    ares_cb_data_t *data = (ares_cb_data_t*)arg;
+    DNSResolver *self = data->resolver;
+    PyObject *callback = data->cb;
+    ASSERT(self);
+    /* Object could go out of scope in the callback, increase refcount to avoid it */
+    Py_INCREF(self);
+
+    PyObject *dns_status = PyLong_FromLong((long) status);
+    PyObject *dns_timeouts = PyLong_FromLong((long) timeouts);
+    PyObject *dns_node;
+    if (node) {
+        dns_node = PyBytes_FromString(node);
+    } else {
+        Py_INCREF(Py_None);
+        dns_node = Py_None;
+    }
+    PyObject *dns_service;
+    if (service) {
+        dns_service = PyBytes_FromString(service);
+    } else {
+        Py_INCREF(Py_None);
+        dns_service = Py_None;
+    }
+
+    if (!(dns_status && dns_timeouts && dns_node && dns_service)) {
+        PyErr_NoMemory();
+        PyErr_WriteUnraisable(callback);
+        goto nameinfo_end;
+    }
+
+    PyObject *result = PyObject_CallFunctionObjArgs(callback, self, dns_status, dns_timeouts, dns_node, dns_service, NULL);
+    if (result == NULL) {
+        PyErr_WriteUnraisable(callback);
+    }
+    Py_XDECREF(result);
+
+nameinfo_end:
+
+    Py_DECREF(callback);
+    PyMem_Free(data);
+
+    Py_DECREF(self);
+    PyGILState_Release(gstate);
+}
+
+
 static PyObject *
 DNSResolver_func_gethostbyname(DNSResolver *self, PyObject *args, PyObject *kwargs)
 {
@@ -177,6 +229,64 @@ DNSResolver_func_gethostbyaddr(DNSResolver *self, PyObject *args, PyObject *kwar
 
     ares_gethostbyaddr(self->channel, address, length, family, &host_cb, (void *)cb_data);
 
+    Py_RETURN_NONE;
+}
+
+
+static PyObject *
+DNSResolver_func_getnameinfo(DNSResolver *self, PyObject *args, PyObject *kwargs)
+{
+    PyObject *callback;
+    ares_cb_data_t *cb_data;
+    struct in_addr addr4;
+    struct in6_addr addr6;
+    struct sockaddr *sa;
+    struct sockaddr_in sa4;
+    struct sockaddr_in6 sa6;
+    char *name;
+    int port;
+    int flags;
+    int length;
+
+    static char *kwlist[] = {"callback", "name", "port", "flags", NULL};
+
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "Osii:getnameinfo", kwlist, &callback, &name, &port, &flags)) {
+        return NULL;
+    }
+
+    if (!PyCallable_Check(callback)) {
+        PyErr_SetString(PyExc_TypeError, "a callable is required");
+        return NULL;
+    }
+
+    if (port < 0 || port > 65536) {
+        PyErr_SetString(PyExc_ValueError, "port must be between 0 and 65536");
+        return NULL;
+    }
+
+    if (inet_pton(AF_INET, name, &addr4) == 1) {
+        sa4 = uv_ip4_addr(name, port);
+        sa = (struct sockaddr *)&sa4;
+        length = sizeof(struct sockaddr_in);
+    } else if (inet_pton(AF_INET6, name, &addr6) == 1) {
+        sa6 = uv_ip6_addr(name, port);
+        sa = (struct sockaddr *)&sa6;
+        length = sizeof(struct sockaddr_in6);
+    } else {
+        PyErr_SetString(PyExc_ValueError, "invalid IP address");
+        return NULL;
+    }
+
+    cb_data = (ares_cb_data_t*) PyMem_Malloc(sizeof *cb_data);
+    if (!cb_data) {
+        return PyErr_NoMemory();
+    }
+
+    Py_INCREF(callback);
+    cb_data->resolver = self;
+    cb_data->cb = callback;
+
+    ares_getnameinfo(self->channel, sa, length, flags, &nameinfo_cb, (void *)cb_data);
     Py_RETURN_NONE;
 }
 
@@ -279,6 +389,7 @@ static PyMethodDef
 DNSResolver_tp_methods[] = {
     { "gethostbyname", (PyCFunction)DNSResolver_func_gethostbyname, METH_VARARGS|METH_KEYWORDS, "Gethostbyname" },
     { "gethostbyaddr", (PyCFunction)DNSResolver_func_gethostbyaddr, METH_VARARGS|METH_KEYWORDS, "Gethostbyaddr" },
+    { "getnameinfo", (PyCFunction)DNSResolver_func_getnameinfo, METH_VARARGS|METH_KEYWORDS, "Getnameinfo" },
     { NULL }
 };
 
