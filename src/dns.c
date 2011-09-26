@@ -290,19 +290,122 @@ DNSResolver_func_getnameinfo(DNSResolver *self, PyObject *args, PyObject *kwargs
 }
 
 
+static int
+set_dns_servers(DNSResolver *self, PyObject *value)
+{
+    struct ares_addr_node *servers;
+    char *server;
+    int i;
+    int length;
+    int ret = 0;
+
+    PyObject *server_list = value;
+    PyObject *item;
+
+    if (!PyList_Check(server_list)) {
+        PyErr_SetString(PyExc_TypeError, "servers argument must be a list");
+	return -1;
+    }
+
+    length = PyList_Size(server_list);
+    servers = PyMem_Malloc(sizeof(struct ares_addr_node) * length);
+
+    for (i = 0; i < length; i++) {
+        item = PyList_GetItem(server_list, i);
+        if (!item) {
+            ret = -1;
+            goto servers_set_end;
+        }
+
+        server = PyString_AsString(item);
+        if (!server) {
+            ret = -1;
+            goto servers_set_end;
+        }
+
+        if (inet_pton(AF_INET, server, &servers[i].addr.addr4) == 1) {
+            servers[i].family = AF_INET;
+        } else if (inet_pton(AF_INET6, server, &servers[i].addr.addr6) == 1) {
+            servers[i].family = AF_INET6;
+        } else {
+            PyErr_SetString(PyExc_ValueError, "invalid IP address");
+            ret = -1;
+            goto servers_set_end;
+        }
+
+        if (i > 0) {
+            servers[i-1].next = &servers[i];
+        }
+    }
+
+    if (length > 0) {
+        servers[length-1].next = NULL;
+    } else {
+        servers = NULL;
+    }
+
+    int r = ares_set_servers(self->channel, servers);
+    if (r != 0) {
+        PyErr_SetString(PyExc_DNSError, "error c-ares library options");
+        ret = -1;
+    }
+
+servers_set_end:
+
+    PyMem_Free(servers);
+    return ret;
+}
+
+
 static PyObject *
 DNSResolver_servers_get(DNSResolver *self, void *closure)
 {
-    // TODO
-    Py_RETURN_NONE;
+    char ip4[INET_ADDRSTRLEN];
+    char ip6[INET6_ADDRSTRLEN];
+    struct ares_addr_node *server;
+    struct ares_addr_node *servers;
+
+    PyObject *server_list;
+    PyObject *tmp;
+
+    server_list = PyList_New(0);
+    if (!server_list) {
+        PyErr_NoMemory();
+        return NULL;
+    }
+
+    int r = ares_get_servers(self->channel, &servers);
+    if (r != 0) {
+        PyErr_SetString(PyExc_DNSError, "error getting c-ares nameservers");
+        return NULL;
+    }
+
+    for (server = servers; server != NULL; server = server->next) {
+        if (server->family == AF_INET) {
+            inet_ntop(AF_INET, &(server->addr.addr4), ip4, INET_ADDRSTRLEN);
+            tmp = PyBytes_FromString(ip4);
+        } else {
+            inet_ntop(AF_INET6, &(server->addr.addr6), ip6, INET6_ADDRSTRLEN);
+            tmp = PyBytes_FromString(ip6);
+        }
+        if (tmp == NULL) {
+            break;
+        }
+        r = PyList_Append(server_list, tmp);
+        Py_DECREF(tmp);
+        if (r != 0) {
+            break;
+        }
+    }
+
+    return server_list;
 }
 
 
 static int
 DNSResolver_servers_set(DNSResolver *self, PyObject *value, void *closure)
 {
-    // TODO
-    return 0;
+    return set_dns_servers(self, value);
 }
 
 
@@ -324,8 +427,6 @@ DNSResolver_tp_init(DNSResolver *self, PyObject *args, PyObject *kwargs)
     self->loop = loop;
     Py_XDECREF(tmp);
 
-    // TODO implement use of servers list
-    
     int r = ares_library_init(ARES_LIB_INIT_ALL);
     if (r != 0) {
         PyErr_SetString(PyExc_DNSError, "error initializing c-ares library");
@@ -342,6 +443,10 @@ DNSResolver_tp_init(DNSResolver *self, PyObject *args, PyObject *kwargs)
     if (r) {
         PyErr_SetString(PyExc_DNSError, "error c-ares library options");
         return -1;
+    }
+
+    if (servers) {
+        return set_dns_servers(self, servers);
     }
 
     return 0;

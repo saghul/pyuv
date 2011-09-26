@@ -5,7 +5,5 @@
 
 - TCP and UDP client support
 
-- Support for using custom nameservers
-
 - FS module with all filesystem related functions from libuv
 
