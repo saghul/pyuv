@@ -312,11 +312,11 @@ DNSResolver_func_gethostbyaddr(DNSResolver *self, PyObject *args, PyObject *kwar
 
     if (inet_pton(AF_INET, name, &addr4) == 1) {
         family = AF_INET;
-        length = 4;
+        length = sizeof(struct in_addr);
         address = (void *)&addr4;
     } else if (inet_pton(AF_INET6, name, &addr6) == 1) {
         family = AF_INET6;
-        length = 16;
+        length = sizeof(struct in6_addr);
         address = (void *)&addr6;
     } else {
         PyErr_SetString(PyExc_ValueError, "invalid IP address");
