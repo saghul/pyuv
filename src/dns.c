@@ -402,13 +402,17 @@ DNSResolver_func_getaddrinfo(DNSResolver *self, PyObject *args, PyObject *kwargs
     PyObject *callback;
     char *name;
     char port_str[6];
-    int port;
+    int port, family, socktype, protocol, flags;
+    struct addrinfo hints;
     ares_cb_data_t *cb_data;
     uv_getaddrinfo_t* handle;
 
-    static char *kwlist[] = {"callback", "name", "port", NULL};
+    socktype = protocol = flags = 0;
+    family = AF_UNSPEC;
 
-    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "Osi:getaddrinfo", kwlist, &callback, &name, &port)) {
+    static char *kwlist[] = {"callback", "name", "port", "family", "socktype", "protocol", "flags", NULL};
+
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "Osi|iiii:getaddrinfo", kwlist, &callback, &name, &port, &family, &socktype, &protocol, &flags)) {
         return NULL;
     }
 
@@ -439,8 +443,13 @@ DNSResolver_func_getaddrinfo(DNSResolver *self, PyObject *args, PyObject *kwargs
     cb_data->cb = callback;
     handle->data = (void *)cb_data;
 
-    // TODO allow passing family, socktype, protocol and flags
-    int r = uv_getaddrinfo(SELF_LOOP, handle, &getaddrinfo_cb, name, port_str, NULL);
+    memset(&hints, 0, sizeof(hints));
+    hints.ai_family = family;
+    hints.ai_socktype = socktype;
+    hints.ai_protocol = protocol;
+    hints.ai_flags = flags;
+
+    int r = uv_getaddrinfo(SELF_LOOP, handle, &getaddrinfo_cb, name, port_str, &hints);
     if (r) {
         RAISE_ERROR(SELF_LOOP, PyExc_DNSError, NULL);
     }
