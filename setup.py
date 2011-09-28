@@ -15,7 +15,7 @@ __version__ = "0.0.0"
 class pyuv_build_ext(build_ext):
     libuv_repo = 'https://github.com/joyent/libuv.git'
     libuv_revision = '10c5293cae2ae11cbf05ed5bd316ad4ae4518233'
-    libuv_patches = []
+    libuv_patches = ['patches/memcpy_fix.patch']
 
     @staticmethod
     def exec_process(cmdline, silent=True, input=None, **kwargs):
