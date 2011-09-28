@@ -147,6 +147,112 @@ nameinfo_end:
 }
 
 
+/* Modified from Python Modules/socketmodule.c */
+static PyObject *
+makesockaddr(struct sockaddr *addr, int addrlen)
+{
+    struct sockaddr_in *addr4;
+    struct sockaddr_in6 *addr6;
+    char ip4[INET_ADDRSTRLEN];
+    char ip6[INET6_ADDRSTRLEN];
+    int r = 0;
+
+    if (addrlen == 0) {
+        /* No address */
+        Py_INCREF(Py_None);
+        return Py_None;
+    }
+
+    switch (addr->sa_family) {
+    case AF_INET:
+    {
+        addr4 = (struct sockaddr_in*)addr;
+        r = uv_ip4_name(addr4, ip4, INET_ADDRSTRLEN);
+        ASSERT(r == 0);
+        return Py_BuildValue("si", ip4, ntohs(addr4->sin_port));
+    }
+
+    case AF_INET6:
+    {
+        addr6 = (struct sockaddr_in6*)addr;
+        r = uv_ip6_name(addr6, ip6, INET6_ADDRSTRLEN);
+        ASSERT(r == 0);
+        return Py_BuildValue("siii", ip6, ntohs(addr6->sin6_port), addr6->sin6_flowinfo, addr6->sin6_scope_id);
+    }
+
+    default:
+        /* If we don't know the address family, don't raise an exception -- return it as a tuple. */
+        return Py_BuildValue("is#", addr->sa_family, addr->sa_data, sizeof(addr->sa_data));
+    }
+}
+
+
+static void
+getaddrinfo_cb(uv_getaddrinfo_t* handle, int status, struct addrinfo* res)
+{
+    struct addrinfo *ptr;
+    PyObject *addr;
+    PyObject *item;
+
+    PyGILState_STATE gstate = PyGILState_Ensure();
+    ASSERT(handle);
+
+    ares_cb_data_t *data = (ares_cb_data_t*)(handle->data);
+    DNSResolver *self = data->resolver;
+    PyObject *callback = data->cb;
+    ASSERT(self);
+    /* Object could go out of scope in the callback, increase refcount to avoid it */
+    Py_INCREF(self);
+
+    PyObject *dns_status = PyLong_FromLong((long) status);
+    PyObject *dns_result = PyList_New(0);
+    if (!(dns_status && dns_result)) {
+        PyErr_NoMemory();
+        PyErr_WriteUnraisable(callback);
+        goto getaddrinfo_end;
+    }
+
+    for (ptr = res; ptr; ptr = ptr->ai_next) {
+        addr = makesockaddr(ptr->ai_addr, ptr->ai_addrlen);
+        if (!addr) {
+            PyErr_NoMemory();
+            PyErr_WriteUnraisable(callback);
+            goto getaddrinfo_end;
+        }
+
+        item = Py_BuildValue("iiisO", ptr->ai_family, ptr->ai_socktype, ptr->ai_protocol, ptr->ai_canonname ? ptr->ai_canonname : "", addr);
+        Py_DECREF(addr);
+        if (!item) {
+            PyErr_NoMemory();
+            PyErr_WriteUnraisable(callback);
+            goto getaddrinfo_end;
+        }
+
+        if (PyList_Append(dns_result, item)) {
+            goto getaddrinfo_end;
+        }
+        Py_DECREF(item);
+    }
+
+    PyObject *result = PyObject_CallFunctionObjArgs(callback, self, dns_status, dns_result, NULL);
+    if (result == NULL) {
+        PyErr_WriteUnraisable(callback);
+    }
+    Py_XDECREF(result);
+
+getaddrinfo_end:
+
+    Py_DECREF(callback);
+    uv_freeaddrinfo(res);
+    handle->data = NULL;
+    PyMem_Free(handle);
+    PyMem_Free(data);
+
+    Py_DECREF(self);
+    PyGILState_Release(gstate);
+}
+
+
 static PyObject *
 DNSResolver_func_gethostbyname(DNSResolver *self, PyObject *args, PyObject *kwargs)
 {
@@ -286,6 +392,58 @@ DNSResolver_func_getnameinfo(DNSResolver *self, PyObject *args, PyObject *kwargs
     cb_data->cb = callback;
 
     ares_getnameinfo(self->channel, sa, length, flags, &nameinfo_cb, (void *)cb_data);
+    Py_RETURN_NONE;
+}
+
+
+static PyObject *
+DNSResolver_func_getaddrinfo(DNSResolver *self, PyObject *args, PyObject *kwargs)
+{
+    PyObject *callback;
+    char *name;
+    char port_str[6];
+    int port;
+    ares_cb_data_t *cb_data;
+    uv_getaddrinfo_t* handle;
+
+    static char *kwlist[] = {"callback", "name", "port", NULL};
+
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "Osi:getaddrinfo", kwlist, &callback, &name, &port)) {
+        return NULL;
+    }
+
+    if (!PyCallable_Check(callback)) {
+        PyErr_SetString(PyExc_TypeError, "a callable is required");
+        return NULL;
+    }
+
+    if (port < 0 || port > 65536) {
+        PyErr_SetString(PyExc_ValueError, "port must be between 0 and 65536");
+        return NULL;
+    }
+    snprintf(port_str, sizeof(port_str), "%d", port);
+
+    handle = PyMem_Malloc(sizeof(uv_getaddrinfo_t));
+    if (!handle) {
+        PyErr_NoMemory();
+        return NULL;
+    }
+
+    cb_data = (ares_cb_data_t*) PyMem_Malloc(sizeof *cb_data);
+    if (!cb_data) {
+        return PyErr_NoMemory();
+    }
+
+    Py_INCREF(callback);
+    cb_data->resolver = self;
+    cb_data->cb = callback;
+    handle->data = (void *)cb_data;
+
+    // TODO allow passing family, socktype, protocol and flags
+    int r = uv_getaddrinfo(SELF_LOOP, handle, &getaddrinfo_cb, name, port_str, NULL);
+    if (r) {
+        RAISE_ERROR(SELF_LOOP, PyExc_DNSError, NULL);
+    }
     Py_RETURN_NONE;
 }
 
@@ -494,6 +652,7 @@ DNSResolver_tp_methods[] = {
     { "gethostbyname", (PyCFunction)DNSResolver_func_gethostbyname, METH_VARARGS|METH_KEYWORDS, "Gethostbyname" },
     { "gethostbyaddr", (PyCFunction)DNSResolver_func_gethostbyaddr, METH_VARARGS|METH_KEYWORDS, "Gethostbyaddr" },
     { "getnameinfo", (PyCFunction)DNSResolver_func_getnameinfo, METH_VARARGS|METH_KEYWORDS, "Getnameinfo" },
+    { "getaddrinfo", (PyCFunction)DNSResolver_func_getaddrinfo, METH_VARARGS|METH_KEYWORDS, "Getaddrinfo" },
     { NULL }
 };
 
