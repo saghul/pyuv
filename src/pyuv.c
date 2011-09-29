@@ -111,9 +111,6 @@ initpyuv(void)
     __PyModule_AddObject(pyuv, "error", error);
 
     /* Macros */
-    PyModule_AddIntMacro(pyuv, AF_INET);
-    PyModule_AddIntMacro(pyuv, AF_INET6);
-
     PyModule_AddIntMacro(pyuv, ARES_NI_NOFQDN);
     PyModule_AddIntMacro(pyuv, ARES_NI_NUMERICHOST);
     PyModule_AddIntMacro(pyuv, ARES_NI_NAMEREQD);
