@@ -9,14 +9,18 @@
 #include "tcp.c"
 #include "udp.c"
 #include "dns.c"
+#include "threadpool.c"
 
 
 static PyObject* PyExc_UVError;
 
 /* Module */
-PyMODINIT_FUNC
-initpyuv(void)
+static PyObject*
+initialize_module(void)
 {
+    /* Initialize GIL */
+    PyEval_InitThreads();
+
     /* Main module */
     PyObject *pyuv = Py_InitModule("pyuv", NULL);
 
@@ -107,6 +111,8 @@ initpyuv(void)
     __PyModule_AddType(error, "UDPServerError", (PyTypeObject *)PyExc_UDPServerError);
     PyExc_DNSError = PyErr_NewException("pyuv.error.DNSError", NULL, NULL);
     __PyModule_AddType(error, "DNSError", (PyTypeObject *)PyExc_DNSError);
+    PyExc_ThreadPoolError = PyErr_NewException("pyuv.error.ThreadPoolError", NULL, NULL);
+    __PyModule_AddType(error, "ThreadPoolError", (PyTypeObject *)PyExc_ThreadPoolError);
 
     __PyModule_AddObject(pyuv, "error", error);
 
@@ -135,9 +141,18 @@ initpyuv(void)
     __PyModule_AddType(pyuv, "TCPServer", &TCPServerType);
     __PyModule_AddType(pyuv, "UDPServer", &UDPServerType);
     __PyModule_AddType(pyuv, "DNSResolver", &DNSResolverType);
+    __PyModule_AddType(pyuv, "ThreadPool", &ThreadPoolType);
 
     /* Module version (the MODULE_VERSION macro is defined by setup.py) */
     PyModule_AddStringConstant(pyuv, "__version__", __MSTR(MODULE_VERSION));
+
+    return pyuv;
+}
+
+void
+initpyuv(void)
+{
+    initialize_module();
 }
 
 
