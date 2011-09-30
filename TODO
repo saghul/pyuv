@@ -1,9 +1,19 @@
-- Evaluate if allocating memory from the Python heap would reduce performance
-- What about the mallocs libuv may do on its own?
+- Evaluate if allocating memory from the Python heap reduces performance
 
-- Something feels weird about timer stop / destroy
+- What about the mallocs libuv does on its own?
+
+- Implement stop / close functions in watchers, instead of 'destroy'
 
 - TCP and UDP client support
 
 - FS module with all filesystem related functions from libuv
+
+- Review Python reference counting in cases where errors are produced
+
+- Add support for named pipes
+
+- Add support for spawning child processes
+
+- Add support for signals (and ensure they are handled in the proper thread)
+
 
