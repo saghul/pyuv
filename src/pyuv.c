@@ -111,7 +111,7 @@ initialize_module(void)
     __PyModule_AddType(error, "UDPServerError", (PyTypeObject *)PyExc_UDPServerError);
     PyExc_DNSError = PyErr_NewException("pyuv.error.DNSError", NULL, NULL);
     __PyModule_AddType(error, "DNSError", (PyTypeObject *)PyExc_DNSError);
-    PyExc_ThreadPoolError = PyErr_NewException("pyuv.error.ThreadPoolError", NULL, NULL);
+    PyExc_ThreadPoolError = PyErr_NewException("pyuv.error.ThreadPoolError", PyExc_UVError, NULL);
     __PyModule_AddType(error, "ThreadPoolError", (PyTypeObject *)PyExc_ThreadPoolError);
 
     __PyModule_AddObject(pyuv, "error", error);
