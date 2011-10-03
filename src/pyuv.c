@@ -10,6 +10,7 @@
 #include "udp.c"
 #include "dns.c"
 #include "threadpool.c"
+#include "fs.c"
 
 
 static PyObject* PyExc_UVError;
@@ -26,6 +27,7 @@ initialize_module(void)
 
     /* Error submodule */
     PyObject *error = Py_InitModule("pyuv.error", NULL);
+    __PyModule_AddObject(pyuv, "error", error);
 
     PyModule_AddIntMacro(error, UV_UNKNOWN);
     PyModule_AddIntMacro(error, UV_OK);
@@ -59,6 +61,7 @@ initialize_module(void)
     PyModule_AddIntMacro(error, UV_ENOTCONN);
     PyModule_AddIntMacro(error, UV_ENOTSOCK);
     PyModule_AddIntMacro(error, UV_ENOTSUP);
+    PyModule_AddIntMacro(error, UV_ENOENT);
     PyModule_AddIntMacro(error, UV_EPIPE);
     PyModule_AddIntMacro(error, UV_EPROTO);
     PyModule_AddIntMacro(error, UV_EPROTONOSUPPORT);
@@ -70,6 +73,7 @@ initialize_module(void)
     PyModule_AddIntMacro(error, UV_EAISERVICE);
     PyModule_AddIntMacro(error, UV_EAISOCKTYPE);
     PyModule_AddIntMacro(error, UV_ESHUTDOWN);
+    PyModule_AddIntMacro(error, UV_EEXIST);
 
     PyModule_AddIntMacro(error, ARES_SUCCESS);
     PyModule_AddIntMacro(error, ARES_ENODATA);
@@ -113,8 +117,12 @@ initialize_module(void)
     __PyModule_AddType(error, "DNSError", (PyTypeObject *)PyExc_DNSError);
     PyExc_ThreadPoolError = PyErr_NewException("pyuv.error.ThreadPoolError", PyExc_UVError, NULL);
     __PyModule_AddType(error, "ThreadPoolError", (PyTypeObject *)PyExc_ThreadPoolError);
+    PyExc_FSError = PyErr_NewException("pyuv.error.FSError", PyExc_UVError, NULL);
+    __PyModule_AddType(error, "FSError", (PyTypeObject *)PyExc_FSError);
 
-    __PyModule_AddObject(pyuv, "error", error);
+    /* FS module */
+    PyObject *fs = Py_InitModule("pyuv.fs", FS_methods);
+    __PyModule_AddObject(pyuv, "fs", fs);
 
     /* Macros */
     PyModule_AddIntMacro(pyuv, ARES_NI_NOFQDN);
