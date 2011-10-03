@@ -25,7 +25,7 @@ initialize_module(void)
     /* Main module */
     PyObject *pyuv = Py_InitModule("pyuv", NULL);
 
-    /* Error submodule */
+    /* Error module */
     PyObject *error = Py_InitModule("pyuv.error", NULL);
     __PyModule_AddObject(pyuv, "error", error);
 
@@ -120,26 +120,31 @@ initialize_module(void)
     PyExc_FSError = PyErr_NewException("pyuv.error.FSError", PyExc_UVError, NULL);
     __PyModule_AddType(error, "FSError", (PyTypeObject *)PyExc_FSError);
 
+    /* DNS module */
+    PyObject *dns = Py_InitModule("pyuv.dns", NULL);
+    __PyModule_AddObject(pyuv, "dns", dns);
+
     /* FS module */
     PyObject *fs = Py_InitModule("pyuv.fs", FS_methods);
     __PyModule_AddObject(pyuv, "fs", fs);
 
-    /* Macros */
-    PyModule_AddIntMacro(pyuv, ARES_NI_NOFQDN);
-    PyModule_AddIntMacro(pyuv, ARES_NI_NUMERICHOST);
-    PyModule_AddIntMacro(pyuv, ARES_NI_NAMEREQD);
-    PyModule_AddIntMacro(pyuv, ARES_NI_NUMERICSERV);
-    PyModule_AddIntMacro(pyuv, ARES_NI_DGRAM);
-    PyModule_AddIntMacro(pyuv, ARES_NI_TCP);
-    PyModule_AddIntMacro(pyuv, ARES_NI_UDP);
-    PyModule_AddIntMacro(pyuv, ARES_NI_SCTP);
-    PyModule_AddIntMacro(pyuv, ARES_NI_DCCP);
-    PyModule_AddIntMacro(pyuv, ARES_NI_NUMERICSCOPE);
-    PyModule_AddIntMacro(pyuv, ARES_NI_LOOKUPHOST);
-    PyModule_AddIntMacro(pyuv, ARES_NI_LOOKUPSERVICE);
-    PyModule_AddIntMacro(pyuv, ARES_NI_IDN);
-    PyModule_AddIntMacro(pyuv, ARES_NI_IDN_ALLOW_UNASSIGNED);
-    PyModule_AddIntMacro(pyuv, ARES_NI_IDN_USE_STD3_ASCII_RULES);
+    PyModule_AddIntMacro(dns, ARES_NI_NOFQDN);
+    PyModule_AddIntMacro(dns, ARES_NI_NUMERICHOST);
+    PyModule_AddIntMacro(dns, ARES_NI_NAMEREQD);
+    PyModule_AddIntMacro(dns, ARES_NI_NUMERICSERV);
+    PyModule_AddIntMacro(dns, ARES_NI_DGRAM);
+    PyModule_AddIntMacro(dns, ARES_NI_TCP);
+    PyModule_AddIntMacro(dns, ARES_NI_UDP);
+    PyModule_AddIntMacro(dns, ARES_NI_SCTP);
+    PyModule_AddIntMacro(dns, ARES_NI_DCCP);
+    PyModule_AddIntMacro(dns, ARES_NI_NUMERICSCOPE);
+    PyModule_AddIntMacro(dns, ARES_NI_LOOKUPHOST);
+    PyModule_AddIntMacro(dns, ARES_NI_LOOKUPSERVICE);
+    PyModule_AddIntMacro(dns, ARES_NI_IDN);
+    PyModule_AddIntMacro(dns, ARES_NI_IDN_ALLOW_UNASSIGNED);
+    PyModule_AddIntMacro(dns, ARES_NI_IDN_USE_STD3_ASCII_RULES);
+
+    __PyModule_AddType(dns, "DNSResolver", &DNSResolverType);
 
     /* Types */
     __PyModule_AddType(pyuv, "Loop", &LoopType);
@@ -148,7 +153,6 @@ initialize_module(void)
     __PyModule_AddType(pyuv, "TCPConnection", &TCPConnectionType);
     __PyModule_AddType(pyuv, "TCPServer", &TCPServerType);
     __PyModule_AddType(pyuv, "UDPServer", &UDPServerType);
-    __PyModule_AddType(pyuv, "DNSResolver", &DNSResolverType);
     __PyModule_AddType(pyuv, "ThreadPool", &ThreadPoolType);
 
     /* Module version (the MODULE_VERSION macro is defined by setup.py) */
