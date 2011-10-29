@@ -1,351 +1,10 @@
 
+static PyObject* PyExc_TCPClientError;
+static PyObject* PyExc_TCPClientConnectionError;
 static PyObject* PyExc_TCPServerError;
-static PyObject* PyExc_TCPConnectionError;
-
-
-typedef struct {
-    uv_write_t req;
-    uv_buf_t buf;
-    void *data;
-} tcp_write_req_t;
-
-
-/* TCPConnection */
-
-
-static uv_buf_t
-on_tcp_alloc(uv_tcp_t* handle, size_t suggested_size)
-{
-    PyGILState_STATE gstate = PyGILState_Ensure();
-    uv_buf_t buf;
-    buf.base = PyMem_Malloc(suggested_size);
-    buf.len = suggested_size;
-    PyGILState_Release(gstate);
-    return buf;
-}
-
-
-static void
-on_tcp_connection_closed(uv_handle_t *handle)
-{
-    PyGILState_STATE gstate = PyGILState_Ensure();
-    ASSERT(handle);
-    PyMem_Free(handle);
-    PyGILState_Release(gstate);
-}
-
-
-static void
-on_tcp_shutdown(uv_shutdown_t* req, int status)
-{
-    PyGILState_STATE gstate = PyGILState_Ensure();
-
-    TCPConnection *self = (TCPConnection *)((uv_handle_t*)req->handle->data);
-    ASSERT(self);
-    /* Object could go out of scope in the callback, increase refcount to avoid it */
-    Py_INCREF(self);
-
-    PyObject *result = PyObject_CallFunctionObjArgs(self->on_close_cb, self, NULL);
-    if (result == NULL) {
-        PyErr_WriteUnraisable(self->on_close_cb);
-    }
-    Py_XDECREF(result);
-
-    self->uv_stream->data = NULL;
-    uv_close((uv_handle_t*)req->handle, on_tcp_connection_closed);
-    self->uv_stream = NULL;
-    PyMem_Free(req);
-
-    Py_DECREF(self);
-    PyGILState_Release(gstate);
-}
-
-
-static void
-on_tcp_read(uv_tcp_t* handle, int nread, uv_buf_t buf)
-{
-    PyGILState_STATE gstate = PyGILState_Ensure();
-    ASSERT(handle);
-
-    TCPConnection *self = (TCPConnection *)(handle->data);
-    ASSERT(self);
-    /* Object could go out of scope in the callback, increase refcount to avoid it */
-    Py_INCREF(self);
-   
-    if (nread > 0) {
-        PyObject *data = PyString_FromStringAndSize(buf.base, nread);
-        PyObject *result;
-        result = PyObject_CallFunctionObjArgs(self->on_read_cb, self, data, NULL);
-        if (result == NULL) {
-            PyErr_WriteUnraisable(self->on_read_cb);
-        }
-        Py_XDECREF(result);
-    } else if (nread < 0) { 
-        uv_err_t err = uv_last_error(SERVER_LOOP);
-        ASSERT(err.code == UV_EOF);
-        UNUSED_ARG(err);
-        uv_shutdown_t* req = (uv_shutdown_t*) PyMem_Malloc(sizeof *req);
-        if (!req) {
-            PyErr_NoMemory();
-            PyErr_WriteUnraisable(self->on_read_cb);
-        } else {
-            uv_shutdown(req, (uv_stream_t *)handle, on_tcp_shutdown);
-        }
-    }
-    PyMem_Free(buf.base);
-
-    Py_DECREF(self);
-    PyGILState_Release(gstate);
-}
-
-
-static void
-on_tcp_write(uv_write_t* req, int status)
-{
-    PyGILState_STATE gstate = PyGILState_Ensure();
-    ASSERT(req);
-    ASSERT(status == 0);
-
-    tcp_write_req_t* wr = (tcp_write_req_t*) req;
-    TCPConnection *self = (TCPConnection *)(wr->data);
-    ASSERT(self);
-    /* Object could go out of scope in the callback, increase refcount to avoid it */
-    Py_INCREF(self);
-  
-    PyObject *result;
-    result = PyObject_CallFunctionObjArgs(self->on_write_cb, self, NULL);
-    if (result == NULL) {
-        PyErr_WriteUnraisable(self->on_read_cb);
-    }
-    Py_XDECREF(result);
-
-    wr->data = NULL;
-    PyMem_Free(wr);
-
-    Py_DECREF(self);
-    PyGILState_Release(gstate);
-}
-
-
-static void
-TCPConnection_start_read(TCPConnection *self)
-{
-    uv_read_start(self->uv_stream, (uv_alloc_cb)on_tcp_alloc, (uv_read_cb)on_tcp_read);
-}
-
-
-static PyObject *
-TCPConnection_func_close(TCPConnection *self)
-{
-    if (self->uv_stream) {
-        self->uv_stream->data = NULL;
-        uv_read_stop(self->uv_stream);
-        uv_close((uv_handle_t *)self->uv_stream, on_tcp_connection_closed);
-        self->uv_stream = NULL;
-    }
-    Py_RETURN_NONE;
-}
-
-
-static PyObject *
-TCPConnection_func_write(TCPConnection *self, PyObject *args)
-{
-    tcp_write_req_t *wr;
-    char *write_data;
-
-    if (!PyArg_ParseTuple(args, "s:write", &write_data)) {
-        return NULL;
-    }
-
-    wr = (tcp_write_req_t*) PyMem_Malloc(sizeof *wr);
-    if (!wr) {
-        return PyErr_NoMemory();
-    }
-    wr->buf.base = write_data;
-    wr->buf.len = strlen(write_data);
-    wr->data = (void *)self;
-
-    int r = uv_write(&wr->req, self->uv_stream, &wr->buf, 1, on_tcp_write);
-    if (r) {
-        wr->data = NULL;
-        RAISE_ERROR(SERVER_LOOP, PyExc_TCPConnectionError, NULL);
-    }
-
-    Py_RETURN_NONE;
-}
-
-
-static int
-TCPConnection_tp_init(TCPConnection *self, PyObject *args, PyObject *kwargs)
-{
-    PyObject *read_callback;
-    PyObject *write_callback;
-    PyObject *close_callback;
-    PyObject *tmp = NULL;
-    TCPServer *server;
-    uv_stream_t *uv_stream;
-
-    static char *kwlist[] = {"server", "read_cb", "write_cb", "close_cb", NULL};
-
-    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!OOO:__init__", kwlist, &TCPServerType, &server, &read_callback, &write_callback, &close_callback)) {
-        return -1;
-    }
-
-    tmp = (PyObject *)self->server;
-    Py_INCREF(server);
-    self->server = server;
-    Py_XDECREF(tmp);
-
-    if (!PyCallable_Check(read_callback)) {
-        PyErr_SetString(PyExc_TypeError, "a callable is required");
-        return -1;
-    } else {
-        tmp = self->on_read_cb;
-        Py_INCREF(read_callback);
-        self->on_read_cb = read_callback;
-        Py_XDECREF(tmp);
-    }
-
-    if (!PyCallable_Check(write_callback)) {
-        PyErr_SetString(PyExc_TypeError, "a callable is required");
-        return -1;
-    } else {
-        tmp = self->on_write_cb;
-        Py_INCREF(write_callback);
-        self->on_write_cb = write_callback;
-        Py_XDECREF(tmp);
-    }
-
-    if (!PyCallable_Check(close_callback)) {
-        PyErr_SetString(PyExc_TypeError, "a callable is required");
-        return -1;
-    } else {
-        tmp = self->on_close_cb;
-        Py_INCREF(close_callback);
-        self->on_close_cb = close_callback;
-        Py_XDECREF(tmp);
-    }
-
-    uv_stream = PyMem_Malloc(sizeof(uv_stream_t));
-    if (!uv_stream) {
-        PyErr_NoMemory();
-        return -1;
-    }
-    int r = uv_tcp_init(SERVER_LOOP, (uv_tcp_t *)uv_stream);
-    if (r) {
-        RAISE_ERROR(SERVER_LOOP, PyExc_TCPConnectionError, -1);
-    }
-    uv_stream->data = (void *)self;
-    self->uv_stream = uv_stream;
-    return 0;
-}
-
-
-static PyObject *
-TCPConnection_tp_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
-{
-    TCPConnection *self = (TCPConnection *)PyType_GenericNew(type, args, kwargs);
-    if (!self) {
-        return NULL;
-    }
-    return (PyObject *)self;
-}
-
-
-static int
-TCPConnection_tp_traverse(TCPConnection *self, visitproc visit, void *arg)
-{
-    Py_VISIT(self->on_read_cb);
-    Py_VISIT(self->on_write_cb);
-    Py_VISIT(self->on_close_cb);
-    Py_VISIT(self->server);
-    return 0;
-}
-
-
-static int
-TCPConnection_tp_clear(TCPConnection *self)
-{
-    Py_CLEAR(self->on_read_cb);
-    Py_CLEAR(self->on_write_cb);
-    Py_CLEAR(self->on_close_cb);
-    Py_CLEAR(self->server);
-    return 0;
-}
-
-
-static void
-TCPConnection_tp_dealloc(TCPConnection *self)
-{
-    if (self->uv_stream) {
-        self->uv_stream->data = NULL;
-        uv_read_stop(self->uv_stream);
-        uv_close((uv_handle_t *)self->uv_stream, on_tcp_connection_closed);
-        self->uv_stream = NULL;
-    }
-    TCPConnection_tp_clear(self);
-    Py_TYPE(self)->tp_free((PyObject *)self);
-}
-
-
-static PyMethodDef
-TCPConnection_tp_methods[] = {
-    { "write", (PyCFunction)TCPConnection_func_write, METH_VARARGS, "Write data on this TCP connection." },
-    { "close", (PyCFunction)TCPConnection_func_close, METH_NOARGS, "Close this TCP connection." },
-    { NULL }
-};
-
-
-static PyMemberDef TCPConnection_tp_members[] = {
-    {"server", T_OBJECT_EX, offsetof(TCPConnection, server), READONLY, "Reference to the TCPServer instance where this connection is made."},
-    {NULL}
-};
-
-
-static PyTypeObject TCPConnectionType = {
-    PyVarObject_HEAD_INIT(NULL, 0)
-    "pyuv.TCPConnection",                                           /*tp_name*/
-    sizeof(TCPConnection),                                          /*tp_basicsize*/
-    0,                                                              /*tp_itemsize*/
-    (destructor)TCPConnection_tp_dealloc,                           /*tp_dealloc*/
-    0,                                                              /*tp_print*/
-    0,                                                              /*tp_getattr*/
-    0,                                                              /*tp_setattr*/
-    0,                                                              /*tp_compare*/
-    0,                                                              /*tp_repr*/
-    0,                                                              /*tp_as_number*/
-    0,                                                              /*tp_as_sequence*/
-    0,                                                              /*tp_as_mapping*/
-    0,                                                              /*tp_hash */
-    0,                                                              /*tp_call*/
-    0,                                                              /*tp_str*/
-    0,                                                              /*tp_getattro*/
-    0,                                                              /*tp_setattro*/
-    0,                                                              /*tp_as_buffer*/
-    Py_TPFLAGS_DEFAULT|Py_TPFLAGS_HAVE_GC,                          /*tp_flags*/
-    0,                                                              /*tp_doc*/
-    (traverseproc)TCPConnection_tp_traverse,                        /*tp_traverse*/
-    (inquiry)TCPConnection_tp_clear,                                /*tp_clear*/
-    0,                                                              /*tp_richcompare*/
-    0,                                                              /*tp_weaklistoffset*/
-    0,                                                              /*tp_iter*/
-    0,                                                              /*tp_iternext*/
-    TCPConnection_tp_methods,                                       /*tp_methods*/
-    TCPConnection_tp_members,                                       /*tp_members*/
-    0,                                                              /*tp_getsets*/
-    0,                                                              /*tp_base*/
-    0,                                                              /*tp_dict*/
-    0,                                                              /*tp_descr_get*/
-    0,                                                              /*tp_descr_set*/
-    0,                                                              /*tp_dictoffset*/
-    (initproc)TCPConnection_tp_init,                                /*tp_init*/
-    0,                                                              /*tp_alloc*/
-    TCPConnection_tp_new,                                           /*tp_new*/
-};
 
 
 /* TCPServer */
-
 
 static void
 on_tcp_connection(uv_stream_t* server, int status)
@@ -381,8 +40,80 @@ on_tcp_server_close(uv_handle_t *handle)
 {
     PyGILState_STATE gstate = PyGILState_Ensure();
     ASSERT(handle);
+    handle->data = NULL;
     PyMem_Free(handle);
     PyGILState_Release(gstate);
+}
+
+
+static PyObject *
+TCPServer_func_bind(TCPServer *self, PyObject *args)
+{
+    int r = 0;
+    char *bind_ip;
+    int bind_port;
+    int address_type;
+    struct in_addr addr4;
+    struct in6_addr addr6;
+    uv_tcp_t *uv_tcp_server = NULL;
+
+    if (self->bound) {
+        PyErr_SetString(PyExc_TCPServerError, "already bound!");
+        return NULL;
+    }
+
+    if (!PyArg_ParseTuple(args, "(si):bind", &bind_ip, &bind_port)) {
+        return NULL;
+    }
+
+    if (bind_port < 0 || bind_port > 65536) {
+        PyErr_SetString(PyExc_ValueError, "port must be between 0 and 65536");
+        return NULL;
+    }
+
+    if (inet_pton(AF_INET, bind_ip, &addr4) == 1) {
+        address_type = AF_INET;
+    } else if (inet_pton(AF_INET6, bind_ip, &addr6) == 1) {
+        address_type = AF_INET6;
+    } else {
+        PyErr_SetString(PyExc_ValueError, "invalid IP address");
+        return NULL;
+    }
+
+    uv_tcp_server = PyMem_Malloc(sizeof(uv_tcp_t));
+    if (!uv_tcp_server) {
+        PyErr_NoMemory();
+        goto error;
+    }
+    r = uv_tcp_init(SELF_LOOP, uv_tcp_server);
+    if (r != 0) {
+        raise_uv_exception(self->loop, PyExc_TCPServerError);
+        goto error;
+    }
+    uv_tcp_server->data = (void *)self;
+    self->uv_tcp_server = uv_tcp_server;
+
+    if (address_type == AF_INET) {
+        r = uv_tcp_bind(self->uv_tcp_server, uv_ip4_addr(bind_ip, bind_port));
+    } else {
+        r = uv_tcp_bind6(self->uv_tcp_server, uv_ip6_addr(bind_ip, bind_port));
+    }
+
+    if (r != 0) {
+        raise_uv_exception(self->loop, PyExc_TCPServerError);
+        return NULL;
+    }
+
+    self->bound = True;
+    Py_RETURN_NONE;
+
+error:
+    if (uv_tcp_server) {
+        uv_tcp_server->data = NULL;
+        PyMem_Free(uv_tcp_server);
+    }
+    self->uv_tcp_server = NULL;
+    return NULL;
 }
 
 
@@ -390,9 +121,16 @@ static PyObject *
 TCPServer_func_listen(TCPServer *self, PyObject *args)
 {
     int r;
-    int backlog = 1;
+    int backlog = 128;
+    PyObject *callback;
+    PyObject *tmp = NULL;
 
-    if (!PyArg_ParseTuple(args, "i", &backlog)) {
+    if (!self->bound) {
+        PyErr_SetString(PyExc_TCPServerError, "not bound");
+        return NULL;
+    }
+
+    if (!PyArg_ParseTuple(args, "O|i:listen", &callback, &backlog)) {
         return NULL;
     }
 
@@ -401,57 +139,127 @@ TCPServer_func_listen(TCPServer *self, PyObject *args)
         return NULL;
     }
 
-    if (self->address_type == AF_INET) {
-        r = uv_tcp_bind(self->uv_tcp_server, uv_ip4_addr(self->listen_ip, self->listen_port));
+    if (!PyCallable_Check(callback)) {
+        PyErr_SetString(PyExc_TypeError, "a callable is required");
+        return NULL;
     } else {
-        r = uv_tcp_bind6(self->uv_tcp_server, uv_ip6_addr(self->listen_ip, self->listen_port));
-    }
-    if (r) {
-        RAISE_ERROR(SELF_LOOP, PyExc_TCPServerError, NULL);
+        tmp = self->on_new_connection_cb;
+        Py_INCREF(callback);
+        self->on_new_connection_cb = callback;
+        Py_XDECREF(tmp);
     }
 
     r = uv_listen((uv_stream_t *)self->uv_tcp_server, backlog, on_tcp_connection);
-    if (r) { 
-        RAISE_ERROR(SELF_LOOP, PyExc_TCPServerError, NULL);
+    if (r != 0) {
+        raise_uv_exception(self->loop, PyExc_TCPServerError);
+        goto error;
     }
 
     Py_RETURN_NONE;
+
+error:
+    Py_DECREF(callback);
+    return NULL;
 }
 
 
 static PyObject *
-TCPServer_func_stop_listening(TCPServer *self)
+TCPServer_func_close(TCPServer *self)
 {
-    if (self->uv_tcp_server) {
-        self->uv_tcp_server->data = NULL;
-        uv_close((uv_handle_t *)self->uv_tcp_server, on_tcp_server_close);
-        self->uv_tcp_server = NULL;
-    }
-    Py_RETURN_NONE;
-}
-
-
-static PyObject *
-TCPServer_func_accept(TCPServer *self, PyObject *args, PyObject *kwargs)
-{
-    PyObject *read_callback;
-    PyObject *write_callback;
-    PyObject *close_callback;
-
-    static char *kwlist[] = {"read_cb", "write_cb", "close_cb", NULL};
-    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "OOO:accept", kwlist, &read_callback, &write_callback, &close_callback)) {
+    if (!self->bound) {
+        PyErr_SetString(PyExc_TCPServerError, "not bound");
         return NULL;
     }
 
-    TCPConnection *tcp_connection;
-    tcp_connection = (TCPConnection *)PyObject_CallFunction((PyObject *)&TCPConnectionType, "OOOO", self, read_callback, write_callback, close_callback);
-    int r = uv_accept((uv_stream_t *)self->uv_tcp_server, tcp_connection->uv_stream);
-    if (r) {
-        RAISE_ERROR(SELF_LOOP, PyExc_TCPServerError, NULL);
-    }
-    TCPConnection_start_read(tcp_connection);
+    self->bound = False;
+    uv_close((uv_handle_t *)self->uv_tcp_server, on_tcp_server_close);
 
-    return (PyObject *)tcp_connection;
+    Py_RETURN_NONE;
+}
+
+
+static PyObject *
+TCPServer_func_accept(TCPServer *self)
+{
+    int r = 0;
+    uv_stream_t *uv_stream = NULL;
+
+    if (!self->bound) {
+        PyErr_SetString(PyExc_TCPServerError, "not bound");
+        return NULL;
+    }
+
+    TCPClientConnection *connection;
+    connection = (TCPClientConnection *)PyObject_CallFunction((PyObject *)&TCPClientConnectionType, "O", self->loop);
+
+    uv_stream = PyMem_Malloc(sizeof(uv_stream_t));
+    if (!uv_stream) {
+        PyErr_NoMemory();
+        goto error;
+    }
+
+    r = uv_tcp_init(((IOStream *)connection)->loop->uv_loop, (uv_tcp_t *)uv_stream);
+    if (r != 0) {
+        raise_uv_exception(self->loop, PyExc_TCPServerError);
+        goto error;
+    }
+
+    uv_stream->data = (void *)connection;
+    ((IOStream *)connection)->uv_stream = uv_stream;
+
+    r = uv_accept((uv_stream_t *)self->uv_tcp_server, ((IOStream *)connection)->uv_stream);
+    if (r != 0) {
+        raise_uv_exception(self->loop, PyExc_TCPServerError);
+        goto error;
+    }
+    ((IOStream *)connection)->connected = True;
+
+    return (PyObject *)connection;
+
+error:
+    if (uv_stream) {
+        uv_stream->data = NULL;
+        PyMem_Free(uv_stream);
+    }
+    return NULL;
+}
+
+
+static PyObject *
+TCPServer_func_getsockname(TCPServer *self)
+{
+    struct sockaddr sockname;
+    struct sockaddr_in *addr4;
+    struct sockaddr_in6 *addr6;
+    char ip4[INET_ADDRSTRLEN];
+    char ip6[INET6_ADDRSTRLEN];
+    int namelen = sizeof(sockname);
+
+    if (!self->bound) {
+        PyErr_SetString(PyExc_TCPServerError, "not bound");
+        return NULL;
+    }
+
+    int r = uv_tcp_getsockname(self->uv_tcp_server, &sockname, &namelen);
+    if (r != 0) {
+        raise_uv_exception(self->loop, PyExc_TCPServerError);
+        return NULL;
+    }
+
+    if (sockname.sa_family == AF_INET) {
+        addr4 = (struct sockaddr_in*)&sockname;
+        r = uv_ip4_name(addr4, ip4, INET_ADDRSTRLEN);
+        ASSERT(r == 0);
+        return Py_BuildValue("si", ip4, ntohs(addr4->sin_port));
+    } else if (sockname.sa_family == AF_INET6) {
+        addr6 = (struct sockaddr_in6*)&sockname;
+        r = uv_ip6_name(addr6, ip6, INET6_ADDRSTRLEN);
+        ASSERT(r == 0);
+        return Py_BuildValue("si", ip6, ntohs(addr6->sin6_port));
+    } else {
+        PyErr_SetString(PyExc_TCPServerError, "unknown address type detected");
+        return NULL;
+    }
 }
 
 
@@ -460,19 +268,13 @@ TCPServer_tp_init(TCPServer *self, PyObject *args, PyObject *kwargs)
 {
     Loop *loop;
     PyObject *tmp = NULL;
-    PyObject *callback;
-    PyObject *listen_address = NULL;
-    char *listen_ip;
-    int listen_port;
-    struct in_addr addr4;
-    struct in6_addr addr6;
-    uv_tcp_t *uv_tcp_server;
 
-    if (!PyArg_ParseTuple(args, "O!OO:__init__", &LoopType, &loop, &listen_address, &callback)) {
+    if (self->initialized) {
+        PyErr_SetString(PyExc_TCPServerError, "Object already initialized");
         return -1;
     }
 
-    if (!PyArg_ParseTuple(listen_address, "si", &listen_ip, &listen_port)) {
+    if (!PyArg_ParseTuple(args, "O!:__init__", &LoopType, &loop)) {
         return -1;
     }
 
@@ -481,48 +283,9 @@ TCPServer_tp_init(TCPServer *self, PyObject *args, PyObject *kwargs)
     self->loop = loop;
     Py_XDECREF(tmp);
 
-    if (!PyCallable_Check(callback)) {
-        PyErr_SetString(PyExc_TypeError, "a callable is required");
-        return -1;
-    } else {
-        tmp = self->on_new_connection_cb;
-        Py_INCREF(callback);
-        self->on_new_connection_cb = callback;
-        Py_XDECREF(tmp);
-    }
-
-    if (listen_port < 0 || listen_port > 65536) {
-        PyErr_SetString(PyExc_ValueError, "port must be between 0 and 65536");
-        return -1;
-    }
-
-    if (inet_pton(AF_INET, listen_ip, &addr4) == 1) {
-        self->address_type = AF_INET;
-    } else if (inet_pton(AF_INET6, listen_ip, &addr6) == 1) {
-        self->address_type = AF_INET6;
-    } else {
-        PyErr_SetString(PyExc_ValueError, "invalid IP address");
-        return -1;
-    }
-
-    tmp = self->listen_address;
-    Py_INCREF(listen_address);
-    self->listen_address = listen_address;
-    Py_XDECREF(tmp);
-    self->listen_ip = listen_ip;
-    self->listen_port = listen_port;
-
-    uv_tcp_server = PyMem_Malloc(sizeof(uv_tcp_t));
-    if (!uv_tcp_server) {
-        PyErr_NoMemory();
-        return -1;
-    }
-    int r = uv_tcp_init(SELF_LOOP, uv_tcp_server);
-    if (r) {
-        RAISE_ERROR(SELF_LOOP, PyExc_TCPServerError, -1);
-    }
-    uv_tcp_server->data = (void *)self;
-    self->uv_tcp_server = uv_tcp_server;
+    self->initialized = True;
+    self->bound = False;
+    self->uv_tcp_server = NULL;
 
     return 0;
 }
@@ -535,6 +298,7 @@ TCPServer_tp_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
     if (!self) {
         return NULL;
     }
+    self->initialized = False;
     return (PyObject *)self;
 }
 
@@ -542,7 +306,6 @@ TCPServer_tp_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
 static int
 TCPServer_tp_traverse(TCPServer *self, visitproc visit, void *arg)
 {
-    Py_VISIT(self->listen_address);
     Py_VISIT(self->on_new_connection_cb);
     Py_VISIT(self->loop);
     return 0;
@@ -552,7 +315,6 @@ TCPServer_tp_traverse(TCPServer *self, visitproc visit, void *arg)
 static int
 TCPServer_tp_clear(TCPServer *self)
 {
-    Py_CLEAR(self->listen_address);
     Py_CLEAR(self->on_new_connection_cb);
     Py_CLEAR(self->loop);
     return 0;
@@ -562,11 +324,6 @@ TCPServer_tp_clear(TCPServer *self)
 static void
 TCPServer_tp_dealloc(TCPServer *self)
 {
-    if (self->uv_tcp_server) {
-        self->uv_tcp_server->data = NULL;
-        uv_close((uv_handle_t *)self->uv_tcp_server, on_tcp_server_close);
-        self->uv_tcp_server = NULL;
-    }
     TCPServer_tp_clear(self);
     Py_TYPE(self)->tp_free((PyObject *)self);
 }
@@ -574,16 +331,17 @@ TCPServer_tp_dealloc(TCPServer *self)
 
 static PyMethodDef
 TCPServer_tp_methods[] = {
+    { "bind", (PyCFunction)TCPServer_func_bind, METH_VARARGS, "Bind to the specified IP and port." },
     { "listen", (PyCFunction)TCPServer_func_listen, METH_VARARGS, "Start listening for TCP connections." },
-    { "stop_listening", (PyCFunction)TCPServer_func_stop_listening, METH_NOARGS, "Stop listening for TCP connections." },
-    { "accept", (PyCFunction)TCPServer_func_accept, METH_VARARGS|METH_KEYWORDS, "Accept incoming TCP connection." },
+    { "close", (PyCFunction)TCPServer_func_close, METH_NOARGS, "Stop listening for TCP connections." },
+    { "accept", (PyCFunction)TCPServer_func_accept, METH_NOARGS, "Accept incoming TCP connection." },
+    { "getsockname", (PyCFunction)TCPServer_func_getsockname, METH_NOARGS, "Get local socket information." },
     { NULL }
 };
 
 
 static PyMemberDef TCPServer_tp_members[] = {
     {"loop", T_OBJECT_EX, offsetof(TCPServer, loop), READONLY, "Loop where this TCPServer is running on."},
-    {"listen_address", T_OBJECT_EX, offsetof(TCPServer, listen_address), 0, "Address tuple where this server listens."},
     {NULL}
 };
 
@@ -629,4 +387,374 @@ static PyTypeObject TCPServerType = {
     TCPServer_tp_new,                                               /*tp_new*/
 };
 
+
+/* TCPClientConnection */
+
+static PyObject *
+TCPClientConnection_tp_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
+{
+    TCPClientConnection *self = (TCPClientConnection *)IOStreamType.tp_new(type, args, kwargs);
+    if (!self) {
+        return NULL;
+    }
+    return (PyObject *)self;
+}
+
+
+static PyTypeObject TCPClientConnectionType = {
+    PyVarObject_HEAD_INIT(NULL, 0)
+    "pyuv.TCPClientConnection",                                    /*tp_name*/
+    sizeof(TCPClientConnection),                                   /*tp_basicsize*/
+    0,                                                             /*tp_itemsize*/
+    0,                                                             /*tp_dealloc*/
+    0,                                                             /*tp_print*/
+    0,                                                             /*tp_getattr*/
+    0,                                                             /*tp_setattr*/
+    0,                                                             /*tp_compare*/
+    0,                                                             /*tp_repr*/
+    0,                                                             /*tp_as_number*/
+    0,                                                             /*tp_as_sequence*/
+    0,                                                             /*tp_as_mapping*/
+    0,                                                             /*tp_hash */
+    0,                                                             /*tp_call*/
+    0,                                                             /*tp_str*/
+    0,                                                             /*tp_getattro*/
+    0,                                                             /*tp_setattro*/
+    0,                                                             /*tp_as_buffer*/
+    Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE,                      /*tp_flags*/
+    0,                                                             /*tp_doc*/
+    0,                                                             /*tp_traverse*/
+    0,                                                             /*tp_clear*/
+    0,                                                             /*tp_richcompare*/
+    0,                                                             /*tp_weaklistoffset*/
+    0,                                                             /*tp_iter*/
+    0,                                                             /*tp_iternext*/
+    0,                                                             /*tp_methods*/
+    0,                                                             /*tp_members*/
+    0,                                                             /*tp_getsets*/
+    0,                                                             /*tp_base*/
+    0,                                                             /*tp_dict*/
+    0,                                                             /*tp_descr_get*/
+    0,                                                             /*tp_descr_set*/
+    0,                                                             /*tp_dictoffset*/
+    0,                                                             /*tp_init*/
+    0,                                                             /*tp_alloc*/
+    TCPClientConnection_tp_new,                                    /*tp_new*/
+};
+
+
+/* TCPClient */
+
+typedef struct {
+    uv_connect_t req;
+    void *data;
+} tcp_connect_req_t;
+
+
+static void
+on_tcp_client_connect(uv_connect_t *req, int status)
+{
+    PyGILState_STATE gstate = PyGILState_Ensure();
+    ASSERT(req);
+
+    tcp_connect_req_t* connect_req = (tcp_connect_req_t*) req;
+    iostream_req_data_t* req_data = (iostream_req_data_t *)connect_req->data;
+
+    IOStream *self = (IOStream *)req_data->obj;
+    PyObject *callback = req_data->callback;
+
+    PyObject *error;
+    PyObject *exc_data;
+    PyObject *result;
+
+    ASSERT(self);
+    /* Object could go out of scope in the callback, increase refcount to avoid it */
+    Py_INCREF(self);
+
+    if (status != 0) {
+        self->connected = False;
+        error = PyBool_FromLong(1);
+        uv_err_t err = uv_last_error(SELF_LOOP);
+        exc_data = Py_BuildValue("(is)", err.code, uv_strerror(err));
+        if (exc_data != NULL) {
+            PyErr_SetObject(PyExc_TCPClientError, exc_data);
+            Py_DECREF(exc_data);
+        }
+        // TODO: pass exception to callback, how?
+        PyErr_WriteUnraisable(callback);
+    } else {
+        self->connected = True;
+        error = PyBool_FromLong(0);
+    }
+
+    result = PyObject_CallFunctionObjArgs(callback, self, error, NULL);
+    if (result == NULL) {
+        PyErr_WriteUnraisable(callback);
+    }
+    Py_XDECREF(result);
+
+    Py_DECREF(callback);
+    PyMem_Free(req_data);
+    connect_req->data = NULL;
+    PyMem_Free(connect_req);
+
+    Py_DECREF(self);
+    PyGILState_Release(gstate);
+}
+
+
+static PyObject *
+TCPClient_func_connect(TCPClient *self, PyObject *args, PyObject *kwargs)
+{
+    int r;
+    char *connect_ip;
+    int connect_port;
+    int address_type;
+    struct in_addr addr4;
+    struct in6_addr addr6;
+    tcp_connect_req_t *connect_req = NULL;
+    iostream_req_data_t *req_data = NULL;
+    uv_tcp_t *uv_stream = NULL;
+    PyObject *connect_address;
+    PyObject *callback;
+
+    IOStream *parent = (IOStream *)self;
+
+    if (parent->connected) {
+        PyErr_SetString(PyExc_TCPClientError, "already connected");
+        return NULL;
+    }
+
+    if (!PyArg_ParseTuple(args, "OO:connect", &connect_address, &callback)) {
+        return NULL;
+    }
+
+    if (!PyArg_ParseTuple(connect_address, "si", &connect_ip, &connect_port)) {
+        return NULL;
+    }
+
+    if (!PyCallable_Check(callback)) {
+        PyErr_SetString(PyExc_TypeError, "a callable is required");
+        return NULL;
+    }
+
+    if (connect_port < 0 || connect_port > 65536) {
+        PyErr_SetString(PyExc_ValueError, "port must be between 0 and 65536");
+        return NULL;
+    }
+
+    if (inet_pton(AF_INET, connect_ip, &addr4) == 1) {
+        address_type = AF_INET;
+    } else if (inet_pton(AF_INET6, connect_ip, &addr6) == 1) {
+        address_type = AF_INET6;
+    } else {
+        PyErr_SetString(PyExc_ValueError, "invalid IP address");
+        return NULL;
+    }
+
+    connect_req = (tcp_connect_req_t*) PyMem_Malloc(sizeof *connect_req);
+    if (!connect_req) {
+        PyErr_NoMemory();
+        goto error;
+    }
+
+    req_data = (iostream_req_data_t*) PyMem_Malloc(sizeof *req_data);
+    if (!req_data) {
+        PyErr_NoMemory();
+        goto error;
+    }
+
+    uv_stream = PyMem_Malloc(sizeof(uv_tcp_t));
+    if (!uv_stream) {
+        PyErr_NoMemory();
+        goto error;
+    }
+
+    r = uv_tcp_init(PARENT_LOOP, (uv_tcp_t *)uv_stream);
+    if (r != 0) {
+        raise_uv_exception(parent->loop, PyExc_TCPClientError);
+        goto error;
+    }
+    uv_stream->data = (void *)self;
+    parent->uv_stream = (uv_stream_t *)uv_stream;
+
+    req_data->obj = (PyObject *)self;
+    Py_INCREF(callback);
+    req_data->callback = callback;
+
+    connect_req->data = (void *)req_data;
+
+    if (address_type == AF_INET) {
+        r = uv_tcp_connect(&connect_req->req, (uv_tcp_t *)parent->uv_stream, uv_ip4_addr(connect_ip, connect_port), on_tcp_client_connect);
+    } else {
+        r = uv_tcp_connect6(&connect_req->req, (uv_tcp_t *)parent->uv_stream, uv_ip6_addr(connect_ip, connect_port), on_tcp_client_connect);
+    }
+
+    if (r != 0) {
+        raise_uv_exception(parent->loop, PyExc_TCPClientError);
+        goto error;
+    }
+
+    Py_RETURN_NONE;
+
+error:
+    if (connect_req) {
+        connect_req->data = NULL;
+        PyMem_Free(connect_req);
+    }
+    if (req_data) {
+        Py_DECREF(callback);
+        req_data->obj = NULL;
+        req_data->callback = NULL;
+        PyMem_Free(req_data);
+    }
+    if (uv_stream) {
+        uv_stream->data = NULL;
+        PyMem_Free(uv_stream);
+    }
+    parent->uv_stream = NULL;
+    return NULL;
+}
+
+
+static PyObject *
+TCPClient_func_getsockname(TCPClient *self)
+{
+    struct sockaddr sockname;
+    struct sockaddr_in *addr4;
+    struct sockaddr_in6 *addr6;
+    char ip4[INET_ADDRSTRLEN];
+    char ip6[INET6_ADDRSTRLEN];
+    int namelen = sizeof(sockname);
+
+    IOStream *parent = (IOStream *)self;
+
+    if (!parent->connected) {
+        PyErr_SetString(PyExc_TCPClientError, "disconnected");
+        return NULL;
+    }
+
+    int r = uv_tcp_getsockname((uv_tcp_t *)parent->uv_stream, &sockname, &namelen);
+    if (r != 0) {
+        raise_uv_exception(parent->loop, PyExc_TCPClientError);
+        return NULL;
+    }
+
+    if (sockname.sa_family == AF_INET) {
+        addr4 = (struct sockaddr_in*)&sockname;
+        r = uv_ip4_name(addr4, ip4, INET_ADDRSTRLEN);
+        ASSERT(r == 0);
+        return Py_BuildValue("si", ip4, ntohs(addr4->sin_port));
+    } else if (sockname.sa_family == AF_INET6) {
+        addr6 = (struct sockaddr_in6*)&sockname;
+        r = uv_ip6_name(addr6, ip6, INET6_ADDRSTRLEN);
+        ASSERT(r == 0);
+        return Py_BuildValue("si", ip6, ntohs(addr6->sin6_port));
+    } else {
+        PyErr_SetString(PyExc_TCPClientError, "unknown address type detected");
+        return NULL;
+    }
+}
+
+
+static PyObject *
+TCPClient_func_getpeername(TCPClient *self)
+{
+    struct sockaddr peername;
+    struct sockaddr_in *addr4;
+    struct sockaddr_in6 *addr6;
+    char ip4[INET_ADDRSTRLEN];
+    char ip6[INET6_ADDRSTRLEN];
+    int namelen = sizeof(peername);
+
+    IOStream *parent = (IOStream *)self;
+
+    if (!parent->connected) {
+        PyErr_SetString(PyExc_TCPClientError, "disconnected");
+        return NULL;
+    }
+
+    int r = uv_tcp_getpeername((uv_tcp_t *)parent->uv_stream, &peername, &namelen);
+    if (r != 0) {
+        raise_uv_exception(parent->loop, PyExc_TCPClientError);
+        return NULL;
+    }
+
+    if (peername.sa_family == AF_INET) {
+        addr4 = (struct sockaddr_in*)&peername;
+        r = uv_ip4_name(addr4, ip4, INET_ADDRSTRLEN);
+        ASSERT(r == 0);
+        return Py_BuildValue("si", ip4, ntohs(addr4->sin_port));
+    } else if (peername.sa_family == AF_INET6) {
+        addr6 = (struct sockaddr_in6*)&peername;
+        r = uv_ip6_name(addr6, ip6, INET6_ADDRSTRLEN);
+        ASSERT(r == 0);
+        return Py_BuildValue("si", ip6, ntohs(addr6->sin6_port));
+    } else {
+        PyErr_SetString(PyExc_TCPClientError, "unknown address type detected");
+        return NULL;
+    }
+}
+
+
+static PyObject *
+TCPClient_tp_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
+{
+    TCPClient *self = (TCPClient *)IOStreamType.tp_new(type, args, kwargs);
+    if (!self) {
+        return NULL;
+    }
+    return (PyObject *)self;
+}
+
+
+static PyMethodDef
+TCPClient_tp_methods[] = {
+    { "connect", (PyCFunction)TCPClient_func_connect, METH_VARARGS, "Start connecion to the remote endpoint." },
+    { "getsockname", (PyCFunction)TCPClient_func_getsockname, METH_NOARGS, "Get local socket information." },
+    { "getpeername", (PyCFunction)TCPClient_func_getpeername, METH_NOARGS, "Get remote socket information." },
+    { NULL }
+};
+
+
+static PyTypeObject TCPClientType = {
+    PyVarObject_HEAD_INIT(NULL, 0)
+    "pyuv.TCPClient",                                              /*tp_name*/
+    sizeof(TCPClient),                                             /*tp_basicsize*/
+    0,                                                             /*tp_itemsize*/
+    0,                                                             /*tp_dealloc*/
+    0,                                                             /*tp_print*/
+    0,                                                             /*tp_getattr*/
+    0,                                                             /*tp_setattr*/
+    0,                                                             /*tp_compare*/
+    0,                                                             /*tp_repr*/
+    0,                                                             /*tp_as_number*/
+    0,                                                             /*tp_as_sequence*/
+    0,                                                             /*tp_as_mapping*/
+    0,                                                             /*tp_hash */
+    0,                                                             /*tp_call*/
+    0,                                                             /*tp_str*/
+    0,                                                             /*tp_getattro*/
+    0,                                                             /*tp_setattro*/
+    0,                                                             /*tp_as_buffer*/
+    Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE,                      /*tp_flags*/
+    0,                                                             /*tp_doc*/
+    0,                                                             /*tp_traverse*/
+    0,                                                             /*tp_clear*/
+    0,                                                             /*tp_richcompare*/
+    0,                                                             /*tp_weaklistoffset*/
+    0,                                                             /*tp_iter*/
+    0,                                                             /*tp_iternext*/
+    TCPClient_tp_methods,                                          /*tp_methods*/
+    0,                                                             /*tp_members*/
+    0,                                                             /*tp_getsets*/
+    0,                                                             /*tp_base*/
+    0,                                                             /*tp_dict*/
+    0,                                                             /*tp_descr_get*/
+    0,                                                             /*tp_descr_set*/
+    0,                                                             /*tp_dictoffset*/
+    0,                                                             /*tp_init*/
+    0,                                                             /*tp_alloc*/
+    TCPClient_tp_new,                                              /*tp_new*/
+};
 

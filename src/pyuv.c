@@ -6,6 +6,7 @@
 #include "loop.c"
 #include "async.c"
 #include "timer.c"
+#include "stream.c"
 #include "tcp.c"
 #include "udp.c"
 #include "dns.c"
@@ -107,10 +108,14 @@ initialize_module(void)
     __PyModule_AddType(error, "AsyncError", (PyTypeObject *)PyExc_AsyncError);
     PyExc_TimerError = PyErr_NewException("pyuv.error.TimerError", PyExc_UVError, NULL);
     __PyModule_AddType(error, "TimerError", (PyTypeObject *)PyExc_TimerError);
-    PyExc_TCPConnectionError = PyErr_NewException("pyuv.error.TCPConnectionError", PyExc_UVError, NULL);
-    __PyModule_AddType(error, "TCPConnectionError", (PyTypeObject *)PyExc_TCPConnectionError);
     PyExc_TCPServerError = PyErr_NewException("pyuv.error.TCPServerError", PyExc_UVError, NULL);
     __PyModule_AddType(error, "TCPServerError", (PyTypeObject *)PyExc_TCPServerError);
+    PyExc_IOStreamError = PyErr_NewException("pyuv.error.IOStreamError", PyExc_UVError, NULL);
+    __PyModule_AddType(error, "IOStreamError", (PyTypeObject *)PyExc_IOStreamError);
+    PyExc_TCPClientError = PyErr_NewException("pyuv.error.TCPClientError", PyExc_IOStreamError, NULL);
+    __PyModule_AddType(error, "TCPClientError", (PyTypeObject *)PyExc_TCPClientError);
+    PyExc_TCPClientConnectionError = PyErr_NewException("pyuv.error.TCPClientConnectionError", PyExc_IOStreamError, NULL);
+    __PyModule_AddType(error, "TCPClientConnectionError", (PyTypeObject *)PyExc_TCPClientConnectionError);
     PyExc_UDPServerError = PyErr_NewException("pyuv.error.UDPServerError", PyExc_UVError, NULL);
     __PyModule_AddType(error, "UDPServerError", (PyTypeObject *)PyExc_UDPServerError);
     PyExc_DNSError = PyErr_NewException("pyuv.error.DNSError", NULL, NULL);
@@ -150,7 +155,10 @@ initialize_module(void)
     __PyModule_AddType(pyuv, "Loop", &LoopType);
     __PyModule_AddType(pyuv, "Async", &AsyncType);
     __PyModule_AddType(pyuv, "Timer", &TimerType);
-    __PyModule_AddType(pyuv, "TCPConnection", &TCPConnectionType);
+    TCPClientType.tp_base = &IOStreamType;
+    __PyModule_AddType(pyuv, "TCPClient", &TCPClientType);
+    TCPClientConnectionType.tp_base = &IOStreamType;
+    __PyModule_AddType(pyuv, "TCPClientConnection", &TCPClientConnectionType);
     __PyModule_AddType(pyuv, "TCPServer", &TCPServerType);
     __PyModule_AddType(pyuv, "UDPServer", &UDPServerType);
     __PyModule_AddType(pyuv, "ThreadPool", &ThreadPoolType);

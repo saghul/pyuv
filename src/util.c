@@ -30,3 +30,16 @@ __PyModule_AddObject(PyObject *module, const char *name, PyObject *value)
 }
 
 
+/* Raise appropriate exception when an error is produced inside libuv */
+inline void
+raise_uv_exception(Loop *loop, PyObject *exc_type)
+{
+    uv_err_t err = uv_last_error(loop->uv_loop);
+    PyObject *exc_data = Py_BuildValue("(is)", err.code, uv_strerror(err));
+    if (exc_data != NULL) {
+        PyErr_SetObject(exc_type, exc_data);
+        Py_DECREF(exc_data);
+    }
+}
+
+

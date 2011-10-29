@@ -38,7 +38,7 @@ typedef int Bool;
     } while(0)                                                              \
 
 #define SELF_LOOP self->loop->uv_loop
-#define SERVER_LOOP self->server->loop->uv_loop
+#define PARENT_LOOP parent->loop->uv_loop
 
 #define RAISE_ERROR(loop, exc, ret)                 \
     do {                                            \
@@ -82,31 +82,44 @@ typedef struct {
 
 static PyTypeObject TimerType;
 
+/* IOStream */
+typedef struct {
+    PyObject_HEAD
+    Loop *loop;
+    PyObject *on_disconnect_cb;
+    PyObject *on_read_cb;
+    uv_stream_t *uv_stream;
+    Bool connected;
+    Bool initialized;
+} IOStream;
+
+static PyTypeObject IOStreamType;
+
 /* TCPServer */
 typedef struct {
     PyObject_HEAD
     Loop *loop;
-    PyObject *listen_address;
     PyObject *on_new_connection_cb;
     uv_tcp_t *uv_tcp_server;
-    char *listen_ip;
-    int listen_port;
-    int address_type;
+    Bool bound;
+    Bool initialized;
 } TCPServer;
 
 static PyTypeObject TCPServerType;
 
-/* TCPConnection */
+/* TCPClient */
 typedef struct {
-    PyObject_HEAD
-    TCPServer *server;
-    PyObject *on_read_cb;
-    PyObject *on_write_cb;
-    PyObject *on_close_cb;
-    uv_stream_t *uv_stream;
-} TCPConnection;
+    IOStream iostream;
+} TCPClient;
 
-static PyTypeObject TCPConnectionType;
+static PyTypeObject TCPClientType;
+
+/* TCPClientConnection */
+typedef struct {
+    IOStream iostream;
+} TCPClientConnection;
+
+static PyTypeObject TCPClientConnectionType;
 
 /* UDPServer */
 typedef struct {
