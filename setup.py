@@ -75,7 +75,7 @@ class pyuv_build_ext(build_ext):
         else:
             if not os.path.exists(os.path.join(self.libuv_dir, 'uv.a')):
                 log.info('libuv needs to be compiled.')
-                update_libuv()
+                build_libuv()
             else:
                 rev = self.exec_process(['git', 'rev-list', '--max-count=1', 'HEAD'], cwd=self.libuv_dir)
                 if rev.strip() == self.libuv_revision:
