@@ -31,6 +31,9 @@ on_iostream_close(uv_handle_t *handle)
 {
     PyGILState_STATE gstate = PyGILState_Ensure();
     ASSERT(handle);
+    /* Decrement reference count of the object this handle was keeping alive */
+    PyObject *obj = (PyObject *)handle->data;
+    Py_DECREF(obj);
     handle->data = NULL;
     PyMem_Free(handle);
     PyGILState_Release(gstate);

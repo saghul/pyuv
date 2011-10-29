@@ -40,6 +40,9 @@ on_tcp_server_close(uv_handle_t *handle)
 {
     PyGILState_STATE gstate = PyGILState_Ensure();
     ASSERT(handle);
+    /* Decrement reference count of the object this handle was keeping alive */
+    PyObject *obj = (PyObject *)handle->data;
+    Py_DECREF(obj);
     handle->data = NULL;
     PyMem_Free(handle);
     PyGILState_Release(gstate);
@@ -105,6 +108,10 @@ TCPServer_func_bind(TCPServer *self, PyObject *args)
     }
 
     self->bound = True;
+
+    /* Increment reference count while libuv keeps this object around. It'll be decremented on handle close. */
+    Py_INCREF(self);
+
     Py_RETURN_NONE;
 
 error:
@@ -213,6 +220,9 @@ TCPServer_func_accept(TCPServer *self)
         goto error;
     }
     ((IOStream *)connection)->connected = True;
+
+    /* Increment reference count while libuv keeps this object around. It'll be decremented on handle close. */
+    Py_INCREF(connection);
 
     return (PyObject *)connection;
 
@@ -594,6 +604,9 @@ TCPClient_func_connect(TCPClient *self, PyObject *args, PyObject *kwargs)
         raise_uv_exception(parent->loop, PyExc_TCPClientError);
         goto error;
     }
+
+    /* Increment reference count while libuv keeps this object around. It'll be decremented on handle close. */
+    Py_INCREF(self);
 
     Py_RETURN_NONE;
 
