@@ -42,7 +42,8 @@ class pyuv_build_ext(build_ext):
         self.get_libuv()
         self.include_dirs.append(os.path.join(self.libuv_dir, 'include'))
         self.library_dirs.append(self.libuv_dir)
-        self.libraries.append('rt')
+        if sys.platform.startswith('linux'):
+            self.libraries.append('rt')
         self.extensions[0].extra_objects = [os.path.join(self.libuv_dir, 'uv.a')]
 
     def get_libuv(self):
