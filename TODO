@@ -4,7 +4,7 @@
 
 - Implement stop / close functions in watchers, instead of 'destroy'
 
-- TCP and UDP client support
+- UDP client support
 
 - FS module with all filesystem related functions from libuv
 
