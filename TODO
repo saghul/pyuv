@@ -4,8 +4,6 @@
 
 - Implement stop / close functions in watchers, instead of 'destroy'
 
-- UDP client support
-
 - FS module with all filesystem related functions from libuv
 
 - Review Python reference counting in cases where errors are produced
