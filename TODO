@@ -11,4 +11,5 @@
 
 - Add support for signals (and ensure they are handled in the proper thread)
 
+- Add prepare, check and idle watcher handles
 
