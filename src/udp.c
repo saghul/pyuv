@@ -310,13 +310,13 @@ UDPConnection_func_write(UDPConnection *self, PyObject *args)
         return NULL;
     }
 
-    wr = (udp_write_req_t*) PyMem_Malloc(sizeof(wr));
+    wr = (udp_write_req_t*) PyMem_Malloc(sizeof(udp_write_req_t));
     if (!wr) {
         PyErr_NoMemory();
         goto error;
     }
 
-    req_data = (udp_req_data_t*) PyMem_Malloc(sizeof(req_data));
+    req_data = (udp_req_data_t*) PyMem_Malloc(sizeof(udp_req_data_t));
     if (!req_data) {
         PyErr_NoMemory();
         goto error;

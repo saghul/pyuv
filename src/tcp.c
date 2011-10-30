@@ -189,7 +189,7 @@ static PyObject *
 TCPServer_func_accept(TCPServer *self)
 {
     int r = 0;
-    uv_stream_t *uv_stream = NULL;
+    uv_tcp_t *uv_stream = NULL;
 
     if (!self->bound) {
         PyErr_SetString(PyExc_TCPServerError, "not bound");
@@ -199,20 +199,20 @@ TCPServer_func_accept(TCPServer *self)
     TCPClientConnection *connection;
     connection = (TCPClientConnection *)PyObject_CallFunction((PyObject *)&TCPClientConnectionType, "O", self->loop);
 
-    uv_stream = PyMem_Malloc(sizeof(uv_stream_t));
+    uv_stream = PyMem_Malloc(sizeof(uv_tcp_t));
     if (!uv_stream) {
         PyErr_NoMemory();
         goto error;
     }
 
-    r = uv_tcp_init(((IOStream *)connection)->loop->uv_loop, (uv_tcp_t *)uv_stream);
+    r = uv_tcp_init(((IOStream *)connection)->loop->uv_loop, uv_stream);
     if (r != 0) {
         raise_uv_exception(self->loop, PyExc_TCPServerError);
         goto error;
     }
 
     uv_stream->data = (void *)connection;
-    ((IOStream *)connection)->uv_stream = uv_stream;
+    ((IOStream *)connection)->uv_stream = (uv_stream_t *)uv_stream;
 
     r = uv_accept((uv_stream_t *)self->uv_tcp_server, ((IOStream *)connection)->uv_stream);
     if (r != 0) {
@@ -562,13 +562,13 @@ TCPClient_func_connect(TCPClient *self, PyObject *args, PyObject *kwargs)
         return NULL;
     }
 
-    connect_req = (tcp_connect_req_t*) PyMem_Malloc(sizeof *connect_req);
+    connect_req = (tcp_connect_req_t*) PyMem_Malloc(sizeof(tcp_connect_req_t));
     if (!connect_req) {
         PyErr_NoMemory();
         goto error;
     }
 
-    req_data = (iostream_req_data_t*) PyMem_Malloc(sizeof *req_data);
+    req_data = (iostream_req_data_t*) PyMem_Malloc(sizeof(iostream_req_data_t));
     if (!req_data) {
         PyErr_NoMemory();
         goto error;

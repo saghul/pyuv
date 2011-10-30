@@ -153,7 +153,7 @@ IOStream_func_disconnect(IOStream *self)
 
     self->connected = False;
     uv_read_stop(self->uv_stream);
-    uv_shutdown_t* req = (uv_shutdown_t*) PyMem_Malloc(sizeof *req);
+    uv_shutdown_t* req = (uv_shutdown_t*) PyMem_Malloc(sizeof(uv_shutdown_t));
     if (!req) {
         PyErr_NoMemory();
         PyErr_WriteUnraisable(self->on_read_cb);
@@ -238,13 +238,13 @@ IOStream_func_write(IOStream *self, PyObject *args)
         return NULL;
     }
 
-    wr = (iostream_write_req_t*) PyMem_Malloc(sizeof *wr);
+    wr = (iostream_write_req_t*) PyMem_Malloc(sizeof(iostream_write_req_t));
     if (!wr) {
         PyErr_NoMemory();
         goto error;
     }
 
-    req_data = (iostream_req_data_t*) PyMem_Malloc(sizeof *req_data);
+    req_data = (iostream_req_data_t*) PyMem_Malloc(sizeof(iostream_req_data_t));
     if (!req_data) {
         PyErr_NoMemory();
         goto error;
