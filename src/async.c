@@ -97,8 +97,9 @@ Async_func_send(Async *self, PyObject *args)
     uv_async->data = (void *)self;
     self->uv_async = uv_async;
 
-    self->active = True;
     uv_async_send(self->uv_async);
+
+    self->active = True;
 
     /* Increment reference count while libuv keeps this object around. It'll be decremented on handle close. */
     Py_INCREF(self);
