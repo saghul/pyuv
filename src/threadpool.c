@@ -1,6 +1,7 @@
 
 static PyObject* PyExc_ThreadPoolError;
 
+static int threadpool_created = 0;
 
 typedef struct {
     PyObject *func;
@@ -150,6 +151,12 @@ ThreadPool_tp_init(ThreadPool *self, PyObject *args, PyObject *kwargs)
 static PyObject *
 ThreadPool_tp_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
 {
+    if (threadpool_created) {
+        PyErr_SetString(PyExc_RuntimeError, "Only one ThreadPool may be instantiated due to a limitation in libuv");
+        return NULL;
+    }
+    threadpool_created = 1;
+
     ThreadPool *self = (ThreadPool *)PyType_GenericNew(type, args, kwargs);
     if (!self) {
         return NULL;
