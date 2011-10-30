@@ -16,8 +16,11 @@ work_cb(uv_work_t *req)
     ASSERT(req);
     tpool_req_data_t *data = (tpool_req_data_t*)(req->data);
 
+    PyObject *args = (data->args)?data->args:PyTuple_New(0);
+    PyObject *kw = data->kwargs;
+
     PyObject *result;
-    result = PyObject_CallFunctionObjArgs(data->func, data->args, data->kwargs, NULL);
+    result = PyObject_Call(data->func, args, kw);
     if (result == NULL) {
         PyErr_WriteUnraisable(data->func);
     }
@@ -33,7 +36,7 @@ after_work_cb(uv_work_t *req)
     PyGILState_STATE gstate = PyGILState_Ensure();
     ASSERT(req);
 
-    tpool_req_data_t *data = (tpool_req_data_t*)(req->data);
+    tpool_req_data_t *data = (tpool_req_data_t*)req->data;
     Py_DECREF(data->func);
     Py_XDECREF(data->args);
     Py_XDECREF(data->kwargs);
@@ -48,8 +51,9 @@ after_work_cb(uv_work_t *req)
 static PyObject *
 ThreadPool_func_run(ThreadPool *self, PyObject *args)
 {
-    uv_work_t *work_req;
-    tpool_req_data_t *req_data;
+    int r = 0;
+    uv_work_t *work_req = NULL;
+    tpool_req_data_t *req_data = NULL;
     PyObject *func;
     PyObject *func_args = NULL;
     PyObject *func_kwargs = NULL;
@@ -63,16 +67,26 @@ ThreadPool_func_run(ThreadPool *self, PyObject *args)
         return NULL;
     }
 
+    if (func_args != NULL && !PyTuple_Check(func_args)) {
+        PyErr_SetString(PyExc_TypeError, "args must be a tuple");
+        return NULL;
+    }
+
+    if (func_kwargs != NULL && !PyDict_Check(func_kwargs)) {
+        PyErr_SetString(PyExc_TypeError, "kwargs must be a dictionary");
+        return NULL;
+    }
+
     work_req = PyMem_Malloc(sizeof(uv_work_t));
     if (!work_req) {
         PyErr_NoMemory();
-        return NULL;
+        goto error;
     }
    
     req_data = PyMem_Malloc(sizeof(tpool_req_data_t));
     if (!req_data) {
         PyErr_NoMemory();
-        return NULL;
+        goto error;
     }
    
     Py_INCREF(func);
@@ -84,12 +98,26 @@ ThreadPool_func_run(ThreadPool *self, PyObject *args)
     req_data->kwargs = func_kwargs;
 
     work_req->data = (void *)req_data;
-    int r = uv_queue_work(SELF_LOOP, work_req, work_cb, after_work_cb);
-    if (r) {
-        RAISE_ERROR(SELF_LOOP, PyExc_ThreadPoolError, NULL);
+    r = uv_queue_work(SELF_LOOP, work_req, work_cb, after_work_cb);
+    if (r != 0) {
+        raise_uv_exception(self->loop, PyExc_ThreadPoolError);
+        goto error;
     }
 
     Py_RETURN_NONE;
+
+error:
+    if (work_req) {
+        work_req->data = NULL;
+        PyMem_Free(work_req);
+    }
+    if (req_data) {
+        PyMem_Free(req_data);
+    }
+    Py_DECREF(func);
+    Py_XDECREF(func_args);
+    Py_XDECREF(func_kwargs);
+    return NULL;
 }
 
 
@@ -99,6 +127,11 @@ ThreadPool_tp_init(ThreadPool *self, PyObject *args, PyObject *kwargs)
     Loop *loop;
     PyObject *tmp = NULL;
 
+    if (self->initialized) {
+        PyErr_SetString(PyExc_ThreadPoolError, "Object already initialized");
+        return -1;
+    }
+
     if (!PyArg_ParseTuple(args, "O!:__init__", &LoopType, &loop)) {
         return -1;
     }
@@ -107,6 +140,8 @@ ThreadPool_tp_init(ThreadPool *self, PyObject *args, PyObject *kwargs)
     Py_INCREF(loop);
     self->loop = loop;
     Py_XDECREF(tmp);
+
+    self->initialized = True;
 
     return 0;
 }
@@ -119,6 +154,7 @@ ThreadPool_tp_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
     if (!self) {
         return NULL;
     }
+    self->initialized = False;
     return (PyObject *)self;
 }
 
