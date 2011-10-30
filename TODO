@@ -1,8 +1,6 @@
 - Evaluate if allocating memory from the Python heap reduces performance
   (what about the mallocs libuv does on its own?)
 
-- Implement stop / close functions in watchers, instead of 'destroy'
-
 - FS module with all filesystem related functions from libuv
 
 - Review Python reference counting in cases where errors are produced
