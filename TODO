@@ -1,6 +1,5 @@
 - Evaluate if allocating memory from the Python heap reduces performance
-
-- What about the mallocs libuv does on its own?
+  (what about the mallocs libuv does on its own?)
 
 - Implement stop / close functions in watchers, instead of 'destroy'
 
