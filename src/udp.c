@@ -368,6 +368,44 @@ UDPConnection_func_close(UDPConnection *self)
 }
 
 
+static PyObject *
+UDPConnection_func_getsockname(UDPConnection *self)
+{
+    struct sockaddr sockname;
+    struct sockaddr_in *addr4;
+    struct sockaddr_in6 *addr6;
+    char ip4[INET_ADDRSTRLEN];
+    char ip6[INET6_ADDRSTRLEN];
+    int namelen = sizeof(sockname);
+
+    if (!self->bound) {
+        PyErr_SetString(PyExc_UDPConnectionError, "not bound");
+        return NULL;
+    }
+
+    int r = uv_udp_getsockname(self->uv_udp_handle, &sockname, &namelen);
+    if (r != 0) {
+        raise_uv_exception(self->loop, PyExc_UDPConnectionError);
+        return NULL;
+    }
+
+    if (sockname.sa_family == AF_INET) {
+        addr4 = (struct sockaddr_in*)&sockname;
+        r = uv_ip4_name(addr4, ip4, INET_ADDRSTRLEN);
+        ASSERT(r == 0);
+        return Py_BuildValue("si", ip4, ntohs(addr4->sin_port));
+    } else if (sockname.sa_family == AF_INET6) {
+        addr6 = (struct sockaddr_in6*)&sockname;
+        r = uv_ip6_name(addr6, ip6, INET6_ADDRSTRLEN);
+        ASSERT(r == 0);
+        return Py_BuildValue("si", ip6, ntohs(addr6->sin6_port));
+    } else {
+        PyErr_SetString(PyExc_UDPConnectionError, "unknown address type detected");
+        return NULL;
+    }
+}
+
+
 static int
 UDPConnection_tp_init(UDPConnection *self, PyObject *args, PyObject *kwargs)
 {
@@ -441,6 +479,7 @@ UDPConnection_tp_methods[] = {
     { "stop_read", (PyCFunction)UDPConnection_func_stop_read, METH_NOARGS, "Stop receiving data." },
     { "write", (PyCFunction)UDPConnection_func_write, METH_VARARGS, "Write data over UDP." },
     { "close", (PyCFunction)UDPConnection_func_close, METH_NOARGS, "Close UDP connection." },
+    { "getsockname", (PyCFunction)UDPConnection_func_getsockname, METH_NOARGS, "Get local socket information." },
     { NULL }
 };
 
