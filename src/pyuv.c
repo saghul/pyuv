@@ -116,8 +116,8 @@ initialize_module(void)
     __PyModule_AddType(error, "TCPClientError", (PyTypeObject *)PyExc_TCPClientError);
     PyExc_TCPClientConnectionError = PyErr_NewException("pyuv.error.TCPClientConnectionError", PyExc_IOStreamError, NULL);
     __PyModule_AddType(error, "TCPClientConnectionError", (PyTypeObject *)PyExc_TCPClientConnectionError);
-    PyExc_UDPServerError = PyErr_NewException("pyuv.error.UDPServerError", PyExc_UVError, NULL);
-    __PyModule_AddType(error, "UDPServerError", (PyTypeObject *)PyExc_UDPServerError);
+    PyExc_UDPConnectionError = PyErr_NewException("pyuv.error.UDPConnectionError", PyExc_UVError, NULL);
+    __PyModule_AddType(error, "UDPConnectionError", (PyTypeObject *)PyExc_UDPConnectionError);
     PyExc_DNSError = PyErr_NewException("pyuv.error.DNSError", NULL, NULL);
     __PyModule_AddType(error, "DNSError", (PyTypeObject *)PyExc_DNSError);
     PyExc_ThreadPoolError = PyErr_NewException("pyuv.error.ThreadPoolError", PyExc_UVError, NULL);
@@ -160,7 +160,7 @@ initialize_module(void)
     TCPClientConnectionType.tp_base = &IOStreamType;
     __PyModule_AddType(pyuv, "TCPClientConnection", &TCPClientConnectionType);
     __PyModule_AddType(pyuv, "TCPServer", &TCPServerType);
-    __PyModule_AddType(pyuv, "UDPServer", &UDPServerType);
+    __PyModule_AddType(pyuv, "UDPConnection", &UDPConnectionType);
     __PyModule_AddType(pyuv, "ThreadPool", &ThreadPoolType);
 
     /* Module version (the MODULE_VERSION macro is defined by setup.py) */

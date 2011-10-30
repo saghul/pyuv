@@ -1,7 +1,7 @@
 
 #define UDP_MAX_BUF_SIZE 65536
 
-static PyObject* PyExc_UDPServerError;
+static PyObject* PyExc_UDPConnectionError;
 
 
 typedef struct {
@@ -10,12 +10,21 @@ typedef struct {
     void *data;
 } udp_write_req_t;
 
+typedef struct {
+    PyObject *obj;
+    PyObject *callback;
+} udp_req_data_t;
+
 
 static void
-on_udp_server_close(uv_handle_t *handle)
+on_udp_close(uv_handle_t *handle)
 {
     PyGILState_STATE gstate = PyGILState_Ensure();
     ASSERT(handle);
+    /* Decrement reference count of the object this handle was keeping alive */
+    PyObject *obj = (PyObject *)handle->data;
+    Py_DECREF(obj);
+    handle->data = NULL;
     PyMem_Free(handle);
     PyGILState_Release(gstate);
 }
@@ -54,7 +63,7 @@ on_udp_read(uv_udp_t* handle, int nread, uv_buf_t buf, struct sockaddr* addr, un
     ASSERT(handle);
     ASSERT(flags == 0);
 
-    UDPServer *self = (UDPServer *)(handle->data);
+    UDPConnection *self = (UDPConnection *)handle->data;
     ASSERT(self);
     /* Object could go out of scope in the callback, increase refcount to avoid it */
     Py_INCREF(self);
@@ -72,18 +81,18 @@ on_udp_read(uv_udp_t* handle, int nread, uv_buf_t buf, struct sockaddr* addr, un
             ASSERT(r == 0);
             address_tuple = Py_BuildValue("(si)", ip6, ntohs(addr6.sin6_port));
         }
+
         data = PyString_FromStringAndSize(buf.base, nread);
+
         result = PyObject_CallFunctionObjArgs(self->on_read_cb, self, address_tuple, data, NULL);
         if (result == NULL) {
             PyErr_WriteUnraisable(self->on_read_cb);
         }
         Py_XDECREF(result);
-    } else if (nread < 0) { 
-        PyErr_SetString(PyExc_UDPServerError, "unexpected recv error");
-        PyErr_WriteUnraisable(self->on_read_cb);
     } else {
         ASSERT(addr == NULL);
     }
+
     PyMem_Free(buf.base);
 
     Py_DECREF(self);
@@ -99,18 +108,26 @@ on_udp_write(uv_udp_send_t* req, int status)
     ASSERT(status == 0);
 
     udp_write_req_t *wr = (udp_write_req_t *)req;
-    UDPServer *self = (UDPServer *)(wr->data);
+    udp_req_data_t* req_data = (udp_req_data_t *)wr->data;
+
+    UDPConnection *self = (UDPConnection *)req_data->obj;
+    PyObject *callback = req_data->callback;
+
     ASSERT(self);
     /* Object could go out of scope in the callback, increase refcount to avoid it */
     Py_INCREF(self);
   
     PyObject *result;
-    result = PyObject_CallFunctionObjArgs(self->on_write_cb, self, NULL);
-    if (result == NULL) {
-        PyErr_WriteUnraisable(self->on_read_cb);
+    if (callback != Py_None) {
+        result = PyObject_CallFunctionObjArgs(callback, self, NULL);
+        if (result == NULL) {
+            PyErr_WriteUnraisable(callback);
+        }
+        Py_XDECREF(result);
     }
-    Py_XDECREF(result);
 
+    Py_DECREF(callback);
+    PyMem_Free(req_data);
     wr->data = NULL;
     PyMem_Free(wr);
 
@@ -120,125 +137,249 @@ on_udp_write(uv_udp_send_t* req, int status)
 
 
 static PyObject *
-UDPServer_func_listen(UDPServer *self, PyObject *args, PyObject *kwargs)
+UDPConnection_func_bind(UDPConnection *self, PyObject *args)
 {
-    PyObject *read_callback;
-    PyObject *write_callback;
-    PyObject *tmp = NULL;
-    int r;
+    int r = 0;
+    char *bind_ip;
+    int bind_port;
+    int address_type;
+    struct in_addr addr4;
+    struct in6_addr addr6;
+    uv_udp_t *uv_udp_handle = NULL;
 
-    static char *kwlist[] = {"read_cb", "write_cb", NULL};
-    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "OO:listen", kwlist, &read_callback, &write_callback)) {
+    if (self->bound) {
+        PyErr_SetString(PyExc_UDPConnectionError, "already bound!");
         return NULL;
     }
 
-    if (!PyCallable_Check(read_callback)) {
+    if (!PyArg_ParseTuple(args, "(si):bind", &bind_ip, &bind_port)) {
+        return NULL;
+    }
+
+    if (bind_port < 0 || bind_port > 65536) {
+        PyErr_SetString(PyExc_ValueError, "port must be between 0 and 65536");
+        return NULL;
+    }
+
+    if (inet_pton(AF_INET, bind_ip, &addr4) == 1) {
+        address_type = AF_INET;
+    } else if (inet_pton(AF_INET6, bind_ip, &addr6) == 1) {
+        address_type = AF_INET6;
+    } else {
+        PyErr_SetString(PyExc_ValueError, "invalid IP address");
+        return NULL;
+    }
+
+    uv_udp_handle = PyMem_Malloc(sizeof(uv_udp_t));
+    if (!uv_udp_handle) {
+        PyErr_NoMemory();
+        goto error;
+    }
+    r = uv_udp_init(SELF_LOOP, uv_udp_handle);
+    if (r != 0) {
+        raise_uv_exception(self->loop, PyExc_UDPConnectionError);
+        goto error;
+    }
+    uv_udp_handle->data = (void *)self;
+    self->uv_udp_handle = uv_udp_handle;
+
+    if (address_type == AF_INET) {
+        r = uv_udp_bind(self->uv_udp_handle, uv_ip4_addr(bind_ip, bind_port), 0);
+    } else {
+        r = uv_udp_bind6(self->uv_udp_handle, uv_ip6_addr(bind_ip, bind_port), UV_UDP_IPV6ONLY);
+    }
+
+    if (r != 0) {
+        raise_uv_exception(self->loop, PyExc_UDPConnectionError);
+        return NULL;
+    }
+
+    self->bound = True;
+
+    /* Increment reference count while libuv keeps this object around. It'll be decremented on handle close. */
+    Py_INCREF(self);
+
+    Py_RETURN_NONE;
+
+error:
+    if (uv_udp_handle) {
+        uv_udp_handle->data = NULL;
+        PyMem_Free(uv_udp_handle);
+    }
+    self->uv_udp_handle = NULL;
+    return NULL;
+}
+
+
+static PyObject *
+UDPConnection_func_start_read(UDPConnection *self, PyObject *args)
+{
+    int r = 0;
+    PyObject *tmp = NULL;
+    PyObject *callback;
+
+    if (!self->bound) {
+        PyErr_SetString(PyExc_UDPConnectionError, "not bound");
+        return NULL;
+    }
+
+    if (!PyArg_ParseTuple(args, "O:start_reading", &callback)) {
+        return NULL;
+    }
+
+    if (!PyCallable_Check(callback)) {
         PyErr_SetString(PyExc_TypeError, "a callable is required");
         return NULL;
     } else {
         tmp = self->on_read_cb;
-        Py_INCREF(read_callback);
-        self->on_read_cb = read_callback;
+        Py_INCREF(callback);
+        self->on_read_cb = callback;
         Py_XDECREF(tmp);
     }
 
-    if (!PyCallable_Check(write_callback)) {
-        PyErr_SetString(PyExc_TypeError, "a callable is required");
+    r = uv_udp_recv_start(self->uv_udp_handle, (uv_alloc_cb)on_udp_alloc, (uv_udp_recv_cb)on_udp_read);
+    if (r != 0) {
+        raise_uv_exception(self->loop, PyExc_UDPConnectionError);
+        goto error;
+    }
+
+    Py_RETURN_NONE;
+
+error:
+    Py_DECREF(callback);
+    return NULL;
+}
+
+
+static PyObject *
+UDPConnection_func_stop_read(UDPConnection *self)
+{
+    if (!self->bound) {
+        PyErr_SetString(PyExc_UDPConnectionError, "not bound");
         return NULL;
-    } else {
-        tmp = self->on_write_cb;
-        Py_INCREF(write_callback);
-        self->on_write_cb = write_callback;
-        Py_XDECREF(tmp);
     }
 
-    if (self->address_type == AF_INET) {
-        r = uv_udp_bind(self->uv_udp_server, uv_ip4_addr(self->listen_ip, self->listen_port), 0);
-    } else {
-        r = uv_udp_bind6(self->uv_udp_server, uv_ip6_addr(self->listen_ip, self->listen_port), UV_UDP_IPV6ONLY);
-    }
+    int r = uv_udp_recv_stop(self->uv_udp_handle);
     if (r) {
-        RAISE_ERROR(SELF_LOOP, PyExc_UDPServerError, NULL);
-    }
-
-    r = uv_udp_recv_start(self->uv_udp_server, (uv_alloc_cb)on_udp_alloc, (uv_udp_recv_cb)on_udp_read);
-    if (r) {
-        RAISE_ERROR(SELF_LOOP, PyExc_UDPServerError, NULL);
-    }
-
-    Py_RETURN_NONE;
-}
-
-
-static PyObject *
-UDPServer_func_stop_listening(UDPServer *self)
-{
-    if (self->uv_udp_server) {
-        self->uv_udp_server->data = NULL;
-        uv_close((uv_handle_t *)self->uv_udp_server, on_udp_server_close);
-        self->uv_udp_server = NULL;
+        raise_uv_exception(self->loop, PyExc_UDPConnectionError);
+        return NULL;
     }
     Py_RETURN_NONE;
 }
 
 
 static PyObject *
-UDPServer_func_write(UDPServer *self, PyObject *args)
+UDPConnection_func_write(UDPConnection *self, PyObject *args)
 {
-    PyObject *address_tuple;
-    udp_write_req_t *wr;
-    char *write_data;
-    char *listen_ip;
-    int listen_port;
     int r;
+    char *write_data;
+    char *dest_ip;
+    int dest_port;
+    int address_type;
+    struct in_addr addr4;
+    struct in6_addr addr6;
+    udp_write_req_t *wr = NULL;
+    udp_req_data_t *req_data = NULL;
+    PyObject *address_tuple;
+    PyObject *callback = Py_None;
 
-    if (!PyArg_ParseTuple(args, "sO:write", &write_data, &address_tuple)) {
+    if (!PyArg_ParseTuple(args, "sO|O:write", &write_data, &address_tuple, &callback)) {
         return NULL;
     }
 
-    if (!PyArg_ParseTuple(address_tuple, "si", &listen_ip, &listen_port)) {
+    if (callback != Py_None && !PyCallable_Check(callback)) {
+        PyErr_SetString(PyExc_TypeError, "a callable or None is required");
         return NULL;
     }
 
-    wr = (udp_write_req_t*) PyMem_Malloc(sizeof *wr);
+    if (!PyArg_ParseTuple(address_tuple, "si", &dest_ip, &dest_port)) {
+        return NULL;
+    }
+
+    if (dest_port < 0 || dest_port > 65536) {
+        PyErr_SetString(PyExc_ValueError, "port must be between 0 and 65536");
+        return NULL;
+    }
+
+    if (inet_pton(AF_INET, dest_ip, &addr4) == 1) {
+        address_type = AF_INET;
+    } else if (inet_pton(AF_INET6, dest_ip, &addr6) == 1) {
+        address_type = AF_INET6;
+    } else {
+        PyErr_SetString(PyExc_ValueError, "invalid IP address");
+        return NULL;
+    }
+
+    wr = (udp_write_req_t*) PyMem_Malloc(sizeof(wr));
     if (!wr) {
-        return PyErr_NoMemory();
+        PyErr_NoMemory();
+        goto error;
     }
+
+    req_data = (udp_req_data_t*) PyMem_Malloc(sizeof(req_data));
+    if (!req_data) {
+        PyErr_NoMemory();
+        goto error;
+    }
+
     wr->buf.base = write_data;
     wr->buf.len = strlen(write_data);
-    wr->data = (void *)self;
 
-    if (self->address_type == AF_INET) {
-        r = uv_udp_send(&wr->req, self->uv_udp_server, &wr->buf, 1, uv_ip4_addr(listen_ip, listen_port), (uv_udp_send_cb)on_udp_write);
+    req_data->obj = (PyObject *)self;
+    Py_INCREF(callback);
+    req_data->callback = callback;
+
+    wr->data = (void *)req_data;
+
+    if (address_type == AF_INET) {
+        r = uv_udp_send(&wr->req, self->uv_udp_handle, &wr->buf, 1, uv_ip4_addr(dest_ip, dest_port), (uv_udp_send_cb)on_udp_write);
     } else {
-        r = uv_udp_send6(&wr->req, self->uv_udp_server, &wr->buf, 1, uv_ip6_addr(listen_ip, listen_port), (uv_udp_send_cb)on_udp_write);
+        r = uv_udp_send6(&wr->req, self->uv_udp_handle, &wr->buf, 1, uv_ip6_addr(dest_ip, dest_port), (uv_udp_send_cb)on_udp_write);
     }
-    if (r) {
-        wr->data = NULL;
-        RAISE_ERROR(SELF_LOOP, PyExc_UDPServerError, NULL);
+    if (r != 0) {
+        raise_uv_exception(self->loop, PyExc_UDPConnectionError);
+        goto error;
     }
+    Py_RETURN_NONE;
 
+error:
+    if (req_data) {
+        Py_DECREF(callback);
+        req_data->obj = NULL;
+        req_data->callback = NULL;
+        PyMem_Free(req_data);
+    }
+    if (wr) {
+        wr->data = NULL;
+        PyMem_Free(wr);
+    }
+    return NULL;
+}
+
+
+static PyObject *
+UDPConnection_func_close(UDPConnection *self)
+{
+    self->bound = False;
+    if (self->uv_udp_handle != NULL) {
+        uv_close((uv_handle_t *)self->uv_udp_handle, on_udp_close);
+    }
     Py_RETURN_NONE;
 }
 
 
 static int
-UDPServer_tp_init(UDPServer *self, PyObject *args, PyObject *kwargs)
+UDPConnection_tp_init(UDPConnection *self, PyObject *args, PyObject *kwargs)
 {
     Loop *loop;
-    PyObject *listen_address;
     PyObject *tmp = NULL;
-    char *listen_ip;
-    int listen_port;
-    struct in_addr addr4;
-    struct in6_addr addr6;
-    uv_udp_t *uv_udp_server;
 
-    if (!PyArg_ParseTuple(args, "O!O:__init__", &LoopType, &loop, &listen_address)) {
+    if (self->initialized) {
+        PyErr_SetString(PyExc_UDPConnectionError, "Object already initialized");
         return -1;
     }
 
-    if (!PyArg_ParseTuple(listen_address, "si", &listen_ip, &listen_port)) {
+    if (!PyArg_ParseTuple(args, "O!:__init__", &LoopType, &loop)) {
         return -1;
     }
 
@@ -247,111 +388,75 @@ UDPServer_tp_init(UDPServer *self, PyObject *args, PyObject *kwargs)
     self->loop = loop;
     Py_XDECREF(tmp);
 
-    if (listen_port < 0 || listen_port > 65536) {
-        PyErr_SetString(PyExc_ValueError, "port must be between 0 and 65536");
-        return -1;
-    }
-
-    if (inet_pton(AF_INET, listen_ip, &addr4) == 1) {
-        self->address_type = AF_INET;
-    } else if (inet_pton(AF_INET6, listen_ip, &addr6) == 1) {
-        self->address_type = AF_INET6;
-    } else {
-        PyErr_SetString(PyExc_ValueError, "invalid IP address");
-        return -1;
-    }
-
-    tmp = self->listen_address;
-    Py_INCREF(listen_address);
-    self->listen_address = listen_address;
-    Py_XDECREF(tmp);
-    self->listen_ip = listen_ip;
-    self->listen_port = listen_port;
-
-    uv_udp_server = PyMem_Malloc(sizeof(uv_udp_t));
-    if (!uv_udp_server) {
-        PyErr_NoMemory();
-        return -1;
-    }
-    int r = uv_udp_init(SELF_LOOP, uv_udp_server);
-    if (r) {
-        RAISE_ERROR(SELF_LOOP, PyExc_UDPServerError, -1);
-    }
-    uv_udp_server->data = (void *)self;
-    self->uv_udp_server = uv_udp_server;
+    self->initialized = True;
+    self->bound = False;
+    self->uv_udp_handle = NULL;
 
     return 0;
 }
 
 
 static PyObject *
-UDPServer_tp_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
+UDPConnection_tp_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
 {
-    UDPServer *self = (UDPServer *)PyType_GenericNew(type, args, kwargs);
+    UDPConnection *self = (UDPConnection *)PyType_GenericNew(type, args, kwargs);
     if (!self) {
         return NULL;
     }
+    self->initialized = False;
     return (PyObject *)self;
 }
 
 
 static int
-UDPServer_tp_traverse(UDPServer *self, visitproc visit, void *arg)
+UDPConnection_tp_traverse(UDPConnection *self, visitproc visit, void *arg)
 {
-    Py_VISIT(self->listen_address);
     Py_VISIT(self->on_read_cb);
-    Py_VISIT(self->on_write_cb);
     Py_VISIT(self->loop);
     return 0;
 }
 
 
 static int
-UDPServer_tp_clear(UDPServer *self)
+UDPConnection_tp_clear(UDPConnection *self)
 {
-    Py_CLEAR(self->listen_address);
     Py_CLEAR(self->on_read_cb);
-    Py_CLEAR(self->on_write_cb);
     Py_CLEAR(self->loop);
     return 0;
 }
 
 
 static void
-UDPServer_tp_dealloc(UDPServer *self)
+UDPConnection_tp_dealloc(UDPConnection *self)
 {
-    if (self->uv_udp_server) {
-        self->uv_udp_server->data = NULL;
-        uv_close((uv_handle_t *)self->uv_udp_server, on_udp_server_close);
-        self->uv_udp_server = NULL;
-    }
-    UDPServer_tp_clear(self);
+    UDPConnection_tp_clear(self);
     Py_TYPE(self)->tp_free((PyObject *)self);
 }
 
 
 static PyMethodDef
-UDPServer_tp_methods[] = {
-    { "listen", (PyCFunction)UDPServer_func_listen, METH_VARARGS|METH_KEYWORDS, "Start listening for UDP connections." },
-    { "stop_listening", (PyCFunction)UDPServer_func_stop_listening, METH_NOARGS, "Stop listening for UDP connections." },
-    { "write", (PyCFunction)UDPServer_func_write, METH_VARARGS, "Write data over UDP." },
+UDPConnection_tp_methods[] = {
+    { "bind", (PyCFunction)UDPConnection_func_bind, METH_VARARGS, "Bind to the specified IP and port." },
+    { "start_read", (PyCFunction)UDPConnection_func_start_read, METH_VARARGS, "Start accepting data." },
+    { "stop_read", (PyCFunction)UDPConnection_func_stop_read, METH_NOARGS, "Stop receiving data." },
+    { "write", (PyCFunction)UDPConnection_func_write, METH_VARARGS, "Write data over UDP." },
+    { "close", (PyCFunction)UDPConnection_func_close, METH_NOARGS, "Close UDP connection." },
     { NULL }
 };
 
 
-static PyMemberDef UDPServer_tp_members[] = {
-    {"loop", T_OBJECT_EX, offsetof(UDPServer, loop), READONLY, "Loop where this UDPServer is running on."},
-    {"listen_address", T_OBJECT_EX, offsetof(UDPServer, listen_address), 0, "Address tuple where this server listens."},
+static PyMemberDef UDPConnection_tp_members[] = {
+    {"loop", T_OBJECT_EX, offsetof(UDPConnection, loop), READONLY, "Loop where this UDPConnection is running on."},
     {NULL}
 };
 
 
-static PyTypeObject UDPServerType = {
+static PyTypeObject UDPConnectionType = {
     PyVarObject_HEAD_INIT(NULL, 0)
-    "pyuv.UDPServer",                                               /*tp_name*/
-    sizeof(UDPServer),                                              /*tp_basicsize*/
+    "pyuv.UDPConnection",                                           /*tp_name*/
+    sizeof(UDPConnection),                                          /*tp_basicsize*/
     0,                                                              /*tp_itemsize*/
-    (destructor)UDPServer_tp_dealloc,                               /*tp_dealloc*/
+    (destructor)UDPConnection_tp_dealloc,                           /*tp_dealloc*/
     0,                                                              /*tp_print*/
     0,                                                              /*tp_getattr*/
     0,                                                              /*tp_setattr*/
@@ -366,25 +471,25 @@ static PyTypeObject UDPServerType = {
     0,                                                              /*tp_getattro*/
     0,                                                              /*tp_setattro*/
     0,                                                              /*tp_as_buffer*/
-    Py_TPFLAGS_DEFAULT|Py_TPFLAGS_HAVE_GC|Py_TPFLAGS_BASETYPE,      /*tp_flags*/
+    Py_TPFLAGS_DEFAULT | Py_TPFLAGS_HAVE_GC | Py_TPFLAGS_BASETYPE,  /*tp_flags*/
     0,                                                              /*tp_doc*/
-    (traverseproc)UDPServer_tp_traverse,                            /*tp_traverse*/
-    (inquiry)UDPServer_tp_clear,                                    /*tp_clear*/
+    (traverseproc)UDPConnection_tp_traverse,                        /*tp_traverse*/
+    (inquiry)UDPConnection_tp_clear,                                /*tp_clear*/
     0,                                                              /*tp_richcompare*/
     0,                                                              /*tp_weaklistoffset*/
     0,                                                              /*tp_iter*/
     0,                                                              /*tp_iternext*/
-    UDPServer_tp_methods,                                           /*tp_methods*/
-    UDPServer_tp_members,                                           /*tp_members*/
+    UDPConnection_tp_methods,                                       /*tp_methods*/
+    UDPConnection_tp_members,                                       /*tp_members*/
     0,                                                              /*tp_getsets*/
     0,                                                              /*tp_base*/
     0,                                                              /*tp_dict*/
     0,                                                              /*tp_descr_get*/
     0,                                                              /*tp_descr_set*/
     0,                                                              /*tp_dictoffset*/
-    (initproc)UDPServer_tp_init,                                    /*tp_init*/
+    (initproc)UDPConnection_tp_init,                                /*tp_init*/
     0,                                                              /*tp_alloc*/
-    UDPServer_tp_new,                                               /*tp_new*/
+    UDPConnection_tp_new,                                           /*tp_new*/
 };
 
 

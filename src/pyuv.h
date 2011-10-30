@@ -121,20 +121,17 @@ typedef struct {
 
 static PyTypeObject TCPClientConnectionType;
 
-/* UDPServer */
+/* UDPConnection */
 typedef struct {
     PyObject_HEAD
     Loop *loop;
-    PyObject *listen_address;
     PyObject *on_read_cb;
-    PyObject *on_write_cb;
-    uv_udp_t *uv_udp_server;
-    char *listen_ip;
-    int listen_port;
-    int address_type;
-} UDPServer;
+    uv_udp_t *uv_udp_handle;
+    Bool bound;
+    Bool initialized;
+} UDPConnection;
 
-static PyTypeObject UDPServerType;
+static PyTypeObject UDPConnectionType;
 
 /* DNSResolver */
 typedef struct {
