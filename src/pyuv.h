@@ -86,6 +86,45 @@ typedef struct {
 
 static PyTypeObject TimerType;
 
+/* Prepare */
+typedef struct {
+    PyObject_HEAD
+    Loop *loop;
+    PyObject *callback;
+    PyObject *data;
+    uv_prepare_t *uv_prepare;
+    Bool initialized;
+    Bool closed;
+} Prepare;
+
+static PyTypeObject PrepareType;
+
+/* Idle */
+typedef struct {
+    PyObject_HEAD
+    Loop *loop;
+    PyObject *callback;
+    PyObject *data;
+    uv_idle_t *uv_idle;
+    Bool initialized;
+    Bool closed;
+} Idle;
+
+static PyTypeObject IdleType;
+
+/* Check */
+typedef struct {
+    PyObject_HEAD
+    Loop *loop;
+    PyObject *callback;
+    PyObject *data;
+    uv_check_t *uv_check;
+    Bool initialized;
+    Bool closed;
+} Check;
+
+static PyTypeObject CheckType;
+
 /* IOStream */
 typedef struct {
     PyObject_HEAD

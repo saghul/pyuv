@@ -6,6 +6,9 @@
 #include "loop.c"
 #include "async.c"
 #include "timer.c"
+#include "prepare.c"
+#include "idle.c"
+#include "check.c"
 #include "stream.c"
 #include "tcp.c"
 #include "udp.c"
@@ -108,6 +111,12 @@ initialize_module(void)
     __PyModule_AddType(error, "AsyncError", (PyTypeObject *)PyExc_AsyncError);
     PyExc_TimerError = PyErr_NewException("pyuv.error.TimerError", PyExc_UVError, NULL);
     __PyModule_AddType(error, "TimerError", (PyTypeObject *)PyExc_TimerError);
+    PyExc_PrepareError = PyErr_NewException("pyuv.error.PrepareError", PyExc_UVError, NULL);
+    __PyModule_AddType(error, "PrepareError", (PyTypeObject *)PyExc_PrepareError);
+    PyExc_IdleError = PyErr_NewException("pyuv.error.IdleError", PyExc_UVError, NULL);
+    __PyModule_AddType(error, "IdleError", (PyTypeObject *)PyExc_IdleError);
+    PyExc_CheckError = PyErr_NewException("pyuv.error.CheckError", PyExc_UVError, NULL);
+    __PyModule_AddType(error, "CheckError", (PyTypeObject *)PyExc_CheckError);
     PyExc_TCPServerError = PyErr_NewException("pyuv.error.TCPServerError", PyExc_UVError, NULL);
     __PyModule_AddType(error, "TCPServerError", (PyTypeObject *)PyExc_TCPServerError);
     PyExc_IOStreamError = PyErr_NewException("pyuv.error.IOStreamError", PyExc_UVError, NULL);
@@ -155,6 +164,9 @@ initialize_module(void)
     __PyModule_AddType(pyuv, "Loop", &LoopType);
     __PyModule_AddType(pyuv, "Async", &AsyncType);
     __PyModule_AddType(pyuv, "Timer", &TimerType);
+    __PyModule_AddType(pyuv, "Prepare", &PrepareType);
+    __PyModule_AddType(pyuv, "Idle", &IdleType);
+    __PyModule_AddType(pyuv, "Check", &CheckType);
     TCPClientType.tp_base = &IOStreamType;
     __PyModule_AddType(pyuv, "TCPClient", &TCPClientType);
     TCPClientConnectionType.tp_base = &IOStreamType;
