@@ -38,8 +38,6 @@ on_async_callback(uv_async_t *async, int status)
         Py_XDECREF(result);
     }
 
-    self->active = False;
-
     Py_DECREF(self);
     PyGILState_Release(gstate);
 }
@@ -49,18 +47,12 @@ static PyObject *
 Async_func_send(Async *self, PyObject *args)
 {
     int r = 0;
-    uv_async_t *uv_async = NULL;
     PyObject *tmp = NULL;
     PyObject *callback = Py_None;
     PyObject *data = Py_None;
 
     if (self->closed) {
         PyErr_SetString(PyExc_AsyncError, "async is closed");
-        return NULL;
-    }
-
-    if (self->active) {
-        PyErr_SetString(PyExc_AsyncError, "async is already active");
         return NULL;
     }
 
@@ -71,60 +63,39 @@ Async_func_send(Async *self, PyObject *args)
     if (callback != Py_None && !PyCallable_Check(callback)) {
         PyErr_SetString(PyExc_TypeError, "a callable or None is required");
         return NULL;
-    } else {
-        tmp = self->callback;
-        Py_INCREF(callback);
-        self->callback = callback;
-        Py_XDECREF(tmp);
     }
+
+    r = uv_async_send(self->uv_async);
+    if (r != 0) {
+        raise_uv_exception(self->loop, PyExc_AsyncError);
+        return NULL;
+    }
+
+    tmp = self->callback;
+    Py_INCREF(callback);
+    self->callback = callback;
+    Py_XDECREF(tmp);
 
     tmp = self->data;
     Py_INCREF(data);
     self->data = data;
     Py_XDECREF(tmp);
 
-    uv_async = PyMem_Malloc(sizeof(uv_async_t));
-    if (!uv_async) {
-        PyErr_NoMemory();
-        goto error;
-    }
-
-    r = uv_async_init(SELF_LOOP, uv_async, on_async_callback);
-    if (r) {
-        raise_uv_exception(self->loop, PyExc_AsyncError);
-        goto error;
-    }
-    uv_async->data = (void *)self;
-    self->uv_async = uv_async;
-
-    uv_async_send(self->uv_async);
-
-    self->active = True;
-
-    /* Increment reference count while libuv keeps this object around. It'll be decremented on handle close. */
-    Py_INCREF(self);
-
     Py_RETURN_NONE;
-
-error:
-    if (uv_async) {
-        uv_async->data = NULL;
-        PyMem_Free(uv_async);
-    }
-    Py_DECREF(callback);
-    Py_DECREF(data);
-    self->uv_async = NULL;
-    return NULL;
 }
 
 
 static PyObject *
 Async_func_close(Async *self)
 {
-    self->closed = True;
-    if (self->uv_async != NULL) {
-        uv_close((uv_handle_t *)self->uv_async, on_async_close);
+    if (self->closed) {
+        PyErr_SetString(PyExc_AsyncError, "Async is already closed");
+        return NULL;
     }
+
+    self->closed = True;
+    uv_close((uv_handle_t *)self->uv_async, on_async_close);
+
     Py_RETURN_NONE;
 }
 
@@ -132,8 +103,10 @@ Async_func_close(Async *self)
 static int
 Async_tp_init(Async *self, PyObject *args, PyObject *kwargs)
 {
+    int r = 0;
     Loop *loop;
     PyObject *tmp = NULL;
+    uv_async_t *uv_async = NULL;
 
     if (self->initialized) {
         PyErr_SetString(PyExc_AsyncError, "Object already initialized");
@@ -149,10 +122,27 @@ Async_tp_init(Async *self, PyObject *args, PyObject *kwargs)
     self->loop = loop;
     Py_XDECREF(tmp);
 
+    uv_async = PyMem_Malloc(sizeof(uv_async_t));
+    if (!uv_async) {
+        PyErr_NoMemory();
+        Py_DECREF(loop);
+        return -1;
+    }
+
+    r = uv_async_init(SELF_LOOP, uv_async, on_async_callback);
+    if (r != 0) {
+        raise_uv_exception(self->loop, PyExc_AsyncError);
+        Py_DECREF(loop);
+        return -1;
+    }
+    uv_async->data = (void *)self;
+    self->uv_async = uv_async;
+
+    /* Increment reference count while libuv keeps this object around. It'll be decremented on handle close. */
+    Py_INCREF(self);
+
     self->initialized = True;
-    self->active = False;
     self->closed = False;
-    self->uv_async = NULL;
 
     return 0;
 }

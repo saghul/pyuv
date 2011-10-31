@@ -65,7 +65,6 @@ typedef struct {
     PyObject *callback;
     PyObject *data;
     uv_async_t *uv_async;
-    Bool active;
     Bool initialized;
     Bool closed;
 } Async;
