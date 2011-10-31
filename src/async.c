@@ -29,14 +29,11 @@ on_async_callback(uv_async_t *async, int status)
     Py_INCREF(self);
 
     PyObject *result;
-
-    if (self->callback != Py_None) {
-        result = PyObject_CallFunctionObjArgs(self->callback, self, self->data,NULL);
-        if (result == NULL) {
-            PyErr_WriteUnraisable(self->callback);
-        }
-        Py_XDECREF(result);
+    result = PyObject_CallFunctionObjArgs(self->callback, self, self->data,NULL);
+    if (result == NULL) {
+        PyErr_WriteUnraisable(self->callback);
     }
+    Py_XDECREF(result);
 
     Py_DECREF(self);
     PyGILState_Release(gstate);
@@ -48,7 +45,7 @@ Async_func_send(Async *self, PyObject *args)
 {
     int r = 0;
     PyObject *tmp = NULL;
-    PyObject *callback = Py_None;
+    PyObject *callback;
     PyObject *data = Py_None;
 
     if (self->closed) {
@@ -56,12 +53,12 @@ Async_func_send(Async *self, PyObject *args)
         return NULL;
     }
 
-    if (!PyArg_ParseTuple(args, "|OO:write", &callback, &data)) {
+    if (!PyArg_ParseTuple(args, "O|O:send", &callback, &data)) {
         return NULL;
     }
 
-    if (callback != Py_None && !PyCallable_Check(callback)) {
-        PyErr_SetString(PyExc_TypeError, "a callable or None is required");
+    if (!PyCallable_Check(callback)) {
+        PyErr_SetString(PyExc_TypeError, "a callable is required");
         return NULL;
     }
 
