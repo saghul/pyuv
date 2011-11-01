@@ -79,7 +79,6 @@ typedef struct {
     PyObject *callback;
     PyObject *data;
     uv_timer_t *uv_timer;
-    Bool active;
     Bool initialized;
     Bool closed;
 } Timer;

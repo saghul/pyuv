@@ -52,17 +52,11 @@ Timer_func_start(Timer *self, PyObject *args, PyObject *kwargs)
     PyObject *tmp = NULL;
     PyObject *callback;
     PyObject *data = Py_None;
-    uv_timer_t *uv_timer = NULL;
 
     static char *kwlist[] = {"callback", "timeout", "repeat", "data", NULL};
 
     if (self->closed) {
         PyErr_SetString(PyExc_TimerError, "Timer is closed");
-        return NULL;
-    }
-
-    if (self->active) {
-        PyErr_SetString(PyExc_TimerError, "Timer is already active.");
         return NULL;
     }
 
@@ -73,72 +67,43 @@ Timer_func_start(Timer *self, PyObject *args, PyObject *kwargs)
     if (!PyCallable_Check(callback)) {
         PyErr_SetString(PyExc_TypeError, "a callable or None is required");
         return NULL;
-    } else {
-        tmp = self->callback;
-        Py_INCREF(callback);
-        self->callback = callback;
-        Py_XDECREF(tmp);
     }
 
     if (timeout < 0.0) {
         PyErr_SetString(PyExc_ValueError, "a positive value or zero is required");
-        goto error;
+        return NULL;
     }
 
     if (repeat < 0.0) {
         PyErr_SetString(PyExc_ValueError, "a positive value or zero is required");
-        goto error;
+        return NULL;
     }
+
+    r = uv_timer_start(self->uv_timer, on_timer_callback, (int64_t)(timeout * 1000), (int64_t)(repeat * 1000));
+    if (r != 0) {
+        raise_uv_exception(self->loop, PyExc_TimerError);
+        return NULL;
+    }
+
+    tmp = self->callback;
+    Py_INCREF(callback);
+    self->callback = callback;
+    Py_XDECREF(tmp);
 
     tmp = self->data;
     Py_INCREF(data);
     self->data = data;
     Py_XDECREF(tmp);
 
-    uv_timer = PyMem_Malloc(sizeof(uv_timer_t));
-    if (!uv_timer) {
-        PyErr_NoMemory();
-        goto error;
-    }
-
-    r = uv_timer_init(SELF_LOOP, uv_timer);
-    if (r != 0) {
-        raise_uv_exception(self->loop, PyExc_TimerError);
-        goto error;
-    }
-    uv_timer->data = (void *)self;
-    self->uv_timer = uv_timer;
-
-    r = uv_timer_start(self->uv_timer, on_timer_callback, (int64_t)(timeout * 1000), (int64_t)(repeat * 1000));
-    if (r != 0) {
-        raise_uv_exception(self->loop, PyExc_TimerError);
-        goto error;
-    }
-
-    self->active = True;
-
-    /* Increment reference count while libuv keeps this object around. It'll be decremented on handle close. */
-    Py_INCREF(self);
-
     Py_RETURN_NONE;
-
-error:
-    if (uv_timer) {
-        uv_timer->data = NULL;
-        PyMem_Free(uv_timer);
-    }
-    Py_DECREF(callback);
-    Py_DECREF(data);
-    self->uv_timer = NULL;
-    return NULL;
 }
 
 
 static PyObject *
 Timer_func_stop(Timer *self)
 {
-    if (!self->active) {
-        PyErr_SetString(PyExc_TimerError, "Timer is not active.");
+    if (self->closed) {
+        PyErr_SetString(PyExc_TimerError, "Timer is closed");
         return NULL;
     }
 
@@ -147,8 +112,6 @@ Timer_func_stop(Timer *self)
         raise_uv_exception(self->loop, PyExc_TimerError);
         return NULL;
     }
-
-    self->active = False;
 
     Py_RETURN_NONE;
 }
@@ -230,8 +193,10 @@ Timer_repeat_set(Timer *self, PyObject *value, void *closure)
 static int
 Timer_tp_init(Timer *self, PyObject *args, PyObject *kwargs)
 {
+    int r = 0;
     Loop *loop;
     PyObject *tmp = NULL;
+    uv_timer_t *uv_timer = NULL;
 
     if (self->initialized) {
         PyErr_SetString(PyExc_TimerError, "Object already initialized");
@@ -247,10 +212,27 @@ Timer_tp_init(Timer *self, PyObject *args, PyObject *kwargs)
     self->loop = loop;
     Py_XDECREF(tmp);
 
+    uv_timer = PyMem_Malloc(sizeof(uv_timer_t));
+    if (!uv_timer) {
+        PyErr_NoMemory();
+        return -1;
+    }
+
+    r = uv_timer_init(SELF_LOOP, uv_timer);
+    if (r != 0) {
+        raise_uv_exception(self->loop, PyExc_TimerError);
+        PyMem_Free(uv_timer);
+        Py_DECREF(loop);
+        return -1;
+    }
+    uv_timer->data = (void *)self;
+    self->uv_timer = uv_timer;
+
+    /* Increment reference count while libuv keeps this object around. It'll be decremented on handle close. */
+    Py_INCREF(self);
+
     self->initialized = True;
-    self->active = False;
     self->closed = False;
-    self->uv_timer = NULL;
 
     return 0;
 }
