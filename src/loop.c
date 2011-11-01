@@ -40,7 +40,9 @@ Loop_func_run(Loop *self)
     Py_BEGIN_ALLOW_THREADS
     uv_run(self->uv_loop);
     Py_END_ALLOW_THREADS
-    /* TODO: check for some error? */
+    if (PyErr_Occurred()) {
+        return NULL;
+    }
     Py_RETURN_NONE;
 }
 
