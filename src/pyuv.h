@@ -125,6 +125,17 @@ typedef struct {
 
 static PyTypeObject CheckType;
 
+/* Signal */
+typedef struct {
+    PyObject_HEAD
+    Loop *loop;
+    uv_prepare_t *uv_prepare;
+    Bool initialized;
+    Bool closed;
+} Signal;
+
+static PyTypeObject SignalType;
+
 /* IOStream */
 typedef struct {
     PyObject_HEAD
