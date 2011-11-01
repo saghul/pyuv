@@ -6,8 +6,6 @@ Next version: 0.0.1
 
 - Add support for named pipes
 
-- Add support for signals (and ensure they are handled in the proper thread)
-
 - Write documentation (sphinkx?)
 
 - Run some benchmarks
