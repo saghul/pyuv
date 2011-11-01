@@ -29,14 +29,11 @@ on_timer_callback(uv_timer_t *timer, int status)
     Py_INCREF(self);
 
     PyObject *result;
-
-    if (self->callback != Py_None) {
-        result = PyObject_CallFunctionObjArgs(self->callback, self, self->data, NULL);
-        if (result == NULL) {
-            PyErr_WriteUnraisable(self->callback);
-        }
-        Py_XDECREF(result);
+    result = PyObject_CallFunctionObjArgs(self->callback, self, self->data, NULL);
+    if (result == NULL) {
+        PyErr_WriteUnraisable(self->callback);
     }
+    Py_XDECREF(result);
 
     Py_DECREF(self);
     PyGILState_Release(gstate);
@@ -65,7 +62,7 @@ Timer_func_start(Timer *self, PyObject *args, PyObject *kwargs)
     }
 
     if (!PyCallable_Check(callback)) {
-        PyErr_SetString(PyExc_TypeError, "a callable or None is required");
+        PyErr_SetString(PyExc_TypeError, "a callable is required");
         return NULL;
     }
 
