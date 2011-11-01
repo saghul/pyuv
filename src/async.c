@@ -28,13 +28,10 @@ on_async_callback(uv_async_t *async, int status)
     /* Object could go out of scope in the callback, increase refcount to avoid it */
     Py_INCREF(self);
 
-    PyObject *args = (self->func_args)?self->func_args:PyTuple_New(0);
-    PyObject *kw = self->func_kwargs;
-
     PyObject *result;
-    result = PyObject_Call(self->func, args, kw);
+    result = PyObject_CallFunctionObjArgs(self->callback, self, self->data,NULL);
     if (result == NULL) {
-        PyErr_WriteUnraisable(self->func);
+        PyErr_WriteUnraisable(self->callback);
     }
     Py_XDECREF(result);
 
@@ -48,31 +45,20 @@ Async_func_send(Async *self, PyObject *args)
 {
     int r = 0;
     PyObject *tmp = NULL;
-    PyObject *func;
-    PyObject *func_args = NULL;
-    PyObject *func_kwargs = NULL;
+    PyObject *callback;
+    PyObject *data = Py_None;
 
     if (self->closed) {
         PyErr_SetString(PyExc_AsyncError, "async is closed");
         return NULL;
     }
 
-    if (!PyArg_ParseTuple(args, "O|OO:send", &func, &func_args, &func_kwargs)) {
+    if (!PyArg_ParseTuple(args, "O|O:send", &callback, &data)) {
         return NULL;
     }
 
-    if (!PyCallable_Check(func)) {
+    if (!PyCallable_Check(callback)) {
         PyErr_SetString(PyExc_TypeError, "a callable is required");
-        return NULL;
-    }
-
-    if (func_args != NULL && !PyTuple_Check(func_args)) {
-        PyErr_SetString(PyExc_TypeError, "args must be a tuple");
-        return NULL;
-    }
-
-    if (func_kwargs != NULL && !PyDict_Check(func_kwargs)) {
-        PyErr_SetString(PyExc_TypeError, "kwargs must be a dictionary");
         return NULL;
     }
 
@@ -82,19 +68,14 @@ Async_func_send(Async *self, PyObject *args)
         return NULL;
     }
 
-    tmp = self->func;
-    Py_INCREF(func);
-    self->func = func;
+    tmp = self->callback;
+    Py_INCREF(callback);
+    self->callback = callback;
     Py_XDECREF(tmp);
 
-    tmp = self->func_args;
-    Py_XINCREF(func_args);
-    self->func_args = func_args;
-    Py_XDECREF(tmp);
-
-    tmp = self->func_kwargs;
-    Py_XINCREF(func_kwargs);
-    self->func_kwargs = func_kwargs;
+    tmp = self->data;
+    Py_INCREF(data);
+    self->data = data;
     Py_XDECREF(tmp);
 
     Py_RETURN_NONE;
@@ -108,10 +89,6 @@ Async_func_close(Async *self)
         PyErr_SetString(PyExc_AsyncError, "Async is already closed");
         return NULL;
     }
-
-    Py_DECREF(self->func);
-    Py_XDECREF(self->func_args);
-    Py_XDECREF(self->func_kwargs);
 
     self->closed = True;
     uv_close((uv_handle_t *)self->uv_async, on_async_close);
@@ -183,9 +160,8 @@ Async_tp_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
 static int
 Async_tp_traverse(Async *self, visitproc visit, void *arg)
 {
-    Py_VISIT(self->func);
-    Py_VISIT(self->func_args);
-    Py_VISIT(self->func_kwargs);
+    Py_VISIT(self->data);
+    Py_VISIT(self->callback);
     Py_VISIT(self->loop);
     return 0;
 }
@@ -194,9 +170,8 @@ Async_tp_traverse(Async *self, visitproc visit, void *arg)
 static int
 Async_tp_clear(Async *self)
 {
-    Py_CLEAR(self->func);
-    Py_CLEAR(self->func_args);
-    Py_CLEAR(self->func_kwargs);
+    Py_CLEAR(self->data);
+    Py_CLEAR(self->callback);
     Py_CLEAR(self->loop);
     return 0;
 }
@@ -220,6 +195,7 @@ Async_tp_methods[] = {
 
 static PyMemberDef Async_tp_members[] = {
     {"loop", T_OBJECT_EX, offsetof(Async, loop), READONLY, "Loop where this Async is running on."},
+    {"data", T_OBJECT_EX, offsetof(Async, data), 0, "Arbitrary data."},
     {NULL}
 };
 

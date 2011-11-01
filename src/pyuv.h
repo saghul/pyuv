@@ -62,9 +62,8 @@ static PyTypeObject LoopType;
 typedef struct {
     PyObject_HEAD
     Loop *loop;
-    PyObject *func;
-    PyObject *func_args;
-    PyObject *func_kwargs;
+    PyObject *callback;
+    PyObject *data;
     uv_async_t *uv_async;
     Bool initialized;
     Bool closed;
