@@ -47,7 +47,7 @@ stat_cb(uv_fs_t* req) {
     if (req->result != -1) {
         PyTuple_SET_ITEM(stat_data, 0, PyInt_FromLong((long)st->st_mode));
 #ifdef HAVE_LARGEFILE_SUPPORT
-        PyTple_SET_ITEM(stat_data, 1, PyLong_FromLongLong((PY_LONG_LONG)st->st_ino));
+        PyTuple_SET_ITEM(stat_data, 1, PyLong_FromLongLong((PY_LONG_LONG)st->st_ino));
 #else
         PyTuple_SET_ITEM(stat_data, 1, PyInt_FromLong((long)st->st_ino));
 #endif
