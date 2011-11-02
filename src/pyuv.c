@@ -1,6 +1,7 @@
 
 #include "pyuv.h"
 
+#include "errno.c"
 #include "util.c"
 
 #include "loop.c"
@@ -30,81 +31,16 @@ initialize_module(void)
     /* Main module */
     PyObject *pyuv = Py_InitModule("pyuv", NULL);
 
+    /* Errno module */
+    PyObject *errno_module = init_errno();
+    if (errno_module == NULL) {
+        return NULL;
+    }
+    __PyModule_AddObject(pyuv, "errno", errno_module);
+
     /* Error module */
     PyObject *error = Py_InitModule("pyuv.error", NULL);
     __PyModule_AddObject(pyuv, "error", error);
-
-    PyModule_AddIntMacro(error, UV_UNKNOWN);
-    PyModule_AddIntMacro(error, UV_OK);
-    PyModule_AddIntMacro(error, UV_EOF);
-    PyModule_AddIntMacro(error, UV_EACCESS);
-    PyModule_AddIntMacro(error, UV_EAGAIN);
-    PyModule_AddIntMacro(error, UV_EADDRINUSE);
-    PyModule_AddIntMacro(error, UV_EADDRNOTAVAIL);
-    PyModule_AddIntMacro(error, UV_EAFNOSUPPORT);
-    PyModule_AddIntMacro(error, UV_EALREADY);
-    PyModule_AddIntMacro(error, UV_EBADF);
-    PyModule_AddIntMacro(error, UV_EBUSY);
-    PyModule_AddIntMacro(error, UV_ECONNABORTED);
-    PyModule_AddIntMacro(error, UV_ECONNREFUSED);
-    PyModule_AddIntMacro(error, UV_ECONNRESET);
-    PyModule_AddIntMacro(error, UV_EDESTADDRREQ);
-    PyModule_AddIntMacro(error, UV_EFAULT);
-    PyModule_AddIntMacro(error, UV_EHOSTUNREACH);
-    PyModule_AddIntMacro(error, UV_EINTR);
-    PyModule_AddIntMacro(error, UV_EINVAL);
-    PyModule_AddIntMacro(error, UV_EISCONN);
-    PyModule_AddIntMacro(error, UV_EMFILE);
-    PyModule_AddIntMacro(error, UV_EMSGSIZE);
-    PyModule_AddIntMacro(error, UV_ENETDOWN);
-    PyModule_AddIntMacro(error, UV_ENETUNREACH);
-    PyModule_AddIntMacro(error, UV_ENFILE);
-    PyModule_AddIntMacro(error, UV_ENOBUFS);
-    PyModule_AddIntMacro(error, UV_ENOMEM);
-    PyModule_AddIntMacro(error, UV_ENONET);
-    PyModule_AddIntMacro(error, UV_ENOPROTOOPT);
-    PyModule_AddIntMacro(error, UV_ENOTCONN);
-    PyModule_AddIntMacro(error, UV_ENOTSOCK);
-    PyModule_AddIntMacro(error, UV_ENOTSUP);
-    PyModule_AddIntMacro(error, UV_ENOENT);
-    PyModule_AddIntMacro(error, UV_EPIPE);
-    PyModule_AddIntMacro(error, UV_EPROTO);
-    PyModule_AddIntMacro(error, UV_EPROTONOSUPPORT);
-    PyModule_AddIntMacro(error, UV_EPROTOTYPE);
-    PyModule_AddIntMacro(error, UV_ETIMEDOUT);
-    PyModule_AddIntMacro(error, UV_ECHARSET);
-    PyModule_AddIntMacro(error, UV_EAIFAMNOSUPPORT);
-    PyModule_AddIntMacro(error, UV_EAINONAME);
-    PyModule_AddIntMacro(error, UV_EAISERVICE);
-    PyModule_AddIntMacro(error, UV_EAISOCKTYPE);
-    PyModule_AddIntMacro(error, UV_ESHUTDOWN);
-    PyModule_AddIntMacro(error, UV_EEXIST);
-
-    PyModule_AddIntMacro(error, ARES_SUCCESS);
-    PyModule_AddIntMacro(error, ARES_ENODATA);
-    PyModule_AddIntMacro(error, ARES_EFORMERR);
-    PyModule_AddIntMacro(error, ARES_ESERVFAIL);
-    PyModule_AddIntMacro(error, ARES_ENOTFOUND);
-    PyModule_AddIntMacro(error, ARES_ENOTIMP);
-    PyModule_AddIntMacro(error, ARES_EREFUSED);
-    PyModule_AddIntMacro(error, ARES_EBADQUERY);
-    PyModule_AddIntMacro(error, ARES_EBADNAME);
-    PyModule_AddIntMacro(error, ARES_EBADFAMILY);
-    PyModule_AddIntMacro(error, ARES_EBADRESP);
-    PyModule_AddIntMacro(error, ARES_ECONNREFUSED);
-    PyModule_AddIntMacro(error, ARES_ETIMEOUT);
-    PyModule_AddIntMacro(error, ARES_EOF);
-    PyModule_AddIntMacro(error, ARES_EFILE);
-    PyModule_AddIntMacro(error, ARES_ENOMEM);
-    PyModule_AddIntMacro(error, ARES_EDESTRUCTION);
-    PyModule_AddIntMacro(error, ARES_EBADSTR);
-    PyModule_AddIntMacro(error, ARES_EBADFLAGS);
-    PyModule_AddIntMacro(error, ARES_ENONAME);
-    PyModule_AddIntMacro(error, ARES_EBADHINTS);
-    PyModule_AddIntMacro(error, ARES_ENOTINITIALIZED);
-    PyModule_AddIntMacro(error, ARES_ELOADIPHLPAPI);
-    PyModule_AddIntMacro(error, ARES_EADDRGETNETWORKPARAMS);
-    PyModule_AddIntMacro(error, ARES_ECANCELLED);
 
     PyExc_UVError = PyErr_NewException("pyuv.error.UVError", NULL, NULL);
     __PyModule_AddType(error, "UVError", (PyTypeObject *)PyExc_UVError);
