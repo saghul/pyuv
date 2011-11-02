@@ -720,3 +720,32 @@ static PyTypeObject DNSResolverType = {
 };
 
 
+PyObject *
+init_dns(void)
+{
+    PyObject *module;
+    module = Py_InitModule("pyuv.dns", NULL);
+    if (module == NULL) {
+        return NULL;
+    }
+
+    PyModule_AddIntMacro(module, ARES_NI_NOFQDN);
+    PyModule_AddIntMacro(module, ARES_NI_NUMERICHOST);
+    PyModule_AddIntMacro(module, ARES_NI_NAMEREQD);
+    PyModule_AddIntMacro(module, ARES_NI_NUMERICSERV);
+    PyModule_AddIntMacro(module, ARES_NI_DGRAM);
+    PyModule_AddIntMacro(module, ARES_NI_TCP);
+    PyModule_AddIntMacro(module, ARES_NI_UDP);
+    PyModule_AddIntMacro(module, ARES_NI_SCTP);
+    PyModule_AddIntMacro(module, ARES_NI_DCCP);
+    PyModule_AddIntMacro(module, ARES_NI_NUMERICSCOPE);
+    PyModule_AddIntMacro(module, ARES_NI_LOOKUPHOST);
+    PyModule_AddIntMacro(module, ARES_NI_LOOKUPSERVICE);
+    PyModule_AddIntMacro(module, ARES_NI_IDN);
+    PyModule_AddIntMacro(module, ARES_NI_IDN_ALLOW_UNASSIGNED);
+    PyModule_AddIntMacro(module, ARES_NI_IDN_USE_STD3_ASCII_RULES);
+
+    return module;
+}
+
+

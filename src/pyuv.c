@@ -74,30 +74,16 @@ initialize_module(void)
     __PyModule_AddType(error, "FSError", (PyTypeObject *)PyExc_FSError);
 
     /* DNS module */
-    PyObject *dns = Py_InitModule("pyuv.dns", NULL);
+    PyObject *dns = init_dns();
+    if (dns == NULL) {
+        return NULL;
+    }
     __PyModule_AddObject(pyuv, "dns", dns);
+    __PyModule_AddType(dns, "DNSResolver", &DNSResolverType);
 
     /* FS module */
     PyObject *fs = Py_InitModule("pyuv.fs", FS_methods);
     __PyModule_AddObject(pyuv, "fs", fs);
-
-    PyModule_AddIntMacro(dns, ARES_NI_NOFQDN);
-    PyModule_AddIntMacro(dns, ARES_NI_NUMERICHOST);
-    PyModule_AddIntMacro(dns, ARES_NI_NAMEREQD);
-    PyModule_AddIntMacro(dns, ARES_NI_NUMERICSERV);
-    PyModule_AddIntMacro(dns, ARES_NI_DGRAM);
-    PyModule_AddIntMacro(dns, ARES_NI_TCP);
-    PyModule_AddIntMacro(dns, ARES_NI_UDP);
-    PyModule_AddIntMacro(dns, ARES_NI_SCTP);
-    PyModule_AddIntMacro(dns, ARES_NI_DCCP);
-    PyModule_AddIntMacro(dns, ARES_NI_NUMERICSCOPE);
-    PyModule_AddIntMacro(dns, ARES_NI_LOOKUPHOST);
-    PyModule_AddIntMacro(dns, ARES_NI_LOOKUPSERVICE);
-    PyModule_AddIntMacro(dns, ARES_NI_IDN);
-    PyModule_AddIntMacro(dns, ARES_NI_IDN_ALLOW_UNASSIGNED);
-    PyModule_AddIntMacro(dns, ARES_NI_IDN_USE_STD3_ASCII_RULES);
-
-    __PyModule_AddType(dns, "DNSResolver", &DNSResolverType);
 
     /* Types */
     __PyModule_AddType(pyuv, "Loop", &LoopType);
