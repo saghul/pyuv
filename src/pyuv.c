@@ -82,7 +82,10 @@ initialize_module(void)
     __PyModule_AddType(dns, "DNSResolver", &DNSResolverType);
 
     /* FS module */
-    PyObject *fs = Py_InitModule("pyuv.fs", FS_methods);
+    PyObject *fs = init_fs();
+    if (fs == NULL) {
+        return NULL;
+    }
     __PyModule_AddObject(pyuv, "fs", fs);
 
     /* Types */

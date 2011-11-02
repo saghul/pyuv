@@ -206,3 +206,16 @@ FS_methods[] = {
 };
 
 
+PyObject *
+init_fs(void)
+{
+    PyObject *module;
+    module = Py_InitModule("pyuv.fs", FS_methods);
+    if (module == NULL) {
+        return NULL;
+    }
+
+    return module;
+}
+
+
