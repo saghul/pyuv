@@ -3,8 +3,6 @@
 
 - FS module with all filesystem related functions from libuv
 
-- Review Python reference counting in cases where errors are produced
-
 - Add support for named pipes
 
 - Add support for spawning child processes

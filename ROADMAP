@@ -2,8 +2,6 @@
 Next version: 0.0.1
 -------------------
 
-- Review Python reference counting in cases where errors are produced
-
 - Add support for named pipes
 
 - Write documentation (sphinkx?)
