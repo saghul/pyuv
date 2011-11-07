@@ -7,9 +7,6 @@ on_timer_close(uv_handle_t *handle)
 {
     PyGILState_STATE gstate = PyGILState_Ensure();
     ASSERT(handle);
-    /* Decrement reference count of the object this handle was keeping alive */
-    PyObject *obj = (PyObject *)handle->data;
-    Py_DECREF(obj);
     handle->data = NULL;
     PyMem_Free(handle);
     PyGILState_Release(gstate);
@@ -135,10 +132,13 @@ Timer_func_again(Timer *self)
 static PyObject *
 Timer_func_close(Timer *self)
 {
-    self->closed = True;
-    if (self->uv_timer != NULL) {
-        uv_close((uv_handle_t *)self->uv_timer, on_timer_close);
+    if (self->closed) {
+        PyErr_SetString(PyExc_TimerError, "Timer is already closed");
+        return NULL;
     }
+
+    self->closed = True;
+    uv_close((uv_handle_t *)self->uv_timer, on_timer_close);
 
     Py_RETURN_NONE;
 }
@@ -225,9 +225,6 @@ Timer_tp_init(Timer *self, PyObject *args, PyObject *kwargs)
     uv_timer->data = (void *)self;
     self->uv_timer = uv_timer;
 
-    /* Increment reference count while libuv keeps this object around. It'll be decremented on handle close. */
-    Py_INCREF(self);
-
     self->initialized = True;
     self->closed = False;
 
@@ -270,6 +267,9 @@ Timer_tp_clear(Timer *self)
 static void
 Timer_tp_dealloc(Timer *self)
 {
+    if (!self->closed) {
+        uv_close((uv_handle_t *)self->uv_timer, on_timer_close);
+    }
     Timer_tp_clear(self);
     Py_TYPE(self)->tp_free((PyObject *)self);
 }
