@@ -7,9 +7,6 @@ on_check_close(uv_handle_t *handle)
 {
     PyGILState_STATE gstate = PyGILState_Ensure();
     ASSERT(handle);
-    /* Decrement reference count of the object this handle was keeping alive */
-    PyObject *obj = (PyObject *)handle->data;
-    Py_DECREF(obj);
     handle->data = NULL;
     PyMem_Free(handle);
     PyGILState_Release(gstate);
@@ -157,9 +154,6 @@ Check_tp_init(Check *self, PyObject *args, PyObject *kwargs)
     uv_check->data = (void *)self;
     self->uv_check = uv_check;
 
-    /* Increment reference count while libuv keeps this object around. It'll be decremented on handle close. */
-    Py_INCREF(self);
-
     self->initialized = True;
     self->closed = False;
 
@@ -202,6 +196,9 @@ Check_tp_clear(Check *self)
 static void
 Check_tp_dealloc(Check *self)
 {
+    if (!self->closed) {
+        uv_close((uv_handle_t *)self->uv_check, on_check_close);
+    }
     Check_tp_clear(self);
     Py_TYPE(self)->tp_free((PyObject *)self);
 }

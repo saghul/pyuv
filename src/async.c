@@ -7,9 +7,6 @@ on_async_close(uv_handle_t *handle)
 {
     PyGILState_STATE gstate = PyGILState_Ensure();
     ASSERT(handle);
-    /* Decrement reference count of the object this handle was keeping alive */
-    PyObject *obj = (PyObject *)handle->data;
-    Py_DECREF(obj);
     handle->data = NULL;
     PyMem_Free(handle);
     PyGILState_Release(gstate);
@@ -135,9 +132,6 @@ Async_tp_init(Async *self, PyObject *args, PyObject *kwargs)
     uv_async->data = (void *)self;
     self->uv_async = uv_async;
 
-    /* Increment reference count while libuv keeps this object around. It'll be decremented on handle close. */
-    Py_INCREF(self);
-
     self->initialized = True;
     self->closed = False;
 
@@ -180,6 +174,9 @@ Async_tp_clear(Async *self)
 static void
 Async_tp_dealloc(Async *self)
 {
+    if (!self->closed) {
+        uv_close((uv_handle_t *)self->uv_async, on_async_close);
+    }
     Async_tp_clear(self);
     Py_TYPE(self)->tp_free((PyObject *)self);
 }
