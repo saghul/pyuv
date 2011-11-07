@@ -13,9 +13,6 @@ on_signal_close(uv_handle_t *handle)
 {
     PyGILState_STATE gstate = PyGILState_Ensure();
     ASSERT(handle);
-    /* Decrement reference count of the object this handle was keeping alive */
-    PyObject *obj = (PyObject *)handle->data;
-    Py_DECREF(obj);
     handle->data = NULL;
     PyMem_Free(handle);
     PyGILState_Release(gstate);
@@ -132,9 +129,6 @@ Signal_tp_init(Signal *self, PyObject *args, PyObject *kwargs)
     uv_prepare->data = (void *)self;
     self->uv_prepare = uv_prepare;
 
-    /* Increment reference count while libuv keeps this object around. It'll be decremented on handle close. */
-    Py_INCREF(self);
-
     self->initialized = True;
     self->closed = False;
 
@@ -173,6 +167,9 @@ Signal_tp_clear(Signal *self)
 static void
 Signal_tp_dealloc(Signal *self)
 {
+    if (!self->closed) {
+        uv_close((uv_handle_t *)self->uv_prepare, on_signal_close);
+    }
     Signal_tp_clear(self);
     Py_TYPE(self)->tp_free((PyObject *)self);
 }
