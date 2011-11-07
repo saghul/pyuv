@@ -163,7 +163,6 @@ IOStream_func_disconnect(IOStream *self)
     uv_shutdown_t* req = (uv_shutdown_t*) PyMem_Malloc(sizeof(uv_shutdown_t));
     if (!req) {
         PyErr_NoMemory();
-        PyErr_WriteUnraisable(self->on_read_cb);
         return NULL;
     }
 
