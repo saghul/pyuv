@@ -404,8 +404,8 @@ DNSResolver_func_getaddrinfo(DNSResolver *self, PyObject *args, PyObject *kwargs
     char port_str[6];
     int port, family, socktype, protocol, flags;
     struct addrinfo hints;
-    ares_cb_data_t *cb_data;
-    uv_getaddrinfo_t* handle;
+    ares_cb_data_t *cb_data = NULL;
+    uv_getaddrinfo_t* handle = NULL;
 
     socktype = protocol = flags = 0;
     family = AF_UNSPEC;
@@ -430,12 +430,13 @@ DNSResolver_func_getaddrinfo(DNSResolver *self, PyObject *args, PyObject *kwargs
     handle = PyMem_Malloc(sizeof(uv_getaddrinfo_t));
     if (!handle) {
         PyErr_NoMemory();
-        return NULL;
+        goto error;
     }
 
     cb_data = (ares_cb_data_t*) PyMem_Malloc(sizeof *cb_data);
     if (!cb_data) {
-        return PyErr_NoMemory();
+        PyErr_NoMemory();
+        goto error;
     }
 
     Py_INCREF(callback);
@@ -450,10 +451,22 @@ DNSResolver_func_getaddrinfo(DNSResolver *self, PyObject *args, PyObject *kwargs
     hints.ai_flags = flags;
 
     int r = uv_getaddrinfo(SELF_LOOP, handle, &getaddrinfo_cb, name, port_str, &hints);
-    if (r) {
-        RAISE_ERROR(SELF_LOOP, PyExc_DNSError, NULL);
+    if (r != 0) {
+        raise_uv_exception(self->loop, PyExc_DNSError);
+        goto error;
     }
+
     Py_RETURN_NONE;
+
+error:
+    if (handle) {
+        PyMem_Free(handle);
+    }
+    if (cb_data) {
+        Py_DECREF(callback);
+        PyMem_Free(cb_data);
+    }
+    return NULL;
 }
 
 

@@ -131,13 +131,13 @@ stat_end:
 static PyObject *
 stat_func(PyObject *self, PyObject *args, PyObject *kwargs, int type)
 {
-    uv_fs_t *fs_req;
-    fs_req_data_t *req_data;
     int r;
     char *path;
     Loop *loop;
     PyObject *callback = NULL;
     PyObject *data = NULL;
+    uv_fs_t *fs_req = NULL;
+    fs_req_data_t *req_data = NULL;
 
     static char *kwlist[] = {"path", "loop", "callback", "data", NULL};
 
@@ -153,13 +153,13 @@ stat_func(PyObject *self, PyObject *args, PyObject *kwargs, int type)
     fs_req = PyMem_Malloc(sizeof(uv_fs_t));
     if (!fs_req) {
         PyErr_NoMemory();
-        return NULL;
+        goto error;
     }
    
     req_data = PyMem_Malloc(sizeof(fs_req_data_t));
     if (!req_data) {
         PyErr_NoMemory();
-        return NULL;
+        goto error;
     }
 
     Py_INCREF(loop);
@@ -176,11 +176,24 @@ stat_func(PyObject *self, PyObject *args, PyObject *kwargs, int type)
     } else {
         r = uv_fs_lstat(loop->uv_loop, fs_req, path, stat_cb);
     }
-    if (r) {
-        RAISE_ERROR(loop->uv_loop, PyExc_FSError, NULL);
+    if (r != 0) {
+        raise_uv_exception(loop, PyExc_FSError);
+        goto error;
     }
 
     Py_RETURN_NONE;
+
+error:
+    if (fs_req) {
+        PyMem_Free(fs_req);
+    }
+    if (req_data) {
+        Py_DECREF(loop);
+        Py_XDECREF(callback);
+        Py_XDECREF(data);
+        PyMem_Free(req_data);
+    }
+    return NULL;
 }
 
 
