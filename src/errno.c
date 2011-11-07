@@ -45,7 +45,7 @@ init_errno(void)
     inscode(module_dict, errorcode_dict, "UV_OK", UV_OK);
     inscode(module_dict, errorcode_dict, "UV_EOF", UV_EOF);
     inscode(module_dict, errorcode_dict, "UV_EADDRINFO", UV_EADDRINFO);
-    inscode(module_dict, errorcode_dict, "UV_EACCESS", UV_EACCESS);
+    inscode(module_dict, errorcode_dict, "UV_EACCES", UV_EACCES);
     inscode(module_dict, errorcode_dict, "UV_EAGAIN", UV_EAGAIN);
     inscode(module_dict, errorcode_dict, "UV_EADDRINUSE", UV_EADDRINUSE);
     inscode(module_dict, errorcode_dict, "UV_EADDRNOTAVAIL", UV_EADDRNOTAVAIL);
