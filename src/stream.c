@@ -31,9 +31,6 @@ on_iostream_close(uv_handle_t *handle)
 {
     PyGILState_STATE gstate = PyGILState_Ensure();
     ASSERT(handle);
-    /* Decrement reference count of the object this handle was keeping alive */
-    PyObject *obj = (PyObject *)handle->data;
-    Py_DECREF(obj);
     handle->data = NULL;
     PyMem_Free(handle);
     PyGILState_Release(gstate);
@@ -135,10 +132,14 @@ on_iostream_write(uv_write_t* req, int status)
 static PyObject *
 IOStream_func_close(IOStream *self)
 {
-    self->connected = False;
-    if (self->uv_stream != NULL) {
-        uv_close((uv_handle_t *)self->uv_stream, on_iostream_close);
+    if (self->closed) {
+        PyErr_SetString(PyExc_IOStreamError, "IOStream is already closed");
+        return NULL;
     }
+
+    self->closed = True;
+    uv_close((uv_handle_t *)self->uv_stream, on_iostream_close);
+
     Py_RETURN_NONE;
 }
 
@@ -146,21 +147,33 @@ IOStream_func_close(IOStream *self)
 static PyObject *
 IOStream_func_disconnect(IOStream *self)
 {
-    if (!self->connected) {
-        PyErr_SetString(PyExc_IOStreamError, "already disconnected");
+    int r = 0;
+
+    if (self->closed) {
+        PyErr_SetString(PyExc_IOStreamError, "IOStream is already closed");
         return NULL;
     }
 
-    self->connected = False;
-    uv_read_stop(self->uv_stream);
+    r = uv_read_stop(self->uv_stream);
+    if (r != 0) {
+        raise_uv_exception(self->loop, PyExc_IOStreamError);
+        return NULL;
+    }
+
     uv_shutdown_t* req = (uv_shutdown_t*) PyMem_Malloc(sizeof(uv_shutdown_t));
     if (!req) {
         PyErr_NoMemory();
         PyErr_WriteUnraisable(self->on_read_cb);
-    } else {
-        uv_shutdown(req, self->uv_stream, on_iostream_shutdown);
+        return NULL;
     }
 
+    r = uv_shutdown(req, self->uv_stream, on_iostream_shutdown);
+    if (r != 0) {
+        raise_uv_exception(self->loop, PyExc_IOStreamError);
+        return NULL;
+    }
+
+    self->closed = True;
     Py_RETURN_NONE;
 }
 
@@ -172,8 +185,8 @@ IOStream_func_start_reading(IOStream *self, PyObject *args, PyObject *kwargs)
     PyObject *tmp = NULL;
     PyObject *callback;
 
-    if (!self->connected) {
-        PyErr_SetString(PyExc_IOStreamError, "disconnected");
+    if (self->closed) {
+        PyErr_SetString(PyExc_IOStreamError, "IOStream is closed");
         return NULL;
     }
 
@@ -184,38 +197,37 @@ IOStream_func_start_reading(IOStream *self, PyObject *args, PyObject *kwargs)
     if (!PyCallable_Check(callback)) {
         PyErr_SetString(PyExc_TypeError, "a callable is required");
         return NULL;
-    } else {
-        tmp = self->on_read_cb;
-        Py_INCREF(callback);
-        self->on_read_cb = callback;
-        Py_XDECREF(tmp);
     }
 
     r = uv_read_start((uv_stream_t *)self->uv_stream, (uv_alloc_cb)on_iostream_alloc, (uv_read_cb)on_iostream_read);
     if (r != 0) {
         raise_uv_exception(self->loop, PyExc_IOStreamError);
-        goto error;
+        return NULL;
     }
+
+    tmp = self->on_read_cb;
+    Py_INCREF(callback);
+    self->on_read_cb = callback;
+    Py_XDECREF(tmp);
+
     Py_RETURN_NONE;
-error:
-    Py_DECREF(callback);
-    return NULL;
 }
 
 
 static PyObject *
 IOStream_func_stop_reading(IOStream *self, PyObject *args, PyObject *kwargs)
 {
-    if (!self->connected) {
-        PyErr_SetString(PyExc_IOStreamError, "disconnected");
+    if (self->closed) {
+        PyErr_SetString(PyExc_IOStreamError, "IOStream is closed");
         return NULL;
     }
 
     int r = uv_read_stop(self->uv_stream);
-    if (r) {
+    if (r != 0) {
         raise_uv_exception(self->loop, PyExc_IOStreamError);
         return NULL;
     }
+
     Py_RETURN_NONE;
 }
 
@@ -228,6 +240,11 @@ IOStream_func_write(IOStream *self, PyObject *args)
     iostream_write_req_t *wr = NULL;
     iostream_req_data_t *req_data = NULL;
     PyObject *callback = Py_None;
+
+    if (self->closed) {
+        PyErr_SetString(PyExc_IOStreamError, "IOStream is closed");
+        return NULL;
+    }
 
     if (!PyArg_ParseTuple(args, "s|O:write", &data, &callback)) {
         return NULL;
@@ -264,6 +281,7 @@ IOStream_func_write(IOStream *self, PyObject *args)
         raise_uv_exception(self->loop, PyExc_IOStreamError);
         goto error;
     }
+
     Py_RETURN_NONE;
 
 error:
@@ -302,8 +320,9 @@ IOStream_tp_init(IOStream *self, PyObject *args, PyObject *kwargs)
     Py_XDECREF(tmp);
 
     self->initialized = True;
-    self->connected = False;
-    self->uv_stream = NULL;
+    self->closed = False;
+
+    /* Subclasses MUST call the parent and initialize uv_stream */
 
     return 0;
 }

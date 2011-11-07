@@ -40,9 +40,6 @@ on_tcp_server_close(uv_handle_t *handle)
 {
     PyGILState_STATE gstate = PyGILState_Ensure();
     ASSERT(handle);
-    /* Decrement reference count of the object this handle was keeping alive */
-    PyObject *obj = (PyObject *)handle->data;
-    Py_DECREF(obj);
     handle->data = NULL;
     PyMem_Free(handle);
     PyGILState_Release(gstate);
@@ -58,10 +55,9 @@ TCPServer_func_bind(TCPServer *self, PyObject *args)
     int address_type;
     struct in_addr addr4;
     struct in6_addr addr6;
-    uv_tcp_t *uv_tcp_server = NULL;
 
-    if (self->bound) {
-        PyErr_SetString(PyExc_TCPServerError, "already bound!");
+    if (self->closed) {
+        PyErr_SetString(PyExc_TCPServerError, "already closed");
         return NULL;
     }
 
@@ -83,19 +79,6 @@ TCPServer_func_bind(TCPServer *self, PyObject *args)
         return NULL;
     }
 
-    uv_tcp_server = PyMem_Malloc(sizeof(uv_tcp_t));
-    if (!uv_tcp_server) {
-        PyErr_NoMemory();
-        goto error;
-    }
-    r = uv_tcp_init(SELF_LOOP, uv_tcp_server);
-    if (r != 0) {
-        raise_uv_exception(self->loop, PyExc_TCPServerError);
-        goto error;
-    }
-    uv_tcp_server->data = (void *)self;
-    self->uv_tcp_server = uv_tcp_server;
-
     if (address_type == AF_INET) {
         r = uv_tcp_bind(self->uv_tcp_server, uv_ip4_addr(bind_ip, bind_port));
     } else {
@@ -107,20 +90,7 @@ TCPServer_func_bind(TCPServer *self, PyObject *args)
         return NULL;
     }
 
-    self->bound = True;
-
-    /* Increment reference count while libuv keeps this object around. It'll be decremented on handle close. */
-    Py_INCREF(self);
-
     Py_RETURN_NONE;
-
-error:
-    if (uv_tcp_server) {
-        uv_tcp_server->data = NULL;
-        PyMem_Free(uv_tcp_server);
-    }
-    self->uv_tcp_server = NULL;
-    return NULL;
 }
 
 
@@ -132,8 +102,8 @@ TCPServer_func_listen(TCPServer *self, PyObject *args)
     PyObject *callback;
     PyObject *tmp = NULL;
 
-    if (!self->bound) {
-        PyErr_SetString(PyExc_TCPServerError, "not bound");
+    if (self->closed) {
+        PyErr_SetString(PyExc_TCPServerError, "already closed");
         return NULL;
     }
 
@@ -149,36 +119,32 @@ TCPServer_func_listen(TCPServer *self, PyObject *args)
     if (!PyCallable_Check(callback)) {
         PyErr_SetString(PyExc_TypeError, "a callable is required");
         return NULL;
-    } else {
-        tmp = self->on_new_connection_cb;
-        Py_INCREF(callback);
-        self->on_new_connection_cb = callback;
-        Py_XDECREF(tmp);
     }
 
     r = uv_listen((uv_stream_t *)self->uv_tcp_server, backlog, on_tcp_connection);
     if (r != 0) {
         raise_uv_exception(self->loop, PyExc_TCPServerError);
-        goto error;
+        return NULL;
     }
 
-    Py_RETURN_NONE;
+    tmp = self->on_new_connection_cb;
+    Py_INCREF(callback);
+    self->on_new_connection_cb = callback;
+    Py_XDECREF(tmp);
 
-error:
-    Py_DECREF(callback);
-    return NULL;
+    Py_RETURN_NONE;
 }
 
 
 static PyObject *
 TCPServer_func_close(TCPServer *self)
 {
-    if (!self->bound) {
-        PyErr_SetString(PyExc_TCPServerError, "not bound");
+    if (self->closed) {
+        PyErr_SetString(PyExc_TCPServerError, "already closed");
         return NULL;
     }
 
-    self->bound = False;
+    self->closed = True;
     uv_close((uv_handle_t *)self->uv_tcp_server, on_tcp_server_close);
 
     Py_RETURN_NONE;
@@ -189,49 +155,22 @@ static PyObject *
 TCPServer_func_accept(TCPServer *self)
 {
     int r = 0;
-    uv_tcp_t *uv_stream = NULL;
 
-    if (!self->bound) {
-        PyErr_SetString(PyExc_TCPServerError, "not bound");
+    if (self->closed) {
+        PyErr_SetString(PyExc_TCPServerError, "already closed");
         return NULL;
     }
 
     TCPClientConnection *connection;
     connection = (TCPClientConnection *)PyObject_CallFunction((PyObject *)&TCPClientConnectionType, "O", self->loop);
 
-    uv_stream = PyMem_Malloc(sizeof(uv_tcp_t));
-    if (!uv_stream) {
-        PyErr_NoMemory();
-        goto error;
-    }
-
-    r = uv_tcp_init(((IOStream *)connection)->loop->uv_loop, uv_stream);
-    if (r != 0) {
-        raise_uv_exception(self->loop, PyExc_TCPServerError);
-        goto error;
-    }
-
-    uv_stream->data = (void *)connection;
-    ((IOStream *)connection)->uv_stream = (uv_stream_t *)uv_stream;
-
     r = uv_accept((uv_stream_t *)self->uv_tcp_server, ((IOStream *)connection)->uv_stream);
     if (r != 0) {
         raise_uv_exception(self->loop, PyExc_TCPServerError);
-        goto error;
+        return NULL;
     }
-    ((IOStream *)connection)->connected = True;
-
-    /* Increment reference count while libuv keeps this object around. It'll be decremented on handle close. */
-    Py_INCREF(connection);
 
     return (PyObject *)connection;
-
-error:
-    if (uv_stream) {
-        uv_stream->data = NULL;
-        PyMem_Free(uv_stream);
-    }
-    return NULL;
 }
 
 
@@ -245,8 +184,8 @@ TCPServer_func_getsockname(TCPServer *self)
     char ip6[INET6_ADDRSTRLEN];
     int namelen = sizeof(sockname);
 
-    if (!self->bound) {
-        PyErr_SetString(PyExc_TCPServerError, "not bound");
+    if (self->closed) {
+        PyErr_SetString(PyExc_TCPServerError, "already closed");
         return NULL;
     }
 
@@ -278,6 +217,7 @@ TCPServer_tp_init(TCPServer *self, PyObject *args, PyObject *kwargs)
 {
     Loop *loop;
     PyObject *tmp = NULL;
+    uv_tcp_t *uv_tcp_server = NULL;
 
     if (self->initialized) {
         PyErr_SetString(PyExc_TCPServerError, "Object already initialized");
@@ -293,9 +233,23 @@ TCPServer_tp_init(TCPServer *self, PyObject *args, PyObject *kwargs)
     self->loop = loop;
     Py_XDECREF(tmp);
 
+    uv_tcp_server = PyMem_Malloc(sizeof(uv_tcp_t));
+    if (!uv_tcp_server) {
+        PyErr_NoMemory();
+        Py_DECREF(loop);
+        return -1;
+    }
+    int r = uv_tcp_init(SELF_LOOP, uv_tcp_server);
+    if (r != 0) {
+        raise_uv_exception(self->loop, PyExc_TCPServerError);
+        Py_DECREF(loop);
+        return -1;
+    }
+    uv_tcp_server->data = (void *)self;
+    self->uv_tcp_server = uv_tcp_server;
+
     self->initialized = True;
-    self->bound = False;
-    self->uv_tcp_server = NULL;
+    self->closed = False;
 
     return 0;
 }
@@ -334,6 +288,9 @@ TCPServer_tp_clear(TCPServer *self)
 static void
 TCPServer_tp_dealloc(TCPServer *self)
 {
+    if (!self->closed) {
+        uv_close((uv_handle_t *)self->uv_tcp_server, on_tcp_server_close);
+    }
     TCPServer_tp_clear(self);
     Py_TYPE(self)->tp_free((PyObject *)self);
 }
@@ -400,6 +357,38 @@ static PyTypeObject TCPServerType = {
 
 /* TCPClientConnection */
 
+static int
+TCPClientConnection_tp_init(TCPClientConnection *self, PyObject *args, PyObject *kwargs)
+{
+    int r = 0;
+    uv_tcp_t *uv_stream;
+
+    IOStream *parent = (IOStream *)self;
+
+    if (IOStreamType.tp_init((PyObject *)self, args, kwargs) < 0) {
+        return -1;
+    }
+
+    uv_stream = PyMem_Malloc(sizeof(uv_tcp_t));
+    if (!uv_stream) {
+        PyErr_NoMemory();
+        Py_DECREF(PARENT_LOOP);
+        return -1;
+    }
+
+    r = uv_tcp_init(PARENT_LOOP, (uv_tcp_t *)uv_stream);
+    if (r != 0) {
+        raise_uv_exception(parent->loop, PyExc_TCPClientConnectionError);
+        Py_DECREF(PARENT_LOOP);
+        return -1;
+    }
+    uv_stream->data = (void *)self;
+    parent->uv_stream = (uv_stream_t *)uv_stream;
+
+    return 0;
+}
+
+
 static PyObject *
 TCPClientConnection_tp_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
 {
@@ -447,7 +436,7 @@ static PyTypeObject TCPClientConnectionType = {
     0,                                                             /*tp_descr_get*/
     0,                                                             /*tp_descr_set*/
     0,                                                             /*tp_dictoffset*/
-    0,                                                             /*tp_init*/
+    (initproc)TCPClientConnection_tp_init,                         /*tp_init*/
     0,                                                             /*tp_alloc*/
     TCPClientConnection_tp_new,                                    /*tp_new*/
 };
@@ -482,7 +471,6 @@ on_tcp_client_connect(uv_connect_t *req, int status)
     Py_INCREF(self);
 
     if (status != 0) {
-        self->connected = False;
         error = PyBool_FromLong(1);
         uv_err_t err = uv_last_error(SELF_LOOP);
         exc_data = Py_BuildValue("(is)", err.code, uv_strerror(err));
@@ -493,7 +481,6 @@ on_tcp_client_connect(uv_connect_t *req, int status)
         // TODO: pass exception to callback, how?
         PyErr_WriteUnraisable(callback);
     } else {
-        self->connected = True;
         error = PyBool_FromLong(0);
     }
 
@@ -524,14 +511,13 @@ TCPClient_func_connect(TCPClient *self, PyObject *args, PyObject *kwargs)
     struct in6_addr addr6;
     tcp_connect_req_t *connect_req = NULL;
     iostream_req_data_t *req_data = NULL;
-    uv_tcp_t *uv_stream = NULL;
     PyObject *connect_address;
     PyObject *callback;
 
     IOStream *parent = (IOStream *)self;
 
-    if (parent->connected) {
-        PyErr_SetString(PyExc_TCPClientError, "already connected");
+    if (parent->closed) {
+        PyErr_SetString(PyExc_TCPClientError, "closed");
         return NULL;
     }
 
@@ -574,20 +560,6 @@ TCPClient_func_connect(TCPClient *self, PyObject *args, PyObject *kwargs)
         goto error;
     }
 
-    uv_stream = PyMem_Malloc(sizeof(uv_tcp_t));
-    if (!uv_stream) {
-        PyErr_NoMemory();
-        goto error;
-    }
-
-    r = uv_tcp_init(PARENT_LOOP, (uv_tcp_t *)uv_stream);
-    if (r != 0) {
-        raise_uv_exception(parent->loop, PyExc_TCPClientError);
-        goto error;
-    }
-    uv_stream->data = (void *)self;
-    parent->uv_stream = (uv_stream_t *)uv_stream;
-
     req_data->obj = (PyObject *)self;
     Py_INCREF(callback);
     req_data->callback = callback;
@@ -605,9 +577,6 @@ TCPClient_func_connect(TCPClient *self, PyObject *args, PyObject *kwargs)
         goto error;
     }
 
-    /* Increment reference count while libuv keeps this object around. It'll be decremented on handle close. */
-    Py_INCREF(self);
-
     Py_RETURN_NONE;
 
 error:
@@ -621,11 +590,6 @@ error:
         req_data->callback = NULL;
         PyMem_Free(req_data);
     }
-    if (uv_stream) {
-        uv_stream->data = NULL;
-        PyMem_Free(uv_stream);
-    }
-    parent->uv_stream = NULL;
     return NULL;
 }
 
@@ -642,8 +606,8 @@ TCPClient_func_getsockname(TCPClient *self)
 
     IOStream *parent = (IOStream *)self;
 
-    if (!parent->connected) {
-        PyErr_SetString(PyExc_TCPClientError, "disconnected");
+    if (!parent->closed) {
+        PyErr_SetString(PyExc_TCPClientError, "closed");
         return NULL;
     }
 
@@ -682,8 +646,8 @@ TCPClient_func_getpeername(TCPClient *self)
 
     IOStream *parent = (IOStream *)self;
 
-    if (!parent->connected) {
-        PyErr_SetString(PyExc_TCPClientError, "disconnected");
+    if (!parent->closed) {
+        PyErr_SetString(PyExc_TCPClientError, "closed");
         return NULL;
     }
 
@@ -707,6 +671,38 @@ TCPClient_func_getpeername(TCPClient *self)
         PyErr_SetString(PyExc_TCPClientError, "unknown address type detected");
         return NULL;
     }
+}
+
+
+static int
+TCPClient_tp_init(TCPClient *self, PyObject *args, PyObject *kwargs)
+{
+    int r = 0;
+    uv_tcp_t *uv_stream;
+
+    IOStream *parent = (IOStream *)self;
+
+    if (IOStreamType.tp_init((PyObject *)self, args, kwargs) < 0) {
+        return -1;
+    }
+
+    uv_stream = PyMem_Malloc(sizeof(uv_tcp_t));
+    if (!uv_stream) {
+        PyErr_NoMemory();
+        Py_DECREF(PARENT_LOOP);
+        return -1;
+    }
+
+    r = uv_tcp_init(PARENT_LOOP, (uv_tcp_t *)uv_stream);
+    if (r != 0) {
+        raise_uv_exception(parent->loop, PyExc_TCPClientError);
+        Py_DECREF(PARENT_LOOP);
+        return -1;
+    }
+    uv_stream->data = (void *)self;
+    parent->uv_stream = (uv_stream_t *)uv_stream;
+
+    return 0;
 }
 
 
@@ -766,7 +762,7 @@ static PyTypeObject TCPClientType = {
     0,                                                             /*tp_descr_get*/
     0,                                                             /*tp_descr_set*/
     0,                                                             /*tp_dictoffset*/
-    0,                                                             /*tp_init*/
+    (initproc)TCPClient_tp_init,                                   /*tp_init*/
     0,                                                             /*tp_alloc*/
     TCPClient_tp_new,                                              /*tp_new*/
 };

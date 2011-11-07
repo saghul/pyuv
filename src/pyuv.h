@@ -141,8 +141,8 @@ typedef struct {
     PyObject *on_disconnect_cb;
     PyObject *on_read_cb;
     uv_stream_t *uv_stream;
-    Bool connected;
     Bool initialized;
+    Bool closed;
 } IOStream;
 
 static PyTypeObject IOStreamType;
@@ -153,8 +153,8 @@ typedef struct {
     Loop *loop;
     PyObject *on_new_connection_cb;
     uv_tcp_t *uv_tcp_server;
-    Bool bound;
     Bool initialized;
+    Bool closed;
 } TCPServer;
 
 static PyTypeObject TCPServerType;
