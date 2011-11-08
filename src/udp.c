@@ -21,9 +21,6 @@ on_udp_close(uv_handle_t *handle)
 {
     PyGILState_STATE gstate = PyGILState_Ensure();
     ASSERT(handle);
-    /* Decrement reference count of the object this handle was keeping alive */
-    PyObject *obj = (PyObject *)handle->data;
-    Py_DECREF(obj);
     handle->data = NULL;
     PyMem_Free(handle);
     PyGILState_Release(gstate);
@@ -116,7 +113,7 @@ on_udp_write(uv_udp_send_t* req, int status)
     ASSERT(self);
     /* Object could go out of scope in the callback, increase refcount to avoid it */
     Py_INCREF(self);
-  
+
     PyObject *result;
     if (callback != Py_None) {
         result = PyObject_CallFunctionObjArgs(callback, self, NULL);
@@ -145,10 +142,9 @@ UDPConnection_func_bind(UDPConnection *self, PyObject *args)
     int address_type;
     struct in_addr addr4;
     struct in6_addr addr6;
-    uv_udp_t *uv_udp_handle = NULL;
 
-    if (self->bound) {
-        PyErr_SetString(PyExc_UDPConnectionError, "already bound!");
+    if (self->closed) {
+        PyErr_SetString(PyExc_UDPConnectionError, "closed");
         return NULL;
     }
 
@@ -170,19 +166,6 @@ UDPConnection_func_bind(UDPConnection *self, PyObject *args)
         return NULL;
     }
 
-    uv_udp_handle = PyMem_Malloc(sizeof(uv_udp_t));
-    if (!uv_udp_handle) {
-        PyErr_NoMemory();
-        goto error;
-    }
-    r = uv_udp_init(SELF_LOOP, uv_udp_handle);
-    if (r != 0) {
-        raise_uv_exception(self->loop, PyExc_UDPConnectionError);
-        goto error;
-    }
-    uv_udp_handle->data = (void *)self;
-    self->uv_udp_handle = uv_udp_handle;
-
     if (address_type == AF_INET) {
         r = uv_udp_bind(self->uv_udp_handle, uv_ip4_addr(bind_ip, bind_port), 0);
     } else {
@@ -194,20 +177,7 @@ UDPConnection_func_bind(UDPConnection *self, PyObject *args)
         return NULL;
     }
 
-    self->bound = True;
-
-    /* Increment reference count while libuv keeps this object around. It'll be decremented on handle close. */
-    Py_INCREF(self);
-
     Py_RETURN_NONE;
-
-error:
-    if (uv_udp_handle) {
-        uv_udp_handle->data = NULL;
-        PyMem_Free(uv_udp_handle);
-    }
-    self->uv_udp_handle = NULL;
-    return NULL;
 }
 
 
@@ -218,8 +188,8 @@ UDPConnection_func_start_read(UDPConnection *self, PyObject *args)
     PyObject *tmp = NULL;
     PyObject *callback;
 
-    if (!self->bound) {
-        PyErr_SetString(PyExc_UDPConnectionError, "not bound");
+    if (self->closed) {
+        PyErr_SetString(PyExc_UDPConnectionError, "closed");
         return NULL;
     }
 
@@ -230,37 +200,35 @@ UDPConnection_func_start_read(UDPConnection *self, PyObject *args)
     if (!PyCallable_Check(callback)) {
         PyErr_SetString(PyExc_TypeError, "a callable is required");
         return NULL;
-    } else {
-        tmp = self->on_read_cb;
-        Py_INCREF(callback);
-        self->on_read_cb = callback;
-        Py_XDECREF(tmp);
     }
 
     r = uv_udp_recv_start(self->uv_udp_handle, (uv_alloc_cb)on_udp_alloc, (uv_udp_recv_cb)on_udp_read);
     if (r != 0) {
         raise_uv_exception(self->loop, PyExc_UDPConnectionError);
-        goto error;
+        return NULL;
     }
 
-    Py_RETURN_NONE;
+    tmp = self->on_read_cb;
+    Py_INCREF(callback);
+    self->on_read_cb = callback;
+    Py_XDECREF(tmp);
 
-error:
-    Py_DECREF(callback);
-    return NULL;
+    Py_RETURN_NONE;
 }
 
 
 static PyObject *
 UDPConnection_func_stop_read(UDPConnection *self)
 {
-    if (!self->bound) {
-        PyErr_SetString(PyExc_UDPConnectionError, "not bound");
+    int r = 0;
+
+    if (self->closed) {
+        PyErr_SetString(PyExc_UDPConnectionError, "closed");
         return NULL;
     }
 
-    int r = uv_udp_recv_stop(self->uv_udp_handle);
-    if (r) {
+    r = uv_udp_recv_stop(self->uv_udp_handle);
+    if (r != 0) {
         raise_uv_exception(self->loop, PyExc_UDPConnectionError);
         return NULL;
     }
@@ -271,7 +239,7 @@ UDPConnection_func_stop_read(UDPConnection *self)
 static PyObject *
 UDPConnection_func_write(UDPConnection *self, PyObject *args)
 {
-    int r;
+    int r = 0;
     char *write_data;
     char *dest_ip;
     int dest_port;
@@ -282,6 +250,11 @@ UDPConnection_func_write(UDPConnection *self, PyObject *args)
     udp_req_data_t *req_data = NULL;
     PyObject *address_tuple;
     PyObject *callback = Py_None;
+
+    if (self->closed) {
+        PyErr_SetString(PyExc_UDPConnectionError, "closed");
+        return NULL;
+    }
 
     if (!PyArg_ParseTuple(args, "sO|O:write", &write_data, &address_tuple, &callback)) {
         return NULL;
@@ -360,10 +333,14 @@ error:
 static PyObject *
 UDPConnection_func_close(UDPConnection *self)
 {
-    self->bound = False;
-    if (self->uv_udp_handle != NULL) {
-        uv_close((uv_handle_t *)self->uv_udp_handle, on_udp_close);
+    if (self->closed) {
+        PyErr_SetString(PyExc_UDPConnectionError, "UDPConnection is already closed");
+        return NULL;
     }
+
+    self->closed = True;
+    uv_close((uv_handle_t *)self->uv_udp_handle, on_udp_close);
+
     Py_RETURN_NONE;
 }
 
@@ -371,6 +348,7 @@ UDPConnection_func_close(UDPConnection *self)
 static PyObject *
 UDPConnection_func_getsockname(UDPConnection *self)
 {
+    int r = 0;
     struct sockaddr sockname;
     struct sockaddr_in *addr4;
     struct sockaddr_in6 *addr6;
@@ -378,12 +356,12 @@ UDPConnection_func_getsockname(UDPConnection *self)
     char ip6[INET6_ADDRSTRLEN];
     int namelen = sizeof(sockname);
 
-    if (!self->bound) {
-        PyErr_SetString(PyExc_UDPConnectionError, "not bound");
+    if (self->closed) {
+        PyErr_SetString(PyExc_UDPConnectionError, "closed");
         return NULL;
     }
 
-    int r = uv_udp_getsockname(self->uv_udp_handle, &sockname, &namelen);
+    r = uv_udp_getsockname(self->uv_udp_handle, &sockname, &namelen);
     if (r != 0) {
         raise_uv_exception(self->loop, PyExc_UDPConnectionError);
         return NULL;
@@ -409,8 +387,10 @@ UDPConnection_func_getsockname(UDPConnection *self)
 static int
 UDPConnection_tp_init(UDPConnection *self, PyObject *args, PyObject *kwargs)
 {
+    int r = 0;
     Loop *loop;
     PyObject *tmp = NULL;
+    uv_udp_t *uv_udp_handle = NULL;
 
     if (self->initialized) {
         PyErr_SetString(PyExc_UDPConnectionError, "Object already initialized");
@@ -426,9 +406,23 @@ UDPConnection_tp_init(UDPConnection *self, PyObject *args, PyObject *kwargs)
     self->loop = loop;
     Py_XDECREF(tmp);
 
+    uv_udp_handle = PyMem_Malloc(sizeof(uv_udp_t));
+    if (!uv_udp_handle) {
+        PyErr_NoMemory();
+        Py_DECREF(loop);
+        return -1;
+    }
+    r = uv_udp_init(SELF_LOOP, uv_udp_handle);
+    if (r != 0) {
+        raise_uv_exception(self->loop, PyExc_UDPConnectionError);
+        Py_DECREF(loop);
+        return -1;
+    }
+    uv_udp_handle->data = (void *)self;
+    self->uv_udp_handle = uv_udp_handle;
+
     self->initialized = True;
-    self->bound = False;
-    self->uv_udp_handle = NULL;
+    self->closed = False;
 
     return 0;
 }
@@ -467,6 +461,9 @@ UDPConnection_tp_clear(UDPConnection *self)
 static void
 UDPConnection_tp_dealloc(UDPConnection *self)
 {
+    if (!self->closed) {
+        uv_close((uv_handle_t *)self->uv_udp_handle, on_udp_close);
+    }
     UDPConnection_tp_clear(self);
     Py_TYPE(self)->tp_free((PyObject *)self);
 }

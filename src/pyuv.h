@@ -172,8 +172,8 @@ typedef struct {
     Loop *loop;
     PyObject *on_read_cb;
     uv_udp_t *uv_udp_handle;
-    Bool bound;
     Bool initialized;
+    Bool closed;
 } UDPConnection;
 
 static PyTypeObject UDPConnectionType;
