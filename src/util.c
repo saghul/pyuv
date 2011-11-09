@@ -3,7 +3,7 @@
 
 /* Add a type to a module */
 int
-__PyModule_AddType(PyObject *module, const char *name, PyTypeObject *type)
+PyUVModule_AddType(PyObject *module, const char *name, PyTypeObject *type)
 {
     if (PyType_Ready(type)) {
         return -1;
@@ -19,7 +19,7 @@ __PyModule_AddType(PyObject *module, const char *name, PyTypeObject *type)
 
 /* Add a type to a module */
 int
-__PyModule_AddObject(PyObject *module, const char *name, PyObject *value)
+PyUVModule_AddObject(PyObject *module, const char *name, PyObject *value)
 {
     Py_INCREF(value);
     if (PyModule_AddObject(module, name, value)) {
