@@ -73,7 +73,7 @@ on_iostream_read(uv_tcp_t* handle, int nread, uv_buf_t buf)
     if (nread >= 0) {
         data = PyString_FromStringAndSize(buf.base, nread);
     } else if (nread < 0) {
-        uv_err_t err = uv_last_error(SELF_LOOP);
+        uv_err_t err = uv_last_error(UV_LOOP(self));
         ASSERT(err.code == UV_EOF);
         UNUSED_ARG(err);
         data = Py_None;

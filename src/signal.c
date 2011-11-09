@@ -120,7 +120,7 @@ Signal_tp_init(Signal *self, PyObject *args, PyObject *kwargs)
         return -1;
     }
 
-    r = uv_prepare_init(SELF_LOOP, uv_prepare);
+    r = uv_prepare_init(UV_LOOP(self), uv_prepare);
     if (r != 0) {
         raise_uv_exception(self->loop, PyExc_SignalError);
         Py_DECREF(loop);

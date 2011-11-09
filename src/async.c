@@ -123,7 +123,7 @@ Async_tp_init(Async *self, PyObject *args, PyObject *kwargs)
         return -1;
     }
 
-    r = uv_async_init(SELF_LOOP, uv_async, on_async_callback);
+    r = uv_async_init(UV_LOOP(self), uv_async, on_async_callback);
     if (r != 0) {
         raise_uv_exception(self->loop, PyExc_AsyncError);
         Py_DECREF(loop);

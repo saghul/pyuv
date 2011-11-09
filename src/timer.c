@@ -215,7 +215,7 @@ Timer_tp_init(Timer *self, PyObject *args, PyObject *kwargs)
         return -1;
     }
 
-    r = uv_timer_init(SELF_LOOP, uv_timer);
+    r = uv_timer_init(UV_LOOP(self), uv_timer);
     if (r != 0) {
         raise_uv_exception(self->loop, PyExc_TimerError);
         PyMem_Free(uv_timer);

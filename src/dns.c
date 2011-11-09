@@ -450,7 +450,7 @@ DNSResolver_func_getaddrinfo(DNSResolver *self, PyObject *args, PyObject *kwargs
     hints.ai_protocol = protocol;
     hints.ai_flags = flags;
 
-    int r = uv_getaddrinfo(SELF_LOOP, handle, &getaddrinfo_cb, name, port_str, &hints);
+    int r = uv_getaddrinfo(UV_LOOP(self), handle, &getaddrinfo_cb, name, port_str, &hints);
     if (r != 0) {
         raise_uv_exception(self->loop, PyExc_DNSError);
         goto error;
@@ -619,7 +619,7 @@ DNSResolver_tp_init(DNSResolver *self, PyObject *args, PyObject *kwargs)
     optmask = ARES_OPT_FLAGS;
     options.flags = ARES_FLAG_USEVC;
 
-    r = uv_ares_init_options(SELF_LOOP, &self->channel, &options, optmask);
+    r = uv_ares_init_options(UV_LOOP(self), &self->channel, &options, optmask);
     if (r) {
         PyErr_SetString(PyExc_DNSError, "error c-ares library options");
         return -1;
@@ -663,7 +663,7 @@ DNSResolver_tp_clear(DNSResolver *self)
 static void
 DNSResolver_tp_dealloc(DNSResolver *self)
 {
-    uv_ares_destroy(SELF_LOOP, self->channel);
+    uv_ares_destroy(UV_LOOP(self), self->channel);
     DNSResolver_tp_clear(self);
     Py_TYPE(self)->tp_free((PyObject *)self);
 }

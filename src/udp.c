@@ -412,7 +412,7 @@ UDPConnection_tp_init(UDPConnection *self, PyObject *args, PyObject *kwargs)
         Py_DECREF(loop);
         return -1;
     }
-    r = uv_udp_init(SELF_LOOP, uv_udp_handle);
+    r = uv_udp_init(UV_LOOP(self), uv_udp_handle);
     if (r != 0) {
         raise_uv_exception(self->loop, PyExc_UDPConnectionError);
         Py_DECREF(loop);

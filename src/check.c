@@ -145,7 +145,7 @@ Check_tp_init(Check *self, PyObject *args, PyObject *kwargs)
         return -1;
     }
 
-    r = uv_check_init(SELF_LOOP, uv_check);
+    r = uv_check_init(UV_LOOP(self), uv_check);
     if (r != 0) {
         raise_uv_exception(self->loop, PyExc_CheckError);
         Py_DECREF(loop);

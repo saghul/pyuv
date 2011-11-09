@@ -37,8 +37,6 @@ typedef int Bool;
         }                                                                   \
     } while(0)                                                              \
 
-#define SELF_LOOP self->loop->uv_loop
-#define PARENT_LOOP parent->loop->uv_loop
 #define UV_LOOP(x) x->loop->uv_loop
 
 

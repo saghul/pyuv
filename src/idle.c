@@ -145,7 +145,7 @@ Idle_tp_init(Idle *self, PyObject *args, PyObject *kwargs)
         return -1;
     }
 
-    r = uv_idle_init(SELF_LOOP, uv_idle);
+    r = uv_idle_init(UV_LOOP(self), uv_idle);
     if (r != 0) {
         raise_uv_exception(self->loop, PyExc_IdleError);
         Py_DECREF(loop);

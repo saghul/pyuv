@@ -99,7 +99,7 @@ ThreadPool_func_run(ThreadPool *self, PyObject *args)
     req_data->kwargs = func_kwargs;
 
     work_req->data = (void *)req_data;
-    r = uv_queue_work(SELF_LOOP, work_req, work_cb, after_work_cb);
+    r = uv_queue_work(UV_LOOP(self), work_req, work_cb, after_work_cb);
     if (r != 0) {
         raise_uv_exception(self->loop, PyExc_ThreadPoolError);
         goto error;
