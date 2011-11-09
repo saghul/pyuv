@@ -1,7 +1,7 @@
 
 #define UDP_MAX_BUF_SIZE 65536
 
-static PyObject* PyExc_UDPConnectionError;
+static PyObject* PyExc_UDPError;
 
 
 typedef struct {
@@ -55,12 +55,10 @@ on_udp_read(uv_udp_t* handle, int nread, uv_buf_t buf, struct sockaddr* addr, un
     PyObject *data;
     PyObject *result;
 
-    UNUSED_ARG(r);
-
     ASSERT(handle);
     ASSERT(flags == 0);
 
-    UDPConnection *self = (UDPConnection *)handle->data;
+    UDP *self = (UDP *)handle->data;
     ASSERT(self);
     /* Object could go out of scope in the callback, increase refcount to avoid it */
     Py_INCREF(self);
@@ -88,6 +86,7 @@ on_udp_read(uv_udp_t* handle, int nread, uv_buf_t buf, struct sockaddr* addr, un
         Py_XDECREF(result);
     } else {
         ASSERT(addr == NULL);
+        UNUSED_ARG(r);
     }
 
     PyMem_Free(buf.base);
@@ -107,7 +106,7 @@ on_udp_write(uv_udp_send_t* req, int status)
     udp_write_req_t *wr = (udp_write_req_t *)req;
     udp_req_data_t* req_data = (udp_req_data_t *)wr->data;
 
-    UDPConnection *self = (UDPConnection *)req_data->obj;
+    UDP *self = (UDP *)req_data->obj;
     PyObject *callback = req_data->callback;
 
     ASSERT(self);
@@ -134,7 +133,7 @@ on_udp_write(uv_udp_send_t* req, int status)
 
 
 static PyObject *
-UDPConnection_func_bind(UDPConnection *self, PyObject *args)
+UDP_func_bind(UDP *self, PyObject *args)
 {
     int r = 0;
     char *bind_ip;
@@ -144,7 +143,7 @@ UDPConnection_func_bind(UDPConnection *self, PyObject *args)
     struct in6_addr addr6;
 
     if (self->closed) {
-        PyErr_SetString(PyExc_UDPConnectionError, "closed");
+        PyErr_SetString(PyExc_UDPError, "closed");
         return NULL;
     }
 
@@ -173,7 +172,7 @@ UDPConnection_func_bind(UDPConnection *self, PyObject *args)
     }
 
     if (r != 0) {
-        raise_uv_exception(self->loop, PyExc_UDPConnectionError);
+        raise_uv_exception(self->loop, PyExc_UDPError);
         return NULL;
     }
 
@@ -182,14 +181,14 @@ UDPConnection_func_bind(UDPConnection *self, PyObject *args)
 
 
 static PyObject *
-UDPConnection_func_start_read(UDPConnection *self, PyObject *args)
+UDP_func_start_read(UDP *self, PyObject *args)
 {
     int r = 0;
     PyObject *tmp = NULL;
     PyObject *callback;
 
     if (self->closed) {
-        PyErr_SetString(PyExc_UDPConnectionError, "closed");
+        PyErr_SetString(PyExc_UDPError, "closed");
         return NULL;
     }
 
@@ -204,7 +203,7 @@ UDPConnection_func_start_read(UDPConnection *self, PyObject *args)
 
     r = uv_udp_recv_start(self->uv_udp_handle, (uv_alloc_cb)on_udp_alloc, (uv_udp_recv_cb)on_udp_read);
     if (r != 0) {
-        raise_uv_exception(self->loop, PyExc_UDPConnectionError);
+        raise_uv_exception(self->loop, PyExc_UDPError);
         return NULL;
     }
 
@@ -218,18 +217,18 @@ UDPConnection_func_start_read(UDPConnection *self, PyObject *args)
 
 
 static PyObject *
-UDPConnection_func_stop_read(UDPConnection *self)
+UDP_func_stop_read(UDP *self)
 {
     int r = 0;
 
     if (self->closed) {
-        PyErr_SetString(PyExc_UDPConnectionError, "closed");
+        PyErr_SetString(PyExc_UDPError, "closed");
         return NULL;
     }
 
     r = uv_udp_recv_stop(self->uv_udp_handle);
     if (r != 0) {
-        raise_uv_exception(self->loop, PyExc_UDPConnectionError);
+        raise_uv_exception(self->loop, PyExc_UDPError);
         return NULL;
     }
     Py_RETURN_NONE;
@@ -237,7 +236,7 @@ UDPConnection_func_stop_read(UDPConnection *self)
 
 
 static PyObject *
-UDPConnection_func_write(UDPConnection *self, PyObject *args)
+UDP_func_write(UDP *self, PyObject *args)
 {
     int r = 0;
     char *write_data;
@@ -252,7 +251,7 @@ UDPConnection_func_write(UDPConnection *self, PyObject *args)
     PyObject *callback = Py_None;
 
     if (self->closed) {
-        PyErr_SetString(PyExc_UDPConnectionError, "closed");
+        PyErr_SetString(PyExc_UDPError, "closed");
         return NULL;
     }
 
@@ -310,7 +309,7 @@ UDPConnection_func_write(UDPConnection *self, PyObject *args)
         r = uv_udp_send6(&wr->req, self->uv_udp_handle, &wr->buf, 1, uv_ip6_addr(dest_ip, dest_port), (uv_udp_send_cb)on_udp_write);
     }
     if (r != 0) {
-        raise_uv_exception(self->loop, PyExc_UDPConnectionError);
+        raise_uv_exception(self->loop, PyExc_UDPError);
         goto error;
     }
     Py_RETURN_NONE;
@@ -331,10 +330,10 @@ error:
 
 
 static PyObject *
-UDPConnection_func_close(UDPConnection *self)
+UDP_func_close(UDP *self)
 {
     if (self->closed) {
-        PyErr_SetString(PyExc_UDPConnectionError, "UDPConnection is already closed");
+        PyErr_SetString(PyExc_UDPError, "UDP is already closed");
         return NULL;
     }
 
@@ -346,7 +345,7 @@ UDPConnection_func_close(UDPConnection *self)
 
 
 static PyObject *
-UDPConnection_func_getsockname(UDPConnection *self)
+UDP_func_getsockname(UDP *self)
 {
     int r = 0;
     struct sockaddr sockname;
@@ -357,13 +356,13 @@ UDPConnection_func_getsockname(UDPConnection *self)
     int namelen = sizeof(sockname);
 
     if (self->closed) {
-        PyErr_SetString(PyExc_UDPConnectionError, "closed");
+        PyErr_SetString(PyExc_UDPError, "closed");
         return NULL;
     }
 
     r = uv_udp_getsockname(self->uv_udp_handle, &sockname, &namelen);
     if (r != 0) {
-        raise_uv_exception(self->loop, PyExc_UDPConnectionError);
+        raise_uv_exception(self->loop, PyExc_UDPError);
         return NULL;
     }
 
@@ -378,14 +377,14 @@ UDPConnection_func_getsockname(UDPConnection *self)
         ASSERT(r == 0);
         return Py_BuildValue("si", ip6, ntohs(addr6->sin6_port));
     } else {
-        PyErr_SetString(PyExc_UDPConnectionError, "unknown address type detected");
+        PyErr_SetString(PyExc_UDPError, "unknown address type detected");
         return NULL;
     }
 }
 
 
 static int
-UDPConnection_tp_init(UDPConnection *self, PyObject *args, PyObject *kwargs)
+UDP_tp_init(UDP *self, PyObject *args, PyObject *kwargs)
 {
     int r = 0;
     Loop *loop;
@@ -393,7 +392,7 @@ UDPConnection_tp_init(UDPConnection *self, PyObject *args, PyObject *kwargs)
     uv_udp_t *uv_udp_handle = NULL;
 
     if (self->initialized) {
-        PyErr_SetString(PyExc_UDPConnectionError, "Object already initialized");
+        PyErr_SetString(PyExc_UDPError, "Object already initialized");
         return -1;
     }
 
@@ -414,7 +413,7 @@ UDPConnection_tp_init(UDPConnection *self, PyObject *args, PyObject *kwargs)
     }
     r = uv_udp_init(UV_LOOP(self), uv_udp_handle);
     if (r != 0) {
-        raise_uv_exception(self->loop, PyExc_UDPConnectionError);
+        raise_uv_exception(self->loop, PyExc_UDPError);
         Py_DECREF(loop);
         return -1;
     }
@@ -429,9 +428,9 @@ UDPConnection_tp_init(UDPConnection *self, PyObject *args, PyObject *kwargs)
 
 
 static PyObject *
-UDPConnection_tp_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
+UDP_tp_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
 {
-    UDPConnection *self = (UDPConnection *)PyType_GenericNew(type, args, kwargs);
+    UDP *self = (UDP *)PyType_GenericNew(type, args, kwargs);
     if (!self) {
         return NULL;
     }
@@ -441,7 +440,7 @@ UDPConnection_tp_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
 
 
 static int
-UDPConnection_tp_traverse(UDPConnection *self, visitproc visit, void *arg)
+UDP_tp_traverse(UDP *self, visitproc visit, void *arg)
 {
     Py_VISIT(self->on_read_cb);
     Py_VISIT(self->loop);
@@ -450,7 +449,7 @@ UDPConnection_tp_traverse(UDPConnection *self, visitproc visit, void *arg)
 
 
 static int
-UDPConnection_tp_clear(UDPConnection *self)
+UDP_tp_clear(UDP *self)
 {
     Py_CLEAR(self->on_read_cb);
     Py_CLEAR(self->loop);
@@ -459,40 +458,40 @@ UDPConnection_tp_clear(UDPConnection *self)
 
 
 static void
-UDPConnection_tp_dealloc(UDPConnection *self)
+UDP_tp_dealloc(UDP *self)
 {
     if (!self->closed) {
         uv_close((uv_handle_t *)self->uv_udp_handle, on_udp_close);
     }
-    UDPConnection_tp_clear(self);
+    UDP_tp_clear(self);
     Py_TYPE(self)->tp_free((PyObject *)self);
 }
 
 
 static PyMethodDef
-UDPConnection_tp_methods[] = {
-    { "bind", (PyCFunction)UDPConnection_func_bind, METH_VARARGS, "Bind to the specified IP and port." },
-    { "start_read", (PyCFunction)UDPConnection_func_start_read, METH_VARARGS, "Start accepting data." },
-    { "stop_read", (PyCFunction)UDPConnection_func_stop_read, METH_NOARGS, "Stop receiving data." },
-    { "write", (PyCFunction)UDPConnection_func_write, METH_VARARGS, "Write data over UDP." },
-    { "close", (PyCFunction)UDPConnection_func_close, METH_NOARGS, "Close UDP connection." },
-    { "getsockname", (PyCFunction)UDPConnection_func_getsockname, METH_NOARGS, "Get local socket information." },
+UDP_tp_methods[] = {
+    { "bind", (PyCFunction)UDP_func_bind, METH_VARARGS, "Bind to the specified IP and port." },
+    { "start_read", (PyCFunction)UDP_func_start_read, METH_VARARGS, "Start accepting data." },
+    { "stop_read", (PyCFunction)UDP_func_stop_read, METH_NOARGS, "Stop receiving data." },
+    { "write", (PyCFunction)UDP_func_write, METH_VARARGS, "Write data over UDP." },
+    { "close", (PyCFunction)UDP_func_close, METH_NOARGS, "Close UDP connection." },
+    { "getsockname", (PyCFunction)UDP_func_getsockname, METH_NOARGS, "Get local socket information." },
     { NULL }
 };
 
 
-static PyMemberDef UDPConnection_tp_members[] = {
-    {"loop", T_OBJECT_EX, offsetof(UDPConnection, loop), READONLY, "Loop where this UDPConnection is running on."},
+static PyMemberDef UDP_tp_members[] = {
+    {"loop", T_OBJECT_EX, offsetof(UDP, loop), READONLY, "Loop where this UDP is running on."},
     {NULL}
 };
 
 
-static PyTypeObject UDPConnectionType = {
+static PyTypeObject UDPType = {
     PyVarObject_HEAD_INIT(NULL, 0)
-    "pyuv.UDPConnection",                                           /*tp_name*/
-    sizeof(UDPConnection),                                          /*tp_basicsize*/
+    "pyuv.UDP",                                                     /*tp_name*/
+    sizeof(UDP),                                                    /*tp_basicsize*/
     0,                                                              /*tp_itemsize*/
-    (destructor)UDPConnection_tp_dealloc,                           /*tp_dealloc*/
+    (destructor)UDP_tp_dealloc,                                     /*tp_dealloc*/
     0,                                                              /*tp_print*/
     0,                                                              /*tp_getattr*/
     0,                                                              /*tp_setattr*/
@@ -509,23 +508,23 @@ static PyTypeObject UDPConnectionType = {
     0,                                                              /*tp_as_buffer*/
     Py_TPFLAGS_DEFAULT | Py_TPFLAGS_HAVE_GC | Py_TPFLAGS_BASETYPE,  /*tp_flags*/
     0,                                                              /*tp_doc*/
-    (traverseproc)UDPConnection_tp_traverse,                        /*tp_traverse*/
-    (inquiry)UDPConnection_tp_clear,                                /*tp_clear*/
+    (traverseproc)UDP_tp_traverse,                                  /*tp_traverse*/
+    (inquiry)UDP_tp_clear,                                          /*tp_clear*/
     0,                                                              /*tp_richcompare*/
     0,                                                              /*tp_weaklistoffset*/
     0,                                                              /*tp_iter*/
     0,                                                              /*tp_iternext*/
-    UDPConnection_tp_methods,                                       /*tp_methods*/
-    UDPConnection_tp_members,                                       /*tp_members*/
+    UDP_tp_methods,                                                 /*tp_methods*/
+    UDP_tp_members,                                                 /*tp_members*/
     0,                                                              /*tp_getsets*/
     0,                                                              /*tp_base*/
     0,                                                              /*tp_dict*/
     0,                                                              /*tp_descr_get*/
     0,                                                              /*tp_descr_set*/
     0,                                                              /*tp_dictoffset*/
-    (initproc)UDPConnection_tp_init,                                /*tp_init*/
+    (initproc)UDP_tp_init,                                          /*tp_init*/
     0,                                                              /*tp_alloc*/
-    UDPConnection_tp_new,                                           /*tp_new*/
+    UDP_tp_new,                                                     /*tp_new*/
 };
 
 

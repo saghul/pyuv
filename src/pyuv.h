@@ -155,7 +155,7 @@ typedef struct {
 
 static PyTypeObject PipeType;
 
-/* UDPConnection */
+/* UDP */
 typedef struct {
     PyObject_HEAD
     Loop *loop;
@@ -163,9 +163,9 @@ typedef struct {
     uv_udp_t *uv_udp_handle;
     Bool initialized;
     Bool closed;
-} UDPConnection;
+} UDP;
 
-static PyTypeObject UDPConnectionType;
+static PyTypeObject UDPType;
 
 /* DNSResolver */
 typedef struct {
