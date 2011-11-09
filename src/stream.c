@@ -365,7 +365,7 @@ IOStream_tp_dealloc(IOStream *self)
     if (!self->closed) {
         uv_close((uv_handle_t *)self->uv_stream, on_iostream_close);
     }
-    IOStream_tp_clear(self);
+    Py_TYPE(self)->tp_clear((PyObject *)self);
     Py_TYPE(self)->tp_free((PyObject *)self);
 }
 
