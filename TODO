@@ -3,7 +3,5 @@
 
 - FS module with all filesystem related functions from libuv
 
-- Add support for named pipes
-
 - Add support for spawning child processes
 
