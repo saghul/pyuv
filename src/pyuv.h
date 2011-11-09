@@ -149,31 +149,13 @@ typedef struct {
 
 static PyTypeObject TCPType;
 
-/* PipeServer */
+/* Pipe */
 typedef struct {
-    PyObject_HEAD
-    Loop *loop;
+    IOStream iostream;
     PyObject *on_new_connection_cb;
-    uv_pipe_t *uv_pipe_server;
-    Bool initialized;
-    Bool closed;
-} PipeServer;
+} Pipe;
 
-static PyTypeObject PipeServerType;
-
-/* PipeClient */
-typedef struct {
-    IOStream iostream;
-} PipeClient;
-
-static PyTypeObject PipeClientType;
-
-/* PipeClientConnection */
-typedef struct {
-    IOStream iostream;
-} PipeClientConnection;
-
-static PyTypeObject PipeClientConnectionType;
+static PyTypeObject PipeType;
 
 /* UDPConnection */
 typedef struct {
