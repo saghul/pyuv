@@ -166,6 +166,32 @@ typedef struct {
 
 static PyTypeObject TCPClientConnectionType;
 
+/* PipeServer */
+typedef struct {
+    PyObject_HEAD
+    Loop *loop;
+    PyObject *on_new_connection_cb;
+    uv_pipe_t *uv_pipe_server;
+    Bool initialized;
+    Bool closed;
+} PipeServer;
+
+static PyTypeObject PipeServerType;
+
+/* PipeClient */
+typedef struct {
+    IOStream iostream;
+} PipeClient;
+
+static PyTypeObject PipeClientType;
+
+/* PipeClientConnection */
+typedef struct {
+    IOStream iostream;
+} PipeClientConnection;
+
+static PyTypeObject PipeClientConnectionType;
+
 /* UDPConnection */
 typedef struct {
     PyObject_HEAD
