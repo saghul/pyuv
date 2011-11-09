@@ -39,6 +39,7 @@ typedef int Bool;
 
 #define SELF_LOOP self->loop->uv_loop
 #define PARENT_LOOP parent->loop->uv_loop
+#define UV_LOOP(x) x->loop->uv_loop
 
 
 /* Python types definitions */
@@ -140,31 +141,13 @@ typedef struct {
 
 static PyTypeObject IOStreamType;
 
-/* TCPServer */
+/* TCP */
 typedef struct {
-    PyObject_HEAD
-    Loop *loop;
+    IOStream iostream;
     PyObject *on_new_connection_cb;
-    uv_tcp_t *uv_tcp_server;
-    Bool initialized;
-    Bool closed;
-} TCPServer;
+} TCP;
 
-static PyTypeObject TCPServerType;
-
-/* TCPClient */
-typedef struct {
-    IOStream iostream;
-} TCPClient;
-
-static PyTypeObject TCPClientType;
-
-/* TCPClientConnection */
-typedef struct {
-    IOStream iostream;
-} TCPClientConnection;
-
-static PyTypeObject TCPClientConnectionType;
+static PyTypeObject TCPType;
 
 /* PipeServer */
 typedef struct {

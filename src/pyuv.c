@@ -50,11 +50,9 @@ initialize_module(void)
     PyExc_IdleError = PyErr_NewException("pyuv.error.IdleError", PyExc_UVError, NULL);
     PyExc_CheckError = PyErr_NewException("pyuv.error.CheckError", PyExc_UVError, NULL);
     PyExc_SignalError = PyErr_NewException("pyuv.error.SignalError", PyExc_UVError, NULL);
-    PyExc_TCPServerError = PyErr_NewException("pyuv.error.TCPServerError", PyExc_UVError, NULL);
     PyExc_PipeServerError = PyErr_NewException("pyuv.error.PipeServerError", PyExc_UVError, NULL);
     PyExc_IOStreamError = PyErr_NewException("pyuv.error.IOStreamError", PyExc_UVError, NULL);
-    PyExc_TCPClientError = PyErr_NewException("pyuv.error.TCPClientError", PyExc_IOStreamError, NULL);
-    PyExc_TCPClientConnectionError = PyErr_NewException("pyuv.error.TCPClientConnectionError", PyExc_IOStreamError, NULL);
+    PyExc_TCPError = PyErr_NewException("pyuv.error.TCPError", PyExc_IOStreamError, NULL);
     PyExc_PipeClientError = PyErr_NewException("pyuv.error.PipeClientError", PyExc_IOStreamError, NULL);
     PyExc_PipeClientConnectionError = PyErr_NewException("pyuv.error.PipeClientConnectionError", PyExc_IOStreamError, NULL);
     PyExc_UDPConnectionError = PyErr_NewException("pyuv.error.UDPConnectionError", PyExc_UVError, NULL);
@@ -69,11 +67,9 @@ initialize_module(void)
     PyUVModule_AddType(error, "IdleError", (PyTypeObject *)PyExc_IdleError);
     PyUVModule_AddType(error, "CheckError", (PyTypeObject *)PyExc_CheckError);
     PyUVModule_AddType(error, "SignalError", (PyTypeObject *)PyExc_SignalError);
-    PyUVModule_AddType(error, "TCPServerError", (PyTypeObject *)PyExc_TCPServerError);
     PyUVModule_AddType(error, "PipeServerError", (PyTypeObject *)PyExc_PipeServerError);
     PyUVModule_AddType(error, "IOStreamError", (PyTypeObject *)PyExc_IOStreamError);
-    PyUVModule_AddType(error, "TCPClientError", (PyTypeObject *)PyExc_TCPClientError);
-    PyUVModule_AddType(error, "TCPClientConnectionError", (PyTypeObject *)PyExc_TCPClientConnectionError);
+    PyUVModule_AddType(error, "TCPError", (PyTypeObject *)PyExc_TCPError);
     PyUVModule_AddType(error, "PipeClientError", (PyTypeObject *)PyExc_PipeClientError);
     PyUVModule_AddType(error, "PipeClientConnectionError", (PyTypeObject *)PyExc_PipeClientConnectionError);
     PyUVModule_AddType(error, "UDPConnectionError", (PyTypeObject *)PyExc_UDPConnectionError);
@@ -97,8 +93,7 @@ initialize_module(void)
     PyUVModule_AddObject(pyuv, "fs", fs);
 
     /* Types */
-    TCPClientType.tp_base = &IOStreamType;
-    TCPClientConnectionType.tp_base = &IOStreamType;
+    TCPType.tp_base = &IOStreamType;
     PipeClientType.tp_base = &IOStreamType;
     PipeClientConnectionType.tp_base = &IOStreamType;
 
@@ -109,9 +104,7 @@ initialize_module(void)
     PyUVModule_AddType(pyuv, "Idle", &IdleType);
     PyUVModule_AddType(pyuv, "Check", &CheckType);
     PyUVModule_AddType(pyuv, "Signal", &SignalType);
-    PyUVModule_AddType(pyuv, "TCPClient", &TCPClientType);
-    PyUVModule_AddType(pyuv, "TCPClientConnection", &TCPClientConnectionType);
-    PyUVModule_AddType(pyuv, "TCPServer", &TCPServerType);
+    PyUVModule_AddType(pyuv, "TCP", &TCPType);
     PyUVModule_AddType(pyuv, "PipeClient", &PipeClientType);
     PyUVModule_AddType(pyuv, "PipeClientConnection", &PipeClientConnectionType);
     PyUVModule_AddType(pyuv, "PipeServer", &PipeServerType);
