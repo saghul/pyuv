@@ -399,14 +399,14 @@ TCP_tp_init(TCP *self, PyObject *args, PyObject *kwargs)
     uv_stream = PyMem_Malloc(sizeof(uv_tcp_t));
     if (!uv_stream) {
         PyErr_NoMemory();
-        Py_DECREF(UV_LOOP(base));
+        Py_DECREF(base->loop);
         return -1;
     }
 
     r = uv_tcp_init(UV_LOOP(base), (uv_tcp_t *)uv_stream);
     if (r != 0) {
         raise_uv_exception(base->loop, PyExc_TCPError);
-        Py_DECREF(UV_LOOP(base));
+        Py_DECREF(base->loop);
         return -1;
     }
     uv_stream->data = (void *)self;
