@@ -64,6 +64,21 @@ Loop_func_unref(Loop *self)
 
 
 static PyObject *
+Loop_func_now(Loop *self)
+{
+    return PyLong_FromDouble(uv_now(self->uv_loop));
+}
+
+
+static PyObject *
+Loop_func_update_time(Loop *self)
+{
+    uv_update_time(self->uv_loop);
+    Py_RETURN_NONE;
+}
+
+
+static PyObject *
 Loop_func_default_loop(PyObject *cls, PyObject *args, PyObject *kwargs)
 {
     return new_loop(&LoopType, args, kwargs, 1);
@@ -118,6 +133,8 @@ Loop_tp_methods[] = {
     { "run", (PyCFunction)Loop_func_run, METH_NOARGS, "Run the event loop." },
     { "ref", (PyCFunction)Loop_func_ref, METH_NOARGS, "Increase the event loop reference count." },
     { "unref", (PyCFunction)Loop_func_unref, METH_NOARGS, "Decrease the event loop reference count." },
+    { "now", (PyCFunction)Loop_func_now, METH_NOARGS, "Return high resolution time, expressed in nanoseconds." },
+    { "update_time", (PyCFunction)Loop_func_update_time, METH_NOARGS, "Update event loop's notion of time by querying the kernel." },
     { "default_loop", (PyCFunction)Loop_func_default_loop, METH_CLASS|METH_VARARGS|METH_KEYWORDS, "Instantiate the default loop." },
     { NULL }
 };
