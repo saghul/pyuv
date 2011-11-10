@@ -105,10 +105,10 @@ Loop_tp_clear(Loop *self)
 static void
 Loop_tp_dealloc(Loop *self)
 {
-    Loop_tp_clear(self);
     if (self->uv_loop && !self->is_default) {
         uv_loop_delete(self->uv_loop);
     }
+    Loop_tp_clear(self);
     Py_TYPE(self)->tp_free((PyObject *)self);
 }
 
