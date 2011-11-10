@@ -10,7 +10,7 @@ from distutils.core import setup, Extension
 from distutils.errors import DistutilsError
 
 
-__version__ = "0.0.0"
+__version__ = "0.1.0"
 
 class pyuv_build_ext(build_ext):
     libuv_repo = 'https://github.com/joyent/libuv.git'
