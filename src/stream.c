@@ -319,7 +319,6 @@ IOStream_tp_init(IOStream *self, PyObject *args, PyObject *kwargs)
     Py_XDECREF(tmp);
 
     self->initialized = True;
-    self->closed = False;
 
     /* Subclasses MUST call the parent and initialize uv_stream */
 
@@ -335,6 +334,8 @@ IOStream_tp_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
         return NULL;
     }
     self->initialized = False;
+    self->closed = False;
+    self->uv_stream = NULL;
     return (PyObject *)self;
 }
 
@@ -362,7 +363,7 @@ IOStream_tp_clear(IOStream *self)
 static void
 IOStream_tp_dealloc(IOStream *self)
 {
-    if (!self->closed) {
+    if (!self->closed && self->uv_stream) {
         uv_close((uv_handle_t *)self->uv_stream, on_iostream_close);
     }
     Py_TYPE(self)->tp_clear((PyObject *)self);

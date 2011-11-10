@@ -130,7 +130,6 @@ Signal_tp_init(Signal *self, PyObject *args, PyObject *kwargs)
     self->uv_prepare = uv_prepare;
 
     self->initialized = True;
-    self->closed = False;
 
     return 0;
 }
@@ -144,6 +143,8 @@ Signal_tp_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
         return NULL;
     }
     self->initialized = False;
+    self->closed = False;
+    self->uv_prepare = NULL;
     return (PyObject *)self;
 }
 
@@ -167,7 +168,7 @@ Signal_tp_clear(Signal *self)
 static void
 Signal_tp_dealloc(Signal *self)
 {
-    if (!self->closed) {
+    if (!self->closed && self->uv_prepare) {
         uv_close((uv_handle_t *)self->uv_prepare, on_signal_close);
     }
     Signal_tp_clear(self);

@@ -226,7 +226,6 @@ Timer_tp_init(Timer *self, PyObject *args, PyObject *kwargs)
     self->uv_timer = uv_timer;
 
     self->initialized = True;
-    self->closed = False;
 
     return 0;
 }
@@ -240,6 +239,8 @@ Timer_tp_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
         return NULL;
     }
     self->initialized = False;
+    self->closed = False;
+    self->uv_timer = NULL;
     return (PyObject *)self;
 }
 
@@ -267,7 +268,7 @@ Timer_tp_clear(Timer *self)
 static void
 Timer_tp_dealloc(Timer *self)
 {
-    if (!self->closed) {
+    if (!self->closed && self->uv_timer) {
         uv_close((uv_handle_t *)self->uv_timer, on_timer_close);
     }
     Timer_tp_clear(self);

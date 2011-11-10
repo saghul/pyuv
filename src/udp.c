@@ -421,7 +421,6 @@ UDP_tp_init(UDP *self, PyObject *args, PyObject *kwargs)
     self->uv_udp_handle = uv_udp_handle;
 
     self->initialized = True;
-    self->closed = False;
 
     return 0;
 }
@@ -435,6 +434,8 @@ UDP_tp_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
         return NULL;
     }
     self->initialized = False;
+    self->closed = False;
+    self->uv_udp_handle = NULL;
     return (PyObject *)self;
 }
 
@@ -460,7 +461,7 @@ UDP_tp_clear(UDP *self)
 static void
 UDP_tp_dealloc(UDP *self)
 {
-    if (!self->closed) {
+    if (!self->closed && self->uv_udp_handle) {
         uv_close((uv_handle_t *)self->uv_udp_handle, on_udp_close);
     }
     UDP_tp_clear(self);

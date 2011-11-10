@@ -640,6 +640,7 @@ DNSResolver_tp_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
     if (!self) {
         return NULL;
     }
+    self->channel = NULL;
     return (PyObject *)self;
 }
 
@@ -663,7 +664,9 @@ DNSResolver_tp_clear(DNSResolver *self)
 static void
 DNSResolver_tp_dealloc(DNSResolver *self)
 {
-    uv_ares_destroy(UV_LOOP(self), self->channel);
+    if (self->channel) {
+        uv_ares_destroy(UV_LOOP(self), self->channel);
+    }
     DNSResolver_tp_clear(self);
     Py_TYPE(self)->tp_free((PyObject *)self);
 }

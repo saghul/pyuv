@@ -155,7 +155,6 @@ Check_tp_init(Check *self, PyObject *args, PyObject *kwargs)
     self->uv_check = uv_check;
 
     self->initialized = True;
-    self->closed = False;
 
     return 0;
 }
@@ -169,6 +168,8 @@ Check_tp_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
         return NULL;
     }
     self->initialized = False;
+    self->closed = False;
+    self->uv_check = NULL;
     return (PyObject *)self;
 }
 
@@ -196,7 +197,7 @@ Check_tp_clear(Check *self)
 static void
 Check_tp_dealloc(Check *self)
 {
-    if (!self->closed) {
+    if (!self->closed && self->uv_check) {
         uv_close((uv_handle_t *)self->uv_check, on_check_close);
     }
     Check_tp_clear(self);

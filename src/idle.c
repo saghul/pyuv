@@ -155,7 +155,6 @@ Idle_tp_init(Idle *self, PyObject *args, PyObject *kwargs)
     self->uv_idle = uv_idle;
 
     self->initialized = True;
-    self->closed = False;
 
     return 0;
 }
@@ -169,6 +168,8 @@ Idle_tp_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
         return NULL;
     }
     self->initialized = False;
+    self->closed = False;
+    self->uv_idle = NULL;
     return (PyObject *)self;
 }
 
@@ -196,7 +197,7 @@ Idle_tp_clear(Idle *self)
 static void
 Idle_tp_dealloc(Idle *self)
 {
-    if (!self->closed) {
+    if (!self->closed && self->uv_idle) {
         uv_close((uv_handle_t *)self->uv_idle, on_idle_close);
     }
     Idle_tp_clear(self);

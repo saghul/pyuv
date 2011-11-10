@@ -154,7 +154,6 @@ Prepare_tp_init(Prepare *self, PyObject *args, PyObject *kwargs)
     self->uv_prepare = uv_prepare;
 
     self->initialized = True;
-    self->closed = False;
 
     return 0;
 }
@@ -168,6 +167,8 @@ Prepare_tp_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
         return NULL;
     }
     self->initialized = False;
+    self->closed = False;
+    self->uv_prepare = NULL;
     return (PyObject *)self;
 }
 
@@ -195,7 +196,7 @@ Prepare_tp_clear(Prepare *self)
 static void
 Prepare_tp_dealloc(Prepare *self)
 {
-    if (!self->closed) {
+    if (!self->closed && self->uv_prepare) {
         uv_close((uv_handle_t *)self->uv_prepare, on_prepare_close);
     }
     Prepare_tp_clear(self);

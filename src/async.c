@@ -133,7 +133,6 @@ Async_tp_init(Async *self, PyObject *args, PyObject *kwargs)
     self->uv_async = uv_async;
 
     self->initialized = True;
-    self->closed = False;
 
     return 0;
 }
@@ -147,6 +146,8 @@ Async_tp_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
         return NULL;
     }
     self->initialized = False;
+    self->closed = False;
+    self->uv_async = NULL;
     return (PyObject *)self;
 }
 
@@ -174,7 +175,7 @@ Async_tp_clear(Async *self)
 static void
 Async_tp_dealloc(Async *self)
 {
-    if (!self->closed) {
+    if (!self->closed && self->uv_async) {
         uv_close((uv_handle_t *)self->uv_async, on_async_close);
     }
     Async_tp_clear(self);
