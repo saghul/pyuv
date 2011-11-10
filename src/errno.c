@@ -70,8 +70,8 @@ init_errno(void)
     inscode(module_dict, errorcode_dict, "UV_ENOBUFS", UV_ENOBUFS);
     inscode(module_dict, errorcode_dict, "UV_ENOMEM", UV_ENOMEM);
     inscode(module_dict, errorcode_dict, "UV_ENOTDIR", UV_ENOTDIR);
+    inscode(module_dict, errorcode_dict, "UV_EISDIR", UV_EISDIR);
     inscode(module_dict, errorcode_dict, "UV_ENONET", UV_ENONET);
-    inscode(module_dict, errorcode_dict, "UV_ENOPROTOOPT", UV_ENOPROTOOPT);
     inscode(module_dict, errorcode_dict, "UV_ENOTCONN", UV_ENOTCONN);
     inscode(module_dict, errorcode_dict, "UV_ENOTSOCK", UV_ENOTSOCK);
     inscode(module_dict, errorcode_dict, "UV_ENOTSUP", UV_ENOTSUP);
@@ -89,6 +89,7 @@ init_errno(void)
     inscode(module_dict, errorcode_dict, "UV_EAISOCKTYPE", UV_EAISOCKTYPE);
     inscode(module_dict, errorcode_dict, "UV_ESHUTDOWN", UV_ESHUTDOWN);
     inscode(module_dict, errorcode_dict, "UV_EEXIST", UV_EEXIST);
+    inscode(module_dict, errorcode_dict, "UV_ESRCH", UV_ESRCH);
 
     inscode(module_dict, ares_errorcode_dict, "ARES_SUCCESS", ARES_SUCCESS);
     inscode(module_dict, ares_errorcode_dict, "ARES_ENODATA", ARES_ENODATA);
