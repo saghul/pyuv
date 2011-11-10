@@ -1,0 +1,9 @@
+#!/bin/bash
+
+for testmod in `ls test_*.py`
+do
+    echo $testmod
+    python $testmod -v
+    echo
+done
+
