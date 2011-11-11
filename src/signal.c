@@ -91,6 +91,13 @@ Signal_func_close(Signal *self)
 }
 
 
+static PyObject *
+Signal_active_get(Signal *self, void *closure)
+{
+    return PyBool_FromLong((long)uv_is_active((uv_handle_t *)self->uv_prepare));
+}
+
+
 static int
 Signal_tp_init(Signal *self, PyObject *args, PyObject *kwargs)
 {
@@ -191,6 +198,12 @@ static PyMemberDef Signal_tp_members[] = {
 };
 
 
+static PyGetSetDef Signal_tp_getsets[] = {
+    {"active", (getter)Signal_active_get, 0, "Indicates if handle is active", NULL},
+    {NULL}
+};
+
+
 static PyTypeObject SignalType = {
     PyVarObject_HEAD_INIT(NULL, 0)
     "pyuv.Signal",                                                  /*tp_name*/
@@ -221,7 +234,7 @@ static PyTypeObject SignalType = {
     0,                                                              /*tp_iternext*/
     Signal_tp_methods,                                              /*tp_methods*/
     Signal_tp_members,                                              /*tp_members*/
-    0,                                                              /*tp_getsets*/
+    Signal_tp_getsets,                                              /*tp_getsets*/
     0,                                                              /*tp_base*/
     0,                                                              /*tp_dict*/
     0,                                                              /*tp_descr_get*/

@@ -115,6 +115,13 @@ Prepare_func_close(Prepare *self)
 }
 
 
+static PyObject *
+Prepare_active_get(Prepare *self, void *closure)
+{
+    return PyBool_FromLong((long)uv_is_active((uv_handle_t *)self->uv_prepare));
+}
+
+
 static int
 Prepare_tp_init(Prepare *self, PyObject *args, PyObject *kwargs)
 {
@@ -220,6 +227,12 @@ static PyMemberDef Prepare_tp_members[] = {
 };
 
 
+static PyGetSetDef Prepare_tp_getsets[] = {
+    {"active", (getter)Prepare_active_get, 0, "Indicates if handle is active", NULL},
+    {NULL}
+};
+
+
 static PyTypeObject PrepareType = {
     PyVarObject_HEAD_INIT(NULL, 0)
     "pyuv.Prepare",                                                 /*tp_name*/
@@ -250,7 +263,7 @@ static PyTypeObject PrepareType = {
     0,                                                              /*tp_iternext*/
     Prepare_tp_methods,                                             /*tp_methods*/
     Prepare_tp_members,                                             /*tp_members*/
-    0,                                                              /*tp_getsets*/
+    Prepare_tp_getsets,                                             /*tp_getsets*/
     0,                                                              /*tp_base*/
     0,                                                              /*tp_dict*/
     0,                                                              /*tp_descr_get*/

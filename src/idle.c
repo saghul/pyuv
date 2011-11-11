@@ -116,6 +116,13 @@ Idle_func_close(Idle *self)
 }
 
 
+static PyObject *
+Idle_active_get(Idle *self, void *closure)
+{
+    return PyBool_FromLong((long)uv_is_active((uv_handle_t *)self->uv_idle));
+}
+
+
 static int
 Idle_tp_init(Idle *self, PyObject *args, PyObject *kwargs)
 {
@@ -221,6 +228,12 @@ static PyMemberDef Idle_tp_members[] = {
 };
 
 
+static PyGetSetDef Idle_tp_getsets[] = {
+    {"active", (getter)Idle_active_get, 0, "Indicates if handle is active", NULL},
+    {NULL}
+};
+
+
 static PyTypeObject IdleType = {
     PyVarObject_HEAD_INIT(NULL, 0)
     "pyuv.Idle",                                                    /*tp_name*/
@@ -251,7 +264,7 @@ static PyTypeObject IdleType = {
     0,                                                              /*tp_iternext*/
     Idle_tp_methods,                                                /*tp_methods*/
     Idle_tp_members,                                                /*tp_members*/
-    0,                                                              /*tp_getsets*/
+    Idle_tp_getsets,                                                /*tp_getsets*/
     0,                                                              /*tp_base*/
     0,                                                              /*tp_dict*/
     0,                                                              /*tp_descr_get*/

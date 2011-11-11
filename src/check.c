@@ -116,6 +116,13 @@ Check_func_close(Check *self)
 }
 
 
+static PyObject *
+Check_active_get(Check *self, void *closure)
+{
+    return PyBool_FromLong((long)uv_is_active((uv_handle_t *)self->uv_check));
+}
+
+
 static int
 Check_tp_init(Check *self, PyObject *args, PyObject *kwargs)
 {
@@ -221,6 +228,12 @@ static PyMemberDef Check_tp_members[] = {
 };
 
 
+static PyGetSetDef Check_tp_getsets[] = {
+    {"active", (getter)Check_active_get, 0, "Indicates if handle is active", NULL},
+    {NULL}
+};
+
+
 static PyTypeObject CheckType = {
     PyVarObject_HEAD_INIT(NULL, 0)
     "pyuv.Check",                                                   /*tp_name*/
@@ -251,7 +264,7 @@ static PyTypeObject CheckType = {
     0,                                                              /*tp_iternext*/
     Check_tp_methods,                                               /*tp_methods*/
     Check_tp_members,                                               /*tp_members*/
-    0,                                                              /*tp_getsets*/
+    Check_tp_getsets,                                               /*tp_getsets*/
     0,                                                              /*tp_base*/
     0,                                                              /*tp_dict*/
     0,                                                              /*tp_descr_get*/

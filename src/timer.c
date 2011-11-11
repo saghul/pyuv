@@ -145,6 +145,13 @@ Timer_func_close(Timer *self)
 
 
 static PyObject *
+Timer_active_get(Timer *self, void *closure)
+{
+    return PyBool_FromLong((long)uv_is_active((uv_handle_t *)self->uv_timer));
+}
+
+
+static PyObject *
 Timer_repeat_get(Timer *self, void *closure)
 {
     if (self->closed) {
@@ -294,6 +301,7 @@ static PyMemberDef Timer_tp_members[] = {
 
 
 static PyGetSetDef Timer_tp_getsets[] = {
+    {"active", (getter)Timer_active_get, 0, "Indicates if handle is active.", NULL},
     {"repeat", (getter)Timer_repeat_get, (setter)Timer_repeat_set, "Timer repeat value.", NULL},
     {NULL}
 };
