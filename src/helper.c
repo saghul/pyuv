@@ -1,4 +1,4 @@
-/* Some random utility functions */
+/* Some helper functions */
 
 
 /* Add a type to a module */

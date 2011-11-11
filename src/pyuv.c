@@ -2,7 +2,7 @@
 #include "pyuv.h"
 
 #include "errno.c"
-#include "util.c"
+#include "helper.c"
 
 #include "loop.c"
 #include "async.c"
