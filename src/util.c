@@ -47,12 +47,28 @@ Util_func_loadavg(PyObject *self)
 }
 
 
+static PyObject *
+Util_func_exepath(PyObject *self)
+{
+    char buffer[1024];
+    size_t size;
+
+    size = sizeof(buffer) / sizeof(buffer[0]);
+    int r = uv_exepath(buffer, &size);
+    if (r != 0) {
+        Py_RETURN_NONE;
+    }
+    return PyString_FromStringAndSize(buffer, size);
+}
+
+
 static PyMethodDef
 Util_methods[] = {
     { "hrtime", (PyCFunction)Util_func_hrtime, METH_NOARGS, "High resolution time." },
     { "get_free_memory", (PyCFunction)Util_func_get_free_memory, METH_NOARGS, "Get system free memory." },
     { "get_total_memory", (PyCFunction)Util_func_get_total_memory, METH_NOARGS, "Get system total memory." },
     { "loadavg", (PyCFunction)Util_func_loadavg, METH_NOARGS, "Get system load average." },
+    { "exepath", (PyCFunction)Util_func_exepath, METH_NOARGS, "Get executable path." },
     { NULL }
 };
 
