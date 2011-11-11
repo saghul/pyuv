@@ -38,11 +38,21 @@ Util_func_get_total_memory(PyObject *self)
 }
 
 
+static PyObject *
+Util_func_loadavg(PyObject *self)
+{
+    double avg[3];
+    uv_loadavg(avg);
+    return Py_BuildValue("(ddd)", avg[0], avg[1], avg[2]);
+}
+
+
 static PyMethodDef
 Util_methods[] = {
     { "hrtime", (PyCFunction)Util_func_hrtime, METH_NOARGS, "High resolution time." },
     { "get_free_memory", (PyCFunction)Util_func_get_free_memory, METH_NOARGS, "Get system free memory." },
     { "get_total_memory", (PyCFunction)Util_func_get_total_memory, METH_NOARGS, "Get system total memory." },
+    { "loadavg", (PyCFunction)Util_func_loadavg, METH_NOARGS, "Get system load average." },
     { NULL }
 };
 
