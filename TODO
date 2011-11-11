@@ -5,3 +5,11 @@
 
 - Add support for spawning child processes
 
+- uv_udp_set_membership
+
+- uv_tty stuff
+
+- uv_spawn / uv_process_kill / uv_kill
+
+- uv_fs_event
+
