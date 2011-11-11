@@ -1,9 +1,9 @@
-#!/bin/bash
+#!/usr/bin/env python
 
-for testmod in `ls test_*.py`
-do
-    echo $testmod
-    python $testmod -v
-    echo
-done
+import common
+import unittest
+
+common.load_tests()
+alltests = unittest.TestSuite(common.suites)
+unittest.TextTestRunner(verbosity=2).run(alltests)
 
