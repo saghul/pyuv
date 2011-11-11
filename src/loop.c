@@ -123,7 +123,7 @@ Loop_tp_methods[] = {
     { "run", (PyCFunction)Loop_func_run, METH_NOARGS, "Run the event loop." },
     { "ref", (PyCFunction)Loop_func_ref, METH_NOARGS, "Increase the event loop reference count." },
     { "unref", (PyCFunction)Loop_func_unref, METH_NOARGS, "Decrease the event loop reference count." },
-    { "now", (PyCFunction)Loop_func_now, METH_NOARGS, "Return high resolution time, expressed in nanoseconds." },
+    { "now", (PyCFunction)Loop_func_now, METH_NOARGS, "Return event loop time, expressed in nanoseconds." },
     { "update_time", (PyCFunction)Loop_func_update_time, METH_NOARGS, "Update event loop's notion of time by querying the kernel." },
     { "default_loop", (PyCFunction)Loop_func_default_loop, METH_CLASS|METH_VARARGS|METH_KEYWORDS, "Instantiate the default loop." },
     { NULL }
