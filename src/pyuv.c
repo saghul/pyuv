@@ -18,6 +18,7 @@
 #include "dns.c"
 #include "threadpool.c"
 #include "fs.c"
+#include "util.c"
 
 
 static PyObject* PyExc_UVError;
@@ -87,6 +88,13 @@ initialize_module(void)
         return NULL;
     }
     PyUVModule_AddObject(pyuv, "fs", fs);
+
+    /* Util module */
+    PyObject *util = init_util();
+    if (util == NULL) {
+        return NULL;
+    }
+    PyUVModule_AddObject(pyuv, "util", util);
 
     /* Types */
     TCPType.tp_base = &IOStreamType;
