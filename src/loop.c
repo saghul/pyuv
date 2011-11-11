@@ -1,6 +1,4 @@
 
-static Loop *default_loop = NULL;
-
 
 static PyObject *
 new_loop(PyTypeObject *type, PyObject *args, PyObject *kwargs, int is_default)
@@ -10,27 +8,19 @@ new_loop(PyTypeObject *type, PyObject *args, PyObject *kwargs, int is_default)
         return NULL;
     }
 
+    Loop *self = (Loop *)PyType_GenericNew(type, args, kwargs);
+    if (!self) {
+        return NULL;
+    }
+
     if (is_default) {
-        if (!default_loop) {
-            default_loop = (Loop *)PyType_GenericNew(type, args, kwargs);
-            if (!default_loop) {
-                return NULL;
-            }
-            default_loop->uv_loop = uv_default_loop();
-            default_loop->is_default = 1;
-        } else {
-            Py_INCREF(default_loop);
-        }
-        return (PyObject *)default_loop;
+        self->uv_loop = uv_default_loop();
+        self->is_default = 1;
     } else {
-        Loop *self = (Loop *)PyType_GenericNew(type, args, kwargs);
-        if (!self) {
-            return NULL;
-        }
         self->uv_loop = uv_loop_new();
         self->is_default = 0;
-        return (PyObject *)self;
     }
+    return (PyObject *)self;
 }
 
 
