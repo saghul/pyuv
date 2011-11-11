@@ -18,9 +18,7 @@ static uv_buf_t
 on_iostream_alloc(uv_stream_t* handle, size_t suggested_size)
 {
     PyGILState_STATE gstate = PyGILState_Ensure();
-    uv_buf_t buf;
-    buf.base = PyMem_Malloc(suggested_size);
-    buf.len = suggested_size;
+    uv_buf_t buf = uv_buf_init(PyMem_Malloc(suggested_size), suggested_size);
     PyGILState_Release(gstate);
     return buf;
 }
