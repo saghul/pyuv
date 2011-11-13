@@ -51,8 +51,7 @@ on_pipe_client_connection(uv_connect_t *req, int status)
     Pipe *self = (Pipe *)req_data->obj;
     PyObject *callback = req_data->callback;
 
-    PyObject *error;
-    PyObject *exc_data;
+    PyObject *py_status;
     PyObject *result;
 
     ASSERT(self);
@@ -62,20 +61,13 @@ on_pipe_client_connection(uv_connect_t *req, int status)
     IOStream *base = (IOStream *)self;
 
     if (status != 0) {
-        error = PyBool_FromLong(1);
         uv_err_t err = uv_last_error(UV_LOOP(base));
-        exc_data = Py_BuildValue("(is)", err.code, uv_strerror(err));
-        if (exc_data != NULL) {
-            PyErr_SetObject(PyExc_PipeError, exc_data);
-            Py_DECREF(exc_data);
-        }
-        // TODO: pass exception to callback, how?
-        PyErr_WriteUnraisable(callback);
+        py_status = PyInt_FromLong(err.code);
     } else {
-        error = PyBool_FromLong(0);
+        py_status = PyInt_FromLong(0);
     }
 
-    result = PyObject_CallFunctionObjArgs(callback, self, error, NULL);
+    result = PyObject_CallFunctionObjArgs(callback, self, py_status, NULL);
     if (result == NULL) {
         PyErr_WriteUnraisable(callback);
     }
