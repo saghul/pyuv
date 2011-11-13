@@ -6,6 +6,8 @@ import unittest
 import pyuv
 
 
+TEST_PORT = 1234
+
 class TCPErrorTest(common.UVTestCase):
 
     def on_client_connect_error(self, client_pipe, status):
@@ -15,7 +17,7 @@ class TCPErrorTest(common.UVTestCase):
     def test_client1(self):
         loop = pyuv.Loop.default_loop()
         client = pyuv.TCP(loop)
-        client.connect(("127.0.0.1", common.TEST_PORT), self.on_client_connect_error)
+        client.connect(("127.0.0.1", TEST_PORT), self.on_client_connect_error)
         loop.run()
 
 
@@ -52,14 +54,11 @@ class TCPTest(common.UVTestCase):
 
     def test_pipe1(self):
         self.server = pyuv.TCP(self.loop)
-        self.server.bind(("0.0.0.0", common.TEST_PORT))
+        self.server.bind(("0.0.0.0", TEST_PORT))
         self.server.listen(self.on_connection)
         self.client = pyuv.TCP(self.loop)
-        self.client.connect(("127.0.0.1", common.TEST_PORT), self.on_client_connection)
+        self.client.connect(("127.0.0.1", TEST_PORT), self.on_client_connection)
         self.loop.run()
-        self.client_connections = []
-        self.client = None
-        self.server = None
 
 
 if __name__ == '__main__':

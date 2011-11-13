@@ -6,6 +6,9 @@ import unittest
 import pyuv
 
 
+TEST_PIPE = 'test-pipe'
+BAD_PIPE = '/pipe/that/does/not/exist'
+
 class PipeErrorTest(common.UVTestCase):
 
     def on_client_connect_error(self, client_pipe, status):
@@ -15,7 +18,7 @@ class PipeErrorTest(common.UVTestCase):
     def test_client1(self):
         loop = pyuv.Loop.default_loop()
         client = pyuv.Pipe(loop)
-        client.connect(common.BAD_PIPE, self.on_client_connect_error)
+        client.connect(BAD_PIPE, self.on_client_connect_error)
         loop.run()
 
 
@@ -52,14 +55,11 @@ class PipeTest(common.UVTestCase):
 
     def test_pipe1(self):
         self.server = pyuv.Pipe(self.loop)
-        self.server.bind(common.TEST_PIPE)
+        self.server.bind(TEST_PIPE)
         self.server.listen(self.on_connection)
         self.client = pyuv.Pipe(self.loop)
-        self.client.connect(common.TEST_PIPE, self.on_client_connection)
+        self.client.connect(TEST_PIPE, self.on_client_connection)
         self.loop.run()
-        self.client_connections = []
-        self.client = None
-        self.server = None
 
 
 if __name__ == '__main__':

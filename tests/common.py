@@ -4,11 +4,6 @@ import sys
 sys.path.insert(0, '../')
 import unittest
 
-TEST_PORT = 12345
-TEST_PORT2 = 12346
-TEST_PIPE = 'test-pipe'
-BAD_PIPE = '/pipe/that/does/not/exist'
-
 
 loader = unittest.TestLoader()
 suites = []

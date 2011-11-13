@@ -6,6 +6,9 @@ import unittest
 import pyuv
 
 
+TEST_PORT = 12345
+TEST_PORT2 = 12346
+
 class UDPTest(common.UVTestCase):
 
     def setUp(self):
@@ -25,15 +28,15 @@ class UDPTest(common.UVTestCase):
         self.server.close()
 
     def timer_cb(self, timer, data):
-        self.client.write("PING"+os.linesep, ("127.0.0.1", common.TEST_PORT))
+        self.client.write("PING"+os.linesep, ("127.0.0.1", TEST_PORT))
         timer.close()
 
     def test_udp_pingpong(self):
         self.server = pyuv.UDP(self.loop)
-        self.server.bind(("0.0.0.0", common.TEST_PORT))
+        self.server.bind(("0.0.0.0", TEST_PORT))
         self.server.start_read(self.on_server_read)
         self.client = pyuv.UDP(self.loop)
-        self.client.bind(("0.0.0.0", common.TEST_PORT2))
+        self.client.bind(("0.0.0.0", TEST_PORT2))
         self.client.start_read(self.on_client_read)
         timer = pyuv.Timer(self.loop)
         timer.start(self.timer_cb, 1, 0)
