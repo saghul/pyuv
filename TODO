@@ -5,6 +5,8 @@
 
 - Add support for spawning child processes
 
+- Better docstrings
+
 - uv_udp_set_membership
 
 - uv_tty stuff
