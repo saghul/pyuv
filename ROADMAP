@@ -6,7 +6,3 @@ Next version: 0.1.0
 
 - Run some benchmarks
 
-- Remove disconnect method
-    - Add callback to close, it's optional
-    - Add on_close callback to all handles?
-
