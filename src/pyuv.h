@@ -54,6 +54,7 @@ static PyTypeObject LoopType;
 typedef struct {
     PyObject_HEAD
     Loop *loop;
+    PyObject *on_close_cb;
     PyObject *callback;
     PyObject *data;
     uv_async_t *uv_handle;
@@ -67,6 +68,7 @@ static PyTypeObject AsyncType;
 typedef struct {
     PyObject_HEAD
     Loop *loop;
+    PyObject *on_close_cb;
     PyObject *callback;
     PyObject *data;
     uv_timer_t *uv_handle;
@@ -80,6 +82,7 @@ static PyTypeObject TimerType;
 typedef struct {
     PyObject_HEAD
     Loop *loop;
+    PyObject *on_close_cb;
     PyObject *callback;
     PyObject *data;
     uv_prepare_t *uv_handle;
@@ -93,6 +96,7 @@ static PyTypeObject PrepareType;
 typedef struct {
     PyObject_HEAD
     Loop *loop;
+    PyObject *on_close_cb;
     PyObject *callback;
     PyObject *data;
     uv_idle_t *uv_handle;
@@ -106,6 +110,7 @@ static PyTypeObject IdleType;
 typedef struct {
     PyObject_HEAD
     Loop *loop;
+    PyObject *on_close_cb;
     PyObject *callback;
     PyObject *data;
     uv_check_t *uv_handle;
@@ -119,6 +124,7 @@ static PyTypeObject CheckType;
 typedef struct {
     PyObject_HEAD
     Loop *loop;
+    PyObject *on_close_cb;
     uv_prepare_t *uv_handle;
     Bool initialized;
     Bool closed;
@@ -160,6 +166,7 @@ typedef struct {
     PyObject_HEAD
     Loop *loop;
     PyObject *on_read_cb;
+    PyObject *on_close_cb;
     uv_udp_t *uv_handle;
     Bool initialized;
     Bool closed;

@@ -7,6 +7,34 @@ on_async_close(uv_handle_t *handle)
 {
     PyGILState_STATE gstate = PyGILState_Ensure();
     ASSERT(handle);
+    Async *self = (Async *)handle->data;
+    ASSERT(self);
+
+    PyObject *result;
+
+    if (self->on_close_cb != Py_None) {
+        result = PyObject_CallFunctionObjArgs(self->on_close_cb, self, NULL);
+        if (result == NULL) {
+            PyErr_WriteUnraisable(self->on_close_cb);
+        }
+        Py_XDECREF(result);
+    }
+
+    handle->data = NULL;
+    PyMem_Free(handle);
+
+    /* Refcount was increased in func_close */
+    Py_DECREF(self);
+
+    PyGILState_Release(gstate);
+}
+
+
+static void
+on_async_dealloc_close(uv_handle_t *handle)
+{
+    PyGILState_STATE gstate = PyGILState_Ensure();
+    ASSERT(handle);
     handle->data = NULL;
     PyMem_Free(handle);
     PyGILState_Release(gstate);
@@ -26,7 +54,7 @@ on_async_callback(uv_async_t *async, int status)
     Py_INCREF(self);
 
     PyObject *result;
-    result = PyObject_CallFunctionObjArgs(self->callback, self, self->data,NULL);
+    result = PyObject_CallFunctionObjArgs(self->callback, self, self->data, NULL);
     if (result == NULL) {
         PyErr_WriteUnraisable(self->callback);
     }
@@ -80,12 +108,32 @@ Async_func_send(Async *self, PyObject *args)
 
 
 static PyObject *
-Async_func_close(Async *self)
+Async_func_close(Async *self, PyObject *args)
 {
+    PyObject *tmp = NULL;
+    PyObject *callback = Py_None;
+
     if (self->closed) {
         PyErr_SetString(PyExc_AsyncError, "Async is already closed");
         return NULL;
     }
+
+    if (!PyArg_ParseTuple(args, "|O:close", &callback)) {
+        return NULL;
+    }
+
+    if (callback != Py_None && !PyCallable_Check(callback)) {
+        PyErr_SetString(PyExc_TypeError, "a callable or None is required");
+        return NULL;
+    }
+
+    tmp = self->on_close_cb;
+    Py_INCREF(callback);
+    self->on_close_cb = callback;
+    Py_XDECREF(tmp);
+
+    /* Increase refcount so that object is not removed before the callback is called */
+    Py_INCREF(self);
 
     self->closed = True;
     uv_close((uv_handle_t *)self->uv_handle, on_async_close);
@@ -157,6 +205,7 @@ Async_tp_traverse(Async *self, visitproc visit, void *arg)
 {
     Py_VISIT(self->data);
     Py_VISIT(self->callback);
+    Py_VISIT(self->on_close_cb);
     Py_VISIT(self->loop);
     return 0;
 }
@@ -167,6 +216,7 @@ Async_tp_clear(Async *self)
 {
     Py_CLEAR(self->data);
     Py_CLEAR(self->callback);
+    Py_CLEAR(self->on_close_cb);
     Py_CLEAR(self->loop);
     return 0;
 }
@@ -176,7 +226,7 @@ static void
 Async_tp_dealloc(Async *self)
 {
     if (!self->closed && self->uv_handle) {
-        uv_close((uv_handle_t *)self->uv_handle, on_async_close);
+        uv_close((uv_handle_t *)self->uv_handle, on_async_dealloc_close);
     }
     Async_tp_clear(self);
     Py_TYPE(self)->tp_free((PyObject *)self);
@@ -186,7 +236,7 @@ Async_tp_dealloc(Async *self)
 static PyMethodDef
 Async_tp_methods[] = {
     { "send", (PyCFunction)Async_func_send, METH_VARARGS, "Send the Async signal." },
-    { "close", (PyCFunction)Async_func_close, METH_NOARGS, "Close this Async handle." },
+    { "close", (PyCFunction)Async_func_close, METH_VARARGS, "Close this Async handle." },
     { NULL }
 };
 

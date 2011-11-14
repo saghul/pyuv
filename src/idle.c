@@ -7,6 +7,34 @@ on_idle_close(uv_handle_t *handle)
 {
     PyGILState_STATE gstate = PyGILState_Ensure();
     ASSERT(handle);
+    Idle *self = (Idle *)handle->data;
+    ASSERT(self);
+
+    PyObject *result;
+
+    if (self->on_close_cb != Py_None) {
+        result = PyObject_CallFunctionObjArgs(self->on_close_cb, self, NULL);
+        if (result == NULL) {
+            PyErr_WriteUnraisable(self->on_close_cb);
+        }
+        Py_XDECREF(result);
+    }
+
+    handle->data = NULL;
+    PyMem_Free(handle);
+
+    /* Refcount was increased in func_close */
+    Py_DECREF(self);
+
+    PyGILState_Release(gstate);
+}
+
+
+static void
+on_idle_dealloc_close(uv_handle_t *handle)
+{
+    PyGILState_STATE gstate = PyGILState_Ensure();
+    ASSERT(handle);
     handle->data = NULL;
     PyMem_Free(handle);
     PyGILState_Release(gstate);
@@ -102,12 +130,32 @@ Idle_func_stop(Idle *self)
 
 
 static PyObject *
-Idle_func_close(Idle *self)
+Idle_func_close(Idle *self, PyObject *args)
 {
+    PyObject *tmp = NULL;
+    PyObject *callback = Py_None;
+
     if (self->closed) {
         PyErr_SetString(PyExc_IdleError, "Idle is already closed");
         return NULL;
     }
+
+    if (!PyArg_ParseTuple(args, "|O:close", &callback)) {
+        return NULL;
+    }
+
+    if (callback != Py_None && !PyCallable_Check(callback)) {
+        PyErr_SetString(PyExc_TypeError, "a callable or None is required");
+        return NULL;
+    }
+
+    tmp = self->on_close_cb;
+    Py_INCREF(callback);
+    self->on_close_cb = callback;
+    Py_XDECREF(tmp);
+
+    /* Increase refcount so that object is not removed before the callback is called */
+    Py_INCREF(self);
 
     self->closed = True;
     uv_close((uv_handle_t *)self->uv_handle, on_idle_close);
@@ -186,6 +234,7 @@ Idle_tp_traverse(Idle *self, visitproc visit, void *arg)
 {
     Py_VISIT(self->data);
     Py_VISIT(self->callback);
+    Py_VISIT(self->on_close_cb);
     Py_VISIT(self->loop);
     return 0;
 }
@@ -196,6 +245,7 @@ Idle_tp_clear(Idle *self)
 {
     Py_CLEAR(self->data);
     Py_CLEAR(self->callback);
+    Py_CLEAR(self->on_close_cb);
     Py_CLEAR(self->loop);
     return 0;
 }
@@ -205,7 +255,7 @@ static void
 Idle_tp_dealloc(Idle *self)
 {
     if (!self->closed && self->uv_handle) {
-        uv_close((uv_handle_t *)self->uv_handle, on_idle_close);
+        uv_close((uv_handle_t *)self->uv_handle, on_idle_dealloc_close);
     }
     Idle_tp_clear(self);
     Py_TYPE(self)->tp_free((PyObject *)self);
@@ -216,7 +266,7 @@ static PyMethodDef
 Idle_tp_methods[] = {
     { "start", (PyCFunction)Idle_func_start, METH_VARARGS|METH_KEYWORDS, "Start the Idle." },
     { "stop", (PyCFunction)Idle_func_stop, METH_NOARGS, "Stop the Idle." },
-    { "close", (PyCFunction)Idle_func_close, METH_NOARGS, "Close the Idle." },
+    { "close", (PyCFunction)Idle_func_close, METH_VARARGS, "Close the Idle." },
     { NULL }
 };
 

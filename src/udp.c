@@ -21,6 +21,34 @@ on_udp_close(uv_handle_t *handle)
 {
     PyGILState_STATE gstate = PyGILState_Ensure();
     ASSERT(handle);
+    UDP *self = (UDP *)handle->data;
+    ASSERT(self);
+
+    PyObject *result;
+
+    if (self->on_close_cb != Py_None) {
+        result = PyObject_CallFunctionObjArgs(self->on_close_cb, self, NULL);
+        if (result == NULL) {
+            PyErr_WriteUnraisable(self->on_close_cb);
+        }
+        Py_XDECREF(result);
+    }
+
+    handle->data = NULL;
+    PyMem_Free(handle);
+
+    /* Refcount was increased in func_close */
+    Py_DECREF(self);
+
+    PyGILState_Release(gstate);
+}
+
+
+static void
+on_udp_dealloc_close(uv_handle_t *handle)
+{
+    PyGILState_STATE gstate = PyGILState_Ensure();
+    ASSERT(handle);
     handle->data = NULL;
     PyMem_Free(handle);
     PyGILState_Release(gstate);
@@ -328,12 +356,32 @@ error:
 
 
 static PyObject *
-UDP_func_close(UDP *self)
+UDP_func_close(UDP *self, PyObject *args)
 {
+    PyObject *tmp = NULL;
+    PyObject *callback = Py_None;
+
     if (self->closed) {
         PyErr_SetString(PyExc_UDPError, "UDP is already closed");
         return NULL;
     }
+
+    if (!PyArg_ParseTuple(args, "|O:close", &callback)) {
+        return NULL;
+    }
+
+    if (callback != Py_None && !PyCallable_Check(callback)) {
+        PyErr_SetString(PyExc_TypeError, "a callable or None is required");
+        return NULL;
+    }
+
+    tmp = self->on_close_cb;
+    Py_INCREF(callback);
+    self->on_close_cb = callback;
+    Py_XDECREF(tmp);
+
+    /* Increase refcount so that object is not removed before the callback is called */
+    Py_INCREF(self);
 
     self->closed = True;
     uv_close((uv_handle_t *)self->uv_handle, on_udp_close);
@@ -460,7 +508,7 @@ static void
 UDP_tp_dealloc(UDP *self)
 {
     if (!self->closed && self->uv_handle) {
-        uv_close((uv_handle_t *)self->uv_handle, on_udp_close);
+        uv_close((uv_handle_t *)self->uv_handle, on_udp_dealloc_close);
     }
     UDP_tp_clear(self);
     Py_TYPE(self)->tp_free((PyObject *)self);
@@ -473,7 +521,7 @@ UDP_tp_methods[] = {
     { "start_read", (PyCFunction)UDP_func_start_read, METH_VARARGS, "Start accepting data." },
     { "stop_read", (PyCFunction)UDP_func_stop_read, METH_NOARGS, "Stop receiving data." },
     { "write", (PyCFunction)UDP_func_write, METH_VARARGS, "Write data over UDP." },
-    { "close", (PyCFunction)UDP_func_close, METH_NOARGS, "Close UDP connection." },
+    { "close", (PyCFunction)UDP_func_close, METH_VARARGS, "Close UDP connection." },
     { "getsockname", (PyCFunction)UDP_func_getsockname, METH_NOARGS, "Get local socket information." },
     { NULL }
 };

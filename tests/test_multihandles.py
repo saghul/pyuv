@@ -8,26 +8,29 @@ import pyuv
 class MultiHandleTest(common.UVTestCase):
 
     def test_multihandle1(self):
+        self.close_cb_called = 0
         self.prepare_cb_called = 0
+        def close_cb(handle):
+            self.close_cb_called += 1
         def prepare_cb(prepare, data):
             self.prepare_cb_called += 1
             prepare.stop()
-            prepare.close()
+            prepare.close(close_cb)
         self.idle_cb_called = 0
         def idle_cb(idle, data):
             self.idle_cb_called += 1
             idle.stop()
-            idle.close()
+            idle.close(close_cb)
         self.check_cb_called = 0
         def check_cb(check, data):
             self.check_cb_called += 1
             check.stop()
-            check.close()
+            check.close(close_cb)
         self.timer_cb_called = 0
         def timer_cb(timer, data):
             self.timer_cb_called += 1
             timer.stop()
-            timer.close()
+            timer.close(close_cb)
         loop = pyuv.Loop.default_loop()
         prepare = pyuv.Prepare(loop)
         prepare.start(prepare_cb)
@@ -41,6 +44,7 @@ class MultiHandleTest(common.UVTestCase):
         self.assertEqual(self.prepare_cb_called, 1)
         self.assertEqual(self.idle_cb_called, 1)
         self.assertEqual(self.check_cb_called, 1)
+        self.assertEqual(self.close_cb_called, 4)
 
 
 if __name__ == '__main__':

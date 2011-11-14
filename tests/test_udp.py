@@ -16,6 +16,9 @@ class UDPTest(common.UVTestCase):
         self.server = None
         self.client = None
 
+    def on_close(self, handle):
+        self.on_close_called += 1
+
     def on_server_read(self, handle, (ip, port), data):
         data = data.strip()
         self.assertEquals(data, "PING")
@@ -24,14 +27,15 @@ class UDPTest(common.UVTestCase):
     def on_client_read(self, handle, (ip, port), data):
         data = data.strip()
         self.assertEquals(data, "PONG")
-        self.client.close()
-        self.server.close()
+        self.client.close(self.on_close)
+        self.server.close(self.on_close)
 
     def timer_cb(self, timer, data):
         self.client.write("PING"+os.linesep, ("127.0.0.1", TEST_PORT))
-        timer.close()
+        timer.close(self.on_close)
 
     def test_udp_pingpong(self):
+        self.on_close_called = 0
         self.server = pyuv.UDP(self.loop)
         self.server.bind(("0.0.0.0", TEST_PORT))
         self.server.start_read(self.on_server_read)
@@ -41,6 +45,7 @@ class UDPTest(common.UVTestCase):
         timer = pyuv.Timer(self.loop)
         timer.start(self.timer_cb, 1, 0)
         self.loop.run()
+        self.assertEqual(self.on_close_called, 3)
 
 
 if __name__ == '__main__':
