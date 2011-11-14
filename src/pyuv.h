@@ -131,6 +131,7 @@ typedef struct {
     PyObject_HEAD
     Loop *loop;
     PyObject *on_read_cb;
+    PyObject *on_close_cb;
     uv_stream_t *uv_handle;
     Bool initialized;
     Bool closed;

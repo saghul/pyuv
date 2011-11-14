@@ -23,6 +23,35 @@ on_iostream_close(uv_handle_t *handle)
 {
     PyGILState_STATE gstate = PyGILState_Ensure();
     ASSERT(handle);
+
+    IOStream *self = (IOStream *)handle->data;
+    ASSERT(self);
+
+    PyObject *result;
+
+    if (self->on_close_cb != Py_None) {
+        result = PyObject_CallFunctionObjArgs(self->on_close_cb, self, NULL);
+        if (result == NULL) {
+            PyErr_WriteUnraisable(self->on_close_cb);
+        }
+        Py_XDECREF(result);
+    }
+
+    handle->data = NULL;
+    PyMem_Free(handle);
+
+    /* Refcount was increased in func_close */
+    Py_DECREF(self);
+
+    PyGILState_Release(gstate);
+}
+
+
+static void
+on_iostream_dealloc_close(uv_handle_t *handle)
+{
+    PyGILState_STATE gstate = PyGILState_Ensure();
+    ASSERT(handle);
     handle->data = NULL;
     PyMem_Free(handle);
     PyGILState_Release(gstate);
@@ -139,12 +168,32 @@ on_iostream_write(uv_write_t* req, int status)
 
 
 static PyObject *
-IOStream_func_close(IOStream *self)
+IOStream_func_close(IOStream *self, PyObject *args)
 {
+    PyObject *tmp = NULL;
+    PyObject *callback = Py_None;
+
     if (self->closed) {
         PyErr_SetString(PyExc_IOStreamError, "IOStream is already closed");
         return NULL;
     }
+
+    if (!PyArg_ParseTuple(args, "|O:close", &callback)) {
+        return NULL;
+    }
+
+    if (callback != Py_None && !PyCallable_Check(callback)) {
+        PyErr_SetString(PyExc_TypeError, "a callable or None is required");
+        return NULL;
+    }
+
+    tmp = self->on_close_cb;
+    Py_INCREF(callback);
+    self->on_close_cb = callback;
+    Py_XDECREF(tmp);
+
+    /* Increase refcount so that object is not removed before the callback is called */
+    Py_INCREF(self);
 
     self->closed = True;
     uv_close((uv_handle_t *)self->uv_handle, on_iostream_close);
@@ -377,6 +426,7 @@ static int
 IOStream_tp_traverse(IOStream *self, visitproc visit, void *arg)
 {
     Py_VISIT(self->on_read_cb);
+    Py_VISIT(self->on_close_cb);
     Py_VISIT(self->loop);
     return 0;
 }
@@ -386,6 +436,7 @@ static int
 IOStream_tp_clear(IOStream *self)
 {
     Py_CLEAR(self->on_read_cb);
+    Py_CLEAR(self->on_close_cb);
     Py_CLEAR(self->loop);
     return 0;
 }
@@ -395,7 +446,7 @@ static void
 IOStream_tp_dealloc(IOStream *self)
 {
     if (!self->closed && self->uv_handle) {
-        uv_close((uv_handle_t *)self->uv_handle, on_iostream_close);
+        uv_close((uv_handle_t *)self->uv_handle, on_iostream_dealloc_close);
     }
     Py_TYPE(self)->tp_clear((PyObject *)self);
     Py_TYPE(self)->tp_free((PyObject *)self);
@@ -405,7 +456,7 @@ IOStream_tp_dealloc(IOStream *self)
 static PyMethodDef
 IOStream_tp_methods[] = {
     { "shutdown", (PyCFunction)IOStream_func_shutdown, METH_VARARGS, "Shutdown the write side of this IOStream." },
-    { "close", (PyCFunction)IOStream_func_close, METH_NOARGS, "Abruptly stop this IOStream connection." },
+    { "close", (PyCFunction)IOStream_func_close, METH_VARARGS, "Close this IOStream connection." },
     { "write", (PyCFunction)IOStream_func_write, METH_VARARGS, "Write data-" },
     { "start_read", (PyCFunction)IOStream_func_start_read, METH_VARARGS, "Start read data from the connected endpoint." },
     { "stop_read", (PyCFunction)IOStream_func_stop_read, METH_NOARGS, "Stop read data from the connected endpoint." },
