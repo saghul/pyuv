@@ -32,7 +32,7 @@ class TCPTest(common.UVTestCase):
     def on_connection(self, server):
         client = server.accept()
         self.client_connections.append(client)
-        client.start_reading(self.on_client_connection_read)
+        client.start_read(self.on_client_connection_read)
         client.write("PING"+os.linesep)
 
     def on_client_connection_read(self, client, data):
@@ -44,7 +44,7 @@ class TCPTest(common.UVTestCase):
 
     def on_client_connection(self, client, status):
         self.assertEquals(status, 0)
-        client.start_reading(self.on_client_read)
+        client.start_read(self.on_client_read)
 
     def on_client_read(self, client, data):
         self.assertNotEqual(data, None)

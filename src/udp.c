@@ -190,7 +190,7 @@ UDP_func_start_read(UDP *self, PyObject *args)
         return NULL;
     }
 
-    if (!PyArg_ParseTuple(args, "O:start_reading", &callback)) {
+    if (!PyArg_ParseTuple(args, "O:start_read", &callback)) {
         return NULL;
     }
 

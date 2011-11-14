@@ -211,7 +211,7 @@ error:
 
 
 static PyObject *
-IOStream_func_start_reading(IOStream *self, PyObject *args, PyObject *kwargs)
+IOStream_func_start_read(IOStream *self, PyObject *args, PyObject *kwargs)
 {
     int r = 0;
     PyObject *tmp = NULL;
@@ -222,7 +222,7 @@ IOStream_func_start_reading(IOStream *self, PyObject *args, PyObject *kwargs)
         return NULL;
     }
 
-    if (!PyArg_ParseTuple(args, "O:start_reading", &callback)) {
+    if (!PyArg_ParseTuple(args, "O:start_read", &callback)) {
         return NULL;
     }
 
@@ -247,7 +247,7 @@ IOStream_func_start_reading(IOStream *self, PyObject *args, PyObject *kwargs)
 
 
 static PyObject *
-IOStream_func_stop_reading(IOStream *self, PyObject *args, PyObject *kwargs)
+IOStream_func_stop_read(IOStream *self, PyObject *args, PyObject *kwargs)
 {
     if (self->closed) {
         PyErr_SetString(PyExc_IOStreamError, "IOStream is closed");
@@ -407,8 +407,8 @@ IOStream_tp_methods[] = {
     { "shutdown", (PyCFunction)IOStream_func_shutdown, METH_VARARGS, "Shutdown the write side of this IOStream." },
     { "close", (PyCFunction)IOStream_func_close, METH_NOARGS, "Abruptly stop this IOStream connection." },
     { "write", (PyCFunction)IOStream_func_write, METH_VARARGS, "Write data-" },
-    { "start_reading", (PyCFunction)IOStream_func_start_reading, METH_VARARGS, "Start reading data from the connected endpoint." },
-    { "stop_reading", (PyCFunction)IOStream_func_stop_reading, METH_NOARGS, "Stop reading data from the connected endpoint." },
+    { "start_read", (PyCFunction)IOStream_func_start_read, METH_VARARGS, "Start read data from the connected endpoint." },
+    { "stop_read", (PyCFunction)IOStream_func_stop_read, METH_NOARGS, "Stop read data from the connected endpoint." },
     { NULL }
 };
 
