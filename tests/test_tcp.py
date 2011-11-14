@@ -37,7 +37,7 @@ class TCPTest(common.UVTestCase):
 
     def on_client_connection_read(self, client, data):
         if data is None:
-            client.disconnect()
+            client.close()
             self.client_connections.remove(client)
             self.server.close()
             return

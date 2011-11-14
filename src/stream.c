@@ -37,13 +37,31 @@ on_iostream_shutdown(uv_shutdown_t* req, int status)
 {
     PyGILState_STATE gstate = PyGILState_Ensure();
 
-    IOStream *self = (IOStream *)(((uv_handle_t*)req->handle)->data);
+    iostream_req_data_t* req_data = (iostream_req_data_t *)req->data;
+
+    IOStream *self = (IOStream *)req_data->obj;
+    PyObject *callback = req_data->callback;
+
     ASSERT(self);
+    /* Object could go out of scope in the callback, increase refcount to avoid it */
+    Py_INCREF(self);
 
-    uv_close((uv_handle_t*)req->handle, on_iostream_close);
+    PyObject *result;
 
+    if (callback != Py_None) {
+        result = PyObject_CallFunctionObjArgs(callback, self, NULL);
+        if (result == NULL) {
+            PyErr_WriteUnraisable(callback);
+        }
+        Py_XDECREF(result);
+    }
+
+    Py_DECREF(callback);
+    PyMem_Free(req_data);
+    req->data = NULL;
     PyMem_Free(req);
 
+    Py_DECREF(self);
     PyGILState_Release(gstate);
 }
 
@@ -136,35 +154,59 @@ IOStream_func_close(IOStream *self)
 
 
 static PyObject *
-IOStream_func_disconnect(IOStream *self)
+IOStream_func_shutdown(IOStream *self, PyObject *args)
 {
     int r = 0;
+    PyObject *callback;
+    uv_shutdown_t *req = NULL;
+    iostream_req_data_t *req_data = NULL;
 
     if (self->closed) {
         PyErr_SetString(PyExc_IOStreamError, "IOStream is already closed");
         return NULL;
     }
 
-    r = uv_read_stop(self->uv_handle);
-    if (r != 0) {
-        raise_uv_exception(self->loop, PyExc_IOStreamError);
+    if (!PyArg_ParseTuple(args, "|O:shutdown", &callback)) {
         return NULL;
     }
 
-    uv_shutdown_t* req = (uv_shutdown_t*) PyMem_Malloc(sizeof(uv_shutdown_t));
+    req = (uv_shutdown_t*) PyMem_Malloc(sizeof(uv_shutdown_t));
     if (!req) {
         PyErr_NoMemory();
-        return NULL;
+        goto error;
     }
+
+    req_data = (iostream_req_data_t*) PyMem_Malloc(sizeof(iostream_req_data_t));
+    if (!req_data) {
+        PyErr_NoMemory();
+        goto error;
+    }
+
+    req_data->obj = (PyObject *)self;
+    Py_INCREF(callback);
+    req_data->callback = callback;
+    req->data = (void *)req_data;
 
     r = uv_shutdown(req, self->uv_handle, on_iostream_shutdown);
     if (r != 0) {
         raise_uv_exception(self->loop, PyExc_IOStreamError);
-        return NULL;
+        goto error;
     }
 
-    self->closed = True;
     Py_RETURN_NONE;
+
+error:
+    if (req_data) {
+        Py_DECREF(callback);
+        req_data->obj = NULL;
+        req_data->callback = NULL;
+        PyMem_Free(req_data);
+    }
+    if (req) {
+        req->data = NULL;
+        PyMem_Free(req);
+    }
+    return NULL;
 }
 
 
@@ -227,10 +269,10 @@ IOStream_func_write(IOStream *self, PyObject *args)
 {
     char *data;
     int r = 0;
-    iostream_req_data_t *req_data = NULL;
     PyObject *callback = Py_None;
     uv_buf_t buf;
     uv_write_t *wr = NULL;
+    iostream_req_data_t *req_data = NULL;
 
     if (self->closed) {
         PyErr_SetString(PyExc_IOStreamError, "IOStream is closed");
@@ -362,7 +404,7 @@ IOStream_tp_dealloc(IOStream *self)
 
 static PyMethodDef
 IOStream_tp_methods[] = {
-    { "disconnect", (PyCFunction)IOStream_func_disconnect, METH_NOARGS, "Disconnect this IOStream." },
+    { "shutdown", (PyCFunction)IOStream_func_shutdown, METH_VARARGS, "Shutdown the write side of this IOStream." },
     { "close", (PyCFunction)IOStream_func_close, METH_NOARGS, "Abruptly stop this IOStream connection." },
     { "write", (PyCFunction)IOStream_func_write, METH_VARARGS, "Write data-" },
     { "start_reading", (PyCFunction)IOStream_func_start_reading, METH_VARARGS, "Start reading data from the connected endpoint." },
