@@ -2,12 +2,6 @@
 static PyObject* PyExc_PipeError;
 
 
-typedef struct {
-    uv_connect_t req;
-    void *data;
-} pipe_connect_req_t;
-
-
 static void
 on_pipe_connection(uv_stream_t* server, int status)
 {
@@ -45,8 +39,7 @@ on_pipe_client_connection(uv_connect_t *req, int status)
     PyGILState_STATE gstate = PyGILState_Ensure();
     ASSERT(req);
 
-    pipe_connect_req_t* connect_req = (pipe_connect_req_t*) req;
-    iostream_req_data_t* req_data = (iostream_req_data_t *)connect_req->data;
+    iostream_req_data_t* req_data = (iostream_req_data_t *)req->data;
 
     Pipe *self = (Pipe *)req_data->obj;
     PyObject *callback = req_data->callback;
@@ -75,8 +68,8 @@ on_pipe_client_connection(uv_connect_t *req, int status)
 
     Py_DECREF(callback);
     PyMem_Free(req_data);
-    connect_req->data = NULL;
-    PyMem_Free(connect_req);
+    req->data = NULL;
+    PyMem_Free(req);
 
     Py_DECREF(self);
     PyGILState_Release(gstate);
@@ -183,7 +176,7 @@ static PyObject *
 Pipe_func_connect(Pipe *self, PyObject *args, PyObject *kwargs)
 {
     char *name;
-    pipe_connect_req_t *connect_req = NULL;
+    uv_connect_t *connect_req = NULL;
     iostream_req_data_t *req_data = NULL;
     PyObject *callback;
 
@@ -203,7 +196,7 @@ Pipe_func_connect(Pipe *self, PyObject *args, PyObject *kwargs)
         return NULL;
     }
 
-    connect_req = (pipe_connect_req_t*) PyMem_Malloc(sizeof(pipe_connect_req_t));
+    connect_req = (uv_connect_t *)PyMem_Malloc(sizeof(uv_connect_t));
     if (!connect_req) {
         PyErr_NoMemory();
         goto error;
@@ -218,10 +211,9 @@ Pipe_func_connect(Pipe *self, PyObject *args, PyObject *kwargs)
     req_data->obj = (PyObject *)self;
     Py_INCREF(callback);
     req_data->callback = callback;
-
     connect_req->data = (void *)req_data;
 
-    uv_pipe_connect(&connect_req->req, (uv_pipe_t *)base->uv_handle, name, on_pipe_client_connection);
+    uv_pipe_connect(connect_req, (uv_pipe_t *)base->uv_handle, name, on_pipe_client_connection);
 
     Py_RETURN_NONE;
 

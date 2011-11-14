@@ -3,11 +3,6 @@ static PyObject* PyExc_IOStreamError;
 
 
 typedef struct {
-    uv_write_t req;
-    void *data;
-} iostream_write_req_t;
-
-typedef struct {
     PyObject *obj;
     PyObject *callback;
 } iostream_req_data_t;
@@ -96,8 +91,7 @@ on_iostream_write(uv_write_t* req, int status)
     PyGILState_STATE gstate = PyGILState_Ensure();
     ASSERT(req);
 
-    iostream_write_req_t* wr = (iostream_write_req_t*) req;
-    iostream_req_data_t* req_data = (iostream_req_data_t *)wr->data;
+    iostream_req_data_t* req_data = (iostream_req_data_t *)req->data;
 
     IOStream *self = (IOStream *)req_data->obj;
     PyObject *callback = req_data->callback;
@@ -118,8 +112,8 @@ on_iostream_write(uv_write_t* req, int status)
 
     Py_DECREF(callback);
     PyMem_Free(req_data);
-    wr->data = NULL;
-    PyMem_Free(wr);
+    req->data = NULL;
+    PyMem_Free(req);
 
     Py_DECREF(self);
     PyGILState_Release(gstate);
@@ -233,10 +227,10 @@ IOStream_func_write(IOStream *self, PyObject *args)
 {
     char *data;
     int r = 0;
-    iostream_write_req_t *wr = NULL;
     iostream_req_data_t *req_data = NULL;
     PyObject *callback = Py_None;
     uv_buf_t buf;
+    uv_write_t *wr = NULL;
 
     if (self->closed) {
         PyErr_SetString(PyExc_IOStreamError, "IOStream is closed");
@@ -252,7 +246,7 @@ IOStream_func_write(IOStream *self, PyObject *args)
         return NULL;
     }
 
-    wr = (iostream_write_req_t*) PyMem_Malloc(sizeof(iostream_write_req_t));
+    wr = (uv_write_t *)PyMem_Malloc(sizeof(uv_write_t));
     if (!wr) {
         PyErr_NoMemory();
         goto error;
@@ -269,9 +263,10 @@ IOStream_func_write(IOStream *self, PyObject *args)
     req_data->callback = callback;
     wr->data = (void *)req_data;
 
+    // TODO: duplicate data and allocate memory from Python heap. Free it on the callback.
     buf = uv_buf_init(data, strlen(data));
 
-    r = uv_write(&wr->req, self->uv_handle, &buf, 1, on_iostream_write);
+    r = uv_write(wr, self->uv_handle, &buf, 1, on_iostream_write);
     if (r != 0) {
         raise_uv_exception(self->loop, PyExc_IOStreamError);
         goto error;

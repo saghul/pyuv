@@ -2,12 +2,6 @@
 static PyObject* PyExc_TCPError;
 
 
-typedef struct {
-    uv_connect_t req;
-    void *data;
-} tcp_connect_req_t;
-
-
 static void
 on_tcp_connection(uv_stream_t* server, int status)
 {
@@ -45,8 +39,7 @@ on_tcp_client_connection(uv_connect_t *req, int status)
     PyGILState_STATE gstate = PyGILState_Ensure();
     ASSERT(req);
 
-    tcp_connect_req_t* connect_req = (tcp_connect_req_t*) req;
-    iostream_req_data_t* req_data = (iostream_req_data_t *)connect_req->data;
+    iostream_req_data_t* req_data = (iostream_req_data_t *)req->data;
 
     TCP *self = (TCP *)req_data->obj;
     PyObject *callback = req_data->callback;
@@ -75,8 +68,8 @@ on_tcp_client_connection(uv_connect_t *req, int status)
 
     Py_DECREF(callback);
     PyMem_Free(req_data);
-    connect_req->data = NULL;
-    PyMem_Free(connect_req);
+    req->data = NULL;
+    PyMem_Free(req);
 
     Py_DECREF(self);
     PyGILState_Release(gstate);
@@ -211,7 +204,7 @@ TCP_func_connect(TCP *self, PyObject *args, PyObject *kwargs)
     int address_type;
     struct in_addr addr4;
     struct in6_addr addr6;
-    tcp_connect_req_t *connect_req = NULL;
+    uv_connect_t *connect_req = NULL;
     iostream_req_data_t *req_data = NULL;
     PyObject *connect_address;
     PyObject *callback;
@@ -250,7 +243,7 @@ TCP_func_connect(TCP *self, PyObject *args, PyObject *kwargs)
         return NULL;
     }
 
-    connect_req = (tcp_connect_req_t*) PyMem_Malloc(sizeof(tcp_connect_req_t));
+    connect_req = (uv_connect_t *)PyMem_Malloc(sizeof(uv_connect_t));
     if (!connect_req) {
         PyErr_NoMemory();
         goto error;
@@ -265,13 +258,12 @@ TCP_func_connect(TCP *self, PyObject *args, PyObject *kwargs)
     req_data->obj = (PyObject *)self;
     Py_INCREF(callback);
     req_data->callback = callback;
-
     connect_req->data = (void *)req_data;
 
     if (address_type == AF_INET) {
-        r = uv_tcp_connect(&connect_req->req, (uv_tcp_t *)base->uv_handle, uv_ip4_addr(connect_ip, connect_port), on_tcp_client_connection);
+        r = uv_tcp_connect(connect_req, (uv_tcp_t *)base->uv_handle, uv_ip4_addr(connect_ip, connect_port), on_tcp_client_connection);
     } else {
-        r = uv_tcp_connect6(&connect_req->req, (uv_tcp_t *)base->uv_handle, uv_ip6_addr(connect_ip, connect_port), on_tcp_client_connection);
+        r = uv_tcp_connect6(connect_req, (uv_tcp_t *)base->uv_handle, uv_ip6_addr(connect_ip, connect_port), on_tcp_client_connection);
     }
 
     if (r != 0) {
