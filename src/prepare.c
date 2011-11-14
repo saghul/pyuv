@@ -62,7 +62,7 @@ Prepare_func_start(Prepare *self, PyObject *args, PyObject *kwargs)
         return NULL;
     }
 
-    r = uv_prepare_start(self->uv_prepare, on_prepare_callback);
+    r = uv_prepare_start(self->uv_handle, on_prepare_callback);
     if (r != 0) {
         raise_uv_exception(self->loop, PyExc_PrepareError);
         return NULL;
@@ -90,7 +90,7 @@ Prepare_func_stop(Prepare *self)
         return NULL;
     }
 
-    int r = uv_prepare_stop(self->uv_prepare);
+    int r = uv_prepare_stop(self->uv_handle);
     if (r != 0) {
         raise_uv_exception(self->loop, PyExc_PrepareError);
         return NULL;
@@ -109,7 +109,7 @@ Prepare_func_close(Prepare *self)
     }
 
     self->closed = True;
-    uv_close((uv_handle_t *)self->uv_prepare, on_prepare_close);
+    uv_close((uv_handle_t *)self->uv_handle, on_prepare_close);
 
     Py_RETURN_NONE;
 }
@@ -118,7 +118,7 @@ Prepare_func_close(Prepare *self)
 static PyObject *
 Prepare_active_get(Prepare *self, void *closure)
 {
-    return PyBool_FromLong((long)uv_is_active((uv_handle_t *)self->uv_prepare));
+    return PyBool_FromLong((long)uv_is_active((uv_handle_t *)self->uv_handle));
 }
 
 
@@ -158,7 +158,7 @@ Prepare_tp_init(Prepare *self, PyObject *args, PyObject *kwargs)
         return -1;
     }
     uv_prepare->data = (void *)self;
-    self->uv_prepare = uv_prepare;
+    self->uv_handle = uv_prepare;
 
     self->initialized = True;
 
@@ -175,7 +175,7 @@ Prepare_tp_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
     }
     self->initialized = False;
     self->closed = False;
-    self->uv_prepare = NULL;
+    self->uv_handle = NULL;
     return (PyObject *)self;
 }
 
@@ -203,8 +203,8 @@ Prepare_tp_clear(Prepare *self)
 static void
 Prepare_tp_dealloc(Prepare *self)
 {
-    if (!self->closed && self->uv_prepare) {
-        uv_close((uv_handle_t *)self->uv_prepare, on_prepare_close);
+    if (!self->closed && self->uv_handle) {
+        uv_close((uv_handle_t *)self->uv_handle, on_prepare_close);
     }
     Prepare_tp_clear(self);
     Py_TYPE(self)->tp_free((PyObject *)self);

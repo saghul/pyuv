@@ -73,7 +73,7 @@ Timer_func_start(Timer *self, PyObject *args, PyObject *kwargs)
         return NULL;
     }
 
-    r = uv_timer_start(self->uv_timer, on_timer_callback, (int64_t)(timeout * 1000), (int64_t)(repeat * 1000));
+    r = uv_timer_start(self->uv_handle, on_timer_callback, (int64_t)(timeout * 1000), (int64_t)(repeat * 1000));
     if (r != 0) {
         raise_uv_exception(self->loop, PyExc_TimerError);
         return NULL;
@@ -101,7 +101,7 @@ Timer_func_stop(Timer *self)
         return NULL;
     }
 
-    int r = uv_timer_stop(self->uv_timer);
+    int r = uv_timer_stop(self->uv_handle);
     if (r != 0) {
         raise_uv_exception(self->loop, PyExc_TimerError);
         return NULL;
@@ -119,7 +119,7 @@ Timer_func_again(Timer *self)
         return NULL;
     }
 
-    int r = uv_timer_again(self->uv_timer);
+    int r = uv_timer_again(self->uv_handle);
     if (r != 0) {
         raise_uv_exception(self->loop, PyExc_TimerError);
         return NULL;
@@ -138,7 +138,7 @@ Timer_func_close(Timer *self)
     }
 
     self->closed = True;
-    uv_close((uv_handle_t *)self->uv_timer, on_timer_close);
+    uv_close((uv_handle_t *)self->uv_handle, on_timer_close);
 
     Py_RETURN_NONE;
 }
@@ -147,7 +147,7 @@ Timer_func_close(Timer *self)
 static PyObject *
 Timer_active_get(Timer *self, void *closure)
 {
-    return PyBool_FromLong((long)uv_is_active((uv_handle_t *)self->uv_timer));
+    return PyBool_FromLong((long)uv_is_active((uv_handle_t *)self->uv_handle));
 }
 
 
@@ -159,7 +159,7 @@ Timer_repeat_get(Timer *self, void *closure)
         return NULL;
     }
 
-    return PyFloat_FromDouble(uv_timer_get_repeat(self->uv_timer)/1000.0);
+    return PyFloat_FromDouble(uv_timer_get_repeat(self->uv_handle)/1000.0);
 }
 
 
@@ -188,7 +188,7 @@ Timer_repeat_set(Timer *self, PyObject *value, void *closure)
         return -1;
     }
 
-    uv_timer_set_repeat(self->uv_timer, (int64_t)(repeat * 1000));
+    uv_timer_set_repeat(self->uv_handle, (int64_t)(repeat * 1000));
 
     return 0;
 }
@@ -230,7 +230,7 @@ Timer_tp_init(Timer *self, PyObject *args, PyObject *kwargs)
         return -1;
     }
     uv_timer->data = (void *)self;
-    self->uv_timer = uv_timer;
+    self->uv_handle = uv_timer;
 
     self->initialized = True;
 
@@ -247,7 +247,7 @@ Timer_tp_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
     }
     self->initialized = False;
     self->closed = False;
-    self->uv_timer = NULL;
+    self->uv_handle = NULL;
     return (PyObject *)self;
 }
 
@@ -275,8 +275,8 @@ Timer_tp_clear(Timer *self)
 static void
 Timer_tp_dealloc(Timer *self)
 {
-    if (!self->closed && self->uv_timer) {
-        uv_close((uv_handle_t *)self->uv_timer, on_timer_close);
+    if (!self->closed && self->uv_handle) {
+        uv_close((uv_handle_t *)self->uv_handle, on_timer_close);
     }
     Timer_tp_clear(self);
     Py_TYPE(self)->tp_free((PyObject *)self);

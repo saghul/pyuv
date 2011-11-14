@@ -164,9 +164,9 @@ UDP_func_bind(UDP *self, PyObject *args)
     }
 
     if (address_type == AF_INET) {
-        r = uv_udp_bind(self->uv_udp_handle, uv_ip4_addr(bind_ip, bind_port), 0);
+        r = uv_udp_bind(self->uv_handle, uv_ip4_addr(bind_ip, bind_port), 0);
     } else {
-        r = uv_udp_bind6(self->uv_udp_handle, uv_ip6_addr(bind_ip, bind_port), UV_UDP_IPV6ONLY);
+        r = uv_udp_bind6(self->uv_handle, uv_ip6_addr(bind_ip, bind_port), UV_UDP_IPV6ONLY);
     }
 
     if (r != 0) {
@@ -199,7 +199,7 @@ UDP_func_start_read(UDP *self, PyObject *args)
         return NULL;
     }
 
-    r = uv_udp_recv_start(self->uv_udp_handle, (uv_alloc_cb)on_udp_alloc, (uv_udp_recv_cb)on_udp_read);
+    r = uv_udp_recv_start(self->uv_handle, (uv_alloc_cb)on_udp_alloc, (uv_udp_recv_cb)on_udp_read);
     if (r != 0) {
         raise_uv_exception(self->loop, PyExc_UDPError);
         return NULL;
@@ -224,7 +224,7 @@ UDP_func_stop_read(UDP *self)
         return NULL;
     }
 
-    r = uv_udp_recv_stop(self->uv_udp_handle);
+    r = uv_udp_recv_stop(self->uv_handle);
     if (r != 0) {
         raise_uv_exception(self->loop, PyExc_UDPError);
         return NULL;
@@ -302,9 +302,9 @@ UDP_func_write(UDP *self, PyObject *args)
     wr->data = (void *)req_data;
 
     if (address_type == AF_INET) {
-        r = uv_udp_send(&wr->req, self->uv_udp_handle, &wr->buf, 1, uv_ip4_addr(dest_ip, dest_port), (uv_udp_send_cb)on_udp_write);
+        r = uv_udp_send(&wr->req, self->uv_handle, &wr->buf, 1, uv_ip4_addr(dest_ip, dest_port), (uv_udp_send_cb)on_udp_write);
     } else {
-        r = uv_udp_send6(&wr->req, self->uv_udp_handle, &wr->buf, 1, uv_ip6_addr(dest_ip, dest_port), (uv_udp_send_cb)on_udp_write);
+        r = uv_udp_send6(&wr->req, self->uv_handle, &wr->buf, 1, uv_ip6_addr(dest_ip, dest_port), (uv_udp_send_cb)on_udp_write);
     }
     if (r != 0) {
         raise_uv_exception(self->loop, PyExc_UDPError);
@@ -336,7 +336,7 @@ UDP_func_close(UDP *self)
     }
 
     self->closed = True;
-    uv_close((uv_handle_t *)self->uv_udp_handle, on_udp_close);
+    uv_close((uv_handle_t *)self->uv_handle, on_udp_close);
 
     Py_RETURN_NONE;
 }
@@ -358,7 +358,7 @@ UDP_func_getsockname(UDP *self)
         return NULL;
     }
 
-    r = uv_udp_getsockname(self->uv_udp_handle, &sockname, &namelen);
+    r = uv_udp_getsockname(self->uv_handle, &sockname, &namelen);
     if (r != 0) {
         raise_uv_exception(self->loop, PyExc_UDPError);
         return NULL;
@@ -416,7 +416,7 @@ UDP_tp_init(UDP *self, PyObject *args, PyObject *kwargs)
         return -1;
     }
     uv_udp_handle->data = (void *)self;
-    self->uv_udp_handle = uv_udp_handle;
+    self->uv_handle = uv_udp_handle;
 
     self->initialized = True;
 
@@ -433,7 +433,7 @@ UDP_tp_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
     }
     self->initialized = False;
     self->closed = False;
-    self->uv_udp_handle = NULL;
+    self->uv_handle = NULL;
     return (PyObject *)self;
 }
 
@@ -459,8 +459,8 @@ UDP_tp_clear(UDP *self)
 static void
 UDP_tp_dealloc(UDP *self)
 {
-    if (!self->closed && self->uv_udp_handle) {
-        uv_close((uv_handle_t *)self->uv_udp_handle, on_udp_close);
+    if (!self->closed && self->uv_handle) {
+        uv_close((uv_handle_t *)self->uv_handle, on_udp_close);
     }
     UDP_tp_clear(self);
     Py_TYPE(self)->tp_free((PyObject *)self);

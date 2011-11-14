@@ -59,7 +59,7 @@ Async_func_send(Async *self, PyObject *args)
         return NULL;
     }
 
-    r = uv_async_send(self->uv_async);
+    r = uv_async_send(self->uv_handle);
     if (r != 0) {
         raise_uv_exception(self->loop, PyExc_AsyncError);
         return NULL;
@@ -88,7 +88,7 @@ Async_func_close(Async *self)
     }
 
     self->closed = True;
-    uv_close((uv_handle_t *)self->uv_async, on_async_close);
+    uv_close((uv_handle_t *)self->uv_handle, on_async_close);
 
     Py_RETURN_NONE;
 }
@@ -130,7 +130,7 @@ Async_tp_init(Async *self, PyObject *args, PyObject *kwargs)
         return -1;
     }
     uv_async->data = (void *)self;
-    self->uv_async = uv_async;
+    self->uv_handle = uv_async;
 
     self->initialized = True;
 
@@ -147,7 +147,7 @@ Async_tp_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
     }
     self->initialized = False;
     self->closed = False;
-    self->uv_async = NULL;
+    self->uv_handle = NULL;
     return (PyObject *)self;
 }
 
@@ -175,8 +175,8 @@ Async_tp_clear(Async *self)
 static void
 Async_tp_dealloc(Async *self)
 {
-    if (!self->closed && self->uv_async) {
-        uv_close((uv_handle_t *)self->uv_async, on_async_close);
+    if (!self->closed && self->uv_handle) {
+        uv_close((uv_handle_t *)self->uv_handle, on_async_close);
     }
     Async_tp_clear(self);
     Py_TYPE(self)->tp_free((PyObject *)self);

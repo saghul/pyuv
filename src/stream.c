@@ -136,7 +136,7 @@ IOStream_func_close(IOStream *self)
     }
 
     self->closed = True;
-    uv_close((uv_handle_t *)self->uv_stream, on_iostream_close);
+    uv_close((uv_handle_t *)self->uv_handle, on_iostream_close);
 
     Py_RETURN_NONE;
 }
@@ -152,7 +152,7 @@ IOStream_func_disconnect(IOStream *self)
         return NULL;
     }
 
-    r = uv_read_stop(self->uv_stream);
+    r = uv_read_stop(self->uv_handle);
     if (r != 0) {
         raise_uv_exception(self->loop, PyExc_IOStreamError);
         return NULL;
@@ -164,7 +164,7 @@ IOStream_func_disconnect(IOStream *self)
         return NULL;
     }
 
-    r = uv_shutdown(req, self->uv_stream, on_iostream_shutdown);
+    r = uv_shutdown(req, self->uv_handle, on_iostream_shutdown);
     if (r != 0) {
         raise_uv_exception(self->loop, PyExc_IOStreamError);
         return NULL;
@@ -196,7 +196,7 @@ IOStream_func_start_reading(IOStream *self, PyObject *args, PyObject *kwargs)
         return NULL;
     }
 
-    r = uv_read_start((uv_stream_t *)self->uv_stream, (uv_alloc_cb)on_iostream_alloc, (uv_read_cb)on_iostream_read);
+    r = uv_read_start((uv_stream_t *)self->uv_handle, (uv_alloc_cb)on_iostream_alloc, (uv_read_cb)on_iostream_read);
     if (r != 0) {
         raise_uv_exception(self->loop, PyExc_IOStreamError);
         return NULL;
@@ -219,7 +219,7 @@ IOStream_func_stop_reading(IOStream *self, PyObject *args, PyObject *kwargs)
         return NULL;
     }
 
-    int r = uv_read_stop(self->uv_stream);
+    int r = uv_read_stop(self->uv_handle);
     if (r != 0) {
         raise_uv_exception(self->loop, PyExc_IOStreamError);
         return NULL;
@@ -273,7 +273,7 @@ IOStream_func_write(IOStream *self, PyObject *args)
 
     wr->data = (void *)req_data;
 
-    r = uv_write(&wr->req, self->uv_stream, &wr->buf, 1, on_iostream_write);
+    r = uv_write(&wr->req, self->uv_handle, &wr->buf, 1, on_iostream_write);
     if (r != 0) {
         raise_uv_exception(self->loop, PyExc_IOStreamError);
         goto error;
@@ -333,7 +333,7 @@ IOStream_tp_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
     }
     self->initialized = False;
     self->closed = False;
-    self->uv_stream = NULL;
+    self->uv_handle = NULL;
     return (PyObject *)self;
 }
 
@@ -359,8 +359,8 @@ IOStream_tp_clear(IOStream *self)
 static void
 IOStream_tp_dealloc(IOStream *self)
 {
-    if (!self->closed && self->uv_stream) {
-        uv_close((uv_handle_t *)self->uv_stream, on_iostream_close);
+    if (!self->closed && self->uv_handle) {
+        uv_close((uv_handle_t *)self->uv_handle, on_iostream_close);
     }
     Py_TYPE(self)->tp_clear((PyObject *)self);
     Py_TYPE(self)->tp_free((PyObject *)self);

@@ -100,7 +100,7 @@ Pipe_func_bind(Pipe *self, PyObject *args)
         return NULL;
     }
 
-    r = uv_pipe_bind((uv_pipe_t *)base->uv_stream, name);
+    r = uv_pipe_bind((uv_pipe_t *)base->uv_handle, name);
     if (r != 0) {
         raise_uv_exception(base->loop, PyExc_PipeError);
         return NULL;
@@ -139,7 +139,7 @@ Pipe_func_listen(Pipe *self, PyObject *args)
         return NULL;
     }
 
-    r = uv_listen(base->uv_stream, backlog, on_pipe_connection);
+    r = uv_listen(base->uv_handle, backlog, on_pipe_connection);
     if (r != 0) {
         raise_uv_exception(base->loop, PyExc_PipeError);
         return NULL;
@@ -169,7 +169,7 @@ Pipe_func_accept(Pipe *self)
     Pipe *connection;
     connection = (Pipe *)PyObject_CallFunction((PyObject *)&PipeType, "O", base->loop);
 
-    r = uv_accept(base->uv_stream, ((IOStream *)connection)->uv_stream);
+    r = uv_accept(base->uv_handle, ((IOStream *)connection)->uv_handle);
     if (r != 0) {
         raise_uv_exception(base->loop, PyExc_PipeError);
         return NULL;
@@ -221,7 +221,7 @@ Pipe_func_connect(Pipe *self, PyObject *args, PyObject *kwargs)
 
     connect_req->data = (void *)req_data;
 
-    uv_pipe_connect(&connect_req->req, (uv_pipe_t *)base->uv_stream, name, on_pipe_client_connection);
+    uv_pipe_connect(&connect_req->req, (uv_pipe_t *)base->uv_handle, name, on_pipe_client_connection);
 
     Py_RETURN_NONE;
 
@@ -266,7 +266,7 @@ Pipe_tp_init(Pipe *self, PyObject *args, PyObject *kwargs)
         return -1;
     }
     uv_stream->data = (void *)self;
-    base->uv_stream = (uv_stream_t *)uv_stream;
+    base->uv_handle = (uv_stream_t *)uv_stream;
 
     return 0;
 }

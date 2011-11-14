@@ -48,7 +48,7 @@ Signal_func_start(Signal *self)
         return NULL;
     }
 
-    int r = uv_prepare_start(self->uv_prepare, on_signal_callback);
+    int r = uv_prepare_start(self->uv_handle, on_signal_callback);
     if (r != 0) {
         raise_uv_exception(self->loop, PyExc_SignalError);
         return NULL;
@@ -66,7 +66,7 @@ Signal_func_stop(Signal *self)
         return NULL;
     }
 
-    int r = uv_prepare_stop(self->uv_prepare);
+    int r = uv_prepare_stop(self->uv_handle);
     if (r != 0) {
         raise_uv_exception(self->loop, PyExc_SignalError);
         return NULL;
@@ -85,7 +85,7 @@ Signal_func_close(Signal *self)
     }
 
     self->closed = True;
-    uv_close((uv_handle_t *)self->uv_prepare, on_signal_close);
+    uv_close((uv_handle_t *)self->uv_handle, on_signal_close);
 
     Py_RETURN_NONE;
 }
@@ -94,7 +94,7 @@ Signal_func_close(Signal *self)
 static PyObject *
 Signal_active_get(Signal *self, void *closure)
 {
-    return PyBool_FromLong((long)uv_is_active((uv_handle_t *)self->uv_prepare));
+    return PyBool_FromLong((long)uv_is_active((uv_handle_t *)self->uv_handle));
 }
 
 
@@ -134,7 +134,7 @@ Signal_tp_init(Signal *self, PyObject *args, PyObject *kwargs)
         return -1;
     }
     uv_prepare->data = (void *)self;
-    self->uv_prepare = uv_prepare;
+    self->uv_handle = uv_prepare;
 
     self->initialized = True;
 
@@ -151,7 +151,7 @@ Signal_tp_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
     }
     self->initialized = False;
     self->closed = False;
-    self->uv_prepare = NULL;
+    self->uv_handle = NULL;
     return (PyObject *)self;
 }
 
@@ -175,8 +175,8 @@ Signal_tp_clear(Signal *self)
 static void
 Signal_tp_dealloc(Signal *self)
 {
-    if (!self->closed && self->uv_prepare) {
-        uv_close((uv_handle_t *)self->uv_prepare, on_signal_close);
+    if (!self->closed && self->uv_handle) {
+        uv_close((uv_handle_t *)self->uv_handle, on_signal_close);
     }
     Signal_tp_clear(self);
     Py_TYPE(self)->tp_free((PyObject *)self);

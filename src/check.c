@@ -63,7 +63,7 @@ Check_func_start(Check *self, PyObject *args, PyObject *kwargs)
         return NULL;
     }
 
-    r = uv_check_start(self->uv_check, on_check_callback);
+    r = uv_check_start(self->uv_handle, on_check_callback);
     if (r != 0) {
         raise_uv_exception(self->loop, PyExc_CheckError);
         return NULL;
@@ -91,7 +91,7 @@ Check_func_stop(Check *self)
         return NULL;
     }
 
-    int r = uv_check_stop(self->uv_check);
+    int r = uv_check_stop(self->uv_handle);
     if (r != 0) {
         raise_uv_exception(self->loop, PyExc_CheckError);
         return NULL;
@@ -110,7 +110,7 @@ Check_func_close(Check *self)
     }
 
     self->closed = True;
-    uv_close((uv_handle_t *)self->uv_check, on_check_close);
+    uv_close((uv_handle_t *)self->uv_handle, on_check_close);
 
     Py_RETURN_NONE;
 }
@@ -119,7 +119,7 @@ Check_func_close(Check *self)
 static PyObject *
 Check_active_get(Check *self, void *closure)
 {
-    return PyBool_FromLong((long)uv_is_active((uv_handle_t *)self->uv_check));
+    return PyBool_FromLong((long)uv_is_active((uv_handle_t *)self->uv_handle));
 }
 
 
@@ -159,7 +159,7 @@ Check_tp_init(Check *self, PyObject *args, PyObject *kwargs)
         return -1;
     }
     uv_check->data = (void *)self;
-    self->uv_check = uv_check;
+    self->uv_handle = uv_check;
 
     self->initialized = True;
 
@@ -176,7 +176,7 @@ Check_tp_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
     }
     self->initialized = False;
     self->closed = False;
-    self->uv_check = NULL;
+    self->uv_handle = NULL;
     return (PyObject *)self;
 }
 
@@ -204,8 +204,8 @@ Check_tp_clear(Check *self)
 static void
 Check_tp_dealloc(Check *self)
 {
-    if (!self->closed && self->uv_check) {
-        uv_close((uv_handle_t *)self->uv_check, on_check_close);
+    if (!self->closed && self->uv_handle) {
+        uv_close((uv_handle_t *)self->uv_handle, on_check_close);
     }
     Check_tp_clear(self);
     Py_TYPE(self)->tp_free((PyObject *)self);

@@ -63,7 +63,7 @@ Idle_func_start(Idle *self, PyObject *args, PyObject *kwargs)
         return NULL;
     }
 
-    r = uv_idle_start(self->uv_idle, on_idle_callback);
+    r = uv_idle_start(self->uv_handle, on_idle_callback);
     if (r != 0) {
         raise_uv_exception(self->loop, PyExc_IdleError);
         return NULL;
@@ -91,7 +91,7 @@ Idle_func_stop(Idle *self)
         return NULL;
     }
 
-    int r = uv_idle_stop(self->uv_idle);
+    int r = uv_idle_stop(self->uv_handle);
     if (r != 0) {
         raise_uv_exception(self->loop, PyExc_IdleError);
         return NULL;
@@ -110,7 +110,7 @@ Idle_func_close(Idle *self)
     }
 
     self->closed = True;
-    uv_close((uv_handle_t *)self->uv_idle, on_idle_close);
+    uv_close((uv_handle_t *)self->uv_handle, on_idle_close);
 
     Py_RETURN_NONE;
 }
@@ -119,7 +119,7 @@ Idle_func_close(Idle *self)
 static PyObject *
 Idle_active_get(Idle *self, void *closure)
 {
-    return PyBool_FromLong((long)uv_is_active((uv_handle_t *)self->uv_idle));
+    return PyBool_FromLong((long)uv_is_active((uv_handle_t *)self->uv_handle));
 }
 
 
@@ -159,7 +159,7 @@ Idle_tp_init(Idle *self, PyObject *args, PyObject *kwargs)
         return -1;
     }
     uv_idle->data = (void *)self;
-    self->uv_idle = uv_idle;
+    self->uv_handle = uv_idle;
 
     self->initialized = True;
 
@@ -176,7 +176,7 @@ Idle_tp_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
     }
     self->initialized = False;
     self->closed = False;
-    self->uv_idle = NULL;
+    self->uv_handle = NULL;
     return (PyObject *)self;
 }
 
@@ -204,8 +204,8 @@ Idle_tp_clear(Idle *self)
 static void
 Idle_tp_dealloc(Idle *self)
 {
-    if (!self->closed && self->uv_idle) {
-        uv_close((uv_handle_t *)self->uv_idle, on_idle_close);
+    if (!self->closed && self->uv_handle) {
+        uv_close((uv_handle_t *)self->uv_handle, on_idle_close);
     }
     Idle_tp_clear(self);
     Py_TYPE(self)->tp_free((PyObject *)self);
