@@ -206,7 +206,7 @@ static PyObject *
 IOStream_func_shutdown(IOStream *self, PyObject *args)
 {
     int r = 0;
-    PyObject *callback;
+    PyObject *callback = Py_None;
     uv_shutdown_t *req = NULL;
     iostream_req_data_t *req_data = NULL;
 
