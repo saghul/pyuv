@@ -4,7 +4,6 @@ static PyObject* PyExc_IOStreamError;
 
 typedef struct {
     uv_write_t req;
-    uv_buf_t buf;
     void *data;
 } iostream_write_req_t;
 
@@ -237,6 +236,7 @@ IOStream_func_write(IOStream *self, PyObject *args)
     iostream_write_req_t *wr = NULL;
     iostream_req_data_t *req_data = NULL;
     PyObject *callback = Py_None;
+    uv_buf_t buf;
 
     if (self->closed) {
         PyErr_SetString(PyExc_IOStreamError, "IOStream is closed");
@@ -264,16 +264,14 @@ IOStream_func_write(IOStream *self, PyObject *args)
         goto error;
     }
 
-    wr->buf.base = data;
-    wr->buf.len = strlen(data);
-
     req_data->obj = (PyObject *)self;
     Py_INCREF(callback);
     req_data->callback = callback;
-
     wr->data = (void *)req_data;
 
-    r = uv_write(&wr->req, self->uv_handle, &wr->buf, 1, on_iostream_write);
+    buf = uv_buf_init(data, strlen(data));
+
+    r = uv_write(&wr->req, self->uv_handle, &buf, 1, on_iostream_write);
     if (r != 0) {
         raise_uv_exception(self->loop, PyExc_IOStreamError);
         goto error;
