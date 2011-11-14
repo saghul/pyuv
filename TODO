@@ -7,6 +7,8 @@
 
 - Better docstrings
 
+- uv_tcp_nodelay / uv_tcp_keepalive / uv_tcp_simultaneous_accepts
+
 - uv_udp_set_membership
 
 - uv_tty stuff
