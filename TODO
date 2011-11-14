@@ -17,3 +17,6 @@
 
 - uv_fs_event
 
+- Use PyStructSequence (similar to a named tuple) on stat and perhaps
+  somewhere else as well
+
