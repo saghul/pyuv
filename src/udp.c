@@ -5,12 +5,6 @@ static PyObject* PyExc_UDPError;
 
 
 typedef struct {
-    uv_udp_send_t req;
-    uv_buf_t buf;
-    void *data;
-} udp_write_req_t;
-
-typedef struct {
     PyObject *obj;
     PyObject *callback;
 } udp_req_data_t;
@@ -123,14 +117,13 @@ on_udp_read(uv_udp_t* handle, int nread, uv_buf_t buf, struct sockaddr* addr, un
 
 
 static void
-on_udp_write(uv_udp_send_t* req, int status)
+on_udp_send(uv_udp_send_t* req, int status)
 {
     PyGILState_STATE gstate = PyGILState_Ensure();
     ASSERT(req);
     ASSERT(status == 0);
 
-    udp_write_req_t *wr = (udp_write_req_t *)req;
-    udp_req_data_t* req_data = (udp_req_data_t *)wr->data;
+    udp_req_data_t* req_data = (udp_req_data_t *)req->data;
 
     UDP *self = (UDP *)req_data->obj;
     PyObject *callback = req_data->callback;
@@ -150,8 +143,8 @@ on_udp_write(uv_udp_send_t* req, int status)
 
     Py_DECREF(callback);
     PyMem_Free(req_data);
-    wr->data = NULL;
-    PyMem_Free(wr);
+    req->data = NULL;
+    PyMem_Free(req);
 
     Py_DECREF(self);
     PyGILState_Release(gstate);
@@ -207,7 +200,7 @@ UDP_func_bind(UDP *self, PyObject *args)
 
 
 static PyObject *
-UDP_func_start_read(UDP *self, PyObject *args)
+UDP_func_start_recv(UDP *self, PyObject *args)
 {
     int r = 0;
     PyObject *tmp = NULL;
@@ -218,7 +211,7 @@ UDP_func_start_read(UDP *self, PyObject *args)
         return NULL;
     }
 
-    if (!PyArg_ParseTuple(args, "O:start_read", &callback)) {
+    if (!PyArg_ParseTuple(args, "O:start_recv", &callback)) {
         return NULL;
     }
 
@@ -243,7 +236,7 @@ UDP_func_start_read(UDP *self, PyObject *args)
 
 
 static PyObject *
-UDP_func_stop_read(UDP *self)
+UDP_func_stop_recv(UDP *self)
 {
     int r = 0;
 
@@ -262,7 +255,7 @@ UDP_func_stop_read(UDP *self)
 
 
 static PyObject *
-UDP_func_write(UDP *self, PyObject *args)
+UDP_func_send(UDP *self, PyObject *args)
 {
     int r = 0;
     char *write_data;
@@ -271,7 +264,8 @@ UDP_func_write(UDP *self, PyObject *args)
     int address_type;
     struct in_addr addr4;
     struct in6_addr addr6;
-    udp_write_req_t *wr = NULL;
+    uv_buf_t buf;
+    uv_udp_send_t *wr = NULL;
     udp_req_data_t *req_data = NULL;
     PyObject *address_tuple;
     PyObject *callback = Py_None;
@@ -281,7 +275,7 @@ UDP_func_write(UDP *self, PyObject *args)
         return NULL;
     }
 
-    if (!PyArg_ParseTuple(args, "sO|O:write", &write_data, &address_tuple, &callback)) {
+    if (!PyArg_ParseTuple(args, "sO|O:send", &write_data, &address_tuple, &callback)) {
         return NULL;
     }
 
@@ -308,7 +302,7 @@ UDP_func_write(UDP *self, PyObject *args)
         return NULL;
     }
 
-    wr = (udp_write_req_t*) PyMem_Malloc(sizeof(udp_write_req_t));
+    wr = (uv_udp_send_t *) PyMem_Malloc(sizeof(uv_udp_send_t));
     if (!wr) {
         PyErr_NoMemory();
         goto error;
@@ -320,19 +314,18 @@ UDP_func_write(UDP *self, PyObject *args)
         goto error;
     }
 
-    wr->buf.base = write_data;
-    wr->buf.len = strlen(write_data);
-
     req_data->obj = (PyObject *)self;
     Py_INCREF(callback);
     req_data->callback = callback;
-
     wr->data = (void *)req_data;
 
+    // TODO: duplicate data and allocate memory from Python heap. Free it on the callback.
+    buf = uv_buf_init(write_data, strlen(write_data));
+
     if (address_type == AF_INET) {
-        r = uv_udp_send(&wr->req, self->uv_handle, &wr->buf, 1, uv_ip4_addr(dest_ip, dest_port), (uv_udp_send_cb)on_udp_write);
+        r = uv_udp_send(wr, self->uv_handle, &buf, 1, uv_ip4_addr(dest_ip, dest_port), (uv_udp_send_cb)on_udp_send);
     } else {
-        r = uv_udp_send6(&wr->req, self->uv_handle, &wr->buf, 1, uv_ip6_addr(dest_ip, dest_port), (uv_udp_send_cb)on_udp_write);
+        r = uv_udp_send6(wr, self->uv_handle, &buf, 1, uv_ip6_addr(dest_ip, dest_port), (uv_udp_send_cb)on_udp_send);
     }
     if (r != 0) {
         raise_uv_exception(self->loop, PyExc_UDPError);
@@ -518,9 +511,9 @@ UDP_tp_dealloc(UDP *self)
 static PyMethodDef
 UDP_tp_methods[] = {
     { "bind", (PyCFunction)UDP_func_bind, METH_VARARGS, "Bind to the specified IP and port." },
-    { "start_read", (PyCFunction)UDP_func_start_read, METH_VARARGS, "Start accepting data." },
-    { "stop_read", (PyCFunction)UDP_func_stop_read, METH_NOARGS, "Stop receiving data." },
-    { "write", (PyCFunction)UDP_func_write, METH_VARARGS, "Write data over UDP." },
+    { "start_recv", (PyCFunction)UDP_func_start_recv, METH_VARARGS, "Start accepting data." },
+    { "stop_recv", (PyCFunction)UDP_func_stop_recv, METH_NOARGS, "Stop receiving data." },
+    { "send", (PyCFunction)UDP_func_send, METH_VARARGS, "Send data over UDP." },
     { "close", (PyCFunction)UDP_func_close, METH_VARARGS, "Close UDP connection." },
     { "getsockname", (PyCFunction)UDP_func_getsockname, METH_NOARGS, "Get local socket information." },
     { NULL }
