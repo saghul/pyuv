@@ -130,7 +130,6 @@ static PyTypeObject SignalType;
 typedef struct {
     PyObject_HEAD
     Loop *loop;
-    PyObject *on_disconnect_cb;
     PyObject *on_read_cb;
     uv_stream_t *uv_stream;
     Bool initialized;

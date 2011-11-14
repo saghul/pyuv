@@ -341,7 +341,6 @@ IOStream_tp_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
 static int
 IOStream_tp_traverse(IOStream *self, visitproc visit, void *arg)
 {
-    Py_VISIT(self->on_disconnect_cb);
     Py_VISIT(self->on_read_cb);
     Py_VISIT(self->loop);
     return 0;
@@ -351,7 +350,6 @@ IOStream_tp_traverse(IOStream *self, visitproc visit, void *arg)
 static int
 IOStream_tp_clear(IOStream *self)
 {
-    Py_CLEAR(self->on_disconnect_cb);
     Py_CLEAR(self->on_read_cb);
     Py_CLEAR(self->loop);
     return 0;
