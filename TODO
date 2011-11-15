@@ -20,3 +20,7 @@
 - Use PyStructSequence (similar to a named tuple) on stat and perhaps
   somewhere else as well
 
+- Python 3 support
+
+- Test it on Windows (MinGW)
+
