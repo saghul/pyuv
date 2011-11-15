@@ -21,6 +21,9 @@
 #include "util.c"
 
 
+#define LIBUV_VERSION UV_VERSION_MAJOR.UV_VERSION_MINOR-LIBUV_REVISION
+
+
 static PyObject* PyExc_UVError;
 
 /* Module */
@@ -114,6 +117,9 @@ initialize_module(void)
 
     /* Module version (the MODULE_VERSION macro is defined by setup.py) */
     PyModule_AddStringConstant(pyuv, "__version__", __MSTR(MODULE_VERSION));
+
+    /* libuv version */
+    PyModule_AddStringConstant(pyuv, "LIBUV_VERSION", __MSTR(LIBUV_VERSION));
 
     return pyuv;
 }

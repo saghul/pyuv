@@ -14,7 +14,7 @@ __version__ = "0.1.0"
 
 class pyuv_build_ext(build_ext):
     libuv_repo = 'https://github.com/joyent/libuv.git'
-    libuv_revision = '9322dd17240d32574d0cab91432d068cd58b24de'
+    libuv_revision = '4ae40b6'
     libuv_patches = []
 
     @staticmethod
@@ -77,7 +77,7 @@ class pyuv_build_ext(build_ext):
                 log.info('libuv needs to be compiled.')
                 build_libuv()
             else:
-                rev = self.exec_process(['git', 'rev-list', '--max-count=1', 'HEAD'], cwd=self.libuv_dir)
+                rev = self.exec_process(['git', 'rev-parse', '--short', 'HEAD'], cwd=self.libuv_dir)
                 if rev.strip() == self.libuv_revision:
                     log.info('No need to download libuv.')
                 else:
@@ -90,6 +90,6 @@ setup(name = 'pyuv',
       version = __version__,
       description = 'Python bindings for libuv',
       cmdclass={'build_ext': pyuv_build_ext},
-      ext_modules = [Extension('pyuv', sources = ['src/pyuv.c'], define_macros=[('MODULE_VERSION', __version__)])]
+      ext_modules = [Extension('pyuv', sources = ['src/pyuv.c'], define_macros=[('MODULE_VERSION', __version__), ('LIBUV_REVISION', pyuv_build_ext.libuv_revision)])]
      )
 
