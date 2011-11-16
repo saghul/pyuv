@@ -696,7 +696,7 @@ static PyGetSetDef DNSResolver_tp_getsets[] = {
 
 static PyTypeObject DNSResolverType = {
     PyVarObject_HEAD_INIT(NULL, 0)
-    "pyuv.DNSResolver",                                         /*tp_name*/
+    "pyuv.dns.DNSResolver",                                         /*tp_name*/
     sizeof(DNSResolver),                                            /*tp_basicsize*/
     0,                                                              /*tp_itemsize*/
     (destructor)DNSResolver_tp_dealloc,                             /*tp_dealloc*/
