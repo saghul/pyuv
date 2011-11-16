@@ -407,12 +407,12 @@ DNSResolver_func_getaddrinfo(DNSResolver *self, PyObject *args, PyObject *kwargs
     ares_cb_data_t *cb_data = NULL;
     uv_getaddrinfo_t* handle = NULL;
 
-    socktype = protocol = flags = 0;
+    port = socktype = protocol = flags = 0;
     family = AF_UNSPEC;
 
     static char *kwlist[] = {"callback", "name", "port", "family", "socktype", "protocol", "flags", NULL};
 
-    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "Osi|iiii:getaddrinfo", kwlist, &callback, &name, &port, &family, &socktype, &protocol, &flags)) {
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "Os|iiiii:getaddrinfo", kwlist, &callback, &name, &port, &family, &socktype, &protocol, &flags)) {
         return NULL;
     }
 
