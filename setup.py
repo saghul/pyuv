@@ -46,6 +46,8 @@ class pyuv_build_ext(build_ext):
         self.library_dirs.append(self.libuv_dir)
         if sys.platform.startswith('linux'):
             self.libraries.append('rt')
+        elif sys.platform == 'darwin':
+            self.extensions[0].extra_link_args = ['-framework', 'CoreServices']
         self.extensions[0].extra_objects = [os.path.join(self.libuv_dir, 'uv.a')]
 
     def get_libuv(self):
