@@ -102,23 +102,17 @@ stat_cb(uv_fs_t* req) {
 #endif
     }
 
-    if (req_data->callback != Py_None) {
-        if (!req_data->data) {
-            Py_INCREF(Py_None);
-            req_data->data = Py_None;
-        }
-        PyObject *cb_result = PyObject_CallFunctionObjArgs(req_data->callback, req_data->loop, req_data->data, result, errorno, stat_data, NULL);
-        if (cb_result == NULL) {
-            PyErr_WriteUnraisable(req_data->callback);
-        }
-        Py_XDECREF(cb_result);
+    PyObject *cb_result = PyObject_CallFunctionObjArgs(req_data->callback, req_data->loop, req_data->data, result, errorno, stat_data, NULL);
+    if (cb_result == NULL) {
+        PyErr_WriteUnraisable(req_data->callback);
     }
+    Py_XDECREF(cb_result);
 
 stat_end:
 
     Py_DECREF(req_data->loop);
-    Py_XDECREF(req_data->callback);
-    Py_XDECREF(req_data->data);
+    Py_DECREF(req_data->callback);
+    Py_DECREF(req_data->data);
     PyMem_Free(req_data);
     req->data = NULL;
     uv_fs_req_cleanup(req);
@@ -134,18 +128,18 @@ stat_func(PyObject *self, PyObject *args, PyObject *kwargs, int type)
     int r;
     char *path;
     Loop *loop;
-    PyObject *callback = NULL;
-    PyObject *data = NULL;
+    PyObject *callback;
+    PyObject *data = Py_None;
     uv_fs_t *fs_req = NULL;
     fs_req_data_t *req_data = NULL;
 
     static char *kwlist[] = {"path", "loop", "callback", "data", NULL};
 
-    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "sO!|OO:stat", kwlist, &path, &LoopType, &loop, &callback, &data)) {
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "sO!O|O:stat", kwlist, &path, &LoopType, &loop, &callback, &data)) {
         return NULL;
     }
 
-    if (callback != Py_None && !PyCallable_Check(callback)) {
+    if (!PyCallable_Check(callback)) {
         PyErr_SetString(PyExc_TypeError, "a callable or None is required");
         return NULL;
     }
@@ -163,8 +157,8 @@ stat_func(PyObject *self, PyObject *args, PyObject *kwargs, int type)
     }
 
     Py_INCREF(loop);
-    Py_XINCREF(callback);
-    Py_XINCREF(data);
+    Py_INCREF(callback);
+    Py_INCREF(data);
 
     req_data->loop = loop;
     req_data->callback = callback;
@@ -189,8 +183,8 @@ error:
     }
     if (req_data) {
         Py_DECREF(loop);
-        Py_XDECREF(callback);
-        Py_XDECREF(data);
+        Py_DECREF(callback);
+        Py_DECREF(data);
         PyMem_Free(req_data);
     }
     return NULL;
