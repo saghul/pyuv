@@ -15,7 +15,8 @@ __version__ = "0.1.0"
 
 class pyuv_build_ext(build_ext):
     libuv_repo = 'https://github.com/joyent/libuv.git'
-    libuv_revision = '4ae40b6'
+    libuv_branch = 'v0.6'
+    libuv_revision = '2007eb8'
     libuv_patches = []
 
     @staticmethod
@@ -52,7 +53,7 @@ class pyuv_build_ext(build_ext):
         #self.debug_mode =  bool(self.debug) or hasattr(sys, 'gettotalrefcount')
         def download_libuv():
             log.info('Downloading libuv...')
-            self.exec_process(['git', 'clone', self.libuv_repo, self.libuv_dir])
+            self.exec_process(['git', 'clone', '-b', self.libuv_branch, self.libuv_repo, self.libuv_dir])
             self.exec_process(['git', 'checkout', self.libuv_revision], cwd=self.libuv_dir)
         def patch_libuv():
             log.info('Patching libuv...')
