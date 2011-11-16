@@ -1,3 +1,4 @@
+# coding=utf8
 
 import os
 import shutil
@@ -86,10 +87,21 @@ class pyuv_build_ext(build_ext):
                     update_libuv()
 
 
-setup(name = 'pyuv',
-      version = __version__,
-      description = 'Python bindings for libuv',
-      cmdclass={'build_ext': pyuv_build_ext},
-      ext_modules = [Extension('pyuv', sources = ['src/pyuv.c'], define_macros=[('MODULE_VERSION', __version__), ('LIBUV_REVISION', pyuv_build_ext.libuv_revision)])]
+setup(name         = "pyuv",
+      version      = __version__,
+      author       = "Saúl Ibarra Corretgé",
+      author_email = "saghul@gmail.com",
+      url          = "http://github.com/saghul/pyuv",
+      description  = "Python interface for libuv",
+      platforms    = ["POSIX"],
+      classifiers  = [
+          "Development Status :: 3 - Alpha",
+          "Intended Audience :: Developers",
+          "License :: OSI Approved :: MIT License",
+          "Operating System :: POSIX",
+          "Programming Language :: C"
+      ],
+      cmdclass     = {'build_ext': pyuv_build_ext},
+      ext_modules  = [Extension('pyuv', sources = ['src/pyuv.c'], define_macros=[('MODULE_VERSION', __version__), ('LIBUV_REVISION', pyuv_build_ext.libuv_revision)])]
      )
 
