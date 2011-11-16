@@ -1,0 +1,7 @@
+include README LICENSE TODO
+recursive-include docs *
+recursive-include examples *
+recursive-include patches *
+recursive-include src *
+recursive-include tests *
+prune docs/_build
