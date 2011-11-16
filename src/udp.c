@@ -134,7 +134,7 @@ on_udp_send(uv_udp_send_t* req, int status)
 
     PyObject *result;
     if (callback != Py_None) {
-        result = PyObject_CallFunctionObjArgs(callback, self, NULL);
+        result = PyObject_CallFunctionObjArgs(callback, self, PyInt_FromLong(status), NULL);
         if (result == NULL) {
             PyErr_WriteUnraisable(callback);
         }
