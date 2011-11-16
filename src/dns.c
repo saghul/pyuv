@@ -349,13 +349,13 @@ DNSResolver_func_getnameinfo(DNSResolver *self, PyObject *args, PyObject *kwargs
     struct sockaddr_in sa4;
     struct sockaddr_in6 sa6;
     char *name;
-    int port;
-    int flags;
+    int port = 0;
+    int flags = 0;
     int length;
 
     static char *kwlist[] = {"callback", "name", "port", "flags", NULL};
 
-    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "Osii:getnameinfo", kwlist, &callback, &name, &port, &flags)) {
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "Os|ii:getnameinfo", kwlist, &callback, &name, &port, &flags)) {
         return NULL;
     }
 
