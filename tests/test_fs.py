@@ -10,7 +10,7 @@ BAD_FILE = 'test_file_bad'
 TEST_FILE = 'test_file_1234'
 TEST_LINK = 'test_file_1234_link'
 
-class UDPTest(common.UVTestCase):
+class FSTest(common.UVTestCase):
 
     def setUp(self):
         self.loop = pyuv.Loop.default_loop()
