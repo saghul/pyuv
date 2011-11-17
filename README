@@ -1,0 +1,88 @@
+pyuv: Python interface to libuv
+===============================
+
+pyuv is a Python module which provides an interface to libuv.
+libuv (http://github.com/joyent/libuv) is a high performance
+asynchronous networking library, used as the platform layer for
+NodeJS (http://nodejs.org).
+
+It’s built on top of liev and libeio on Unix and IOCP on Windows systems
+providing a consistent API on top of them.
+
+libuv's features:
+
+ * Non-blocking TCP sockets
+ * Non-blocking named pipes
+ * UDP
+ * Timers
+ * Child process spawning
+ * Asynchronous DNS via c-ares or uv_getaddrinfo.
+ * Asynchronous file system APIs uv_fs_*
+ * High resolution time uv_hrtime
+ * Current executable path look up uv_exepath
+ * Thread pool scheduling uv_queue_work
+ * ANSI escape code controlled TTY uv_tty_t
+ * File system events Currently supports inotify, ReadDirectoryChangesW
+   and kqueue. Event ports in the near future. uv_fs_event_t
+ * IPC and socket sharing between processes uv_write2
+
+libuv is written and maintained by Joyent Inc. and contributors.
+
+puyv does not yet wrap all functionality of libuv.
+
+
+Documentation
+-------------
+
+TODO
+
+
+Building
+--------
+
+Linux:
+    ./build_inplace
+
+Mac OSX:
+    (XCode needs to be installed)
+    export CC="gcc -isysroot /Developer/SDKs/MacOSX10.6.sdk"
+    export ARCHFLAGS="-arch x86_64"
+    ./build_inplace
+
+Microsoft Windows:
+    Not currently supported.
+
+
+Author
+------
+
+Saúl Ibarra Corretgé <saghul@gmail.com>
+
+
+License
+-------
+
+Unless states otherwise on-file pyuv uses the MIT license, check LICENSE file.
+
+
+Roadmap
+-------
+
+Check TODO file.
+
+
+Python versions
+---------------
+
+At the moment pyuv is compatible with Python 2.6 and 2.7. Python 3 is not
+currently supported, but it's on the roadmap.
+
+
+Contributing
+------------
+
+If you'd like to contribute fork the project, make a patch and send a pull
+request. Have a look at the surounding code and please, make yours look
+alike :-)
+
+
