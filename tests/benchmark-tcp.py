@@ -45,7 +45,7 @@ def signal_cb(sig, frame):
 
 print "PyUV version %s" % pyuv.__version__
 
-loop = pyuv.Loop()
+loop = pyuv.Loop.default_loop()
 
 async = pyuv.Async(loop)
 clients = []
