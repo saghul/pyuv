@@ -3,17 +3,13 @@
 
 - FS module with all filesystem related functions from libuv
 
-- Add support for spawning child processes
+- Add support for spawning child processes: uv_spawn / uv_process_kill / uv_kill
 
 - Better docstrings
 
 - uv_tcp_nodelay / uv_tcp_keepalive / uv_tcp_simultaneous_accepts
 
 - uv_udp_set_membership
-
-- uv_tty stuff
-
-- uv_spawn / uv_process_kill / uv_kill
 
 - uv_fs_event
 
