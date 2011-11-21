@@ -161,6 +161,13 @@ typedef struct {
 
 static PyTypeObject PipeType;
 
+/* TTY */
+typedef struct {
+    IOStream iostream;
+} TTY;
+
+static PyTypeObject TTYType;
+
 /* UDP */
 typedef struct {
     PyObject_HEAD

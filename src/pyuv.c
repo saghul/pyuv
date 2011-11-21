@@ -14,6 +14,7 @@
 #include "stream.c"
 #include "pipe.c"
 #include "tcp.c"
+#include "tty.c"
 #include "udp.c"
 #include "dns.c"
 #include "threadpool.c"
@@ -57,6 +58,7 @@ initialize_module(void)
     PyExc_IOStreamError = PyErr_NewException("pyuv.error.IOStreamError", PyExc_UVError, NULL);
     PyExc_TCPError = PyErr_NewException("pyuv.error.TCPError", PyExc_IOStreamError, NULL);
     PyExc_PipeError = PyErr_NewException("pyuv.error.PipeError", PyExc_IOStreamError, NULL);
+    PyExc_TTYError = PyErr_NewException("pyuv.error.TTYError", PyExc_IOStreamError, NULL);
     PyExc_UDPError = PyErr_NewException("pyuv.error.UDPError", PyExc_UVError, NULL);
     PyExc_DNSError = PyErr_NewException("pyuv.error.DNSError", NULL, NULL);
     PyExc_ThreadPoolError = PyErr_NewException("pyuv.error.ThreadPoolError", PyExc_UVError, NULL);
@@ -72,6 +74,7 @@ initialize_module(void)
     PyUVModule_AddType(error, "IOStreamError", (PyTypeObject *)PyExc_IOStreamError);
     PyUVModule_AddType(error, "TCPError", (PyTypeObject *)PyExc_TCPError);
     PyUVModule_AddType(error, "PipeError", (PyTypeObject *)PyExc_PipeError);
+    PyUVModule_AddType(error, "TTYError", (PyTypeObject *)PyExc_TTYError);
     PyUVModule_AddType(error, "UDPError", (PyTypeObject *)PyExc_UDPError);
     PyUVModule_AddType(error, "DNSError", (PyTypeObject *)PyExc_DNSError);
     PyUVModule_AddType(error, "ThreadPoolError", (PyTypeObject *)PyExc_ThreadPoolError);
@@ -102,6 +105,7 @@ initialize_module(void)
     /* Types */
     TCPType.tp_base = &IOStreamType;
     PipeType.tp_base = &IOStreamType;
+    TTYType.tp_base = &IOStreamType;
 
     PyUVModule_AddType(pyuv, "Loop", &LoopType);
     PyUVModule_AddType(pyuv, "Async", &AsyncType);
@@ -112,6 +116,7 @@ initialize_module(void)
     PyUVModule_AddType(pyuv, "Signal", &SignalType);
     PyUVModule_AddType(pyuv, "TCP", &TCPType);
     PyUVModule_AddType(pyuv, "Pipe", &PipeType);
+    PyUVModule_AddType(pyuv, "TTY", &TTYType);
     PyUVModule_AddType(pyuv, "UDP", &UDPType);
     PyUVModule_AddType(pyuv, "ThreadPool", &ThreadPoolType);
 
