@@ -21,11 +21,10 @@
 #include "fs.c"
 #include "util.c"
 
+#include "error.c"
 
 #define LIBUV_VERSION UV_VERSION_MAJOR.UV_VERSION_MINOR-LIBUV_REVISION
 
-
-static PyObject* PyExc_UVError;
 
 /* Module */
 static PyObject*
@@ -45,40 +44,11 @@ initialize_module(void)
     PyUVModule_AddObject(pyuv, "errno", errno_module);
 
     /* Error module */
-    PyObject *error = Py_InitModule("pyuv.error", NULL);
+    PyObject *error = init_error();
+    if (error == NULL) {
+        return NULL;
+    }
     PyUVModule_AddObject(pyuv, "error", error);
-
-    PyExc_UVError = PyErr_NewException("pyuv.error.UVError", NULL, NULL);
-    PyExc_AsyncError = PyErr_NewException("pyuv.error.AsyncError", PyExc_UVError, NULL);
-    PyExc_TimerError = PyErr_NewException("pyuv.error.TimerError", PyExc_UVError, NULL);
-    PyExc_PrepareError = PyErr_NewException("pyuv.error.PrepareError", PyExc_UVError, NULL);
-    PyExc_IdleError = PyErr_NewException("pyuv.error.IdleError", PyExc_UVError, NULL);
-    PyExc_CheckError = PyErr_NewException("pyuv.error.CheckError", PyExc_UVError, NULL);
-    PyExc_SignalError = PyErr_NewException("pyuv.error.SignalError", PyExc_UVError, NULL);
-    PyExc_IOStreamError = PyErr_NewException("pyuv.error.IOStreamError", PyExc_UVError, NULL);
-    PyExc_TCPError = PyErr_NewException("pyuv.error.TCPError", PyExc_IOStreamError, NULL);
-    PyExc_PipeError = PyErr_NewException("pyuv.error.PipeError", PyExc_IOStreamError, NULL);
-    PyExc_TTYError = PyErr_NewException("pyuv.error.TTYError", PyExc_IOStreamError, NULL);
-    PyExc_UDPError = PyErr_NewException("pyuv.error.UDPError", PyExc_UVError, NULL);
-    PyExc_DNSError = PyErr_NewException("pyuv.error.DNSError", NULL, NULL);
-    PyExc_ThreadPoolError = PyErr_NewException("pyuv.error.ThreadPoolError", PyExc_UVError, NULL);
-    PyExc_FSError = PyErr_NewException("pyuv.error.FSError", PyExc_UVError, NULL);
-
-    PyUVModule_AddType(error, "UVError", (PyTypeObject *)PyExc_UVError);
-    PyUVModule_AddType(error, "AsyncError", (PyTypeObject *)PyExc_AsyncError);
-    PyUVModule_AddType(error, "TimerError", (PyTypeObject *)PyExc_TimerError);
-    PyUVModule_AddType(error, "PrepareError", (PyTypeObject *)PyExc_PrepareError);
-    PyUVModule_AddType(error, "IdleError", (PyTypeObject *)PyExc_IdleError);
-    PyUVModule_AddType(error, "CheckError", (PyTypeObject *)PyExc_CheckError);
-    PyUVModule_AddType(error, "SignalError", (PyTypeObject *)PyExc_SignalError);
-    PyUVModule_AddType(error, "IOStreamError", (PyTypeObject *)PyExc_IOStreamError);
-    PyUVModule_AddType(error, "TCPError", (PyTypeObject *)PyExc_TCPError);
-    PyUVModule_AddType(error, "PipeError", (PyTypeObject *)PyExc_PipeError);
-    PyUVModule_AddType(error, "TTYError", (PyTypeObject *)PyExc_TTYError);
-    PyUVModule_AddType(error, "UDPError", (PyTypeObject *)PyExc_UDPError);
-    PyUVModule_AddType(error, "DNSError", (PyTypeObject *)PyExc_DNSError);
-    PyUVModule_AddType(error, "ThreadPoolError", (PyTypeObject *)PyExc_ThreadPoolError);
-    PyUVModule_AddType(error, "FSError", (PyTypeObject *)PyExc_FSError);
 
     /* DNS module */
     PyObject *dns = init_dns();
