@@ -90,6 +90,10 @@ initialize_module(void)
     PyUVModule_AddType(pyuv, "UDP", &UDPType);
     PyUVModule_AddType(pyuv, "ThreadPool", &ThreadPoolType);
 
+    /* Constants */
+    PyModule_AddIntMacro(pyuv, UV_JOIN_GROUP);
+    PyModule_AddIntMacro(pyuv, UV_LEAVE_GROUP);
+
     /* Module version (the MODULE_VERSION macro is defined by setup.py) */
     PyModule_AddStringConstant(pyuv, "__version__", __MSTR(MODULE_VERSION));
 

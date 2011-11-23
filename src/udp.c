@@ -348,6 +348,33 @@ error:
 
 
 static PyObject *
+UDP_func_set_membership(UDP *self, PyObject *args)
+{
+    int r = 0;
+    char *multicast_address;
+    char *interface_address = NULL;
+    int membership;
+
+    if (self->closed) {
+        PyErr_SetString(PyExc_UDPError, "closed");
+        return NULL;
+    }
+
+    if (!PyArg_ParseTuple(args, "si|:set_membership", &multicast_address, &membership, &interface_address)) {
+        return NULL;
+    }
+
+    r = uv_udp_set_membership(self->uv_handle, multicast_address, interface_address, membership);
+    if (r != 0) {
+        raise_uv_exception(self->loop, PyExc_UDPError);
+        return NULL;
+    }
+
+    Py_RETURN_NONE;
+}
+
+
+static PyObject *
 UDP_func_close(UDP *self, PyObject *args)
 {
     PyObject *tmp = NULL;
@@ -515,6 +542,7 @@ UDP_tp_methods[] = {
     { "send", (PyCFunction)UDP_func_send, METH_VARARGS, "Send data over UDP." },
     { "close", (PyCFunction)UDP_func_close, METH_VARARGS, "Close UDP connection." },
     { "getsockname", (PyCFunction)UDP_func_getsockname, METH_NOARGS, "Get local socket information." },
+    { "set_membership", (PyCFunction)UDP_func_set_membership, METH_VARARGS, "Set membership for multicast address." },
     { NULL }
 };
 
