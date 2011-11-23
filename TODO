@@ -9,8 +9,6 @@
 
 - uv_tcp_nodelay / uv_tcp_keepalive / uv_tcp_simultaneous_accepts
 
-- uv_udp_set_membership
-
 - uv_fs_event
 
 - Use PyStructSequence (similar to a named tuple) on stat and perhaps
