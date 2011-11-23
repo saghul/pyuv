@@ -121,7 +121,6 @@ on_udp_send(uv_udp_send_t* req, int status)
 {
     PyGILState_STATE gstate = PyGILState_Ensure();
     ASSERT(req);
-    ASSERT(status == 0);
 
     udp_req_data_t* req_data = (udp_req_data_t *)req->data;
 
