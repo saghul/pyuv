@@ -30,7 +30,7 @@ TTY_func_set_mode(TTY *self, PyObject *args)
 
 
 static PyObject *
-TTY_func_reset_mode(TTY *self)
+TTY_func_reset_mode(PyObject *cls)
 {
     uv_tty_reset_mode();
     Py_RETURN_NONE;
@@ -126,7 +126,7 @@ TTY_tp_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
 static PyMethodDef
 TTY_tp_methods[] = {
     { "set_mode", (PyCFunction)TTY_func_set_mode, METH_VARARGS, "Set TTY handle mode." },
-    { "reset_mode", (PyCFunction)TTY_func_reset_mode, METH_NOARGS, "Reset TTY settings. To be called when program exits." },
+    { "reset_mode", (PyCFunction)TTY_func_reset_mode, METH_CLASS|METH_NOARGS, "Reset TTY settings. To be called when program exits." },
     { "get_winsize", (PyCFunction)TTY_func_get_winsize, METH_NOARGS, "Get the currecnt Window size." },
     { NULL }
 };
