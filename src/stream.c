@@ -401,7 +401,7 @@ IOStream_func_write(IOStream *self, PyObject *args)
         }
         strcpy(tmp, data_str);
         tmpbuf = uv_buf_init(tmp, strlen(tmp));
-        bufs = &tmpbuf;
+        bufs[0] = tmpbuf;
         buf_count = 1;
     } else {
         // We have a list
