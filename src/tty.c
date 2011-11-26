@@ -3,7 +3,7 @@ static PyObject* PyExc_TTYError;
 
 
 static PyObject *
-TTY_func_set_mode(Pipe *self, PyObject *args)
+TTY_func_set_mode(TTY *self, PyObject *args)
 {
     int r = 0;
     int mode;
@@ -30,7 +30,7 @@ TTY_func_set_mode(Pipe *self, PyObject *args)
 
 
 static PyObject *
-TTY_func_reset_mode(Pipe *self)
+TTY_func_reset_mode(TTY *self)
 {
     uv_tty_reset_mode();
     Py_RETURN_NONE;
@@ -38,7 +38,7 @@ TTY_func_reset_mode(Pipe *self)
 
 
 static PyObject *
-TTY_func_get_winsize(Pipe *self)
+TTY_func_get_winsize(TTY *self)
 {
     int r = 0;
     int width, height;
@@ -46,7 +46,7 @@ TTY_func_get_winsize(Pipe *self)
     IOStream *base = (IOStream *)self;
 
     if (base->closed) {
-        PyErr_SetString(PyExc_PipeError, "already closed");
+        PyErr_SetString(PyExc_TTYError, "already closed");
         return NULL;
     }
 
