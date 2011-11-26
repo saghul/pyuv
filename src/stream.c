@@ -5,7 +5,13 @@ static PyObject* PyExc_IOStreamError;
 typedef struct {
     PyObject *obj;
     PyObject *callback;
+    void *data;
 } iostream_req_data_t;
+
+typedef struct {
+    uv_buf_t *bufs;
+    int buf_count;
+} iostream_write_data_t;
 
 
 static uv_buf_t
@@ -135,10 +141,13 @@ on_iostream_read(uv_tcp_t* handle, int nread, uv_buf_t buf)
 static void
 on_iostream_write(uv_write_t* req, int status)
 {
+    int i;
+
     PyGILState_STATE gstate = PyGILState_Ensure();
     ASSERT(req);
 
     iostream_req_data_t* req_data = (iostream_req_data_t *)req->data;
+    iostream_write_data_t* write_data = (iostream_write_data_t *)req_data->data;
 
     IOStream *self = (IOStream *)req_data->obj;
     PyObject *callback = req_data->callback;
@@ -157,6 +166,10 @@ on_iostream_write(uv_write_t* req, int status)
         Py_XDECREF(result);
     }
 
+    for (i = 0; i < write_data->buf_count; i++) {
+        PyMem_Free(write_data->bufs[i].base);
+    }
+    PyMem_Free(write_data);
     Py_DECREF(callback);
     PyMem_Free(req_data);
     req->data = NULL;
@@ -316,19 +329,31 @@ IOStream_func_stop_read(IOStream *self, PyObject *args, PyObject *kwargs)
 static PyObject *
 IOStream_func_write(IOStream *self, PyObject *args)
 {
-    char *data;
+    int i, n;
     int r = 0;
+    int buf_count = 0;
+    char *data_str;
+    char *tmp;
+    PyObject *item;
+    PyObject *data;
     PyObject *callback = Py_None;
-    uv_buf_t buf;
+    uv_buf_t tmpbuf;
+    uv_buf_t *bufs;
     uv_write_t *wr = NULL;
     iostream_req_data_t *req_data = NULL;
+    iostream_write_data_t *write_data = NULL;
 
     if (self->closed) {
         PyErr_SetString(PyExc_IOStreamError, "IOStream is closed");
         return NULL;
     }
 
-    if (!PyArg_ParseTuple(args, "s|O:write", &data, &callback)) {
+    if (!PyArg_ParseTuple(args, "O|O:write", &data, &callback)) {
+        return NULL;
+    }
+
+    if (!PyString_Check(data) && !PySequence_Check(data)) {
+        PyErr_SetString(PyExc_TypeError, "only strings and iterables are supported");
         return NULL;
     }
 
@@ -349,15 +374,65 @@ IOStream_func_write(IOStream *self, PyObject *args)
         goto error;
     }
 
+    write_data = (iostream_write_data_t *) PyMem_Malloc(sizeof(iostream_write_data_t));
+    if (!write_data) {
+        PyErr_NoMemory();
+        goto error;
+    }
+
     req_data->obj = (PyObject *)self;
     Py_INCREF(callback);
     req_data->callback = callback;
     wr->data = (void *)req_data;
 
-    // TODO: duplicate data and allocate memory from Python heap. Free it on the callback.
-    buf = uv_buf_init(data, strlen(data));
+    if (PyString_Check(data)) {
+        // We have a single string
+        bufs = (uv_buf_t *) PyMem_Malloc(sizeof(uv_buf_t));
+        if (!bufs) {
+            PyErr_NoMemory();
+            goto error;
+        }
+        data_str = PyString_AsString(data);
+        tmp = (char *) PyMem_Malloc(strlen(data_str) + 1);
+        if (!tmp) {
+            PyMem_Free(bufs);
+            PyErr_NoMemory();
+            goto error;
+        }
+        strcpy(tmp, data_str);
+        tmpbuf = uv_buf_init(tmp, strlen(tmp));
+        bufs = &tmpbuf;
+        buf_count = 1;
+    } else {
+        // We have a list
+        buf_count = 0;
+        n = PySequence_Length(data);
+        bufs = (uv_buf_t *) PyMem_Malloc(sizeof(uv_buf_t) * n);
+        if (!bufs) {
+            PyErr_NoMemory();
+            goto error;
+        }
+        for (i = 0;i < n; i++) {
+            item = PySequence_GetItem(data, i);
+            if (!item || !PyString_Check(item))
+                continue;
+            data_str = PyString_AsString(item);
+            tmp = (char *) PyMem_Malloc(strlen(data_str) + 1);
+            if (!tmp)
+                continue;
+            strcpy(tmp, data_str);
+            tmpbuf = uv_buf_init(tmp, strlen(tmp));
+            bufs[i] = tmpbuf;
+            buf_count++;
+        }
 
-    r = uv_write(wr, self->uv_handle, &buf, 1, on_iostream_write);
+    }
+
+    write_data->bufs = bufs;
+    write_data->buf_count = buf_count;
+    req_data->data = (void *)write_data;
+
+    r = uv_write(wr, self->uv_handle, bufs, buf_count, on_iostream_write);
     if (r != 0) {
         raise_uv_exception(self->loop, PyExc_IOStreamError);
         goto error;
@@ -366,10 +441,14 @@ IOStream_func_write(IOStream *self, PyObject *args)
     Py_RETURN_NONE;
 
 error:
+    if (write_data) {
+        PyMem_Free(write_data);
+    }
     if (req_data) {
         Py_DECREF(callback);
         req_data->obj = NULL;
         req_data->callback = NULL;
+        req_data->data = NULL;
         PyMem_Free(req_data);
     }
     if (wr) {
