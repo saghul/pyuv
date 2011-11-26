@@ -7,7 +7,13 @@ static PyObject* PyExc_UDPError;
 typedef struct {
     PyObject *obj;
     PyObject *callback;
+    void *data;
 } udp_req_data_t;
+
+typedef struct {
+    uv_buf_t *bufs;
+    int buf_count;
+} udp_send_data_t;
 
 
 static void
@@ -119,10 +125,13 @@ on_udp_read(uv_udp_t* handle, int nread, uv_buf_t buf, struct sockaddr* addr, un
 static void
 on_udp_send(uv_udp_send_t* req, int status)
 {
+    int i;
+
     PyGILState_STATE gstate = PyGILState_Ensure();
     ASSERT(req);
 
     udp_req_data_t* req_data = (udp_req_data_t *)req->data;
+    udp_send_data_t* send_data = (udp_send_data_t *)req_data->data;
 
     UDP *self = (UDP *)req_data->obj;
     PyObject *callback = req_data->callback;
@@ -140,6 +149,10 @@ on_udp_send(uv_udp_send_t* req, int status)
         Py_XDECREF(result);
     }
 
+    for (i = 0; i < send_data->buf_count; i++) {
+        PyMem_Free(send_data->bufs[i].base);
+    }
+    PyMem_Free(send_data);
     Py_DECREF(callback);
     PyMem_Free(req_data);
     req->data = NULL;
@@ -256,16 +269,23 @@ UDP_func_stop_recv(UDP *self)
 static PyObject *
 UDP_func_send(UDP *self, PyObject *args)
 {
+    int i, n;
     int r = 0;
-    char *write_data;
+    int buf_count = 0;
+    char *data_str;
+    char *tmp;
     char *dest_ip;
     int dest_port;
     int address_type;
     struct in_addr addr4;
     struct in6_addr addr6;
-    uv_buf_t buf;
+    uv_buf_t tmpbuf;
+    uv_buf_t *bufs;
     uv_udp_send_t *wr = NULL;
     udp_req_data_t *req_data = NULL;
+    udp_send_data_t *send_data = NULL;
+    PyObject *item;
+    PyObject *data;
     PyObject *address_tuple;
     PyObject *callback = Py_None;
 
@@ -274,7 +294,12 @@ UDP_func_send(UDP *self, PyObject *args)
         return NULL;
     }
 
-    if (!PyArg_ParseTuple(args, "sO|O:send", &write_data, &address_tuple, &callback)) {
+    if (!PyArg_ParseTuple(args, "OO|O:send", &data, &address_tuple, &callback)) {
+        return NULL;
+    }
+
+    if (!PyString_Check(data) && !PySequence_Check(data)) {
+        PyErr_SetString(PyExc_TypeError, "only strings and iterables are supported");
         return NULL;
     }
 
@@ -307,8 +332,14 @@ UDP_func_send(UDP *self, PyObject *args)
         goto error;
     }
 
-    req_data = (udp_req_data_t*) PyMem_Malloc(sizeof(udp_req_data_t));
+    req_data = (udp_req_data_t *) PyMem_Malloc(sizeof(udp_req_data_t));
     if (!req_data) {
+        PyErr_NoMemory();
+        goto error;
+    }
+
+    send_data = (udp_send_data_t *) PyMem_Malloc(sizeof(udp_send_data_t));
+    if (!send_data) {
         PyErr_NoMemory();
         goto error;
     }
@@ -318,13 +349,57 @@ UDP_func_send(UDP *self, PyObject *args)
     req_data->callback = callback;
     wr->data = (void *)req_data;
 
-    // TODO: duplicate data and allocate memory from Python heap. Free it on the callback.
-    buf = uv_buf_init(write_data, strlen(write_data));
+    if (PyString_Check(data)) {
+        // We have a single string
+        bufs = (uv_buf_t *) PyMem_Malloc(sizeof(uv_buf_t));
+        if (!bufs) {
+            PyErr_NoMemory();
+            goto error;
+        }
+        data_str = PyString_AsString(data);
+        tmp = (char *) PyMem_Malloc(strlen(data_str) + 1);
+        if (!tmp) {
+            PyMem_Free(bufs);
+            PyErr_NoMemory();
+            goto error;
+        }
+        strcpy(tmp, data_str);
+        tmpbuf = uv_buf_init(tmp, strlen(tmp));
+        bufs[0] = tmpbuf;
+        buf_count = 1;
+    } else {
+        // We have a list
+        buf_count = 0;
+        n = PySequence_Length(data);
+        bufs = (uv_buf_t *) PyMem_Malloc(sizeof(uv_buf_t) * n);
+        if (!bufs) {
+            PyErr_NoMemory();
+            goto error;
+        }
+        for (i = 0;i < n; i++) {
+            item = PySequence_GetItem(data, i);
+            if (!item || !PyString_Check(item))
+                continue;
+            data_str = PyString_AsString(item);
+            tmp = (char *) PyMem_Malloc(strlen(data_str) + 1);
+            if (!tmp)
+                continue;
+            strcpy(tmp, data_str);
+            tmpbuf = uv_buf_init(tmp, strlen(tmp));
+            bufs[i] = tmpbuf;
+            buf_count++;
+        }
+
+    }
+
+    send_data->bufs = bufs;
+    send_data->buf_count = buf_count;
+    req_data->data = (void *)send_data;
 
     if (address_type == AF_INET) {
-        r = uv_udp_send(wr, self->uv_handle, &buf, 1, uv_ip4_addr(dest_ip, dest_port), (uv_udp_send_cb)on_udp_send);
+        r = uv_udp_send(wr, self->uv_handle, bufs, buf_count, uv_ip4_addr(dest_ip, dest_port), (uv_udp_send_cb)on_udp_send);
     } else {
-        r = uv_udp_send6(wr, self->uv_handle, &buf, 1, uv_ip6_addr(dest_ip, dest_port), (uv_udp_send_cb)on_udp_send);
+        r = uv_udp_send6(wr, self->uv_handle, bufs, buf_count, uv_ip6_addr(dest_ip, dest_port), (uv_udp_send_cb)on_udp_send);
     }
     if (r != 0) {
         raise_uv_exception(self->loop, PyExc_UDPError);
@@ -333,10 +408,14 @@ UDP_func_send(UDP *self, PyObject *args)
     Py_RETURN_NONE;
 
 error:
+    if (send_data) {
+        PyMem_Free(send_data);
+    }
     if (req_data) {
         Py_DECREF(callback);
         req_data->obj = NULL;
         req_data->callback = NULL;
+        req_data->data = NULL;
         PyMem_Free(req_data);
     }
     if (wr) {
