@@ -73,7 +73,7 @@ class TCPTestList(common.UVTestCase):
         client = server.accept()
         self.client_connections.append(client)
         client.start_read(self.on_client_connection_read)
-        client.write(["PING"+os.linesep])
+        client.write(["PING1", "PING2", "PING3", "PING4", "PING5", os.linesep])
 
     def on_client_connection_read(self, client, data):
         if data is None:
@@ -89,7 +89,7 @@ class TCPTestList(common.UVTestCase):
     def on_client_read(self, client, data):
         self.assertNotEqual(data, None)
         data = data.strip()
-        self.assertEquals(data, "PING")
+        self.assertEquals(data, "PING1PING2PING3PING4PING5")
         client.close()
 
     def test_tcp1(self):
