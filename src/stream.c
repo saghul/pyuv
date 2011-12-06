@@ -169,6 +169,7 @@ on_iostream_write(uv_write_t* req, int status)
     for (i = 0; i < write_data->buf_count; i++) {
         PyMem_Free(write_data->bufs[i].base);
     }
+    PyMem_Free(write_data->bufs);
     PyMem_Free(write_data);
     Py_DECREF(callback);
     PyMem_Free(req_data);
@@ -338,7 +339,7 @@ IOStream_func_write(IOStream *self, PyObject *args)
     PyObject *data;
     PyObject *callback = Py_None;
     uv_buf_t tmpbuf;
-    uv_buf_t *bufs;
+    uv_buf_t *bufs = NULL;
     uv_write_t *wr = NULL;
     iostream_req_data_t *req_data = NULL;
     iostream_write_data_t *write_data = NULL;
@@ -441,6 +442,12 @@ IOStream_func_write(IOStream *self, PyObject *args)
     Py_RETURN_NONE;
 
 error:
+    if (bufs) {
+        for (i = 0; i < buf_count; i++) {
+            PyMem_Free(bufs[i].base);
+        }
+        PyMem_Free(bufs);
+    }
     if (write_data) {
         PyMem_Free(write_data);
     }
