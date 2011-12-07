@@ -14,7 +14,7 @@ class DNSTest(common.UVTestCase):
     def test_getaddrinfo(self):
         loop = pyuv.Loop.default_loop()
         resolver = pyuv.dns.DNSResolver(loop)
-        resolver.getaddrinfo(self.getaddrinfo_cb, 'localhost', 0, socket.AF_INET)
+        resolver.getaddrinfo(self.getaddrinfo_cb, 'localhost', 80, socket.AF_INET)
         loop.run()
 
     def gethostbyaddr_cb(self, resolver, status, timeouts, name, aliases, result):
