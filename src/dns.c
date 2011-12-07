@@ -204,7 +204,7 @@ getaddrinfo_cb(uv_getaddrinfo_t* handle, int status, struct addrinfo* res)
     /* Object could go out of scope in the callback, increase refcount to avoid it */
     Py_INCREF(self);
 
-    PyObject *dns_status = PyLong_FromLong((long) status);
+    PyObject *dns_status = PyInt_FromLong(status);
     PyObject *dns_result = PyList_New(0);
     if (!(dns_status && dns_result)) {
         PyErr_NoMemory();
