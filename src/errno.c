@@ -84,7 +84,6 @@ init_errno(void)
     inscode(module_dict, errorcode_dict, "UV_ETIMEDOUT", UV_ETIMEDOUT);
     inscode(module_dict, errorcode_dict, "UV_ECHARSET", UV_ECHARSET);
     inscode(module_dict, errorcode_dict, "UV_EAIFAMNOSUPPORT", UV_EAIFAMNOSUPPORT);
-    inscode(module_dict, errorcode_dict, "UV_EAINONAME", UV_EAINONAME);
     inscode(module_dict, errorcode_dict, "UV_EAISERVICE", UV_EAISERVICE);
     inscode(module_dict, errorcode_dict, "UV_EAISOCKTYPE", UV_EAISOCKTYPE);
     inscode(module_dict, errorcode_dict, "UV_ESHUTDOWN", UV_ESHUTDOWN);
