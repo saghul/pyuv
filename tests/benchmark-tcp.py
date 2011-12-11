@@ -33,7 +33,7 @@ def on_connection(server):
     clients.append(client)
     client.start_read(on_read)
 
-def async_exit(async, data):
+def async_exit(async):
     [c.close() for c in clients]
     async.close()
     signal_h.close()

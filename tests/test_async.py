@@ -13,7 +13,7 @@ class AsyncTest(common.UVTestCase):
         self.close_cb_called = 0
         def close_cb(handle):
             self.close_cb_called += 1
-        def async_cb(async, data):
+        def async_cb(async):
             self.async_cb_called += 1
             async.close(close_cb)
         loop = pyuv.Loop.default_loop()

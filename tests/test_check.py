@@ -14,7 +14,7 @@ class CheckTest(common.UVTestCase):
             check.stop()
             check.close()
         self.timer_cb_called = 0
-        def timer_cb(timer, data):
+        def timer_cb(timer):
             self.timer_cb_called += 1
             timer.stop()
             timer.close()

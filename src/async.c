@@ -54,7 +54,7 @@ on_async_callback(uv_async_t *async, int status)
     Py_INCREF(self);
 
     PyObject *result;
-    result = PyObject_CallFunctionObjArgs(self->callback, self, self->data, NULL);
+    result = PyObject_CallFunctionObjArgs(self->callback, self, NULL);
     if (result == NULL) {
         PyErr_WriteUnraisable(self->callback);
     }

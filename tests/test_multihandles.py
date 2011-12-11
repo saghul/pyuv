@@ -27,7 +27,7 @@ class MultiHandleTest(common.UVTestCase):
             check.stop()
             check.close(close_cb)
         self.timer_cb_called = 0
-        def timer_cb(timer, data):
+        def timer_cb(timer):
             self.timer_cb_called += 1
             timer.stop()
             timer.close(close_cb)

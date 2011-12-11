@@ -23,7 +23,7 @@ class SignalTest(common.UVTestCase):
         self.async = pyuv.Async(self.loop)
         self.async.send(self.async_cb)
 
-    def async_cb(self, async, data):
+    def async_cb(self, async):
         self.async_cb_called += 1
         async.close()
         self.signal_h.close()

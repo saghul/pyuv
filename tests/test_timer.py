@@ -9,7 +9,7 @@ class TimerTest(common.UVTestCase):
 
     def test_timer1(self):
         self.timer_cb_called = 0
-        def timer_cb(timer, data):
+        def timer_cb(timer):
             self.timer_cb_called += 1
             timer.stop()
             timer.close()
@@ -21,7 +21,7 @@ class TimerTest(common.UVTestCase):
 
     def test_timer_never(self):
         self.timer_cb_called = 0
-        def timer_cb(timer, data):
+        def timer_cb(timer):
             self.timer_cb_called += 1
             timer.stop()
             timer.close()
@@ -34,7 +34,7 @@ class TimerTest(common.UVTestCase):
 
     def test_timer_ref1(self):
         self.timer_cb_called = 0
-        def timer_cb(timer, data):
+        def timer_cb(timer):
             self.timer_cb_called += 1
             timer.stop()
             timer.close()
@@ -48,7 +48,7 @@ class TimerTest(common.UVTestCase):
 
     def test_timer_ref2(self):
         self.timer_cb_called = 0
-        def timer_cb(timer, data):
+        def timer_cb(timer):
             self.timer_cb_called += 1
             timer.stop()
             timer.close()

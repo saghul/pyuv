@@ -30,7 +30,7 @@ class UDPTest(common.UVTestCase):
         self.client.close(self.on_close)
         self.server.close(self.on_close)
 
-    def timer_cb(self, timer, data):
+    def timer_cb(self, timer):
         self.client.send("PING"+os.linesep, ("127.0.0.1", TEST_PORT))
         timer.close(self.on_close)
 
@@ -69,7 +69,7 @@ class UDPTestList(common.UVTestCase):
         self.client.close(self.on_close)
         self.server.close(self.on_close)
 
-    def timer_cb(self, timer, data):
+    def timer_cb(self, timer):
         self.client.send(["PING", os.linesep], ("127.0.0.1", TEST_PORT))
         timer.close(self.on_close)
 
