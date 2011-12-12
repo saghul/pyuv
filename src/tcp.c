@@ -368,6 +368,97 @@ TCP_func_getpeername(TCP *self)
 }
 
 
+static PyObject *
+TCP_func_nodelay(TCP *self, PyObject *args)
+{
+    int r = 0;
+    PyObject *enable;
+
+    IOStream *base = (IOStream *)self;
+
+    if (base->closed) {
+        PyErr_SetString(PyExc_TCPError, "already closed");
+        return NULL;
+    }
+
+    if (!PyArg_ParseTuple(args, "O!:nodelay", &PyBool_Type, &enable)) {
+        return NULL;
+    }
+
+    r = uv_tcp_nodelay((uv_tcp_t *)base->uv_handle, (enable == Py_True) ? 1 : 0);
+    if (r != 0) {
+        raise_uv_exception(base->loop, PyExc_TCPError);
+        return NULL;
+    }
+
+    Py_RETURN_NONE;
+}
+
+
+static PyObject *
+TCP_func_keepalive(TCP *self, PyObject *args)
+{
+    int r = 0;
+    unsigned int delay;
+    PyObject *enable;
+
+    IOStream *base = (IOStream *)self;
+
+    if (base->closed) {
+        PyErr_SetString(PyExc_TCPError, "already closed");
+        return NULL;
+    }
+
+    if (!PyArg_ParseTuple(args, "O!I:keepalive", &PyBool_Type, &enable, &delay)) {
+        return NULL;
+    }
+
+    r = uv_tcp_keepalive((uv_tcp_t *)base->uv_handle, (enable == Py_True) ? 1 : 0, delay);
+    if (r != 0) {
+        raise_uv_exception(base->loop, PyExc_TCPError);
+        return NULL;
+    }
+
+    Py_RETURN_NONE;
+}
+
+
+static PyObject *
+TCP_func_simultaneous_accepts(TCP *self, PyObject *args)
+{
+    /*
+    * This setting applies to Windows only.
+    * Enable/disable simultaneous asynchronous accept requests that are
+    * queued by the operating system when listening for new tcp connections.
+    * This setting is used to tune a tcp server for the desired performance.
+    * Having simultaneous accepts can significantly improve the rate of
+    * accepting connections (which is why it is enabled by default).
+    */
+
+    int r = 0;
+    PyObject *enable;
+
+    IOStream *base = (IOStream *)self;
+
+    if (base->closed) {
+        PyErr_SetString(PyExc_TCPError, "already closed");
+        return NULL;
+    }
+
+    if (!PyArg_ParseTuple(args, "O!:simultaneous_accepts", &PyBool_Type, &enable)) {
+        return NULL;
+    }
+
+    r = uv_tcp_simultaneous_accepts((uv_tcp_t *)base->uv_handle, (enable == Py_True) ? 1 : 0);
+    if (r != 0) {
+        raise_uv_exception(base->loop, PyExc_TCPError);
+        return NULL;
+    }
+
+    Py_RETURN_NONE;
+}
+
+
 static int
 TCP_tp_init(TCP *self, PyObject *args, PyObject *kwargs)
 {
@@ -437,6 +528,9 @@ TCP_tp_methods[] = {
     { "connect", (PyCFunction)TCP_func_connect, METH_VARARGS, "Start connecion to remote endpoint." },
     { "getsockname", (PyCFunction)TCP_func_getsockname, METH_NOARGS, "Get local socket information." },
     { "getpeername", (PyCFunction)TCP_func_getpeername, METH_NOARGS, "Get remote socket information." },
+    { "nodelay", (PyCFunction)TCP_func_nodelay, METH_VARARGS, "Enable/disable Nagle's algorithm." },
+    { "keepalive", (PyCFunction)TCP_func_keepalive, METH_VARARGS, "Enable/disable TCP keep-alive." },
+    { "simultaneous_accepts", (PyCFunction)TCP_func_simultaneous_accepts, METH_VARARGS, "Enable/disable simultaneous asynchronous accept requests that are queued by the operating system when listening for new tcp connections." },
     { NULL }
 };
 

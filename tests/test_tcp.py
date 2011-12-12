@@ -152,6 +152,19 @@ class TCPShutdownTest(common.UVTestCase):
         self.assertEqual(self.close_cb_called, 3)
 
 
+class TCPFlagsTest(common.UVTestCase):
+
+    def test_tcp_flags(self):
+        loop = pyuv.Loop.default_loop()
+        tcp = pyuv.TCP(loop)
+        tcp.nodelay(True)
+        tcp.keepalive(True, 60)
+        tcp.simultaneous_accepts(True)
+        tcp.close()
+        loop.run()
+        self.assertTrue(True)
+
+
 if __name__ == '__main__':
     unittest.main()
 
