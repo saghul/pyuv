@@ -55,7 +55,7 @@ on_prepare_callback(uv_prepare_t *handle, int status)
 
     PyObject *result;
 
-    result = PyObject_CallFunctionObjArgs(self->callback, self, self->data, NULL);
+    result = PyObject_CallFunctionObjArgs(self->callback, self, NULL);
     if (result == NULL) {
         PyErr_WriteUnraisable(self->callback);
     }

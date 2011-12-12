@@ -9,7 +9,7 @@ class CheckTest(common.UVTestCase):
 
     def test_check1(self):
         self.check_cb_called = 0
-        def check_cb(check, data):
+        def check_cb(check):
             self.check_cb_called += 1
             check.stop()
             check.close()

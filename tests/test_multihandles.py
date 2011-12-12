@@ -12,17 +12,17 @@ class MultiHandleTest(common.UVTestCase):
         self.prepare_cb_called = 0
         def close_cb(handle):
             self.close_cb_called += 1
-        def prepare_cb(prepare, data):
+        def prepare_cb(prepare):
             self.prepare_cb_called += 1
             prepare.stop()
             prepare.close(close_cb)
         self.idle_cb_called = 0
-        def idle_cb(idle, data):
+        def idle_cb(idle):
             self.idle_cb_called += 1
             idle.stop()
             idle.close(close_cb)
         self.check_cb_called = 0
-        def check_cb(check, data):
+        def check_cb(check):
             self.check_cb_called += 1
             check.stop()
             check.close(close_cb)

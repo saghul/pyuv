@@ -9,7 +9,7 @@ class IdleTest(common.UVTestCase):
 
     def test_idle1(self):
         self.idle_cb_called = 0
-        def idle_cb(idle, data):
+        def idle_cb(idle):
             self.idle_cb_called += 1
             idle.stop()
             idle.close()
