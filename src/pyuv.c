@@ -17,8 +17,9 @@
 #include "tty.c"
 #include "udp.c"
 #include "dns.c"
-#include "threadpool.c"
 #include "fs.c"
+#include "threadpool.c"
+#include "process.c"
 #include "util.c"
 
 #include "error.c"
@@ -89,6 +90,7 @@ initialize_module(void)
     PyUVModule_AddType(pyuv, "TTY", &TTYType);
     PyUVModule_AddType(pyuv, "UDP", &UDPType);
     PyUVModule_AddType(pyuv, "ThreadPool", &ThreadPoolType);
+    PyUVModule_AddType(pyuv, "Process", &ProcessType);
 
     /* Constants */
     PyModule_AddIntMacro(pyuv, UV_JOIN_GROUP);

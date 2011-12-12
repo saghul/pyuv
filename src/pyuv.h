@@ -199,6 +199,23 @@ typedef struct {
 
 static PyTypeObject ThreadPoolType;
 
+/* Process */
+typedef struct {
+    PyObject_HEAD
+    Loop *loop;
+    PyObject *on_close_cb;
+    PyObject *on_exit_cb;
+    PyObject *stdin_pipe;
+    PyObject *stdout_pipe;
+    PyObject *stderr_pipe;
+    uv_process_t *uv_handle;
+    uv_process_options_t process_options;
+    Bool initialized;
+    Bool closed;
+} Process;
+
+static PyTypeObject ProcessType;
+
 #endif
 
 
