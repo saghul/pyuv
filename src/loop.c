@@ -12,7 +12,7 @@ _loop_cleanup(void)
 static PyObject *
 new_loop(PyTypeObject *type, PyObject *args, PyObject *kwargs, int is_default)
 {
-    if (PyTuple_GET_SIZE(args) || (kwargs && PyDict_Check(kwargs) && PyDict_Size(kwargs))) {
+    if ((args && PyTuple_GET_SIZE(args)) || (kwargs && PyDict_Check(kwargs) && PyDict_Size(kwargs))) {
         PyErr_SetString(PyExc_TypeError, "Loop initialization takes no parameters");
         return NULL;
     }
@@ -86,9 +86,9 @@ Loop_func_update_time(Loop *self)
 
 
 static PyObject *
-Loop_func_default_loop(PyObject *cls, PyObject *args, PyObject *kwargs)
+Loop_func_default_loop(PyObject *cls)
 {
-    return new_loop(&LoopType, args, kwargs, 1);
+    return new_loop(&LoopType, NULL, NULL, 1);
 }
 
 
@@ -144,7 +144,7 @@ Loop_tp_methods[] = {
     { "unref", (PyCFunction)Loop_func_unref, METH_NOARGS, "Decrease the event loop reference count." },
     { "now", (PyCFunction)Loop_func_now, METH_NOARGS, "Return event loop time, expressed in nanoseconds." },
     { "update_time", (PyCFunction)Loop_func_update_time, METH_NOARGS, "Update event loop's notion of time by querying the kernel." },
-    { "default_loop", (PyCFunction)Loop_func_default_loop, METH_CLASS|METH_VARARGS|METH_KEYWORDS, "Instantiate the default loop." },
+    { "default_loop", (PyCFunction)Loop_func_default_loop, METH_CLASS|METH_NOARGS, "Instantiate the default loop." },
     { NULL }
 };
 
