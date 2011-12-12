@@ -55,6 +55,7 @@ class PipeTest(common.UVTestCase):
 
     def test_pipe1(self):
         self.server = pyuv.Pipe(self.loop)
+        self.server.pending_instances(100)
         self.server.bind(TEST_PIPE)
         self.server.listen(self.on_connection)
         self.client = pyuv.Pipe(self.loop)

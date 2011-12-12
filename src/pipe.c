@@ -254,6 +254,29 @@ Pipe_func_open(Pipe *self, PyObject *args)
 }
 
 
+static PyObject *
+Pipe_func_pending_instances(Pipe *self, PyObject *args)
+{
+    /* This function applies to Windows only */
+    int count;
+
+    IOStream *base = (IOStream *)self;
+
+    if (base->closed) {
+        PyErr_SetString(PyExc_PipeError, "closed");
+        return NULL;
+    }
+
+    if (!PyArg_ParseTuple(args, "i:pending_instances", &count)) {
+        return NULL;
+    }
+
+    uv_pipe_pending_instances((uv_pipe_t *)base->uv_handle, count);
+
+    Py_RETURN_NONE;
+}
+
+
 static int
 Pipe_tp_init(Pipe *self, PyObject *args, PyObject *kwargs)
 {
@@ -322,6 +345,7 @@ Pipe_tp_methods[] = {
     { "accept", (PyCFunction)Pipe_func_accept, METH_NOARGS, "Accept incoming connection." },
     { "connect", (PyCFunction)Pipe_func_connect, METH_VARARGS, "Start connecion to the remote Pipe." },
     { "open", (PyCFunction)Pipe_func_open, METH_VARARGS, "Open the specified file descriptor and manage it as a Pipe." },
+    { "pending_instances", (PyCFunction)Pipe_func_pending_instances, METH_VARARGS, "Set the number of pending pipe instance handles when the pipe server is waiting for connections." },
     { NULL }
 };
 
