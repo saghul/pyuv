@@ -207,6 +207,7 @@ Signal_tp_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
 static int
 Signal_tp_traverse(Signal *self, visitproc visit, void *arg)
 {
+    Py_VISIT(self->data);
     Py_VISIT(self->on_close_cb);
     Py_VISIT(self->loop);
     return 0;
@@ -216,6 +217,7 @@ Signal_tp_traverse(Signal *self, visitproc visit, void *arg)
 static int
 Signal_tp_clear(Signal *self)
 {
+    Py_CLEAR(self->data);
     Py_CLEAR(self->on_close_cb);
     Py_CLEAR(self->loop);
     return 0;
@@ -244,6 +246,7 @@ Signal_tp_methods[] = {
 
 static PyMemberDef Signal_tp_members[] = {
     {"loop", T_OBJECT_EX, offsetof(Signal, loop), READONLY, "Loop where this Signal is running on."},
+    {"data", T_OBJECT_EX, offsetof(Signal, data), 0, "Arbitrary data."},
     {NULL}
 };
 

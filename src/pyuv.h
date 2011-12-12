@@ -44,6 +44,7 @@ typedef int Bool;
 /* Loop */
 typedef struct {
     PyObject_HEAD
+    PyObject *data;
     uv_loop_t *uv_loop;
     int is_default;
 } Loop;
@@ -125,6 +126,7 @@ typedef struct {
     PyObject_HEAD
     Loop *loop;
     PyObject *on_close_cb;
+    PyObject *data;
     uv_prepare_t *uv_handle;
     Bool initialized;
     Bool closed;
@@ -138,6 +140,7 @@ typedef struct {
     Loop *loop;
     PyObject *on_read_cb;
     PyObject *on_close_cb;
+    PyObject *data;
     uv_stream_t *uv_handle;
     Bool initialized;
     Bool closed;
@@ -174,6 +177,7 @@ typedef struct {
     Loop *loop;
     PyObject *on_read_cb;
     PyObject *on_close_cb;
+    PyObject *data;
     uv_udp_t *uv_handle;
     Bool initialized;
     Bool closed;
@@ -185,6 +189,7 @@ static PyTypeObject UDPType;
 typedef struct {
     PyObject_HEAD
     Loop *loop;
+    PyObject *data;
     ares_channel channel;
 } DNSResolver;
 
@@ -208,6 +213,7 @@ typedef struct {
     PyObject *stdin_pipe;
     PyObject *stdout_pipe;
     PyObject *stderr_pipe;
+    PyObject *data;
     uv_process_t *uv_handle;
     uv_process_options_t process_options;
     Bool initialized;

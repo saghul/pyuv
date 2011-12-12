@@ -113,6 +113,7 @@ Loop_tp_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
 static int
 Loop_tp_traverse(Loop *self, visitproc visit, void *arg)
 {
+    Py_VISIT(self->data);
     return 0;
 }
 
@@ -120,6 +121,7 @@ Loop_tp_traverse(Loop *self, visitproc visit, void *arg)
 static int
 Loop_tp_clear(Loop *self)
 {
+    Py_CLEAR(self->data);
     return 0;
 }
 
@@ -144,6 +146,12 @@ Loop_tp_methods[] = {
     { "update_time", (PyCFunction)Loop_func_update_time, METH_NOARGS, "Update event loop's notion of time by querying the kernel." },
     { "default_loop", (PyCFunction)Loop_func_default_loop, METH_CLASS|METH_VARARGS|METH_KEYWORDS, "Instantiate the default loop." },
     { NULL }
+};
+
+
+static PyMemberDef Loop_tp_members[] = {
+    {"data", T_OBJECT_EX, offsetof(Loop, data), 0, "Arbitrary data."},
+    {NULL}
 };
 
 
@@ -182,7 +190,7 @@ static PyTypeObject LoopType = {
     0,                                                              /*tp_iter*/
     0,                                                              /*tp_iternext*/
     Loop_tp_methods,                                                /*tp_methods*/
-    0,                                                              /*tp_members*/
+    Loop_tp_members,                                                /*tp_members*/
     Loop_tp_getsets,                                                /*tp_getsets*/
     0,                                                              /*tp_base*/
     0,                                                              /*tp_dict*/

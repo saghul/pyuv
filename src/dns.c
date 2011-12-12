@@ -648,6 +648,7 @@ DNSResolver_tp_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
 static int
 DNSResolver_tp_traverse(DNSResolver *self, visitproc visit, void *arg)
 {
+    Py_VISIT(self->data);
     Py_VISIT(self->loop);
     return 0;
 }
@@ -656,6 +657,7 @@ DNSResolver_tp_traverse(DNSResolver *self, visitproc visit, void *arg)
 static int
 DNSResolver_tp_clear(DNSResolver *self)
 {
+    Py_CLEAR(self->data);
     Py_CLEAR(self->loop);
     return 0;
 }
@@ -684,6 +686,7 @@ DNSResolver_tp_methods[] = {
 
 static PyMemberDef DNSResolver_tp_members[] = {
     {"loop", T_OBJECT_EX, offsetof(DNSResolver, loop), READONLY, "Loop where this DNSResolver is running on."},
+    {"data", T_OBJECT_EX, offsetof(DNSResolver, data), 0, "Arbitrary data."},
     {NULL}
 };
 

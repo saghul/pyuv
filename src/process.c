@@ -376,6 +376,7 @@ Process_tp_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
 static int
 Process_tp_traverse(Process *self, visitproc visit, void *arg)
 {
+    Py_VISIT(self->data);
     Py_VISIT(self->on_close_cb);
     Py_VISIT(self->on_exit_cb);
     Py_VISIT(self->stdin_pipe);
@@ -389,6 +390,7 @@ Process_tp_traverse(Process *self, visitproc visit, void *arg)
 static int
 Process_tp_clear(Process *self)
 {
+    Py_CLEAR(self->data);
     Py_CLEAR(self->on_close_cb);
     Py_CLEAR(self->on_exit_cb);
     Py_CLEAR(self->stdin_pipe);
@@ -438,6 +440,7 @@ Process_tp_methods[] = {
 
 static PyMemberDef Process_tp_members[] = {
     {"loop", T_OBJECT_EX, offsetof(Process, loop), READONLY, "Loop where this Process is running on."},
+    {"data", T_OBJECT_EX, offsetof(Process, data), 0, "Arbitrary data."},
     {NULL}
 };
 

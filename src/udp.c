@@ -587,6 +587,7 @@ UDP_tp_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
 static int
 UDP_tp_traverse(UDP *self, visitproc visit, void *arg)
 {
+    Py_VISIT(self->data);
     Py_VISIT(self->on_read_cb);
     Py_VISIT(self->loop);
     return 0;
@@ -596,6 +597,7 @@ UDP_tp_traverse(UDP *self, visitproc visit, void *arg)
 static int
 UDP_tp_clear(UDP *self)
 {
+    Py_CLEAR(self->data);
     Py_CLEAR(self->on_read_cb);
     Py_CLEAR(self->loop);
     return 0;
@@ -628,6 +630,7 @@ UDP_tp_methods[] = {
 
 static PyMemberDef UDP_tp_members[] = {
     {"loop", T_OBJECT_EX, offsetof(UDP, loop), READONLY, "Loop where this UDP is running on."},
+    {"data", T_OBJECT_EX, offsetof(UDP, data), 0, "Arbitrary data."},
     {NULL}
 };
 

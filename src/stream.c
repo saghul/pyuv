@@ -511,6 +511,7 @@ IOStream_tp_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
 static int
 IOStream_tp_traverse(IOStream *self, visitproc visit, void *arg)
 {
+    Py_VISIT(self->data);
     Py_VISIT(self->on_read_cb);
     Py_VISIT(self->on_close_cb);
     Py_VISIT(self->loop);
@@ -521,6 +522,7 @@ IOStream_tp_traverse(IOStream *self, visitproc visit, void *arg)
 static int
 IOStream_tp_clear(IOStream *self)
 {
+    Py_CLEAR(self->data);
     Py_CLEAR(self->on_read_cb);
     Py_CLEAR(self->on_close_cb);
     Py_CLEAR(self->loop);
@@ -552,6 +554,7 @@ IOStream_tp_methods[] = {
 
 static PyMemberDef IOStream_tp_members[] = {
     {"loop", T_OBJECT_EX, offsetof(IOStream, loop), READONLY, "Loop where this IOStream is running on."},
+    {"data", T_OBJECT_EX, offsetof(IOStream, data), 0, "Arbitrary data."},
     {NULL}
 };
 
