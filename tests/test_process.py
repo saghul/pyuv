@@ -136,6 +136,32 @@ class ProcessTest(common.UVTestCase):
         self.assertEqual(self.close_cb_called, 3)
         self.assertEqual(self.received_output, "TEST")
 
+    def test_process_kill(self):
+        self.exit_cb_called = 0
+        self.close_cb_called = 0
+        self.exit_status = -1
+        self.term_signal = 0
+        def handle_close_cb(proc):
+            self.close_cb_called +=1
+        def proc_exit_cb(proc, exit_status, term_signal):
+            self.exit_cb_called += 1
+            self.exit_status = exit_status
+            self.term_signal = term_signal
+            proc.close(handle_close_cb)
+        def timer_cb(timer):
+            timer.close(handle_close_cb)
+            proc.kill(15)
+        loop = pyuv.Loop.default_loop()
+        timer = pyuv.Timer(loop)
+        timer.start(timer_cb, 1, 0)
+        proc = pyuv.Process(loop)
+        proc.spawn(file="./proc_infinite.py", exit_callback=proc_exit_cb)
+        loop.run()
+        self.assertEqual(self.exit_cb_called, 1)
+        self.assertEqual(self.close_cb_called, 2)
+        self.assertEqual(self.exit_status, 0)
+        self.assertEqual(self.term_signal, 15)
+
 
 
 if __name__ == '__main__':
