@@ -103,6 +103,55 @@ Loop_default_get(Loop *self, void *closure)
 }
 
 
+static void
+set_counter_value(PyObject *dict, char *key, uint64_t value)
+{
+    PyObject *val;
+#if SIZEOF_TIME_T > SIZEOF_LONG
+    val = PyLong_FromLongLong((PY_LONG_LONG)value);
+#else
+    val = PyInt_FromLong((long)value);
+#endif
+    PyDict_SetItemString(dict, key, val);
+}
+
+static PyObject *
+Loop_counters_get(Loop *self, void *closure)
+{
+    PyObject *counters;
+    uv_counters_t* uv_counters = &self->uv_loop->counters;
+
+    counters = PyDict_New();
+    if (!counters) {
+        PyErr_NoMemory();
+        return NULL;
+    }
+
+#define set_counter(name) set_counter_value(counters, #name, uv_counters->name);
+
+    set_counter(eio_init)
+    set_counter(req_init)
+    set_counter(handle_init)
+    set_counter(stream_init)
+    set_counter(tcp_init)
+    set_counter(udp_init)
+    set_counter(pipe_init)
+    set_counter(tty_init)
+    set_counter(prepare_init)
+    set_counter(check_init)
+    set_counter(idle_init)
+    set_counter(async_init)
+    set_counter(timer_init)
+    set_counter(process_init)
+    set_counter(fs_event_init)
+
+#undef set_counter
+
+    return counters;
+
+}
+
+
 static PyObject *
 Loop_tp_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
 {
@@ -157,6 +206,7 @@ static PyMemberDef Loop_tp_members[] = {
 
 static PyGetSetDef Loop_tp_getsets[] = {
     {"default", (getter)Loop_default_get, NULL, "Is this the default loop?", NULL},
+    {"counters", (getter)Loop_counters_get, NULL, "Loop counters", NULL},
     {NULL}
 };
 
