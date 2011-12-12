@@ -272,7 +272,7 @@ Prepare_tp_methods[] = {
 
 static PyMemberDef Prepare_tp_members[] = {
     {"loop", T_OBJECT_EX, offsetof(Prepare, loop), READONLY, "Loop where this Prepare is running on."},
-    {"data", T_OBJECT_EX, offsetof(Prepare, data), 0, "Arbitrary data."},
+    {"data", T_OBJECT, offsetof(Prepare, data), 0, "Arbitrary data."},
     {NULL}
 };
 

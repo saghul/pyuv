@@ -273,7 +273,7 @@ Idle_tp_methods[] = {
 
 static PyMemberDef Idle_tp_members[] = {
     {"loop", T_OBJECT_EX, offsetof(Idle, loop), READONLY, "Loop where this Idle is running on."},
-    {"data", T_OBJECT_EX, offsetof(Idle, data), 0, "Arbitrary data."},
+    {"data", T_OBJECT, offsetof(Idle, data), 0, "Arbitrary data."},
     {NULL}
 };
 

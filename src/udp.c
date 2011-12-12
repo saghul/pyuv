@@ -630,7 +630,7 @@ UDP_tp_methods[] = {
 
 static PyMemberDef UDP_tp_members[] = {
     {"loop", T_OBJECT_EX, offsetof(UDP, loop), READONLY, "Loop where this UDP is running on."},
-    {"data", T_OBJECT_EX, offsetof(UDP, data), 0, "Arbitrary data."},
+    {"data", T_OBJECT, offsetof(UDP, data), 0, "Arbitrary data."},
     {NULL}
 };
 

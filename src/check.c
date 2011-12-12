@@ -273,7 +273,7 @@ Check_tp_methods[] = {
 
 static PyMemberDef Check_tp_members[] = {
     {"loop", T_OBJECT_EX, offsetof(Check, loop), READONLY, "Loop where this Check is running on."},
-    {"data", T_OBJECT_EX, offsetof(Check, data), 0, "Arbitrary data."},
+    {"data", T_OBJECT, offsetof(Check, data), 0, "Arbitrary data."},
     {NULL}
 };
 

@@ -243,7 +243,7 @@ Async_tp_methods[] = {
 
 static PyMemberDef Async_tp_members[] = {
     {"loop", T_OBJECT_EX, offsetof(Async, loop), READONLY, "Loop where this Async is running on."},
-    {"data", T_OBJECT_EX, offsetof(Async, data), 0, "Arbitrary data."},
+    {"data", T_OBJECT, offsetof(Async, data), 0, "Arbitrary data."},
     {NULL}
 };
 

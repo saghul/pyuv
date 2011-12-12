@@ -246,7 +246,7 @@ Signal_tp_methods[] = {
 
 static PyMemberDef Signal_tp_members[] = {
     {"loop", T_OBJECT_EX, offsetof(Signal, loop), READONLY, "Loop where this Signal is running on."},
-    {"data", T_OBJECT_EX, offsetof(Signal, data), 0, "Arbitrary data."},
+    {"data", T_OBJECT, offsetof(Signal, data), 0, "Arbitrary data."},
     {NULL}
 };
 

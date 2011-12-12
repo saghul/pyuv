@@ -345,7 +345,7 @@ Timer_tp_methods[] = {
 
 static PyMemberDef Timer_tp_members[] = {
     {"loop", T_OBJECT_EX, offsetof(Timer, loop), READONLY, "Loop where this Timer is running on."},
-    {"data", T_OBJECT_EX, offsetof(Timer, data), 0, "Arbitrary data."},
+    {"data", T_OBJECT, offsetof(Timer, data), 0, "Arbitrary data."},
     {NULL}
 };
 

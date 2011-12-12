@@ -554,7 +554,7 @@ IOStream_tp_methods[] = {
 
 static PyMemberDef IOStream_tp_members[] = {
     {"loop", T_OBJECT_EX, offsetof(IOStream, loop), READONLY, "Loop where this IOStream is running on."},
-    {"data", T_OBJECT_EX, offsetof(IOStream, data), 0, "Arbitrary data."},
+    {"data", T_OBJECT, offsetof(IOStream, data), 0, "Arbitrary data."},
     {NULL}
 };
 

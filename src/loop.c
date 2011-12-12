@@ -150,7 +150,7 @@ Loop_tp_methods[] = {
 
 
 static PyMemberDef Loop_tp_members[] = {
-    {"data", T_OBJECT_EX, offsetof(Loop, data), 0, "Arbitrary data."},
+    {"data", T_OBJECT, offsetof(Loop, data), 0, "Arbitrary data."},
     {NULL}
 };
 

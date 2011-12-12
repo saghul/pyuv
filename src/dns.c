@@ -686,7 +686,7 @@ DNSResolver_tp_methods[] = {
 
 static PyMemberDef DNSResolver_tp_members[] = {
     {"loop", T_OBJECT_EX, offsetof(DNSResolver, loop), READONLY, "Loop where this DNSResolver is running on."},
-    {"data", T_OBJECT_EX, offsetof(DNSResolver, data), 0, "Arbitrary data."},
+    {"data", T_OBJECT, offsetof(DNSResolver, data), 0, "Arbitrary data."},
     {NULL}
 };
 

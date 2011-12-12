@@ -440,7 +440,7 @@ Process_tp_methods[] = {
 
 static PyMemberDef Process_tp_members[] = {
     {"loop", T_OBJECT_EX, offsetof(Process, loop), READONLY, "Loop where this Process is running on."},
-    {"data", T_OBJECT_EX, offsetof(Process, data), 0, "Arbitrary data."},
+    {"data", T_OBJECT, offsetof(Process, data), 0, "Arbitrary data."},
     {NULL}
 };
 
