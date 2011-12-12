@@ -370,7 +370,7 @@ static PyTypeObject PipeType = {
     0,                                                             /*tp_getattro*/
     0,                                                             /*tp_setattro*/
     0,                                                             /*tp_as_buffer*/
-    Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE,                      /*tp_flags*/
+    Py_TPFLAGS_DEFAULT | Py_TPFLAGS_HAVE_GC,                       /*tp_flags*/
     0,                                                             /*tp_doc*/
     (traverseproc)Pipe_tp_traverse,                                /*tp_traverse*/
     (inquiry)Pipe_tp_clear,                                        /*tp_clear*/

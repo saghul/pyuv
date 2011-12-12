@@ -123,6 +123,22 @@ TTY_tp_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
 }
 
 
+static int
+TTY_tp_traverse(TTY *self, visitproc visit, void *arg)
+{
+    IOStreamType.tp_traverse((PyObject *)self, visit, arg);
+    return 0;
+}
+
+
+static int
+TTY_tp_clear(TTY *self)
+{
+    IOStreamType.tp_clear((PyObject *)self);
+    return 0;
+}
+
+
 static PyMethodDef
 TTY_tp_methods[] = {
     { "set_mode", (PyCFunction)TTY_func_set_mode, METH_VARARGS, "Set TTY handle mode." },
@@ -152,10 +168,10 @@ static PyTypeObject TTYType = {
     0,                                                             /*tp_getattro*/
     0,                                                             /*tp_setattro*/
     0,                                                             /*tp_as_buffer*/
-    Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE,                      /*tp_flags*/
+    Py_TPFLAGS_DEFAULT | Py_TPFLAGS_HAVE_GC,                       /*tp_flags*/
     0,                                                             /*tp_doc*/
-    0,                                                             /*tp_traverse*/
-    0,                                                             /*tp_clear*/
+    (traverseproc)TTY_tp_traverse,                                 /*tp_traverse*/
+    (inquiry)TTY_tp_clear,                                         /*tp_clear*/
     0,                                                             /*tp_richcompare*/
     0,                                                             /*tp_weaklistoffset*/
     0,                                                             /*tp_iter*/
