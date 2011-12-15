@@ -26,6 +26,7 @@ init_error(void)
     PyExc_DNSError = PyErr_NewException("pyuv.error.DNSError", NULL, NULL);
     PyExc_ThreadPoolError = PyErr_NewException("pyuv.error.ThreadPoolError", PyExc_UVError, NULL);
     PyExc_FSError = PyErr_NewException("pyuv.error.FSError", PyExc_UVError, NULL);
+    PyExc_ProcessError = PyErr_NewException("pyuv.error.ProcessError", PyExc_UVError, NULL);
 
     PyUVModule_AddType(module, "UVError", (PyTypeObject *)PyExc_UVError);
     PyUVModule_AddType(module, "AsyncError", (PyTypeObject *)PyExc_AsyncError);
@@ -42,6 +43,7 @@ init_error(void)
     PyUVModule_AddType(module, "DNSError", (PyTypeObject *)PyExc_DNSError);
     PyUVModule_AddType(module, "ThreadPoolError", (PyTypeObject *)PyExc_ThreadPoolError);
     PyUVModule_AddType(module, "FSError", (PyTypeObject *)PyExc_FSError);
+    PyUVModule_AddType(module, "ProcessError", (PyTypeObject *)PyExc_ProcessError);
 
     return module;
 }
