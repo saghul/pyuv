@@ -27,7 +27,7 @@ class FSTest(common.UVTestCase):
         self.assertNotEqual(errorno, 0)
 
     def test_stat_error(self):
-        pyuv.fs.stat(BAD_FILE, self.loop, self.stat_error_cb)
+        pyuv.fs.stat(self.loop, BAD_FILE, self.stat_error_cb)
         self.loop.run()
 
     def stat_cb(self, loop, data, result, errorno, stat_result):
@@ -35,7 +35,7 @@ class FSTest(common.UVTestCase):
         self.assertEqual(errorno, 0)
 
     def test_stat(self):
-        pyuv.fs.stat(TEST_FILE, self.loop, self.stat_cb)
+        pyuv.fs.stat(self.loop, TEST_FILE, self.stat_cb)
         self.loop.run()
 
     def lstat_cb(self, loop, data, result, errorno, stat_result):
@@ -43,7 +43,7 @@ class FSTest(common.UVTestCase):
         self.assertEqual(errorno, 0)
 
     def test_lstat(self):
-        pyuv.fs.lstat(TEST_LINK, self.loop, self.lstat_cb)
+        pyuv.fs.lstat(self.loop, TEST_LINK, self.lstat_cb)
         self.loop.run()
 
 

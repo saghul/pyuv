@@ -133,9 +133,9 @@ stat_func(PyObject *self, PyObject *args, PyObject *kwargs, int type)
     uv_fs_t *fs_req = NULL;
     fs_req_data_t *req_data = NULL;
 
-    static char *kwlist[] = {"path", "loop", "callback", "data", NULL};
+    static char *kwlist[] = {"loop", "path", "callback", "data", NULL};
 
-    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "sO!O|O:stat", kwlist, &path, &LoopType, &loop, &callback, &data)) {
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!sO|O:stat", kwlist, &LoopType, &loop, &path, &callback, &data)) {
         return NULL;
     }
 
