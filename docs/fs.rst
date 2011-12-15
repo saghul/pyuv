@@ -9,7 +9,7 @@
 ========================================================
 
 
-.. py:function:: pyuv.fs.stat(path, loop, callback, [data])
+.. py:function:: pyuv.fs.stat(loop, path, callback, [data])
 
     :param string path: File to stat.
 
