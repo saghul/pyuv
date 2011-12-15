@@ -15,5 +15,5 @@ UDP Echo server
 TCP Echo server
 ***************
 
-.. literalinclude:: ../examples/echo-server.py
+.. literalinclude:: ../examples/echo-server-tcp.py
 
