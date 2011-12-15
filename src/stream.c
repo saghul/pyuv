@@ -184,7 +184,6 @@ on_iostream_write(uv_write_t* req, int status)
 static PyObject *
 IOStream_func_close(IOStream *self, PyObject *args)
 {
-    PyObject *tmp = NULL;
     PyObject *callback = Py_None;
 
     if (self->closed) {
@@ -201,10 +200,8 @@ IOStream_func_close(IOStream *self, PyObject *args)
         return NULL;
     }
 
-    tmp = self->on_close_cb;
     Py_INCREF(callback);
     self->on_close_cb = callback;
-    Py_XDECREF(tmp);
 
     /* Increase refcount so that object is not removed before the callback is called */
     Py_INCREF(self);
@@ -470,7 +467,6 @@ static int
 IOStream_tp_init(IOStream *self, PyObject *args, PyObject *kwargs)
 {
     Loop *loop;
-    PyObject *tmp = NULL;
 
     if (self->initialized) {
         PyErr_SetString(PyExc_IOStreamError, "Object already initialized");
@@ -481,10 +477,8 @@ IOStream_tp_init(IOStream *self, PyObject *args, PyObject *kwargs)
         return -1;
     }
 
-    tmp = (PyObject *)self->loop;
     Py_INCREF(loop);
     self->loop = loop;
-    Py_XDECREF(tmp);
 
     self->initialized = True;
 

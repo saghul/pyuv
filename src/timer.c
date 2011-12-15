@@ -154,7 +154,6 @@ Timer_func_again(Timer *self)
 static PyObject *
 Timer_func_close(Timer *self, PyObject *args)
 {
-    PyObject *tmp = NULL;
     PyObject *callback = Py_None;
 
     if (self->closed) {
@@ -171,10 +170,8 @@ Timer_func_close(Timer *self, PyObject *args)
         return NULL;
     }
 
-    tmp = self->on_close_cb;
     Py_INCREF(callback);
     self->on_close_cb = callback;
-    Py_XDECREF(tmp);
 
     /* Increase refcount so that object is not removed before the callback is called */
     Py_INCREF(self);
@@ -241,7 +238,6 @@ Timer_tp_init(Timer *self, PyObject *args, PyObject *kwargs)
 {
     int r = 0;
     Loop *loop;
-    PyObject *tmp = NULL;
     uv_timer_t *uv_timer = NULL;
 
     if (self->initialized) {
@@ -253,10 +249,8 @@ Timer_tp_init(Timer *self, PyObject *args, PyObject *kwargs)
         return -1;
     }
 
-    tmp = (PyObject *)self->loop;
     Py_INCREF(loop);
     self->loop = loop;
-    Py_XDECREF(tmp);
 
     uv_timer = PyMem_Malloc(sizeof(uv_timer_t));
     if (!uv_timer) {

@@ -123,7 +123,6 @@ Check_func_stop(Check *self)
 static PyObject *
 Check_func_close(Check *self, PyObject *args)
 {
-    PyObject *tmp = NULL;
     PyObject *callback = Py_None;
 
     if (self->closed) {
@@ -140,10 +139,8 @@ Check_func_close(Check *self, PyObject *args)
         return NULL;
     }
 
-    tmp = self->on_close_cb;
     Py_INCREF(callback);
     self->on_close_cb = callback;
-    Py_XDECREF(tmp);
 
     /* Increase refcount so that object is not removed before the callback is called */
     Py_INCREF(self);
@@ -167,7 +164,6 @@ Check_tp_init(Check *self, PyObject *args, PyObject *kwargs)
 {
     int r = 0;
     Loop *loop;
-    PyObject *tmp = NULL;
     uv_check_t *uv_check = NULL;
 
     if (self->initialized) {
@@ -179,10 +175,8 @@ Check_tp_init(Check *self, PyObject *args, PyObject *kwargs)
         return -1;
     }
 
-    tmp = (PyObject *)self->loop;
     Py_INCREF(loop);
     self->loop = loop;
-    Py_XDECREF(tmp);
 
     uv_check = PyMem_Malloc(sizeof(uv_check_t));
     if (!uv_check) {

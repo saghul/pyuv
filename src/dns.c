@@ -593,7 +593,6 @@ static int
 DNSResolver_tp_init(DNSResolver *self, PyObject *args, PyObject *kwargs)
 {
     Loop *loop;
-    PyObject *tmp = NULL;
     PyObject *servers = NULL;
 
     static char *kwlist[] = {"loop", "servers", NULL};
@@ -602,10 +601,8 @@ DNSResolver_tp_init(DNSResolver *self, PyObject *args, PyObject *kwargs)
         return -1;
     }
 
-    tmp = (PyObject *)self->loop;
     Py_INCREF(loop);
     self->loop = loop;
-    Py_XDECREF(tmp);
 
     int r = ares_library_init(ARES_LIB_INIT_ALL);
     if (r != 0) {

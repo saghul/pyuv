@@ -456,7 +456,6 @@ UDP_func_set_membership(UDP *self, PyObject *args)
 static PyObject *
 UDP_func_close(UDP *self, PyObject *args)
 {
-    PyObject *tmp = NULL;
     PyObject *callback = Py_None;
 
     if (self->closed) {
@@ -473,10 +472,8 @@ UDP_func_close(UDP *self, PyObject *args)
         return NULL;
     }
 
-    tmp = self->on_close_cb;
     Py_INCREF(callback);
     self->on_close_cb = callback;
-    Py_XDECREF(tmp);
 
     /* Increase refcount so that object is not removed before the callback is called */
     Py_INCREF(self);
@@ -532,7 +529,6 @@ UDP_tp_init(UDP *self, PyObject *args, PyObject *kwargs)
 {
     int r = 0;
     Loop *loop;
-    PyObject *tmp = NULL;
     uv_udp_t *uv_udp_handle = NULL;
 
     if (self->initialized) {
@@ -544,10 +540,8 @@ UDP_tp_init(UDP *self, PyObject *args, PyObject *kwargs)
         return -1;
     }
 
-    tmp = (PyObject *)self->loop;
     Py_INCREF(loop);
     self->loop = loop;
-    Py_XDECREF(tmp);
 
     uv_udp_handle = PyMem_Malloc(sizeof(uv_udp_t));
     if (!uv_udp_handle) {

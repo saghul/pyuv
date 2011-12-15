@@ -107,7 +107,6 @@ Signal_func_stop(Signal *self)
 static PyObject *
 Signal_func_close(Signal *self, PyObject *args)
 {
-    PyObject *tmp = NULL;
     PyObject *callback = Py_None;
 
     if (self->closed) {
@@ -124,10 +123,8 @@ Signal_func_close(Signal *self, PyObject *args)
         return NULL;
     }
 
-    tmp = self->on_close_cb;
     Py_INCREF(callback);
     self->on_close_cb = callback;
-    Py_XDECREF(tmp);
 
     /* Increase refcount so that object is not removed before the callback is called */
     Py_INCREF(self);
@@ -151,7 +148,6 @@ Signal_tp_init(Signal *self, PyObject *args, PyObject *kwargs)
 {
     int r = 0;
     Loop *loop;
-    PyObject *tmp = NULL;
     uv_prepare_t *uv_prepare = NULL;
 
     if (self->initialized) {
@@ -163,10 +159,8 @@ Signal_tp_init(Signal *self, PyObject *args, PyObject *kwargs)
         return -1;
     }
 
-    tmp = (PyObject *)self->loop;
     Py_INCREF(loop);
     self->loop = loop;
-    Py_XDECREF(tmp);
 
     uv_prepare = PyMem_Malloc(sizeof(uv_prepare_t));
     if (!uv_prepare) {
