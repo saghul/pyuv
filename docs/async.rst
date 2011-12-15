@@ -21,13 +21,10 @@
     thread.
 
 
-    .. py:method:: send(callback, [data])
+    .. py:method:: send(callback)
 
         :param callable callback: Function that will be called after the ``Async``
             handle fires. It will be called in the event loop.
-
-        :param object data: Sets the given Python object in the :py:attr:`data`
-            attribute.
 
         Start the ``Async`` handle. The callback will be called *at least* once.
 

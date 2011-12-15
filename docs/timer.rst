@@ -17,7 +17,7 @@
     A ``Timer`` handle will run the suplied callback after the specified amount of seconds. 
 
 
-    .. py:method:: start(callback, timeout, repeat, [data])
+    .. py:method:: start(callback, timeout, repeat)
 
         :param callable callback: Function that will be called when the ``Timer``
             handle is run by the event loop.
@@ -25,8 +25,6 @@
         :param float timeout: The ``Timer`` will start after the specified amount of time.
 
         :param float repeat: The ``Timer`` will run again after the specified amount of time.
-
-        :param object data: Sets the given Python object in the :py:attr:`data` attribute.
 
         Start the ``Timer`` handle.
 

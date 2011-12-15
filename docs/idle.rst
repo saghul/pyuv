@@ -19,13 +19,10 @@
     be run at a later loop iteration.
 
 
-    .. py:method:: start(callback, [data])
+    .. py:method:: start(callback)
 
         :param callable callback: Function that will be called when the ``Idle``
             handle is run by the event loop.
-
-        :param object data: Sets the given Python object in the :py:attr:`data`
-            attribute.
 
         Start the ``Idle`` handle.
 

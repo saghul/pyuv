@@ -19,13 +19,10 @@
     callback will be called *once* each loop iteration, after I/O.
 
 
-    .. py:method:: start(callback, [data])
+    .. py:method:: start(callback)
 
         :param callable callback: Function that will be called when the ``Check``
             handle is run by the event loop.
-
-        :param object data: Sets the given Python object in the :py:attr:`data`
-            attribute.
 
         Start the ``Check`` handle.
 
