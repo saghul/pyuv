@@ -279,7 +279,7 @@ Process_func_kill(Process *self, PyObject *args)
         return NULL;
     }
 
-    if (!PyArg_ParseTuple(args, "i:process_kill", &signum)) {
+    if (!PyArg_ParseTuple(args, "i:kill", &signum)) {
         return NULL;
     }
 
