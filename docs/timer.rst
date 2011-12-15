@@ -30,7 +30,7 @@
 
         Start the ``Timer`` handle.
 
-        Callback signature: ``callback(timer_handle, data)``.
+        Callback signature: ``callback(timer_handle)``.
 
     .. py:method:: stop
 

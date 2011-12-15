@@ -29,7 +29,7 @@
 
         Start the ``Check`` handle.
 
-        Callback signature: ``callback(check_handle, data)``.
+        Callback signature: ``callback(check_handle)``.
 
     .. py:method:: stop
 

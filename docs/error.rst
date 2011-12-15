@@ -65,4 +65,12 @@ are used throughout `puyv`.
 
     Exception raised if an error is found when calling ``UDP`` handle functions.
 
+.. py:exception:: TTYError()
+
+    Exception raised if an error is found when calling ``TTY`` handle functions.
+
+.. py:exception:: ProcessError()
+
+    Exception raised if an error is found when calling ``Process`` handle functions.
+
 

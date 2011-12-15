@@ -29,7 +29,7 @@
 
         Start the ``Prepare`` handle.
 
-        Callback signature: ``callback(prepare_handle, data)``.
+        Callback signature: ``callback(prepare_handle)``.
 
     .. py:method:: stop
 

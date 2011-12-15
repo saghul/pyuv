@@ -31,7 +31,7 @@
 
         Start the ``Async`` handle. The callback will be called *at least* once.
 
-        Callback signature: ``callback(async_handle, data)``
+        Callback signature: ``callback(async_handle)``
 
     .. py:method:: close([callback])
 

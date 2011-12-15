@@ -105,4 +105,39 @@
 
         Stop reading data from the remote endpoint.
 
+    .. py:method:: nodelay(enable)
+
+        :param boolean enable: Enable / disable nodelay option.
+
+        Enable / disable Nagle's algorithm.
+
+    .. py:method:: keepalive(enable, delay)
+
+        :param boolean enable: Enable / disable keepalive option.
+
+        :param int delay: Initial delay, in seconds.
+
+        Enable / disable TCP keep-alive.
+
+    .. py:method:: simultaneous_accepts(enable)
+
+        :param boolean enable: Enable / disable simultaneous accepts.
+
+        This setting applies to Windows only.
+        Enable / disable simultaneous asynchronous accept requests that are queued
+        by the operating system when listening for new tcp connections. This setting
+        is used to tune a tcp server for the desired performance. Having simultaneous
+        accepts can significantly improve the rate of accepting connections (which
+        is why it is enabled by default).
+
+    .. py:attribute:: loop
+
+        *Read only*
+
+        :py:class:`Loop` object where this handle runs.
+
+    .. py:attribute:: data
+
+        Any Python object attached to this handle.
+
 

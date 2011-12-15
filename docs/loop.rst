@@ -25,6 +25,10 @@
         Run the event loop. This method will block until there is no active
         handle running on the loop.
 
+    .. py:method:: poll
+        
+        Poll the event loop for events without blocking.
+
     .. py:method:: ref
     .. py:method:: unref
 
@@ -48,4 +52,15 @@
         to query the kernel for the time.
 
         This are advanced functions not be used in standard applications.
+
+    .. py:attribute:: data
+
+        Any Python object attached to this loop.
+
+    .. py:attribute:: counters
+
+        *Read only*
+
+        Dictionary containing the loop counters. Loop counters maintain a count on the
+        number of different handles, requests, etc that were ever run by the loop.
 

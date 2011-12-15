@@ -29,7 +29,7 @@
 
         Start the ``Idle`` handle.
 
-        Callback signature: ``callback(idle_handle, data)``.
+        Callback signature: ``callback(idle_handle)``.
 
     .. py:method:: stop
 

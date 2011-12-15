@@ -26,9 +26,11 @@ Objects
     tcp
     udp
     pipe
+    tty
     dns
     fs
     threadpool
+    process
     async
     prepare
     idle

@@ -9,21 +9,19 @@
 ================================================================
 
 
-.. py:class:: ThreadPool(loop)
-
-    :type loop: :py:class:`Loop`
-    :param loop: loop object where this pool runs (accessible through :py:attr:`ThreadPool.loop`).
+.. py:class:: ThreadPool()
 
     Many times there are blocking functions which we can't avoid to call. In order to make
     them *feel* asynchronous they can be run in a different thread. It will appear that they
     don't block, but in reallity they do, but they don't hog the event loop because they run
     on a different thread.
 
-    **NOTE:** Due to a limitation in libuv only one ``ThreadPool`` may be instantiated
-    for the moment. Any attempt of instantiating another one will result in
-    :py:exc:`RuntimeError`.
+    **NOTE:** ``ThreadPool`` cannot be instantiated, its only method is a classmethod. Any
+    attempt of instantiating it will result in :py:exc:`RuntimeError`.
 
-    .. py:method:: run(function, [args, kwargs])
+    .. py:classmethod:: run(loop, function, [args, kwargs])
+
+        :param loop: loop where the result will be sent.
 
         :param callable function: Function that will be called in the thread pool.
 

@@ -91,6 +91,10 @@
 
         List of nameservers to use for DNS queries.
 
+    .. py:attribute:: data
+
+        Any Python object attached to this handle.
+
 
 ========================
 c-ares library constants

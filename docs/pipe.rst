@@ -93,4 +93,21 @@
 
         Stop reading data from the remote endpoint.
 
+    .. py:method:: pending_instances(count)
+
+        :param int count: Number of pending instances.
+
+        This setting applies to Windows only. Set the number of pending pipe instance
+        handles when the pipe server is waiting for connections.
+
+    .. py:attribute:: loop
+
+        *Read only*
+
+        :py:class:`Loop` object where this handle runs.
+
+    .. py:attribute:: data
+
+        Any Python object attached to this handle.
+
 
