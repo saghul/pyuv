@@ -73,16 +73,15 @@ Timer_func_start(Timer *self, PyObject *args, PyObject *kwargs)
     double repeat;
     PyObject *tmp = NULL;
     PyObject *callback;
-    PyObject *data = Py_None;
 
-    static char *kwlist[] = {"callback", "timeout", "repeat", "data", NULL};
+    static char *kwlist[] = {"callback", "timeout", "repeat", NULL};
 
     if (self->closed) {
         PyErr_SetString(PyExc_TimerError, "Timer is closed");
         return NULL;
     }
 
-    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "Odd|O:__init__", kwlist, &callback, &timeout, &repeat, &data)) {
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "Odd:__init__", kwlist, &callback, &timeout, &repeat)) {
         return NULL;
     }
 
@@ -110,11 +109,6 @@ Timer_func_start(Timer *self, PyObject *args, PyObject *kwargs)
     tmp = self->callback;
     Py_INCREF(callback);
     self->callback = callback;
-    Py_XDECREF(tmp);
-
-    tmp = self->data;
-    Py_INCREF(data);
-    self->data = data;
     Py_XDECREF(tmp);
 
     Py_RETURN_NONE;
