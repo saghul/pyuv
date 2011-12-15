@@ -22,7 +22,7 @@ class CheckTest(common.UVTestCase):
         check = pyuv.Check(loop)
         check.start(check_cb)
         timer = pyuv.Timer(loop)
-        timer.start(timer_cb, 1, 0)
+        timer.start(timer_cb, 0.1, 0)
         loop.run()
         self.assertEqual(self.check_cb_called, 1)
 

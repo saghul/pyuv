@@ -44,7 +44,7 @@ class UDPTest(common.UVTestCase):
         self.client.bind(("0.0.0.0", TEST_PORT2))
         self.client.start_recv(self.on_client_recv)
         timer = pyuv.Timer(self.loop)
-        timer.start(self.timer_cb, 1, 0)
+        timer.start(self.timer_cb, 0.1, 0)
         self.loop.run()
         self.assertEqual(self.on_close_called, 3)
 
@@ -83,7 +83,7 @@ class UDPTestList(common.UVTestCase):
         self.client.bind(("0.0.0.0", TEST_PORT2))
         self.client.start_recv(self.on_client_recv)
         timer = pyuv.Timer(self.loop)
-        timer.start(self.timer_cb, 1, 0)
+        timer.start(self.timer_cb, 0.1, 0)
         self.loop.run()
         self.assertEqual(self.on_close_called, 3)
 

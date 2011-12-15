@@ -153,7 +153,7 @@ class ProcessTest(common.UVTestCase):
             proc.kill(15)
         loop = pyuv.Loop.default_loop()
         timer = pyuv.Timer(loop)
-        timer.start(timer_cb, 1, 0)
+        timer.start(timer_cb, 0.1, 0)
         proc = pyuv.Process(loop)
         proc.spawn(file="./proc_infinite.py", exit_callback=proc_exit_cb)
         loop.run()

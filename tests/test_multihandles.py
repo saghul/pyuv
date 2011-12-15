@@ -39,7 +39,7 @@ class MultiHandleTest(common.UVTestCase):
         check = pyuv.Check(loop)
         check.start(check_cb)
         timer = pyuv.Timer(loop)
-        timer.start(timer_cb, 1, 0)
+        timer.start(timer_cb, 0.1, 0)
         loop.run()
         self.assertEqual(self.prepare_cb_called, 1)
         self.assertEqual(self.idle_cb_called, 1)
