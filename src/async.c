@@ -71,14 +71,13 @@ Async_func_send(Async *self, PyObject *args)
     int r = 0;
     PyObject *tmp = NULL;
     PyObject *callback;
-    PyObject *data = Py_None;
 
     if (self->closed) {
         PyErr_SetString(PyExc_AsyncError, "async is closed");
         return NULL;
     }
 
-    if (!PyArg_ParseTuple(args, "O|O:send", &callback, &data)) {
+    if (!PyArg_ParseTuple(args, "O:send", &callback)) {
         return NULL;
     }
 
@@ -96,11 +95,6 @@ Async_func_send(Async *self, PyObject *args)
     tmp = self->callback;
     Py_INCREF(callback);
     self->callback = callback;
-    Py_XDECREF(tmp);
-
-    tmp = self->data;
-    Py_INCREF(data);
-    self->data = data;
     Py_XDECREF(tmp);
 
     Py_RETURN_NONE;
