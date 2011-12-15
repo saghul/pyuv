@@ -72,16 +72,13 @@ Prepare_func_start(Prepare *self, PyObject *args, PyObject *kwargs)
     int r = 0;
     PyObject *tmp = NULL;
     PyObject *callback;
-    PyObject *data = Py_None;
-
-    static char *kwlist[] = {"callback", "data", NULL};
 
     if (self->closed) {
         PyErr_SetString(PyExc_PrepareError, "Prepare is closed");
         return NULL;
     }
 
-    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O|O:__init__", kwlist, &callback, &data)) {
+    if (!PyArg_ParseTuple(args, "O:start", &callback)) {
         return NULL;
     }
 
@@ -99,11 +96,6 @@ Prepare_func_start(Prepare *self, PyObject *args, PyObject *kwargs)
     tmp = self->callback;
     Py_INCREF(callback);
     self->callback = callback;
-    Py_XDECREF(tmp);
-
-    tmp = self->data;
-    Py_INCREF(data);
-    self->data = data;
     Py_XDECREF(tmp);
 
     Py_RETURN_NONE;
