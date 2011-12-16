@@ -42,12 +42,12 @@ stat_cb(uv_fs_t* req) {
     } else {
         errorno = PyInt_FromLong(0);
     }
-    stat_data = PyTuple_New(13);
 
-    if (!(result && errorno && stat_data)) {
+    stat_data = PyTuple_New(13);
+    if (!stat_data) {
         PyErr_NoMemory();
         PyErr_WriteUnraisable(req_data->callback);
-        goto stat_end;
+        goto end;
     }
 
     if (req->result != -1) {
@@ -114,7 +114,7 @@ stat_cb(uv_fs_t* req) {
     }
     Py_XDECREF(cb_result);
 
-stat_end:
+end:
 
     Py_DECREF(req_data->loop);
     Py_DECREF(req_data->callback);
