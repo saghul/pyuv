@@ -179,6 +179,9 @@ class FSTestRename(common.UVTestCase):
     def tearDown(self):
         try:
             os.remove(TEST_FILE)
+        except OSError:
+            pass
+        try:
             os.remove(TEST_FILE2)
         except OSError:
             pass
