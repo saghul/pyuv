@@ -134,6 +134,40 @@ class FSTestMkdir(common.UVTestCase):
         self.assertTrue(os.path.isdir(TEST_DIR))
 
 
+class FSTestRmdir(common.UVTestCase):
+
+    def setUp(self):
+        self.loop = pyuv.Loop.default_loop()
+        os.mkdir(TEST_DIR, 0755)
+
+    def tearDown(self):
+        try:
+            os.rmdir(TEST_DIR)
+        except OSError:
+            pass
+
+    def rmdir_cb(self, loop, data, result, errorno):
+        self.result = result
+        self.errorno = errorno
+
+    def test_bad_rmdir(self):
+        self.result = None
+        self.errorno = None
+        pyuv.fs.rmdir(self.loop, BAD_DIR, self.rmdir_cb)
+        self.loop.run()
+        self.assertEqual(self.result, -1)
+        self.assertEqual(self.errorno, pyuv.errno.UV_ENOENT)
+
+    def test_rmdir(self):
+        self.result = None
+        self.errorno = None
+        pyuv.fs.rmdir(self.loop, TEST_DIR, self.rmdir_cb)
+        self.loop.run()
+        self.assertEqual(self.result, 0)
+        self.assertEqual(self.errorno, 0)
+        self.assertFalse(os.path.isdir(TEST_DIR))
+
+
 if __name__ == '__main__':
     unittest.main()
 
