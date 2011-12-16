@@ -132,6 +132,7 @@ static void
 unlink_cb(uv_fs_t* req) {
     PyGILState_STATE gstate = PyGILState_Ensure();
     ASSERT(req);
+    ASSERT(req->fs_type == UV_FS_UNLINK);
 
     fs_req_data_t *req_data = (fs_req_data_t*)(req->data);
 
@@ -165,6 +166,7 @@ static void
 mkdir_cb(uv_fs_t* req) {
     PyGILState_STATE gstate = PyGILState_Ensure();
     ASSERT(req);
+    ASSERT(req->fs_type == UV_FS_MKDIR);
 
     fs_req_data_t *req_data = (fs_req_data_t*)(req->data);
 
