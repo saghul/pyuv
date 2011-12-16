@@ -26,17 +26,24 @@ format_time(time_t sec, unsigned long nsec)
 
 static void
 stat_cb(uv_fs_t* req) {
+    struct stat *st;
+    fs_req_data_t *req_data;
+    unsigned long ansec, mnsec, cnsec;
+    PyObject *result;
+    PyObject *errorno;
+    PyObject *stat_data;
+    PyObject *cb_result;
+
     PyGILState_STATE gstate = PyGILState_Ensure();
     ASSERT(req);
     ASSERT(req->fs_type == UV_FS_STAT || req->fs_type == UV_FS_LSTAT);
 
-    struct stat *st = (struct stat *)(req->ptr);
-    fs_req_data_t *req_data = (fs_req_data_t*)(req->data);
+    st = (struct stat *)(req->ptr);
+    req_data = (fs_req_data_t*)(req->data);
 
-    unsigned long ansec, mnsec, cnsec;
-    PyObject *result = PyInt_FromLong((long)req->result);
-    PyObject *errorno = PyInt_FromLong((long)req->errorno);
-    PyObject *stat_data = PyTuple_New(13);
+    result = PyInt_FromLong((long)req->result);
+    errorno = PyInt_FromLong((long)req->errorno);
+    stat_data = PyTuple_New(13);
 
     if (!(result && errorno && stat_data)) {
         PyErr_NoMemory();
@@ -102,7 +109,7 @@ stat_cb(uv_fs_t* req) {
 #endif
     }
 
-    PyObject *cb_result = PyObject_CallFunctionObjArgs(req_data->callback, req_data->loop, req_data->data, result, errorno, stat_data, NULL);
+    cb_result = PyObject_CallFunctionObjArgs(req_data->callback, req_data->loop, req_data->data, result, errorno, stat_data, NULL);
     if (cb_result == NULL) {
         PyErr_WriteUnraisable(req_data->callback);
     }

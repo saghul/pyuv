@@ -20,11 +20,11 @@ static void
 on_udp_close(uv_handle_t *handle)
 {
     PyGILState_STATE gstate = PyGILState_Ensure();
-    ASSERT(handle);
-    UDP *self = (UDP *)handle->data;
-    ASSERT(self);
-
+    UDP *self;
     PyObject *result;
+    ASSERT(handle);
+    self = (UDP *)handle->data;
+    ASSERT(self);
 
     if (self->on_close_cb != Py_None) {
         result = PyObject_CallFunctionObjArgs(self->on_close_cb, self, NULL);
@@ -59,8 +59,9 @@ static uv_buf_t
 on_udp_alloc(uv_udp_t* handle, size_t suggested_size)
 {
     PyGILState_STATE gstate = PyGILState_Ensure();
+    uv_buf_t buf;
     ASSERT(suggested_size <= UDP_MAX_BUF_SIZE);
-    uv_buf_t buf = uv_buf_init(PyMem_Malloc(suggested_size), suggested_size);
+    buf = uv_buf_init(PyMem_Malloc(suggested_size), suggested_size);
     PyGILState_Release(gstate);
     return buf;
 }
@@ -80,11 +81,12 @@ on_udp_read(uv_udp_t* handle, int nread, uv_buf_t buf, struct sockaddr* addr, un
     PyObject *address_tuple;
     PyObject *data;
     PyObject *result;
+    UDP *self;
 
     ASSERT(handle);
     ASSERT(flags == 0);
 
-    UDP *self = (UDP *)handle->data;
+    self = (UDP *)handle->data;
     ASSERT(self);
     /* Object could go out of scope in the callback, increase refcount to avoid it */
     Py_INCREF(self);
@@ -126,21 +128,25 @@ static void
 on_udp_send(uv_udp_send_t* req, int status)
 {
     int i;
+    udp_req_data_t* req_data;
+    udp_send_data_t* send_data;
+    UDP *self;
+    PyObject *callback;
+    PyObject *result;
 
     PyGILState_STATE gstate = PyGILState_Ensure();
     ASSERT(req);
 
-    udp_req_data_t* req_data = (udp_req_data_t *)req->data;
-    udp_send_data_t* send_data = (udp_send_data_t *)req_data->data;
+    req_data = (udp_req_data_t *)req->data;
+    send_data = (udp_send_data_t *)req_data->data;
 
-    UDP *self = (UDP *)req_data->obj;
-    PyObject *callback = req_data->callback;
+    self = (UDP *)req_data->obj;
+    callback = req_data->callback;
 
     ASSERT(self);
     /* Object could go out of scope in the callback, increase refcount to avoid it */
     Py_INCREF(self);
 
-    PyObject *result;
     if (callback != Py_None) {
         result = PyObject_CallFunctionObjArgs(callback, self, PyInt_FromLong(status), NULL);
         if (result == NULL) {

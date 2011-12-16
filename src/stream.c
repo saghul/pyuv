@@ -28,12 +28,12 @@ static void
 on_iostream_close(uv_handle_t *handle)
 {
     PyGILState_STATE gstate = PyGILState_Ensure();
-    ASSERT(handle);
-
-    IOStream *self = (IOStream *)handle->data;
-    ASSERT(self);
-
+    IOStream *self;
     PyObject *result;
+    
+    ASSERT(handle);
+    self = (IOStream *)handle->data;
+    ASSERT(self);
 
     if (self->on_close_cb != Py_None) {
         result = PyObject_CallFunctionObjArgs(self->on_close_cb, self, NULL);
@@ -71,17 +71,17 @@ static void
 on_iostream_shutdown(uv_shutdown_t* req, int status)
 {
     PyGILState_STATE gstate = PyGILState_Ensure();
-
+    IOStream *self;
+    PyObject *callback;
     iostream_req_data_t* req_data = (iostream_req_data_t *)req->data;
+    PyObject *result;
 
-    IOStream *self = (IOStream *)req_data->obj;
-    PyObject *callback = req_data->callback;
+    self = (IOStream *)req_data->obj;
+    callback = req_data->callback;
 
     ASSERT(self);
     /* Object could go out of scope in the callback, increase refcount to avoid it */
     Py_INCREF(self);
-
-    PyObject *result;
 
     if (callback != Py_None) {
         result = PyObject_CallFunctionObjArgs(callback, self, NULL);
@@ -105,15 +105,15 @@ static void
 on_iostream_read(uv_tcp_t* handle, int nread, uv_buf_t buf)
 {
     PyGILState_STATE gstate = PyGILState_Ensure();
-    ASSERT(handle);
+    IOStream *self;
+    PyObject *data;
+    PyObject *result;
 
-    IOStream *self = (IOStream *)handle->data;
+    ASSERT(handle);
+    self = (IOStream *)handle->data;
     ASSERT(self);
     /* Object could go out of scope in the callback, increase refcount to avoid it */
     Py_INCREF(self);
-
-    PyObject *data;
-    PyObject *result;
 
     if (nread >= 0) {
         data = PyString_FromStringAndSize(buf.base, nread);
@@ -142,21 +142,23 @@ static void
 on_iostream_write(uv_write_t* req, int status)
 {
     int i;
-
     PyGILState_STATE gstate = PyGILState_Ensure();
+    iostream_req_data_t* req_data;
+    iostream_write_data_t* write_data;
+    IOStream *self;
+    PyObject *callback;
+    PyObject *result;
+
     ASSERT(req);
+    req_data = (iostream_req_data_t *)req->data;
+    write_data = (iostream_write_data_t *)req_data->data;
 
-    iostream_req_data_t* req_data = (iostream_req_data_t *)req->data;
-    iostream_write_data_t* write_data = (iostream_write_data_t *)req_data->data;
-
-    IOStream *self = (IOStream *)req_data->obj;
-    PyObject *callback = req_data->callback;
+    self = (IOStream *)req_data->obj;
+    callback = req_data->callback;
 
     ASSERT(self);
     /* Object could go out of scope in the callback, increase refcount to avoid it */
     Py_INCREF(self);
-
-    PyObject *result;
 
     if (callback != Py_None) {
         result = PyObject_CallFunctionObjArgs(callback, self, PyInt_FromLong(status), NULL);
@@ -309,12 +311,13 @@ IOStream_func_start_read(IOStream *self, PyObject *args, PyObject *kwargs)
 static PyObject *
 IOStream_func_stop_read(IOStream *self, PyObject *args, PyObject *kwargs)
 {
+    int r;
     if (self->closed) {
         PyErr_SetString(PyExc_IOStreamError, "IOStream is closed");
         return NULL;
     }
 
-    int r = uv_read_stop(self->uv_handle);
+    r = uv_read_stop(self->uv_handle);
     if (r != 0) {
         raise_uv_exception(self->loop, PyExc_IOStreamError);
         return NULL;

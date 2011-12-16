@@ -14,15 +14,17 @@ static PyObject* PyExc_ProcessError;
 static void
 on_process_exit(uv_process_t *process, int exit_status, int term_signal)
 {
+    Process *self;
+    PyObject *result;
+
     PyGILState_STATE gstate = PyGILState_Ensure();
     ASSERT(process);
-    Process *self = (Process *)process->data;
+    self = (Process *)process->data;
     ASSERT(self);
 
     /* Object could go out of scope in the callback, increase refcount to avoid it */
     Py_INCREF(self);
 
-    PyObject *result;
     if (self->on_exit_cb != Py_None) {
         result = PyObject_CallFunctionObjArgs(self->on_exit_cb, self, PyInt_FromLong(exit_status), PyInt_FromLong(term_signal), NULL);
         if (result == NULL) {
@@ -40,12 +42,13 @@ on_process_exit(uv_process_t *process, int exit_status, int term_signal)
 static void
 on_process_close(uv_handle_t *handle)
 {
+    Process *self;
+    PyObject *result;
+    
     PyGILState_STATE gstate = PyGILState_Ensure();
     ASSERT(handle);
-    Process *self = (Process *)handle->data;
+    self = (Process *)handle->data;
     ASSERT(self);
-
-    PyObject *result;
 
     if (self->on_close_cb != Py_None) {
         result = PyObject_CallFunctionObjArgs(self->on_close_cb, self, NULL);

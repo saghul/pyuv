@@ -6,11 +6,12 @@ static void
 on_idle_close(uv_handle_t *handle)
 {
     PyGILState_STATE gstate = PyGILState_Ensure();
-    ASSERT(handle);
-    Idle *self = (Idle *)handle->data;
-    ASSERT(self);
-
+    Idle *self;
     PyObject *result;
+    
+    ASSERT(handle);
+    self = (Idle *)handle->data;
+    ASSERT(self);
 
     if (self->on_close_cb != Py_None) {
         result = PyObject_CallFunctionObjArgs(self->on_close_cb, self, NULL);
@@ -45,15 +46,16 @@ static void
 on_idle_callback(uv_idle_t *handle, int status)
 {
     PyGILState_STATE gstate = PyGILState_Ensure();
+    Idle *self;
+    PyObject *result;
+
     ASSERT(handle);
     ASSERT(status == 0);
 
-    Idle *self = (Idle *)handle->data;
+    self = (Idle *)handle->data;
     ASSERT(self);
     /* Object could go out of scope in the callback, increase refcount to avoid it */
     Py_INCREF(self);
-
-    PyObject *result;
 
     result = PyObject_CallFunctionObjArgs(self->callback, self, NULL);
     if (result == NULL) {
@@ -105,12 +107,14 @@ Idle_func_start(Idle *self, PyObject *args, PyObject *kwargs)
 static PyObject *
 Idle_func_stop(Idle *self)
 {
+    int r;
+    
     if (self->closed) {
         PyErr_SetString(PyExc_IdleError, "Idle is already closed");
         return NULL;
     }
 
-    int r = uv_idle_stop(self->uv_handle);
+    r = uv_idle_stop(self->uv_handle);
     if (r != 0) {
         raise_uv_exception(self->loop, PyExc_IdleError);
         return NULL;

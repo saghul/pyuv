@@ -11,34 +11,42 @@ typedef struct {
 static void
 host_cb(void *arg, int status, int timeouts, struct hostent *hostent)
 {
-    PyGILState_STATE gstate = PyGILState_Ensure();
-    ASSERT(arg);
-
-    ares_cb_data_t *data = (ares_cb_data_t*)arg;
-    DNSResolver *self = data->resolver;
-    PyObject *callback = data->cb;
-    ASSERT(self);
-    /* Object could go out of scope in the callback, increase refcount to avoid it */
-    Py_INCREF(self);
-
     char ip4[INET_ADDRSTRLEN];
     char ip6[INET6_ADDRSTRLEN];
     char **ptr;
 
+    PyGILState_STATE gstate = PyGILState_Ensure();
+    ares_cb_data_t *data;
+    DNSResolver *self;
+    PyObject *callback;
     PyObject *dns_name;
+    PyObject *tmp;
+    PyObject *result;
+    PyObject *dns_status;
+    PyObject *dns_timeouts;
+    PyObject *dns_aliases;
+    PyObject *dns_result;
+    int r;
+
+    ASSERT(arg);
+
+    data = (ares_cb_data_t*)arg;
+    self = data->resolver;
+    callback = data->cb;
+    ASSERT(self);
+    /* Object could go out of scope in the callback, increase refcount to avoid it */
+    Py_INCREF(self);
+
     if (hostent != NULL) {
         dns_name = PyBytes_FromString(hostent->h_name);
     } else {
         Py_INCREF(Py_None);
         dns_name = Py_None;
     }
-    PyObject *dns_status = PyLong_FromLong((long) status);
-    PyObject *dns_timeouts = PyLong_FromLong((long) timeouts);
-    PyObject *dns_aliases = PyList_New(0);
-    PyObject *dns_result = PyList_New(0);
-    PyObject *tmp;
-    PyObject *result;
-    int r;
+    dns_status = PyLong_FromLong((long) status);
+    dns_timeouts = PyLong_FromLong((long) timeouts);
+    dns_aliases = PyList_New(0);
+    dns_result = PyList_New(0);
 
     if (!(dns_status && dns_timeouts && dns_name && dns_aliases && dns_result)) {
         PyErr_NoMemory();
@@ -99,25 +107,31 @@ static void
 nameinfo_cb(void *arg, int status, int timeouts, char *node, char *service)
 {
     PyGILState_STATE gstate = PyGILState_Ensure();
+    ares_cb_data_t *data;
+    DNSResolver *self;
+    PyObject *callback;
+    PyObject *dns_status;
+    PyObject *dns_timeouts;
+    PyObject *dns_node;
+    PyObject *dns_service;
+    PyObject *result;
     ASSERT(arg);
 
-    ares_cb_data_t *data = (ares_cb_data_t*)arg;
-    DNSResolver *self = data->resolver;
-    PyObject *callback = data->cb;
+    data = (ares_cb_data_t*)arg;
+    self = data->resolver;
+    callback = data->cb;
     ASSERT(self);
     /* Object could go out of scope in the callback, increase refcount to avoid it */
     Py_INCREF(self);
 
-    PyObject *dns_status = PyLong_FromLong((long) status);
-    PyObject *dns_timeouts = PyLong_FromLong((long) timeouts);
-    PyObject *dns_node;
+    dns_status = PyLong_FromLong((long) status);
+    dns_timeouts = PyLong_FromLong((long) timeouts);
     if (node) {
         dns_node = PyBytes_FromString(node);
     } else {
         Py_INCREF(Py_None);
         dns_node = Py_None;
     }
-    PyObject *dns_service;
     if (service) {
         dns_service = PyBytes_FromString(service);
     } else {
@@ -131,7 +145,7 @@ nameinfo_cb(void *arg, int status, int timeouts, char *node, char *service)
         goto nameinfo_end;
     }
 
-    PyObject *result = PyObject_CallFunctionObjArgs(callback, self, dns_status, dns_timeouts, dns_node, dns_service, NULL);
+    result = PyObject_CallFunctionObjArgs(callback, self, dns_status, dns_timeouts, dns_node, dns_service, NULL);
     if (result == NULL) {
         PyErr_WriteUnraisable(callback);
     }
@@ -193,19 +207,25 @@ getaddrinfo_cb(uv_getaddrinfo_t* handle, int status, struct addrinfo* res)
     struct addrinfo *ptr;
     PyObject *addr;
     PyObject *item;
+    ares_cb_data_t *data;
+    DNSResolver *self;
+    PyObject *callback;
+    PyObject *dns_status;
+    PyObject *dns_result;
+    PyObject *result;
 
     PyGILState_STATE gstate = PyGILState_Ensure();
     ASSERT(handle);
 
-    ares_cb_data_t *data = (ares_cb_data_t*)(handle->data);
-    DNSResolver *self = data->resolver;
-    PyObject *callback = data->cb;
+    data = (ares_cb_data_t*)(handle->data);
+    self = data->resolver;
+    callback = data->cb;
     ASSERT(self);
     /* Object could go out of scope in the callback, increase refcount to avoid it */
     Py_INCREF(self);
 
-    PyObject *dns_status = PyInt_FromLong(status);
-    PyObject *dns_result = PyList_New(0);
+    dns_status = PyInt_FromLong(status);
+    dns_result = PyList_New(0);
     if (!(dns_status && dns_result)) {
         PyErr_NoMemory();
         PyErr_WriteUnraisable(callback);
@@ -234,7 +254,7 @@ getaddrinfo_cb(uv_getaddrinfo_t* handle, int status, struct addrinfo* res)
         Py_DECREF(item);
     }
 
-    PyObject *result = PyObject_CallFunctionObjArgs(callback, self, dns_status, dns_result, NULL);
+    result = PyObject_CallFunctionObjArgs(callback, self, dns_status, dns_result, NULL);
     if (result == NULL) {
         PyErr_WriteUnraisable(callback);
     }
@@ -406,11 +426,11 @@ DNSResolver_func_getaddrinfo(DNSResolver *self, PyObject *args, PyObject *kwargs
     struct addrinfo hints;
     ares_cb_data_t *cb_data = NULL;
     uv_getaddrinfo_t* handle = NULL;
+    int r;
+    static char *kwlist[] = {"callback", "name", "port", "family", "socktype", "protocol", "flags", NULL};
 
     port = socktype = protocol = flags = 0;
     family = AF_UNSPEC;
-
-    static char *kwlist[] = {"callback", "name", "port", "family", "socktype", "protocol", "flags", NULL};
 
     if (!PyArg_ParseTupleAndKeywords(args, kwargs, "Os|iiiii:getaddrinfo", kwlist, &callback, &name, &port, &family, &socktype, &protocol, &flags)) {
         return NULL;
@@ -450,7 +470,7 @@ DNSResolver_func_getaddrinfo(DNSResolver *self, PyObject *args, PyObject *kwargs
     hints.ai_protocol = protocol;
     hints.ai_flags = flags;
 
-    int r = uv_getaddrinfo(UV_LOOP(self), handle, &getaddrinfo_cb, name, port_str, &hints);
+    r = uv_getaddrinfo(UV_LOOP(self), handle, &getaddrinfo_cb, name, port_str, &hints);
     if (r != 0) {
         raise_uv_exception(self->loop, PyExc_DNSError);
         goto error;
@@ -481,6 +501,7 @@ set_dns_servers(DNSResolver *self, PyObject *value)
 
     PyObject *server_list = value;
     PyObject *item;
+    int r;
 
     if (!PyList_Check(server_list)) {
         PyErr_SetString(PyExc_TypeError, "servers argument must be a list");
@@ -524,7 +545,7 @@ set_dns_servers(DNSResolver *self, PyObject *value)
         servers = NULL;
     }
 
-    int r = ares_set_servers(self->channel, servers);
+    r = ares_set_servers(self->channel, servers);
     if (r != 0) {
         PyErr_SetString(PyExc_DNSError, "error c-ares library options");
         ret = -1;
@@ -547,6 +568,7 @@ DNSResolver_servers_get(DNSResolver *self, void *closure)
 
     PyObject *server_list;
     PyObject *tmp;
+    int r;
 
     server_list = PyList_New(0);
     if (!server_list) {
@@ -554,7 +576,7 @@ DNSResolver_servers_get(DNSResolver *self, void *closure)
         return NULL;
     }
 
-    int r = ares_get_servers(self->channel, &servers);
+    r = ares_get_servers(self->channel, &servers);
     if (r != 0) {
         PyErr_SetString(PyExc_DNSError, "error getting c-ares nameservers");
         return NULL;
@@ -594,6 +616,9 @@ DNSResolver_tp_init(DNSResolver *self, PyObject *args, PyObject *kwargs)
 {
     Loop *loop;
     PyObject *servers = NULL;
+    int r;
+    struct ares_options options;
+    int optmask;
 
     static char *kwlist[] = {"loop", "servers", NULL};
 
@@ -604,14 +629,11 @@ DNSResolver_tp_init(DNSResolver *self, PyObject *args, PyObject *kwargs)
     Py_INCREF(loop);
     self->loop = loop;
 
-    int r = ares_library_init(ARES_LIB_INIT_ALL);
+    r = ares_library_init(ARES_LIB_INIT_ALL);
     if (r != 0) {
         PyErr_SetString(PyExc_DNSError, "error initializing c-ares library");
         return -1;
     }
-
-    struct ares_options options;
-    int optmask;
 
     optmask = ARES_OPT_FLAGS;
     options.flags = ARES_FLAG_USEVC;

@@ -6,11 +6,12 @@ static void
 on_async_close(uv_handle_t *handle)
 {
     PyGILState_STATE gstate = PyGILState_Ensure();
-    ASSERT(handle);
-    Async *self = (Async *)handle->data;
-    ASSERT(self);
-
+    Async *self;
     PyObject *result;
+
+    ASSERT(handle);
+    self = (Async *)handle->data;
+    ASSERT(self);
 
     if (self->on_close_cb != Py_None) {
         result = PyObject_CallFunctionObjArgs(self->on_close_cb, self, NULL);
@@ -45,15 +46,17 @@ static void
 on_async_callback(uv_async_t *async, int status)
 {
     PyGILState_STATE gstate = PyGILState_Ensure();
+    Async *self;
+    PyObject *result;
+
     ASSERT(async);
     ASSERT(status == 0);
 
-    Async *self = (Async *)async->data;
+    self = (Async *)async->data;
     ASSERT(self);
     /* Object could go out of scope in the callback, increase refcount to avoid it */
     Py_INCREF(self);
 
-    PyObject *result;
     result = PyObject_CallFunctionObjArgs(self->callback, self, NULL);
     if (result == NULL) {
         PyErr_WriteUnraisable(self->callback);
