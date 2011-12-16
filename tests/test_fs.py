@@ -275,6 +275,34 @@ class FSTestSymlink(common.UVTestCase):
         self.assertTrue(os.path.islink(TEST_LINK))
 
 
+class FSTestReadlink(common.UVTestCase):
+
+    def setUp(self):
+        self.loop = pyuv.Loop.default_loop()
+        with open(TEST_FILE, 'w') as f:
+            f.write('test')
+        os.symlink(TEST_FILE, TEST_LINK)
+
+    def tearDown(self):
+        os.remove(TEST_FILE)
+        os.remove(TEST_LINK)
+
+    def readlink_cb(self, loop, data, result, errorno, path):
+        self.result = result
+        self.errorno = errorno
+        self.link_path = path
+
+    def test_readlink(self):
+        self.result = None
+        self.errorno = None
+        self.link_path = None
+        pyuv.fs.readlink(self.loop, TEST_LINK, self.readlink_cb)
+        self.loop.run()
+        self.assertEqual(self.result, 0)
+        self.assertEqual(self.errorno, 0)
+        self.assertEqual(self.link_path, TEST_FILE)
+
+
 if __name__ == '__main__':
     unittest.main()
 
