@@ -34,9 +34,15 @@ stat_cb(uv_fs_t* req) {
     fs_req_data_t *req_data = (fs_req_data_t*)(req->data);
 
     unsigned long ansec, mnsec, cnsec;
-    PyObject *result = PyInt_FromLong((long)req->result);
-    PyObject *errorno = PyInt_FromLong((long)req->errorno);
-    PyObject *stat_data = PyTuple_New(13);
+    PyObject *result, *errorno, *stat_data;
+
+    result = PyInt_FromLong((long)req->result);
+    if (req->result < 0) {
+        errorno = PyInt_FromLong((long)req->errorno);
+    } else {
+        errorno = PyInt_FromLong(0);
+    }
+    stat_data = PyTuple_New(13);
 
     if (!(result && errorno && stat_data)) {
         PyErr_NoMemory();
