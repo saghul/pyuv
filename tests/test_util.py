@@ -23,10 +23,6 @@ class UtilTest(common.UVTestCase):
         r = pyuv.util.loadavg()
         self.assertTrue(r)
 
-    def test_exepath(self):
-        r = pyuv.util.exepath()
-        self.assertTrue(r)
-
 
 if __name__ == '__main__':
     unittest.main()
