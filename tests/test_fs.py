@@ -198,6 +198,30 @@ class FSTestRename(common.UVTestCase):
         self.assertTrue(os.path.exists(TEST_FILE2))
 
 
+class FSTestChmod(common.UVTestCase):
+
+    def setUp(self):
+        self.loop = pyuv.Loop.default_loop()
+        with open(TEST_FILE, 'w') as f:
+            f.write('test')
+
+    def tearDown(self):
+        os.remove(TEST_FILE)
+
+    def chmod_cb(self, loop, data, result, errorno):
+        self.result = result
+        self.errorno = errorno
+
+    def test_chmod(self):
+        self.result = None
+        self.errorno = None
+        pyuv.fs.chmod(self.loop, TEST_FILE, 0777, self.chmod_cb)
+        self.loop.run()
+        self.assertEqual(self.result, 0)
+        self.assertEqual(self.errorno, 0)
+        self.assertTrue(os.access(TEST_FILE, 0777))
+
+
 if __name__ == '__main__':
     unittest.main()
 
