@@ -128,6 +128,39 @@ end:
 }
 
 
+static void
+unlink_cb(uv_fs_t* req) {
+    PyGILState_STATE gstate = PyGILState_Ensure();
+    ASSERT(req);
+
+    fs_req_data_t *req_data = (fs_req_data_t*)(req->data);
+
+    PyObject *result, *errorno;
+
+    result = PyInt_FromLong((long)req->result);
+    if (req->result < 0) {
+        errorno = PyInt_FromLong((long)req->errorno);
+    } else {
+        errorno = PyInt_FromLong(0);
+    }
+
+    PyObject *cb_result = PyObject_CallFunctionObjArgs(req_data->callback, req_data->loop, req_data->data, result, errorno, NULL);
+    if (cb_result == NULL) {
+        PyErr_WriteUnraisable(req_data->callback);
+    }
+    Py_XDECREF(cb_result);
+
+    uv_fs_req_cleanup(req);
+    Py_DECREF(req_data->loop);
+    Py_DECREF(req_data->callback);
+    Py_DECREF(req_data->data);
+    PyMem_Free(req_data);
+    PyMem_Free(req);
+
+    PyGILState_Release(gstate);
+}
+
+
 static PyObject *
 stat_func(PyObject *self, PyObject *args, PyObject *kwargs, int type)
 {
@@ -211,10 +244,76 @@ FS_func_lstat(PyObject *self, PyObject *args, PyObject *kwargs)
 }
 
 
+static PyObject *
+FS_func_unlink(PyObject *self, PyObject *args, PyObject *kwargs)
+{
+    int r;
+    char *path;
+    Loop *loop;
+    PyObject *callback;
+    PyObject *data = Py_None;
+    uv_fs_t *fs_req = NULL;
+    fs_req_data_t *req_data = NULL;
+
+    static char *kwlist[] = {"loop", "path", "callback", "data", NULL};
+
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!sO|O:stat", kwlist, &LoopType, &loop, &path, &callback, &data)) {
+        return NULL;
+    }
+
+    if (!PyCallable_Check(callback)) {
+        PyErr_SetString(PyExc_TypeError, "a callable or None is required");
+        return NULL;
+    }
+
+    fs_req = PyMem_Malloc(sizeof(uv_fs_t));
+    if (!fs_req) {
+        PyErr_NoMemory();
+        goto error;
+    }
+
+    req_data = PyMem_Malloc(sizeof(fs_req_data_t));
+    if (!req_data) {
+        PyErr_NoMemory();
+        goto error;
+    }
+
+    Py_INCREF(loop);
+    Py_INCREF(callback);
+    Py_INCREF(data);
+
+    req_data->loop = loop;
+    req_data->callback = callback;
+    req_data->data = data;
+
+    fs_req->data = (void *)req_data;
+    r = uv_fs_unlink(loop->uv_loop, fs_req, path, unlink_cb);
+    if (r != 0) {
+        raise_uv_exception(loop, PyExc_FSError);
+        goto error;
+    }
+
+    Py_RETURN_NONE;
+
+error:
+    if (fs_req) {
+        PyMem_Free(fs_req);
+    }
+    if (req_data) {
+        Py_DECREF(loop);
+        Py_DECREF(callback);
+        Py_DECREF(data);
+        PyMem_Free(req_data);
+    }
+    return NULL;
+}
+
+
 static PyMethodDef
 FS_methods[] = {
     { "stat", (PyCFunction)FS_func_stat, METH_VARARGS|METH_KEYWORDS, "stat" },
     { "lstat", (PyCFunction)FS_func_lstat, METH_VARARGS|METH_KEYWORDS, "lstat" },
+    { "unlink", (PyCFunction)FS_func_unlink, METH_VARARGS|METH_KEYWORDS, "Remove a file from the filesystem." },
     { NULL }
 };
 
