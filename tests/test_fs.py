@@ -13,7 +13,7 @@ TEST_LINK = 'test_file_1234_link'
 TEST_DIR = 'test-dir'
 BAD_DIR = 'test-dir-bad'
 
-class FSTest(common.UVTestCase):
+class FSTestStat(common.UVTestCase):
 
     def setUp(self):
         self.loop = pyuv.Loop.default_loop()
