@@ -282,7 +282,7 @@ stat_func(PyObject *self, PyObject *args, PyObject *kwargs, int type)
     }
 
     if (!PyCallable_Check(callback)) {
-        PyErr_SetString(PyExc_TypeError, "a callable or None is required");
+        PyErr_SetString(PyExc_TypeError, "a callable is required");
         return NULL;
     }
 
@@ -365,7 +365,7 @@ FS_func_unlink(PyObject *self, PyObject *args, PyObject *kwargs)
     }
 
     if (!PyCallable_Check(callback)) {
-        PyErr_SetString(PyExc_TypeError, "a callable or None is required");
+        PyErr_SetString(PyExc_TypeError, "a callable is required");
         return NULL;
     }
 
@@ -431,7 +431,7 @@ FS_func_mkdir(PyObject *self, PyObject *args, PyObject *kwargs)
     }
 
     if (!PyCallable_Check(callback)) {
-        PyErr_SetString(PyExc_TypeError, "a callable or None is required");
+        PyErr_SetString(PyExc_TypeError, "a callable is required");
         return NULL;
     }
 
