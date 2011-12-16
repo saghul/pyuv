@@ -7,12 +7,18 @@
 #include "structmember.h"
 
 /* system */
+#ifndef _MSC_VER
 #include <arpa/inet.h>
 #include <sys/socket.h>
+#endif
 
 /* libuv */
 #include "uv.h"
 
+#ifdef _MSC_VER
+#define inline __inline
+#define __func__ __FUNCTION__
+#endif
 
 /* Custom types */
 typedef int Bool;

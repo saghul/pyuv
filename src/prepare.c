@@ -6,11 +6,12 @@ static void
 on_prepare_close(uv_handle_t *handle)
 {
     PyGILState_STATE gstate = PyGILState_Ensure();
-    ASSERT(handle);
-    Prepare *self = (Prepare *)handle->data;
-    ASSERT(self);
-
+    Prepare *self;
     PyObject *result;
+    
+    ASSERT(handle);
+    self = (Prepare *)handle->data;
+    ASSERT(self);
 
     if (self->on_close_cb != Py_None) {
         result = PyObject_CallFunctionObjArgs(self->on_close_cb, self, NULL);
@@ -45,15 +46,16 @@ static void
 on_prepare_callback(uv_prepare_t *handle, int status)
 {
     PyGILState_STATE gstate = PyGILState_Ensure();
+    Prepare *self;
+    PyObject *result;
+    
     ASSERT(handle);
     ASSERT(status == 0);
 
-    Prepare *self = (Prepare *)handle->data;
+    self = (Prepare *)handle->data;
     ASSERT(self);
     /* Object could go out of scope in the callback, increase refcount to avoid it */
     Py_INCREF(self);
-
-    PyObject *result;
 
     result = PyObject_CallFunctionObjArgs(self->callback, self, NULL);
     if (result == NULL) {
@@ -113,12 +115,13 @@ Prepare_func_start(Prepare *self, PyObject *args, PyObject *kwargs)
 static PyObject *
 Prepare_func_stop(Prepare *self)
 {
+    int r;
     if (self->closed) {
         PyErr_SetString(PyExc_PrepareError, "Prepare is already closed");
         return NULL;
     }
 
-    int r = uv_prepare_stop(self->uv_handle);
+    r = uv_prepare_stop(self->uv_handle);
     if (r != 0) {
         raise_uv_exception(self->loop, PyExc_PrepareError);
         return NULL;

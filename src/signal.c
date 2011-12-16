@@ -12,11 +12,12 @@ static void
 on_signal_close(uv_handle_t *handle)
 {
     PyGILState_STATE gstate = PyGILState_Ensure();
-    ASSERT(handle);
-    Signal *self = (Signal *)handle->data;
-    ASSERT(self);
-
+    Signal *self;
     PyObject *result;
+
+    ASSERT(handle);
+    self = (Signal *)handle->data;
+    ASSERT(self);
 
     if (self->on_close_cb != Py_None) {
         result = PyObject_CallFunctionObjArgs(self->on_close_cb, self, NULL);
@@ -51,10 +52,12 @@ static void
 on_signal_callback(uv_prepare_t *handle, int status)
 {
     PyGILState_STATE gstate = PyGILState_Ensure();
+    Signal *self;
+
     ASSERT(handle);
     ASSERT(status == 0);
 
-    Signal *self = (Signal *)handle->data;
+    self = (Signal *)handle->data;
     ASSERT(self);
     /* Object could go out of scope in the callback, increase refcount to avoid it */
     Py_INCREF(self);
@@ -71,12 +74,13 @@ on_signal_callback(uv_prepare_t *handle, int status)
 static PyObject *
 Signal_func_start(Signal *self)
 {
+    int r;
     if (self->closed) {
         PyErr_SetString(PyExc_SignalError, "Signal is closed");
         return NULL;
     }
 
-    int r = uv_prepare_start(self->uv_handle, on_signal_callback);
+    r = uv_prepare_start(self->uv_handle, on_signal_callback);
     if (r != 0) {
         raise_uv_exception(self->loop, PyExc_SignalError);
         return NULL;
@@ -89,12 +93,14 @@ Signal_func_start(Signal *self)
 static PyObject *
 Signal_func_stop(Signal *self)
 {
+    int r;
+
     if (self->closed) {
         PyErr_SetString(PyExc_SignalError, "Signal is already closed");
         return NULL;
     }
 
-    int r = uv_prepare_stop(self->uv_handle);
+    r = uv_prepare_stop(self->uv_handle);
     if (r != 0) {
         raise_uv_exception(self->loop, PyExc_SignalError);
         return NULL;

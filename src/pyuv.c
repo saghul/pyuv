@@ -31,28 +31,35 @@
 static PyObject*
 initialize_module(void)
 {
+    PyObject *pyuv;
+    PyObject *errno_module;
+    PyObject *error;
+    PyObject *dns;
+    PyObject *fs;
+    PyObject *util;
+
     /* Initialize GIL */
     PyEval_InitThreads();
 
     /* Main module */
-    PyObject *pyuv = Py_InitModule("pyuv", NULL);
+    pyuv = Py_InitModule("pyuv", NULL);
 
     /* Errno module */
-    PyObject *errno_module = init_errno();
+    errno_module = init_errno();
     if (errno_module == NULL) {
         return NULL;
     }
     PyUVModule_AddObject(pyuv, "errno", errno_module);
 
     /* Error module */
-    PyObject *error = init_error();
+    error = init_error();
     if (error == NULL) {
         return NULL;
     }
     PyUVModule_AddObject(pyuv, "error", error);
 
     /* DNS module */
-    PyObject *dns = init_dns();
+    dns = init_dns();
     if (dns == NULL) {
         return NULL;
     }
@@ -60,14 +67,14 @@ initialize_module(void)
     PyUVModule_AddType(dns, "DNSResolver", &DNSResolverType);
 
     /* FS module */
-    PyObject *fs = init_fs();
+    fs = init_fs();
     if (fs == NULL) {
         return NULL;
     }
     PyUVModule_AddObject(pyuv, "fs", fs);
 
     /* Util module */
-    PyObject *util = init_util();
+    util = init_util();
     if (util == NULL) {
         return NULL;
     }

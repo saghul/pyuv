@@ -52,9 +52,10 @@ Util_func_exepath(PyObject *self)
 {
     char buffer[1024];
     size_t size;
+    int r;
 
     size = sizeof(buffer) / sizeof(buffer[0]);
-    int r = uv_exepath(buffer, &size);
+    r = uv_exepath(buffer, &size);
     if (r != 0) {
         Py_RETURN_NONE;
     }

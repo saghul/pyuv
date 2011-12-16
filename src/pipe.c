@@ -6,14 +6,17 @@ static void
 on_pipe_connection(uv_stream_t* server, int status)
 {
     PyGILState_STATE gstate = PyGILState_Ensure();
+    Pipe *self;
+    IOStream *base;
+    
     ASSERT(server);
 
-    Pipe *self = (Pipe *)server->data;
+    self = (Pipe *)server->data;
     ASSERT(self);
     /* Object could go out of scope in the callback, increase refcount to avoid it */
     Py_INCREF(self);
 
-    IOStream *base = (IOStream *)self;
+    base = (IOStream *)self;
 
     if (status != 0) {
         uv_err_t err = uv_last_error(UV_LOOP(base));
@@ -37,21 +40,25 @@ static void
 on_pipe_client_connection(uv_connect_t *req, int status)
 {
     PyGILState_STATE gstate = PyGILState_Ensure();
-    ASSERT(req);
-
-    iostream_req_data_t* req_data = (iostream_req_data_t *)req->data;
-
-    Pipe *self = (Pipe *)req_data->obj;
-    PyObject *callback = req_data->callback;
-
+    Pipe *self;
+    iostream_req_data_t* req_data;
+    PyObject *callback;
     PyObject *py_status;
     PyObject *result;
+    IOStream *base;
+   
+    ASSERT(req);
+
+    req_data = (iostream_req_data_t *)req->data;
+
+    self = (Pipe *)req_data->obj;
+    callback = req_data->callback;
 
     ASSERT(self);
     /* Object could go out of scope in the callback, increase refcount to avoid it */
     Py_INCREF(self);
 
-    IOStream *base = (IOStream *)self;
+    base = (IOStream *)self;
 
     if (status != 0) {
         uv_err_t err = uv_last_error(UV_LOOP(base));
@@ -151,15 +158,14 @@ static PyObject *
 Pipe_func_accept(Pipe *self)
 {
     int r = 0;
-
     IOStream *base = (IOStream *)self;
+    Pipe *connection;
 
     if (base->closed) {
         PyErr_SetString(PyExc_PipeError, "already closed");
         return NULL;
     }
 
-    Pipe *connection;
     connection = (Pipe *)PyObject_CallFunction((PyObject *)&PipeType, "O", base->loop);
 
     r = uv_accept(base->uv_handle, ((IOStream *)connection)->uv_handle);
@@ -259,8 +265,9 @@ Pipe_tp_init(Pipe *self, PyObject *args, PyObject *kwargs)
 {
     int r = 0;
     uv_pipe_t *uv_stream;
+    IOStream *base;
 
-    IOStream *base = (IOStream *)self;
+    base = (IOStream *)self;
 
     if (IOStreamType.tp_init((PyObject *)self, args, kwargs) < 0) {
         return -1;

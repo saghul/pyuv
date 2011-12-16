@@ -6,11 +6,13 @@ static void
 on_timer_close(uv_handle_t *handle)
 {
     PyGILState_STATE gstate = PyGILState_Ensure();
+    Timer *self;
+    PyObject *result;
+    
     ASSERT(handle);
-    Timer *self = (Timer *)handle->data;
+    self = (Timer *)handle->data;
     ASSERT(self);
 
-    PyObject *result;
 
     if (self->on_close_cb != Py_None) {
         result = PyObject_CallFunctionObjArgs(self->on_close_cb, self, NULL);
@@ -45,15 +47,17 @@ static void
 on_timer_callback(uv_timer_t *timer, int status)
 {
     PyGILState_STATE gstate = PyGILState_Ensure();
+    Timer *self;
+    PyObject *result;
+    
     ASSERT(timer);
     ASSERT(status == 0);
 
-    Timer *self = (Timer *)(timer->data);
+    self = (Timer *)(timer->data);
     ASSERT(self);
     /* Object could go out of scope in the callback, increase refcount to avoid it */
     Py_INCREF(self);
 
-    PyObject *result;
     result = PyObject_CallFunctionObjArgs(self->callback, self, NULL);
     if (result == NULL) {
         PyErr_WriteUnraisable(self->callback);
@@ -124,12 +128,14 @@ Timer_func_start(Timer *self, PyObject *args, PyObject *kwargs)
 static PyObject *
 Timer_func_stop(Timer *self)
 {
+    int r;
+    
     if (self->closed) {
         PyErr_SetString(PyExc_TimerError, "Timer is closed");
         return NULL;
     }
 
-    int r = uv_timer_stop(self->uv_handle);
+    r = uv_timer_stop(self->uv_handle);
     if (r != 0) {
         raise_uv_exception(self->loop, PyExc_TimerError);
         return NULL;
@@ -142,12 +148,13 @@ Timer_func_stop(Timer *self)
 static PyObject *
 Timer_func_again(Timer *self)
 {
+    int r;
     if (self->closed) {
         PyErr_SetString(PyExc_TimerError, "Timer is closed");
         return NULL;
     }
 
-    int r = uv_timer_again(self->uv_handle);
+    r = uv_timer_again(self->uv_handle);
     if (r != 0) {
         raise_uv_exception(self->loop, PyExc_TimerError);
         return NULL;

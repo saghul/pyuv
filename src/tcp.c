@@ -6,14 +6,16 @@ static void
 on_tcp_connection(uv_stream_t* server, int status)
 {
     PyGILState_STATE gstate = PyGILState_Ensure();
+    TCP *self;
+    IOStream *base;
     ASSERT(server);
 
-    TCP *self = (TCP *)server->data;
+    self = (TCP *)server->data;
     ASSERT(self);
     /* Object could go out of scope in the callback, increase refcount to avoid it */
     Py_INCREF(self);
 
-    IOStream *base = (IOStream *)self;
+    base = (IOStream *)self;
 
     if (status != 0) {
         uv_err_t err = uv_last_error(UV_LOOP(base));
@@ -37,21 +39,24 @@ static void
 on_tcp_client_connection(uv_connect_t *req, int status)
 {
     PyGILState_STATE gstate = PyGILState_Ensure();
-    ASSERT(req);
-
-    iostream_req_data_t* req_data = (iostream_req_data_t *)req->data;
-
-    TCP *self = (TCP *)req_data->obj;
-    PyObject *callback = req_data->callback;
-
+    iostream_req_data_t* req_data;
+    PyObject *callback;
+    TCP *self;
     PyObject *py_status;
     PyObject *result;
+    IOStream *base;
+    ASSERT(req);
+
+    req_data = (iostream_req_data_t *)req->data;
+
+    self = (TCP *)req_data->obj;
+    callback = req_data->callback;
 
     ASSERT(self);
     /* Object could go out of scope in the callback, increase refcount to avoid it */
     Py_INCREF(self);
 
-    IOStream *base = (IOStream *)self;
+    base = (IOStream *)self;
 
     if (status != 0) {
         uv_err_t err = uv_last_error(UV_LOOP(base));
@@ -174,6 +179,7 @@ static PyObject *
 TCP_func_accept(TCP *self)
 {
     int r = 0;
+    TCP *connection;
 
     IOStream *base = (IOStream *)self;
 
@@ -182,7 +188,6 @@ TCP_func_accept(TCP *self)
         return NULL;
     }
 
-    TCP *connection;
     connection = (TCP *)PyObject_CallFunction((PyObject *)&TCPType, "O", base->loop);
 
     r = uv_accept(base->uv_handle, ((IOStream *)connection)->uv_handle);
@@ -297,6 +302,7 @@ TCP_func_getsockname(TCP *self)
     char ip4[INET_ADDRSTRLEN];
     char ip6[INET6_ADDRSTRLEN];
     int namelen = sizeof(sockname);
+    int r;
 
     IOStream *base = (IOStream *)self;
 
@@ -305,7 +311,7 @@ TCP_func_getsockname(TCP *self)
         return NULL;
     }
 
-    int r = uv_tcp_getsockname((uv_tcp_t *)base->uv_handle, &sockname, &namelen);
+    r = uv_tcp_getsockname((uv_tcp_t *)base->uv_handle, &sockname, &namelen);
     if (r != 0) {
         raise_uv_exception(base->loop, PyExc_TCPError);
         return NULL;
@@ -337,6 +343,7 @@ TCP_func_getpeername(TCP *self)
     char ip4[INET_ADDRSTRLEN];
     char ip6[INET6_ADDRSTRLEN];
     int namelen = sizeof(peername);
+    int r;
 
     IOStream *base = (IOStream *)self;
 
@@ -345,7 +352,7 @@ TCP_func_getpeername(TCP *self)
         return NULL;
     }
 
-    int r = uv_tcp_getpeername((uv_tcp_t *)base->uv_handle, &peername, &namelen);
+    r = uv_tcp_getpeername((uv_tcp_t *)base->uv_handle, &peername, &namelen);
     if (r != 0) {
         raise_uv_exception(base->loop, PyExc_TCPError);
         return NULL;

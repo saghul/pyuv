@@ -12,14 +12,18 @@ typedef struct {
 static void
 work_cb(uv_work_t *req)
 {
+    tpool_req_data_t *data;
+    PyObject *args;
+    PyObject *kw;
+    PyObject *result;
+
     PyGILState_STATE gstate = PyGILState_Ensure();
     ASSERT(req);
-    tpool_req_data_t *data = (tpool_req_data_t*)(req->data);
+    data = (tpool_req_data_t*)(req->data);
 
-    PyObject *args = (data->args)?data->args:PyTuple_New(0);
-    PyObject *kw = data->kwargs;
+    args = (data->args)?data->args:PyTuple_New(0);
+    kw = data->kwargs;
 
-    PyObject *result;
     result = PyObject_Call(data->func, args, kw);
     if (result == NULL) {
         PyErr_WriteUnraisable(data->func);
@@ -33,10 +37,12 @@ work_cb(uv_work_t *req)
 static void
 after_work_cb(uv_work_t *req)
 {
+    tpool_req_data_t *data;
+
     PyGILState_STATE gstate = PyGILState_Ensure();
     ASSERT(req);
 
-    tpool_req_data_t *data = (tpool_req_data_t*)req->data;
+    data = (tpool_req_data_t*)req->data;
     Py_DECREF(data->loop);
     Py_DECREF(data->func);
     Py_XDECREF(data->args);
