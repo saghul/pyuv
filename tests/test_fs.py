@@ -225,6 +225,31 @@ class FSTestChmod(common.UVTestCase):
         self.assertTrue(os.access(TEST_FILE, 0777))
 
 
+class FSTestLink(common.UVTestCase):
+
+    def setUp(self):
+        self.loop = pyuv.Loop.default_loop()
+        with open(TEST_FILE, 'w') as f:
+            f.write('test')
+
+    def tearDown(self):
+        os.remove(TEST_FILE)
+        os.remove(TEST_LINK)
+
+    def link_cb(self, loop, data, result, errorno):
+        self.result = result
+        self.errorno = errorno
+
+    def test_link(self):
+        self.result = None
+        self.errorno = None
+        pyuv.fs.link(self.loop, TEST_FILE, TEST_LINK, self.link_cb)
+        self.loop.run()
+        self.assertEqual(self.result, 0)
+        self.assertEqual(self.errorno, 0)
+        self.assertEqual(os.stat(TEST_FILE).st_ino, os.stat(TEST_LINK).st_ino)
+
+
 if __name__ == '__main__':
     unittest.main()
 
