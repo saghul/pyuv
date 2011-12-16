@@ -9,6 +9,8 @@ import pyuv
 BAD_FILE = 'test_file_bad'
 TEST_FILE = 'test_file_1234'
 TEST_LINK = 'test_file_1234_link'
+TEST_DIR = 'test-dir'
+BAD_DIR = 'test-dir-bad'
 
 class FSTest(common.UVTestCase):
 
@@ -95,6 +97,41 @@ class FSTestUnlink(common.UVTestCase):
         self.loop.run()
         self.assertEqual(self.result, 0)
         self.assertEqual(self.errorno, 0)
+
+
+class FSTestMkdir(common.UVTestCase):
+
+    def setUp(self):
+        self.loop = pyuv.Loop.default_loop()
+        os.mkdir(BAD_DIR, 0755)
+
+    def tearDown(self):
+        os.rmdir(BAD_DIR)
+        try:
+            os.rmdir(TEST_DIR)
+        except OSError:
+            pass
+
+    def mkdir_cb(self, loop, data, result, errorno):
+        self.result = result
+        self.errorno = errorno
+
+    def test_bad_mkdir(self):
+        self.result = None
+        self.errorno = None
+        pyuv.fs.mkdir(self.loop, BAD_DIR, 0755, self.mkdir_cb)
+        self.loop.run()
+        self.assertEqual(self.result, -1)
+        self.assertEqual(self.errorno, pyuv.errno.UV_EEXIST)
+
+    def test_mkdir(self):
+        self.result = None
+        self.errorno = None
+        pyuv.fs.mkdir(self.loop, TEST_DIR, 0755, self.mkdir_cb)
+        self.loop.run()
+        self.assertEqual(self.result, 0)
+        self.assertEqual(self.errorno, 0)
+        self.assertTrue(os.path.isdir(TEST_DIR))
 
 
 if __name__ == '__main__':
