@@ -5,21 +5,15 @@
     - close
     - open
     - read
-    - unlink
     - write
-    - mkdir
-    - rmdir
     - readdir
     - fstat
-    - rename
     - fsync
     - fdatasync
     - ftruncate
     - sendfile
-    - chmod
     - utime
     - futime
-    - link
 
 - Better docstrings
 
@@ -29,6 +23,4 @@
 - Python 3 support
 
 - Test it on Windows (MinGW)
-
-- Support synchronous fs operations
 
