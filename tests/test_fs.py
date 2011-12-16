@@ -8,6 +8,7 @@ import pyuv
 
 BAD_FILE = 'test_file_bad'
 TEST_FILE = 'test_file_1234'
+TEST_FILE2 = 'test_file_1234_2'
 TEST_LINK = 'test_file_1234_link'
 TEST_DIR = 'test-dir'
 BAD_DIR = 'test-dir-bad'
@@ -166,6 +167,35 @@ class FSTestRmdir(common.UVTestCase):
         self.assertEqual(self.result, 0)
         self.assertEqual(self.errorno, 0)
         self.assertFalse(os.path.isdir(TEST_DIR))
+
+
+class FSTestRename(common.UVTestCase):
+
+    def setUp(self):
+        self.loop = pyuv.Loop.default_loop()
+        with open(TEST_FILE, 'w') as f:
+            f.write('test')
+
+    def tearDown(self):
+        try:
+            os.remove(TEST_FILE)
+            os.remove(TEST_FILE2)
+        except OSError:
+            pass
+
+    def rename_cb(self, loop, data, result, errorno):
+        self.result = result
+        self.errorno = errorno
+
+    def test_rename(self):
+        self.result = None
+        self.errorno = None
+        pyuv.fs.rename(self.loop, TEST_FILE, TEST_FILE2, self.rename_cb)
+        self.loop.run()
+        self.assertEqual(self.result, 0)
+        self.assertEqual(self.errorno, 0)
+        self.assertFalse(os.path.exists(TEST_FILE))
+        self.assertTrue(os.path.exists(TEST_FILE2))
 
 
 if __name__ == '__main__':
