@@ -7,7 +7,6 @@
     - read
     - write
     - readdir
-    - fstat
     - fsync
     - fdatasync
     - ftruncate
@@ -23,4 +22,8 @@
 - Python 3 support
 
 - Test it on Windows (MinGW)
+
+- uv_cpu_info
+
+- uv_interface_addresses
 
