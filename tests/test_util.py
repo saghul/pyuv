@@ -27,6 +27,15 @@ class UtilTest(common.UVTestCase):
         r = pyuv.util.uptime()
         self.assertTrue(r)
 
+    #def test_process_title(self):
+    #    title = 'my process'
+    #    r = pyuv.util.get_process_title()
+    #    self.assertTrue(r)
+    #    r = pyuv.util.set_process_title(title)
+    #    self.assertEquals(r, None)
+    #    r = pyuv.util.get_process_title()
+    #    self.assertEqual(r, title)
+
 
 if __name__ == '__main__':
     unittest.main()
