@@ -225,6 +225,31 @@ class FSTestChmod(common.UVTestCase):
         self.assertTrue(os.access(TEST_FILE, 0777))
 
 
+class FSTestFchmod(common.UVTestCase):
+
+    def setUp(self):
+        self.loop = pyuv.Loop.default_loop()
+        self.file = open(TEST_FILE, 'w')
+        self.file.write('test')
+
+    def tearDown(self):
+        self.file.close()
+        os.remove(TEST_FILE)
+
+    def fchmod_cb(self, loop, data, result, errorno):
+        self.result = result
+        self.errorno = errorno
+
+    def test_fchmod(self):
+        self.result = None
+        self.errorno = None
+        pyuv.fs.fchmod(self.loop, self.file.fileno(), 0777, self.fchmod_cb)
+        self.loop.run()
+        self.assertEqual(self.result, 0)
+        self.assertEqual(self.errorno, 0)
+        self.assertTrue(os.access(TEST_FILE, 0777))
+
+
 class FSTestLink(common.UVTestCase):
 
     def setUp(self):
