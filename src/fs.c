@@ -268,41 +268,7 @@ static void
 chmod_cb(uv_fs_t* req) {
     PyGILState_STATE gstate = PyGILState_Ensure();
     ASSERT(req);
-    ASSERT(req->fs_type == UV_FS_CHMOD);
-
-    fs_req_data_t *req_data = (fs_req_data_t*)(req->data);
-
-    PyObject *result, *errorno;
-
-    result = PyInt_FromLong((long)req->result);
-    if (req->result < 0) {
-        errorno = PyInt_FromLong((long)req->errorno);
-    } else {
-        errorno = PyInt_FromLong(0);
-    }
-
-    PyObject *cb_result = PyObject_CallFunctionObjArgs(req_data->callback, req_data->loop, req_data->data, result, errorno, NULL);
-    if (cb_result == NULL) {
-        PyErr_WriteUnraisable(req_data->callback);
-    }
-    Py_XDECREF(cb_result);
-
-    uv_fs_req_cleanup(req);
-    Py_DECREF(req_data->loop);
-    Py_DECREF(req_data->callback);
-    Py_DECREF(req_data->data);
-    PyMem_Free(req_data);
-    PyMem_Free(req);
-
-    PyGILState_Release(gstate);
-}
-
-
-static void
-fchmod_cb(uv_fs_t* req) {
-    PyGILState_STATE gstate = PyGILState_Ensure();
-    ASSERT(req);
-    ASSERT(req->fs_type == UV_FS_FCHMOD);
+    ASSERT(req->fs_type == UV_FS_CHMOD || req->fs_type == UV_FS_FCHMOD);
 
     fs_req_data_t *req_data = (fs_req_data_t*)(req->data);
 
@@ -925,7 +891,7 @@ FS_func_fchmod(PyObject *self, PyObject *args, PyObject *kwargs)
     req_data->data = data;
 
     fs_req->data = (void *)req_data;
-    r = uv_fs_fchmod(loop->uv_loop, fs_req, fd, mode, fchmod_cb);
+    r = uv_fs_fchmod(loop->uv_loop, fs_req, fd, mode, chmod_cb);
     if (r != 0) {
         raise_uv_exception(loop, PyExc_FSError);
         goto error;
