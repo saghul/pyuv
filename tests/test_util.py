@@ -23,6 +23,10 @@ class UtilTest(common.UVTestCase):
         r = pyuv.util.loadavg()
         self.assertTrue(r)
 
+    def test_uptime(self):
+        r = pyuv.util.uptime()
+        self.assertTrue(r)
+
 
 if __name__ == '__main__':
     unittest.main()
