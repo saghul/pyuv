@@ -40,6 +40,10 @@ class UtilTest(common.UVTestCase):
         r = pyuv.util.resident_set_memory()
         self.assertTrue(r)
 
+    def test_interface_addresses(self):
+        r = pyuv.util.interface_addresses()
+        self.assertTrue(r)
+
 
 if __name__ == '__main__':
     unittest.main()
