@@ -10,7 +10,7 @@ def on_read(handle, (ip, port), data):
     if data:
 	handle.send(data+os.linesep, (ip, port))
 
-def async_exit(async, data):
+def async_exit(async):
     async.close()
     signal_h.close()
     server.close()
