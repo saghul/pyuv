@@ -27,8 +27,6 @@ Objects
     udp
     pipe
     tty
-    dns
-    fs
     threadpool
     process
     async
@@ -36,6 +34,8 @@ Objects
     idle
     check
     signal
+    dns
+    fs
     error
     errno
     util

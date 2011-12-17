@@ -96,9 +96,7 @@
         Any Python object attached to this handle.
 
 
-========================
 c-ares library constants
-========================
 
 .. py:data:: pyuv.dns.ARES_NI_NOFQDN
 .. py:data:: pyuv.dns.ARES_NI_NUMERICHOST
