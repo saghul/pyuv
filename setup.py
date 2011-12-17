@@ -16,7 +16,7 @@ __version__ = "0.1.0"
 class pyuv_build_ext(build_ext):
     libuv_repo = 'https://github.com/joyent/libuv.git'
     libuv_branch = 'master'
-    libuv_revision = '12cc4f7'
+    libuv_revision = '8e50b60'
     libuv_patches = []
 
     @staticmethod
