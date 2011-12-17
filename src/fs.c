@@ -28,7 +28,7 @@ static void
 stat_cb(uv_fs_t* req) {
     PyGILState_STATE gstate = PyGILState_Ensure();
     ASSERT(req);
-    ASSERT(req->fs_type == UV_FS_STAT || req->fs_type == UV_FS_LSTAT);
+    ASSERT(req->fs_type == UV_FS_STAT || req->fs_type == UV_FS_LSTAT || req->fs_type == UV_FS_FSTAT);
 
     struct stat *st = (struct stat *)(req->ptr);
     fs_req_data_t *req_data = (fs_req_data_t*)(req->data);
@@ -516,6 +516,71 @@ static PyObject *
 FS_func_lstat(PyObject *self, PyObject *args, PyObject *kwargs)
 {
     return stat_func(self, args, kwargs, UV_FS_LSTAT);
+}
+
+
+static PyObject *
+FS_func_fstat(PyObject *self, PyObject *args, PyObject *kwargs)
+{
+    int r;
+    int fd;
+    Loop *loop;
+    PyObject *callback;
+    PyObject *data = Py_None;
+    uv_fs_t *fs_req = NULL;
+    fs_req_data_t *req_data = NULL;
+
+    static char *kwlist[] = {"loop", "fd", "callback", "data", NULL};
+
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!iO|O:stat", kwlist, &LoopType, &loop, &fd, &callback, &data)) {
+        return NULL;
+    }
+
+    if (!PyCallable_Check(callback)) {
+        PyErr_SetString(PyExc_TypeError, "a callable is required");
+        return NULL;
+    }
+
+    fs_req = PyMem_Malloc(sizeof(uv_fs_t));
+    if (!fs_req) {
+        PyErr_NoMemory();
+        goto error;
+    }
+   
+    req_data = PyMem_Malloc(sizeof(fs_req_data_t));
+    if (!req_data) {
+        PyErr_NoMemory();
+        goto error;
+    }
+
+    Py_INCREF(loop);
+    Py_INCREF(callback);
+    Py_INCREF(data);
+
+    req_data->loop = loop;
+    req_data->callback = callback;
+    req_data->data = data;
+
+    fs_req->data = (void *)req_data;
+    r = uv_fs_fstat(loop->uv_loop, fs_req, fd, stat_cb);
+    if (r != 0) {
+        raise_uv_exception(loop, PyExc_FSError);
+        goto error;
+    }
+
+    Py_RETURN_NONE;
+
+error:
+    if (fs_req) {
+        PyMem_Free(fs_req);
+    }
+    if (req_data) {
+        Py_DECREF(loop);
+        Py_DECREF(callback);
+        Py_DECREF(data);
+        PyMem_Free(req_data);
+    }
+    return NULL;
 }
 
 
@@ -1249,6 +1314,7 @@ static PyMethodDef
 FS_methods[] = {
     { "stat", (PyCFunction)FS_func_stat, METH_VARARGS|METH_KEYWORDS, "stat" },
     { "lstat", (PyCFunction)FS_func_lstat, METH_VARARGS|METH_KEYWORDS, "lstat" },
+    { "fstat", (PyCFunction)FS_func_fstat, METH_VARARGS|METH_KEYWORDS, "fstat" },
     { "unlink", (PyCFunction)FS_func_unlink, METH_VARARGS|METH_KEYWORDS, "Remove a file from the filesystem." },
     { "mkdir", (PyCFunction)FS_func_mkdir, METH_VARARGS|METH_KEYWORDS, "Create a directory." },
     { "rmdir", (PyCFunction)FS_func_rmdir, METH_VARARGS|METH_KEYWORDS, "Remove a directory." },

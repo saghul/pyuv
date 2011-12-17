@@ -62,6 +62,30 @@ class FSTestStat(common.UVTestCase):
         self.assertEqual(self.errorno, 0)
 
 
+class FSTestFstat(common.UVTestCase):
+
+    def setUp(self):
+        self.loop = pyuv.Loop.default_loop()
+        self.file = open(TEST_FILE, 'w')
+        self.file.write('test')
+
+    def tearDown(self):
+        self.file.close()
+        os.remove(TEST_FILE)
+
+    def fstat_cb(self, loop, data, result, errorno, stat_data):
+        self.result = result
+        self.errorno = errorno
+
+    def test_fstat(self):
+        self.result = None
+        self.errorno = None
+        pyuv.fs.fstat(self.loop, self.file.fileno(), self.fstat_cb)
+        self.loop.run()
+        self.assertEqual(self.result, 0)
+        self.assertEqual(self.errorno, 0)
+
+
 class FSTestUnlink(common.UVTestCase):
 
     def setUp(self):
