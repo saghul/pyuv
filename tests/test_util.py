@@ -44,6 +44,10 @@ class UtilTest(common.UVTestCase):
         r = pyuv.util.interface_addresses()
         self.assertTrue(r)
 
+    def test_cpu_info(self):
+        r = pyuv.util.cpu_info()
+        self.assertTrue(r)
+
 
 if __name__ == '__main__':
     unittest.main()

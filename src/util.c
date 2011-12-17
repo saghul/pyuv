@@ -182,6 +182,65 @@ Util_func_interface_addresses(PyObject *self)
 }
 
 
+static void
+set_cpu_info_time_val(PyObject *dict, char *key, uint64_t v)
+{
+    PyObject *val;
+#if SIZEOF_TIME_T > SIZEOF_LONG
+    val = PyLong_FromLongLong((PY_LONG_LONG)v);
+#else
+    val = PyInt_FromLong((long)v);
+#endif
+    PyDict_SetItemString(dict, key, val);
+}
+
+static PyObject *
+Util_func_cpu_info(PyObject *self)
+{
+    int i;
+    int count;
+    uv_cpu_info_t* cpus;
+    uv_err_t err;
+    PyObject *result, *item, *times;
+
+    err = uv_cpu_info(&cpus, &count);
+    if (err.code == UV_OK) {
+        result = PyList_New(0);
+        if (!result) {
+            uv_free_cpu_info(cpus, count);
+            PyErr_NoMemory();
+            return NULL;
+        }
+        for (i = 0; i < count; i++) {
+            item = PyDict_New();
+            times = PyDict_New();
+            if (!item || !times)
+                continue;
+            PyDict_SetItemString(item, "model", PyString_FromString(cpus[i].model));
+            PyDict_SetItemString(item, "speed", PyInt_FromLong((long)cpus[i].speed));
+            PyDict_SetItemString(item, "times", times);
+            if (PyList_Append(result, item))
+                continue;
+            Py_DECREF(item);
+            set_cpu_info_time_val(times, "sys", cpus[i].cpu_times.sys);
+            set_cpu_info_time_val(times, "user", cpus[i].cpu_times.user);
+            set_cpu_info_time_val(times, "idle", cpus[i].cpu_times.idle);
+            set_cpu_info_time_val(times, "irq", cpus[i].cpu_times.irq);
+            set_cpu_info_time_val(times, "nice", cpus[i].cpu_times.nice);
+        }
+        uv_free_cpu_info(cpus, count);
+        return result;
+    } else {
+        PyObject *exc_data = Py_BuildValue("(is)", err.code, uv_strerror(err));
+        if (exc_data != NULL) {
+            PyErr_SetObject(PyExc_UVError, exc_data);
+            Py_DECREF(exc_data);
+        }
+        return NULL;
+    }
+}
+
+
 static PyMethodDef
 Util_methods[] = {
     { "hrtime", (PyCFunction)Util_func_hrtime, METH_NOARGS, "High resolution time." },
@@ -193,6 +252,7 @@ Util_methods[] = {
     { "get_process_title", (PyCFunction)Util_func_get_process_title, METH_NOARGS, "Gets current process title." },
     { "resident_set_memory", (PyCFunction)Util_func_resident_set_memory, METH_NOARGS, "Gets resident memory size for the current process." },
     { "interface_addresses", (PyCFunction)Util_func_interface_addresses, METH_NOARGS, "Gets network interface addresses." },
+    { "cpu_info", (PyCFunction)Util_func_cpu_info, METH_NOARGS, "Gets system CPU information." },
     { NULL }
 };
 
