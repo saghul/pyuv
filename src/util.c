@@ -113,6 +113,26 @@ Util_func_get_process_title(PyObject *self)
 }
 
 
+static PyObject *
+Util_func_resident_set_memory(PyObject *self)
+{
+    size_t rss;
+    uv_err_t err;
+
+    err = uv_resident_set_memory(&rss);
+    if (err.code == UV_OK) {
+        return PyInt_FromSsize_t(rss);
+    } else {
+        PyObject *exc_data = Py_BuildValue("(is)", err.code, uv_strerror(err));
+        if (exc_data != NULL) {
+            PyErr_SetObject(PyExc_UVError, exc_data);
+            Py_DECREF(exc_data);
+        }
+        return NULL;
+    }
+}
+
+
 static PyMethodDef
 Util_methods[] = {
     { "hrtime", (PyCFunction)Util_func_hrtime, METH_NOARGS, "High resolution time." },
@@ -120,8 +140,9 @@ Util_methods[] = {
     { "get_total_memory", (PyCFunction)Util_func_get_total_memory, METH_NOARGS, "Get system total memory." },
     { "loadavg", (PyCFunction)Util_func_loadavg, METH_NOARGS, "Get system load average." },
     { "uptime", (PyCFunction)Util_func_uptime, METH_NOARGS, "Get system uptime." },
-    { "set_process_title", (PyCFunction)Util_func_set_process_title, METH_VARARGS, "Sets current process title" },
-    { "get_process_title", (PyCFunction)Util_func_get_process_title, METH_NOARGS, "Gets current process title" },
+    { "set_process_title", (PyCFunction)Util_func_set_process_title, METH_VARARGS, "Sets current process title." },
+    { "get_process_title", (PyCFunction)Util_func_get_process_title, METH_NOARGS, "Gets current process title." },
+    { "resident_set_memory", (PyCFunction)Util_func_resident_set_memory, METH_NOARGS, "Gets resident memory size for the current process." },
     { NULL }
 };
 

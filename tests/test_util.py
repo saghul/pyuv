@@ -36,6 +36,10 @@ class UtilTest(common.UVTestCase):
     #    r = pyuv.util.get_process_title()
     #    self.assertEqual(r, title)
 
+    def test_resident_set_memory(self):
+        r = pyuv.util.resident_set_memory()
+        self.assertTrue(r)
+
 
 if __name__ == '__main__':
     unittest.main()
