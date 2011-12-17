@@ -328,6 +328,53 @@ class FSTestReadlink(common.UVTestCase):
         self.assertEqual(self.link_path, TEST_FILE)
 
 
+class FSTestChown(common.UVTestCase):
+
+    def setUp(self):
+        self.loop = pyuv.Loop.default_loop()
+        with open(TEST_FILE, 'w') as f:
+            f.write('test')
+
+    def tearDown(self):
+        os.remove(TEST_FILE)
+
+    def chown_cb(self, loop, data, result, errorno):
+        self.result = result
+        self.errorno = errorno
+
+    def test_chown(self):
+        self.result = None
+        self.errorno = None
+        pyuv.fs.chown(self.loop, TEST_FILE, -1, -1, self.chown_cb)
+        self.loop.run()
+        self.assertEqual(self.result, 0)
+        self.assertEqual(self.errorno, 0)
+
+
+class FSTestFchown(common.UVTestCase):
+
+    def setUp(self):
+        self.loop = pyuv.Loop.default_loop()
+        self.file = open(TEST_FILE, 'w')
+        self.file.write('test')
+
+    def tearDown(self):
+        self.file.close()
+        os.remove(TEST_FILE)
+
+    def fchown_cb(self, loop, data, result, errorno):
+        self.result = result
+        self.errorno = errorno
+
+    def test_fchown(self):
+        self.result = None
+        self.errorno = None
+        pyuv.fs.fchown(self.loop, self.file.fileno(), -1, -1, self.fchown_cb)
+        self.loop.run()
+        self.assertEqual(self.result, 0)
+        self.assertEqual(self.errorno, 0)
+
+
 if __name__ == '__main__':
     unittest.main()
 
