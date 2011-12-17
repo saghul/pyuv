@@ -64,10 +64,10 @@
         :param string multicast_address: Multicast group to join / leave.
 
         :param int membership: Flag indicating if the operation is join or
-        leave. Flags: ``pyuv.UV_JOIN_GROUP`` and ``pyuv.UV_LEAVE_GROUP``.
+            leave. Flags: ``pyuv.UV_JOIN_GROUP`` and ``pyuv.UV_LEAVE_GROUP``.
 
         :param string interface: Local interface address to use to join or
-        leave the specified multicast group.
+            leave the specified multicast group.
 
         Join or leave a multicast group.
 

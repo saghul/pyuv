@@ -27,10 +27,10 @@
         :param tuple args: Arguments to be passed to the executable.
 
         :param dict env: Overrides the environment for the child process. If none is
-        specified the one from the parent is used.
+            specified the one from the parent is used.
 
         :param string cwd: Specifies the working directory where the child process will
-        be executed.
+            be executed.
 
         :param Pipe stdin: Uninitialized ``Pipe`` which will be used as the process stdin.
 
