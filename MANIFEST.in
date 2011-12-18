@@ -1,7 +1,8 @@
-include README LICENSE TODO
+include README LICENSE TODO build_inplace *.py
 recursive-include docs *
 recursive-include examples *
 recursive-include patches *
 recursive-include src *
 recursive-include tests *
+recursive-include deps *
 prune docs/_build
