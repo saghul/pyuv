@@ -14,6 +14,8 @@
     - utime
     - futime
 
+- IPC: uv_start_read2, uv_write2
+
 - Better docstrings
 
 - Use PyStructSequence (similar to a named tuple) on stat and perhaps
