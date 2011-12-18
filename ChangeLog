@@ -1,0 +1,26 @@
+Version 0.2.0
+=============
+ - Made the default loop a singleton
+ - Added TTY handle
+ - Moved all exception definitions to a standalone file
+ - Added set_membership function to UDP handle
+ - Added ability to write a list of strings to IOStream objects
+ - Added ability to send lists of strings on UDP handles
+ - Added open function to Pipe handle
+ - Added Process handle
+ - Added 'data' attribute to all handles for storing arbitrary objects
+ - Refactored ThreadPool
+ - Implemented pending_instances function on Pipe handle
+ - Implemented nodelay, keepalive and simultaneous_accepts functions on TCP handle
+ - Added 'counters' attribute to Loop
+ - Added 'poll' function to Loop
+ - Added new functions to fs module: unlink, mkdir, rmdir, rename, chmod,
+   fchmod, link, symlink, readlink, chown, fchown, fstat
+ - Added new functions to util module: uptime, get_process_title,
+   set_process_title, resident_set_size, interface_addresses, cpu_info
+
+
+Version 0.1.0
+=============
+ - Initial release
+
