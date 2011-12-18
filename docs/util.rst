@@ -26,8 +26,30 @@
 
     Get the system load average.
 
-.. py:function:: pyuv.util.exepath
+.. py:function:: pyuv.util.uptime
 
-    Get the current executable path.
+    Get the current uptime.
+
+.. py:function:: pyuv.util.get_process_title
+
+    Get the current process title.
+
+.. py:function:: pyuv.util.set_process_title(title)
+
+    :param string title: New title for the current process.
+
+    Set the current process title.
+
+.. py:function:: pyuv.util.resident_set_size
+
+    Get the current resident memory size.
+
+.. py:function:: pyuv.util.interface_addresses
+
+    Get interface addresses information.
+
+.. py:function:: pyuv.util.cpu_info
+
+    Get CPUs information.
 
 
