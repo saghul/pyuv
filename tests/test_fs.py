@@ -1,5 +1,7 @@
 
 import os
+import stat
+
 import common
 import unittest
 
@@ -246,7 +248,8 @@ class FSTestChmod(common.UVTestCase):
         self.loop.run()
         self.assertEqual(self.result, 0)
         self.assertEqual(self.errorno, 0)
-        self.assertTrue(os.access(TEST_FILE, 0777))
+        mode = os.stat(TEST_FILE).st_mode
+        self.assertTrue(bool(mode & stat.S_IRWXU) and bool(mode & stat.S_IRWXG) and bool(mode & stat.S_IRWXO))
 
 
 class FSTestFchmod(common.UVTestCase):
@@ -271,7 +274,8 @@ class FSTestFchmod(common.UVTestCase):
         self.loop.run()
         self.assertEqual(self.result, 0)
         self.assertEqual(self.errorno, 0)
-        self.assertTrue(os.access(TEST_FILE, 0777))
+        mode = os.stat(TEST_FILE).st_mode
+        self.assertTrue(bool(mode & stat.S_IRWXU) and bool(mode & stat.S_IRWXG) and bool(mode & stat.S_IRWXO))
 
 
 class FSTestLink(common.UVTestCase):
