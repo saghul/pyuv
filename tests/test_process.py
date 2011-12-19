@@ -113,14 +113,18 @@ class ProcessTest(common.UVTestCase):
         self.exit_cb_called = 0
         self.close_cb_called = 0
         self.received_output = None
+        self.exit_status = -1
+        self.term_signal = 0
         def handle_close_cb(handle):
             self.close_cb_called +=1
         def proc_exit_cb(proc, exit_status, term_signal):
-            self.assertEqual(exit_status, 0)
             self.exit_cb_called += 1
+            self.exit_status = exit_status
+            self.term_signal = term_signal
             proc.close(handle_close_cb)
         def stdout_read_cb(handle, data):
-            self.received_output = data.strip()
+            if data:
+                self.received_output = data.strip()
             handle.close(handle_close_cb)
         def stdin_write_cb(handle, data):
             handle.close(handle_close_cb)
@@ -161,7 +165,6 @@ class ProcessTest(common.UVTestCase):
         self.assertEqual(self.close_cb_called, 2)
         self.assertEqual(self.exit_status, 0)
         self.assertEqual(self.term_signal, 15)
-
 
 
 if __name__ == '__main__':
