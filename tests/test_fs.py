@@ -403,6 +403,48 @@ class FSTestFchown(common.UVTestCase):
         self.assertEqual(self.errorno, 0)
 
 
+class FSTestOpen(common.UVTestCase):
+
+    def setUp(self):
+        self.loop = pyuv.Loop.default_loop()
+
+    def tearDown(self):
+        try:
+            os.remove(TEST_FILE)
+        except OSError:
+            pass
+
+    def close_cb(self, loop, data, result, errorno):
+        self.result = result
+        self.errorno = errorno
+
+    def open_cb(self, loop, data, result, errorno):
+        fd = result
+        self.assertNotEqual(fd, -1)
+        self.assertEqual(errorno, 0)
+        pyuv.fs.close(self.loop, fd, self.close_cb)
+
+    def test_open_create(self):
+        self.result = None
+        self.errorno = None
+        pyuv.fs.open(self.loop, TEST_FILE, os.O_WRONLY|os.O_CREAT, stat.S_IREAD|stat.S_IWRITE, self.open_cb)
+        self.loop.run()
+        self.assertEqual(self.result, 0)
+        self.assertEqual(self.errorno, 0)
+
+    def open_noent_cb(self, loop, data, result, errorno):
+        self.result = result
+        self.errorno = errorno
+
+    def test_open_noent(self):
+        self.result = None
+        self.errorno = None
+        pyuv.fs.open(self.loop, BAD_FILE, os.O_RDONLY, 0, self.open_noent_cb)
+        self.loop.run()
+        self.assertEqual(self.result, -1)
+        self.assertEqual(self.errorno, pyuv.errno.UV_ENOENT)
+
+
 if __name__ == '__main__':
     unittest.main()
 
