@@ -5,6 +5,7 @@ typedef struct {
     Loop *loop;
     PyObject *callback;
     PyObject *data;
+    uv_buf_t buf;
 } fs_req_data_t;
 
 
@@ -531,7 +532,7 @@ stat_func(PyObject *self, PyObject *args, PyObject *kwargs, int type)
         PyErr_NoMemory();
         goto error;
     }
-   
+
     req_data = PyMem_Malloc(sizeof(fs_req_data_t));
     if (!req_data) {
         PyErr_NoMemory();
@@ -600,7 +601,7 @@ FS_func_fstat(PyObject *self, PyObject *args, PyObject *kwargs)
 
     static char *kwlist[] = {"loop", "fd", "callback", "data", NULL};
 
-    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!iO|O:stat", kwlist, &LoopType, &loop, &fd, &callback, &data)) {
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!iO|O:fstat", kwlist, &LoopType, &loop, &fd, &callback, &data)) {
         return NULL;
     }
 
@@ -614,7 +615,7 @@ FS_func_fstat(PyObject *self, PyObject *args, PyObject *kwargs)
         PyErr_NoMemory();
         goto error;
     }
-   
+
     req_data = PyMem_Malloc(sizeof(fs_req_data_t));
     if (!req_data) {
         PyErr_NoMemory();
@@ -665,7 +666,7 @@ FS_func_unlink(PyObject *self, PyObject *args, PyObject *kwargs)
 
     static char *kwlist[] = {"loop", "path", "callback", "data", NULL};
 
-    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!sO|O:stat", kwlist, &LoopType, &loop, &path, &callback, &data)) {
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!sO|O:unlink", kwlist, &LoopType, &loop, &path, &callback, &data)) {
         return NULL;
     }
 
@@ -731,7 +732,7 @@ FS_func_mkdir(PyObject *self, PyObject *args, PyObject *kwargs)
 
     static char *kwlist[] = {"loop", "path", "mode", "callback", "data", NULL};
 
-    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!siO|O:stat", kwlist, &LoopType, &loop, &path, &mode, &callback, &data)) {
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!siO|O:mkdir", kwlist, &LoopType, &loop, &path, &mode, &callback, &data)) {
         return NULL;
     }
 
@@ -862,7 +863,7 @@ FS_func_rename(PyObject *self, PyObject *args, PyObject *kwargs)
 
     static char *kwlist[] = {"loop", "path", "new_path", "callback", "data", NULL};
 
-    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!ssO|O:rmdir", kwlist, &LoopType, &loop, &path, &new_path, &callback, &data)) {
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!ssO|O:rename", kwlist, &LoopType, &loop, &path, &new_path, &callback, &data)) {
         return NULL;
     }
 
@@ -928,7 +929,7 @@ FS_func_chmod(PyObject *self, PyObject *args, PyObject *kwargs)
 
     static char *kwlist[] = {"loop", "path", "mode", "callback", "data", NULL};
 
-    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!siO|O:stat", kwlist, &LoopType, &loop, &path, &mode, &callback, &data)) {
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!siO|O:chmod", kwlist, &LoopType, &loop, &path, &mode, &callback, &data)) {
         return NULL;
     }
 
@@ -994,7 +995,7 @@ FS_func_fchmod(PyObject *self, PyObject *args, PyObject *kwargs)
 
     static char *kwlist[] = {"loop", "fd", "mode", "callback", "data", NULL};
 
-    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!iiO|O:stat", kwlist, &LoopType, &loop, &fd, &mode, &callback, &data)) {
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!iiO|O:fchmod", kwlist, &LoopType, &loop, &fd, &mode, &callback, &data)) {
         return NULL;
     }
 
@@ -1060,7 +1061,7 @@ FS_func_link(PyObject *self, PyObject *args, PyObject *kwargs)
 
     static char *kwlist[] = {"loop", "path", "new_path", "callback", "data", NULL};
 
-    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!ssO|O:rmdir", kwlist, &LoopType, &loop, &path, &new_path, &callback, &data)) {
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!ssO|O:link", kwlist, &LoopType, &loop, &path, &new_path, &callback, &data)) {
         return NULL;
     }
 
@@ -1127,7 +1128,7 @@ FS_func_symlink(PyObject *self, PyObject *args, PyObject *kwargs)
 
     static char *kwlist[] = {"loop", "path", "new_path", "flags", "callback", "data", NULL};
 
-    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!ssiO|O:rmdir", kwlist, &LoopType, &loop, &path, &new_path, &flags, &callback, &data)) {
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!ssiO|O:symlink", kwlist, &LoopType, &loop, &path, &new_path, &flags, &callback, &data)) {
         return NULL;
     }
 
@@ -1192,7 +1193,7 @@ FS_func_readlink(PyObject *self, PyObject *args, PyObject *kwargs)
 
     static char *kwlist[] = {"loop", "path", "callback", "data", NULL};
 
-    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!sO|O:rmdir", kwlist, &LoopType, &loop, &path, &callback, &data)) {
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!sO|O:readlink", kwlist, &LoopType, &loop, &path, &callback, &data)) {
         return NULL;
     }
 
@@ -1259,7 +1260,7 @@ FS_func_chown(PyObject *self, PyObject *args, PyObject *kwargs)
 
     static char *kwlist[] = {"loop", "path", "uid", "gid", "callback", "data", NULL};
 
-    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!siiO|O:rmdir", kwlist, &LoopType, &loop, &path, &uid, &gid, &callback, &data)) {
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!siiO|O:chown", kwlist, &LoopType, &loop, &path, &uid, &gid, &callback, &data)) {
         return NULL;
     }
 
@@ -1326,7 +1327,7 @@ FS_func_fchown(PyObject *self, PyObject *args, PyObject *kwargs)
 
     static char *kwlist[] = {"loop", "fd", "uid", "gid", "callback", "data", NULL};
 
-    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!iiiO|O:rmdir", kwlist, &LoopType, &loop, &fd, &uid, &gid, &callback, &data)) {
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!iiiO|O:fchown", kwlist, &LoopType, &loop, &fd, &uid, &gid, &callback, &data)) {
         return NULL;
     }
 
