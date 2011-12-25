@@ -445,6 +445,58 @@ class FSTestOpen(common.UVTestCase):
         self.assertEqual(self.errorno, pyuv.errno.UV_ENOENT)
 
 
+class FSTestRead(common.UVTestCase):
+
+    def setUp(self):
+        self.loop = pyuv.Loop.default_loop()
+        with open(TEST_FILE, 'w') as f:
+            f.write('test1234567890')
+        self.file = open(TEST_FILE, 'r')
+
+    def tearDown(self):
+        self.file.close()
+        os.remove(TEST_FILE)
+
+    def read_cb(self, loop, data, result, errorno, read_data):
+        self.result = result
+        self.errorno = errorno
+        self.data = read_data
+
+    def test_read(self):
+        self.data = None
+        self.result = None
+        self.errorno = None
+        pyuv.fs.read(self.loop, self.file.fileno(), 4, -1, self.read_cb)
+        self.loop.run()
+        self.assertEqual(self.result, 4)
+        self.assertEqual(self.errorno, 0)
+        self.assertEqual(self.data, 'test')
+
+
+class FSTestWrite(common.UVTestCase):
+
+    def setUp(self):
+        self.loop = pyuv.Loop.default_loop()
+        self.file = open(TEST_FILE, 'w')
+
+    def tearDown(self):
+        os.remove(TEST_FILE)
+
+    def write_cb(self, loop, data, result, errorno):
+        self.file.close()
+        self.result = result
+        self.errorno = errorno
+
+    def test_write(self):
+        self.result = None
+        self.errorno = None
+        pyuv.fs.write(self.loop, self.file.fileno(), "TEST", -1, self.write_cb)
+        self.loop.run()
+        self.assertEqual(self.result, 4)
+        self.assertEqual(self.errorno, 0)
+        self.assertEqual(open(TEST_FILE, 'r').read(), "TEST")
+
+
 if __name__ == '__main__':
     unittest.main()
 

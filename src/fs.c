@@ -505,6 +505,79 @@ close_cb(uv_fs_t* req) {
 }
 
 
+static void
+read_cb(uv_fs_t* req) {
+    PyGILState_STATE gstate = PyGILState_Ensure();
+    ASSERT(req);
+    ASSERT(req->fs_type == UV_FS_READ);
+
+    fs_req_data_t *req_data = (fs_req_data_t*)(req->data);
+
+    PyObject *result, *errorno, *read_data;
+
+    result = PyInt_FromLong((long)req->result);
+    if (req->result < 0) {
+        errorno = PyInt_FromLong((long)req->errorno);
+        read_data = Py_None;
+        Py_INCREF(Py_None);
+    } else {
+        errorno = PyInt_FromLong(0);
+        read_data = PyString_FromStringAndSize(req_data->buf.base, req->result);
+    }
+
+    PyObject *cb_result = PyObject_CallFunctionObjArgs(req_data->callback, req_data->loop, req_data->data, result, errorno, read_data, NULL);
+    if (cb_result == NULL) {
+        PyErr_WriteUnraisable(req_data->callback);
+    }
+    Py_XDECREF(cb_result);
+
+    uv_fs_req_cleanup(req);
+    Py_DECREF(req_data->loop);
+    Py_DECREF(req_data->callback);
+    Py_DECREF(req_data->data);
+    PyMem_Free(req_data->buf.base);
+    PyMem_Free(req_data);
+    PyMem_Free(req);
+
+    PyGILState_Release(gstate);
+}
+
+
+static void
+write_cb(uv_fs_t* req) {
+    PyGILState_STATE gstate = PyGILState_Ensure();
+    ASSERT(req);
+    ASSERT(req->fs_type == UV_FS_WRITE);
+
+    fs_req_data_t *req_data = (fs_req_data_t*)(req->data);
+
+    PyObject *result, *errorno;
+
+    result = PyInt_FromLong((long)req->result);
+    if (req->result < 0) {
+        errorno = PyInt_FromLong((long)req->errorno);
+    } else {
+        errorno = PyInt_FromLong(0);
+    }
+
+    PyObject *cb_result = PyObject_CallFunctionObjArgs(req_data->callback, req_data->loop, req_data->data, result, errorno, NULL);
+    if (cb_result == NULL) {
+        PyErr_WriteUnraisable(req_data->callback);
+    }
+    Py_XDECREF(cb_result);
+
+    uv_fs_req_cleanup(req);
+    Py_DECREF(req_data->loop);
+    Py_DECREF(req_data->callback);
+    Py_DECREF(req_data->data);
+    PyMem_Free(req_data->buf.base);
+    PyMem_Free(req_data);
+    PyMem_Free(req);
+
+    PyGILState_Release(gstate);
+}
+
+
 static PyObject *
 stat_func(PyObject *self, PyObject *args, PyObject *kwargs, int type)
 {
@@ -1511,6 +1584,164 @@ error:
 }
 
 
+static PyObject *
+FS_func_read(PyObject *self, PyObject *args, PyObject *kwargs)
+{
+    int r;
+    int fd;
+    int length;
+    int offset;
+    char *buf_data = NULL;
+    Loop *loop;
+    PyObject *callback;
+    PyObject *data = Py_None;
+    uv_fs_t *fs_req = NULL;
+    fs_req_data_t *req_data = NULL;
+
+    static char *kwlist[] = {"loop", "fd", "length", "offset", "callback", "data", NULL};
+
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!iiiO|O:read", kwlist, &LoopType, &loop, &fd, &length, &offset, &callback, &data)) {
+        return NULL;
+    }
+
+    if (!PyCallable_Check(callback)) {
+        PyErr_SetString(PyExc_TypeError, "a callable is required");
+        return NULL;
+    }
+
+    fs_req = PyMem_Malloc(sizeof(uv_fs_t));
+    if (!fs_req) {
+        PyErr_NoMemory();
+        goto error;
+    }
+
+    req_data = PyMem_Malloc(sizeof(fs_req_data_t));
+    if (!req_data) {
+        PyErr_NoMemory();
+        goto error;
+    }
+
+    buf_data = PyMem_Malloc(length);
+    if (!buf_data) {
+        PyErr_NoMemory();
+        goto error;
+    }
+    memset(buf_data, 0, length);
+
+    Py_INCREF(loop);
+    Py_INCREF(callback);
+    Py_INCREF(data);
+
+    req_data->loop = loop;
+    req_data->callback = callback;
+    req_data->data = data;
+    req_data->buf = uv_buf_init(buf_data, length);
+
+    fs_req->data = (void *)req_data;
+    r = uv_fs_read(loop->uv_loop, fs_req, fd, req_data->buf.base, length, offset, read_cb);
+    if (r != 0) {
+        raise_uv_exception(loop, PyExc_FSError);
+        goto error;
+    }
+
+    Py_RETURN_NONE;
+
+error:
+    if (fs_req) {
+        PyMem_Free(fs_req);
+    }
+    if (req_data) {
+        Py_DECREF(loop);
+        Py_DECREF(callback);
+        Py_DECREF(data);
+        PyMem_Free(req_data);
+    }
+    if (buf_data) {
+        PyMem_Free(buf_data);
+    }
+    return NULL;
+}
+
+
+static PyObject *
+FS_func_write(PyObject *self, PyObject *args, PyObject *kwargs)
+{
+    int r;
+    int fd;
+    int offset;
+    char *write_data = NULL;
+    char *buf_data = NULL;
+    Loop *loop;
+    PyObject *callback;
+    PyObject *data = Py_None;
+    uv_fs_t *fs_req = NULL;
+    fs_req_data_t *req_data = NULL;
+
+    static char *kwlist[] = {"loop", "fd", "write_data", "offset", "callback", "data", NULL};
+
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!isiO|O:write", kwlist, &LoopType, &loop, &fd, &write_data, &offset, &callback, &data)) {
+        return NULL;
+    }
+
+    if (!PyCallable_Check(callback)) {
+        PyErr_SetString(PyExc_TypeError, "a callable is required");
+        return NULL;
+    }
+
+    fs_req = PyMem_Malloc(sizeof(uv_fs_t));
+    if (!fs_req) {
+        PyErr_NoMemory();
+        goto error;
+    }
+
+    req_data = PyMem_Malloc(sizeof(fs_req_data_t));
+    if (!req_data) {
+        PyErr_NoMemory();
+        goto error;
+    }
+
+    buf_data = (char *)PyMem_Malloc(strlen(write_data)+1);
+    if (!buf_data) {
+        PyErr_NoMemory();
+        goto error;
+    }
+    strcpy(buf_data, write_data);
+
+    Py_INCREF(loop);
+    Py_INCREF(callback);
+    Py_INCREF(data);
+
+    req_data->loop = loop;
+    req_data->callback = callback;
+    req_data->data = data;
+    req_data->buf = uv_buf_init(buf_data, strlen(buf_data));
+
+    fs_req->data = (void *)req_data;
+    r = uv_fs_write(loop->uv_loop, fs_req, fd, req_data->buf.base, req_data->buf.len, offset, write_cb);
+    if (r != 0) {
+        raise_uv_exception(loop, PyExc_FSError);
+        goto error;
+    }
+
+    Py_RETURN_NONE;
+
+error:
+    if (fs_req) {
+        PyMem_Free(fs_req);
+    }
+    if (req_data) {
+        Py_DECREF(loop);
+        Py_DECREF(callback);
+        Py_DECREF(data);
+        PyMem_Free(req_data);
+    }
+    if (buf_data) {
+        PyMem_Free(buf_data);
+    }
+    return NULL;
+}
+
+
 static PyMethodDef
 FS_methods[] = {
     { "stat", (PyCFunction)FS_func_stat, METH_VARARGS|METH_KEYWORDS, "stat" },
@@ -1529,6 +1760,8 @@ FS_methods[] = {
     { "fchown", (PyCFunction)FS_func_fchown, METH_VARARGS|METH_KEYWORDS, "Change file ownership." },
     { "open", (PyCFunction)FS_func_open, METH_VARARGS|METH_KEYWORDS, "Open file." },
     { "close", (PyCFunction)FS_func_close, METH_VARARGS|METH_KEYWORDS, "Close file." },
+    { "read", (PyCFunction)FS_func_read, METH_VARARGS|METH_KEYWORDS, "Read data from a file." },
+    { "write", (PyCFunction)FS_func_write, METH_VARARGS|METH_KEYWORDS, "Write data to a file." },
     { NULL }
 };
 
