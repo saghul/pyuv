@@ -578,6 +578,40 @@ write_cb(uv_fs_t* req) {
 }
 
 
+static void
+fsync_cb(uv_fs_t* req) {
+    PyGILState_STATE gstate = PyGILState_Ensure();
+    ASSERT(req);
+    ASSERT(req->fs_type == UV_FS_FSYNC || req->fs_type == UV_FS_FDATASYNC);
+
+    fs_req_data_t *req_data = (fs_req_data_t*)(req->data);
+
+    PyObject *result, *errorno;
+
+    result = PyInt_FromLong((long)req->result);
+    if (req->result < 0) {
+        errorno = PyInt_FromLong((long)req->errorno);
+    } else {
+        errorno = PyInt_FromLong(0);
+    }
+
+    PyObject *cb_result = PyObject_CallFunctionObjArgs(req_data->callback, req_data->loop, req_data->data, result, errorno, NULL);
+    if (cb_result == NULL) {
+        PyErr_WriteUnraisable(req_data->callback);
+    }
+    Py_XDECREF(cb_result);
+
+    uv_fs_req_cleanup(req);
+    Py_DECREF(req_data->loop);
+    Py_DECREF(req_data->callback);
+    Py_DECREF(req_data->data);
+    PyMem_Free(req_data);
+    PyMem_Free(req);
+
+    PyGILState_Release(gstate);
+}
+
+
 static PyObject *
 stat_func(PyObject *self, PyObject *args, PyObject *kwargs, int type)
 {
@@ -1742,6 +1776,136 @@ error:
 }
 
 
+static PyObject *
+FS_func_fsync(PyObject *self, PyObject *args, PyObject *kwargs)
+{
+    int r;
+    int fd;
+    Loop *loop;
+    PyObject *callback;
+    PyObject *data = Py_None;
+    uv_fs_t *fs_req = NULL;
+    fs_req_data_t *req_data = NULL;
+
+    static char *kwlist[] = {"loop", "fd", "callback", "data", NULL};
+
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!iO|O:fsync", kwlist, &LoopType, &loop, &fd, &callback, &data)) {
+        return NULL;
+    }
+
+    if (!PyCallable_Check(callback)) {
+        PyErr_SetString(PyExc_TypeError, "a callable is required");
+        return NULL;
+    }
+
+    fs_req = PyMem_Malloc(sizeof(uv_fs_t));
+    if (!fs_req) {
+        PyErr_NoMemory();
+        goto error;
+    }
+
+    req_data = PyMem_Malloc(sizeof(fs_req_data_t));
+    if (!req_data) {
+        PyErr_NoMemory();
+        goto error;
+    }
+
+    Py_INCREF(loop);
+    Py_INCREF(callback);
+    Py_INCREF(data);
+
+    req_data->loop = loop;
+    req_data->callback = callback;
+    req_data->data = data;
+
+    fs_req->data = (void *)req_data;
+    r = uv_fs_fsync(loop->uv_loop, fs_req, fd, fsync_cb);
+    if (r != 0) {
+        raise_uv_exception(loop, PyExc_FSError);
+        goto error;
+    }
+
+    Py_RETURN_NONE;
+
+error:
+    if (fs_req) {
+        PyMem_Free(fs_req);
+    }
+    if (req_data) {
+        Py_DECREF(loop);
+        Py_DECREF(callback);
+        Py_DECREF(data);
+        PyMem_Free(req_data);
+    }
+    return NULL;
+}
+
+
+static PyObject *
+FS_func_fdatasync(PyObject *self, PyObject *args, PyObject *kwargs)
+{
+    int r;
+    int fd;
+    Loop *loop;
+    PyObject *callback;
+    PyObject *data = Py_None;
+    uv_fs_t *fs_req = NULL;
+    fs_req_data_t *req_data = NULL;
+
+    static char *kwlist[] = {"loop", "fd", "callback", "data", NULL};
+
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!iO|O:fdatasync", kwlist, &LoopType, &loop, &fd, &callback, &data)) {
+        return NULL;
+    }
+
+    if (!PyCallable_Check(callback)) {
+        PyErr_SetString(PyExc_TypeError, "a callable is required");
+        return NULL;
+    }
+
+    fs_req = PyMem_Malloc(sizeof(uv_fs_t));
+    if (!fs_req) {
+        PyErr_NoMemory();
+        goto error;
+    }
+
+    req_data = PyMem_Malloc(sizeof(fs_req_data_t));
+    if (!req_data) {
+        PyErr_NoMemory();
+        goto error;
+    }
+
+    Py_INCREF(loop);
+    Py_INCREF(callback);
+    Py_INCREF(data);
+
+    req_data->loop = loop;
+    req_data->callback = callback;
+    req_data->data = data;
+
+    fs_req->data = (void *)req_data;
+    r = uv_fs_fdatasync(loop->uv_loop, fs_req, fd, fsync_cb);
+    if (r != 0) {
+        raise_uv_exception(loop, PyExc_FSError);
+        goto error;
+    }
+
+    Py_RETURN_NONE;
+
+error:
+    if (fs_req) {
+        PyMem_Free(fs_req);
+    }
+    if (req_data) {
+        Py_DECREF(loop);
+        Py_DECREF(callback);
+        Py_DECREF(data);
+        PyMem_Free(req_data);
+    }
+    return NULL;
+}
+
+
 static PyMethodDef
 FS_methods[] = {
     { "stat", (PyCFunction)FS_func_stat, METH_VARARGS|METH_KEYWORDS, "stat" },
@@ -1762,6 +1926,8 @@ FS_methods[] = {
     { "close", (PyCFunction)FS_func_close, METH_VARARGS|METH_KEYWORDS, "Close file." },
     { "read", (PyCFunction)FS_func_read, METH_VARARGS|METH_KEYWORDS, "Read data from a file." },
     { "write", (PyCFunction)FS_func_write, METH_VARARGS|METH_KEYWORDS, "Write data to a file." },
+    { "fsync", (PyCFunction)FS_func_fsync, METH_VARARGS|METH_KEYWORDS, "Sync all changes made to a file." },
+    { "fdatasync", (PyCFunction)FS_func_fdatasync, METH_VARARGS|METH_KEYWORDS, "Sync data changes made to a file." },
     { NULL }
 };
 

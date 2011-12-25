@@ -497,6 +497,36 @@ class FSTestWrite(common.UVTestCase):
         self.assertEqual(open(TEST_FILE, 'r').read(), "TEST")
 
 
+class FSTestFsync(common.UVTestCase):
+
+    def setUp(self):
+        self.loop = pyuv.Loop.default_loop()
+        self.file = open(TEST_FILE, 'w')
+
+    def tearDown(self):
+        os.remove(TEST_FILE)
+
+    def write_cb(self, loop, data, result, errorno):
+        self.assertEqual(result, 4)
+        self.assertEqual(errorno, 0)
+        pyuv.fs.fdatasync(self.loop, self.file.fileno(), self.fdatasync_cb)
+
+    def fdatasync_cb(self, loop, data, result, errorno):
+        self.assertNotEqual(result, -1)
+        self.assertEqual(errorno, 0)
+        pyuv.fs.fsync(self.loop, self.file.fileno(), self.fsync_cb)
+
+    def fsync_cb(self, loop, data, result, errorno):
+        self.assertNotEqual(result, -1)
+        self.assertEqual(errorno, 0)
+
+    def test_fsync(self):
+        pyuv.fs.write(self.loop, self.file.fileno(), "TEST", -1, self.write_cb)
+        self.loop.run()
+        self.file.close()
+        self.assertEqual(open(TEST_FILE, 'r').read(), "TEST")
+
+
 if __name__ == '__main__':
     unittest.main()
 
