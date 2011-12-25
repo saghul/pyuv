@@ -527,6 +527,41 @@ class FSTestFsync(common.UVTestCase):
         self.assertEqual(open(TEST_FILE, 'r').read(), "TEST")
 
 
+class FSTestFtruncate(common.UVTestCase):
+
+    def setUp(self):
+        self.loop = pyuv.Loop.default_loop()
+        self.file = open(TEST_FILE, 'w')
+        self.file.write("test-data")
+        self.file.flush()
+
+    def tearDown(self):
+        self.file.close()
+        os.remove(TEST_FILE)
+
+    def ftruncate_cb(self, loop, data, result, errorno):
+        self.result = result
+        self.errorno = errorno
+
+    def test_ftruncate1(self):
+        self.result = None
+        self.errorno = None
+        pyuv.fs.ftruncate(self.loop, self.file.fileno(), 4, self.ftruncate_cb)
+        self.loop.run()
+        self.assertEqual(self.result, 0)
+        self.assertEqual(self.errorno, 0)
+        self.assertEqual(open(TEST_FILE, 'r').read(), "test")
+
+    def test_ftruncate2(self):
+        self.result = None
+        self.errorno = None
+        pyuv.fs.ftruncate(self.loop, self.file.fileno(), 0, self.ftruncate_cb)
+        self.loop.run()
+        self.assertEqual(self.result, 0)
+        self.assertEqual(self.errorno, 0)
+        self.assertEqual(open(TEST_FILE, 'r').read(), "")
+
+
 if __name__ == '__main__':
     unittest.main()
 
