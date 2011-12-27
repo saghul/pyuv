@@ -2075,7 +2075,7 @@ FS_func_readdir(PyObject *self, PyObject *args, PyObject *kwargs)
 
     static char *kwlist[] = {"loop", "path", "flags", "callback", "data", NULL};
 
-    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!siO|O:ftruncate", kwlist, &LoopType, &loop, &path, &flags, &callback, &data)) {
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!siO|O:readdir", kwlist, &LoopType, &loop, &path, &flags, &callback, &data)) {
         return NULL;
     }
 
