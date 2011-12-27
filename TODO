@@ -2,14 +2,6 @@
   (what about the mallocs libuv does on its own?)
 
 - FS module with all filesystem related functions from libuv +  uv_fs_event
-    - close
-    - open
-    - read
-    - write
-    - readdir
-    - fsync
-    - fdatasync
-    - ftruncate
     - sendfile
     - utime
     - futime
@@ -24,4 +16,8 @@
 - Python 3 support
 
 - Test it on Windows (MinGW)
+
+- pid property to Process
+
+- better memory allocation strategy for environment (Process)
 
