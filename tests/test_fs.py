@@ -1,10 +1,9 @@
 
 import os
+import shutil
 import stat
 
 import common
-import unittest
-
 import pyuv
 
 
@@ -13,6 +12,7 @@ TEST_FILE = 'test_file_1234'
 TEST_FILE2 = 'test_file_1234_2'
 TEST_LINK = 'test_file_1234_link'
 TEST_DIR = 'test-dir'
+TEST_DIR2 = 'test-dir_2'
 BAD_DIR = 'test-dir-bad'
 
 class FSTestStat(common.UVTestCase):
@@ -562,6 +562,49 @@ class FSTestFtruncate(common.UVTestCase):
         self.assertEqual(open(TEST_FILE, 'r').read(), "")
 
 
+class FSTestReaddir(common.UVTestCase):
+
+    def setUp(self):
+        self.loop = pyuv.Loop.default_loop()
+        os.mkdir(TEST_DIR, 0755)
+        os.mkdir(os.path.join(TEST_DIR, TEST_DIR2), 0755)
+        with open(os.path.join(TEST_DIR, TEST_FILE), 'w') as f:
+            f.write('test')
+        with open(os.path.join(TEST_DIR, TEST_FILE2), 'w') as f:
+            f.write('test')
+
+    def tearDown(self):
+        shutil.rmtree(TEST_DIR)
+
+    def readdir_cb(self, loop, data, result, errorno, files):
+        self.result = result
+        self.errorno = errorno
+        self.files = files
+        print files
+
+    def test_bad_readdir(self):
+        self.result = None
+        self.errorno = None
+        self.files = None
+        pyuv.fs.readdir(self.loop, BAD_DIR, 0, self.readdir_cb)
+        self.loop.run()
+        self.assertEqual(self.result, -1)
+        self.assertEqual(self.errorno, pyuv.errno.UV_ENOENT)
+
+    def test_readdir(self):
+        self.result = None
+        self.errorno = None
+        self.files = None
+        pyuv.fs.readdir(self.loop, TEST_DIR, 0, self.readdir_cb)
+        self.loop.run()
+        self.assertNotEqual(self.result, -1)
+        self.assertEqual(self.errorno, 0)
+        self.assertTrue(TEST_FILE in self.files)
+        self.assertTrue(TEST_FILE2 in self.files)
+        self.assertTrue(TEST_DIR2 in self.files)
+
+
 if __name__ == '__main__':
+    import unittest
     unittest.main()
 

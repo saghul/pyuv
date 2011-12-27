@@ -646,6 +646,60 @@ ftruncate_cb(uv_fs_t* req) {
 }
 
 
+static void
+readdir_cb(uv_fs_t* req) {
+    PyGILState_STATE gstate = PyGILState_Ensure();
+    ASSERT(req);
+    ASSERT(req->fs_type == UV_FS_READDIR);
+
+    fs_req_data_t *req_data = (fs_req_data_t*)(req->data);
+
+    int r;
+    char *ptr;
+    PyObject *result, *errorno, *files, *item;
+
+    result = PyInt_FromLong((long)req->result);
+    if (req->result < 0) {
+        errorno = PyInt_FromLong((long)req->errorno);
+        files = Py_None;
+        Py_INCREF(Py_None);
+    } else {
+        errorno = PyInt_FromLong(0);
+        files = PyList_New(0);
+        if (!files) {
+            PyErr_NoMemory();
+            PyErr_WriteUnraisable(req_data->callback);
+            files = Py_None;
+            Py_INCREF(Py_None);
+        } else {
+            r = req->result;
+            ptr = req->ptr;
+            while (r--) {
+                item = PyString_FromString(ptr);
+                PyList_Append(files, item);
+                Py_DECREF(item);
+                ptr += strlen(ptr) + 1;
+            }
+        }
+    }
+
+    PyObject *cb_result = PyObject_CallFunctionObjArgs(req_data->callback, req_data->loop, req_data->data, result, errorno, files, NULL);
+    if (cb_result == NULL) {
+        PyErr_WriteUnraisable(req_data->callback);
+    }
+    Py_XDECREF(cb_result);
+
+    uv_fs_req_cleanup(req);
+    Py_DECREF(req_data->loop);
+    Py_DECREF(req_data->callback);
+    Py_DECREF(req_data->data);
+    PyMem_Free(req_data);
+    PyMem_Free(req);
+
+    PyGILState_Release(gstate);
+}
+
+
 static PyObject *
 stat_func(PyObject *self, PyObject *args, PyObject *kwargs, int type)
 {
@@ -2006,6 +2060,73 @@ error:
 }
 
 
+// Aapparently 'flags' doesn't do much (nothing on Windows) because libuv uses ptr from eio, instead of ptr2
+static PyObject *
+FS_func_readdir(PyObject *self, PyObject *args, PyObject *kwargs)
+{
+    int r;
+    int flags;
+    char *path;
+    Loop *loop;
+    PyObject *callback;
+    PyObject *data = Py_None;
+    uv_fs_t *fs_req = NULL;
+    fs_req_data_t *req_data = NULL;
+
+    static char *kwlist[] = {"loop", "path", "flags", "callback", "data", NULL};
+
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!siO|O:ftruncate", kwlist, &LoopType, &loop, &path, &flags, &callback, &data)) {
+        return NULL;
+    }
+
+    if (!PyCallable_Check(callback)) {
+        PyErr_SetString(PyExc_TypeError, "a callable is required");
+        return NULL;
+    }
+
+    fs_req = PyMem_Malloc(sizeof(uv_fs_t));
+    if (!fs_req) {
+        PyErr_NoMemory();
+        goto error;
+    }
+
+    req_data = PyMem_Malloc(sizeof(fs_req_data_t));
+    if (!req_data) {
+        PyErr_NoMemory();
+        goto error;
+    }
+
+    Py_INCREF(loop);
+    Py_INCREF(callback);
+    Py_INCREF(data);
+
+    req_data->loop = loop;
+    req_data->callback = callback;
+    req_data->data = data;
+
+    fs_req->data = (void *)req_data;
+    r = uv_fs_readdir(loop->uv_loop, fs_req, path, flags, readdir_cb);
+    if (r != 0) {
+        raise_uv_exception(loop, PyExc_FSError);
+        goto error;
+    }
+
+    Py_RETURN_NONE;
+
+error:
+    if (fs_req) {
+        PyMem_Free(fs_req);
+    }
+    if (req_data) {
+        Py_DECREF(loop);
+        Py_DECREF(callback);
+        Py_DECREF(data);
+        PyMem_Free(req_data);
+    }
+    return NULL;
+}
+
+
 static PyMethodDef
 FS_methods[] = {
     { "stat", (PyCFunction)FS_func_stat, METH_VARARGS|METH_KEYWORDS, "stat" },
@@ -2029,6 +2150,7 @@ FS_methods[] = {
     { "fsync", (PyCFunction)FS_func_fsync, METH_VARARGS|METH_KEYWORDS, "Sync all changes made to a file." },
     { "fdatasync", (PyCFunction)FS_func_fdatasync, METH_VARARGS|METH_KEYWORDS, "Sync data changes made to a file." },
     { "ftruncate", (PyCFunction)FS_func_ftruncate, METH_VARARGS|METH_KEYWORDS, "Truncate the contents of a file to the specified offset." },
+    { "readdir", (PyCFunction)FS_func_readdir, METH_VARARGS|METH_KEYWORDS, "List files from a directory." },
     { NULL }
 };
 
