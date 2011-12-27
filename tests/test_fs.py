@@ -580,7 +580,6 @@ class FSTestReaddir(common.UVTestCase):
         self.result = result
         self.errorno = errorno
         self.files = files
-        print files
 
     def test_bad_readdir(self):
         self.result = None
