@@ -1,7 +1,5 @@
 
 import common
-import unittest
-
 import pyuv
 
 
@@ -21,5 +19,6 @@ class PollTest(common.UVTestCase):
 
 
 if __name__ == '__main__':
+    import unittest
     unittest.main()
 

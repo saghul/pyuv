@@ -1,8 +1,7 @@
 
-import common
 import threading
-import unittest
 
+import common
 import pyuv
 
 
@@ -27,5 +26,6 @@ class AsyncTest(common.UVTestCase):
 
 
 if __name__ == '__main__':
+    import unittest
     unittest.main()
 

@@ -1,10 +1,9 @@
 
 import os
-import common
 import signal
 import threading
-import unittest
 
+import common
 import pyuv
 
 
@@ -43,5 +42,6 @@ class SignalTest(common.UVTestCase):
 
 
 if __name__ == '__main__':
+    import unittest
     unittest.main()
 

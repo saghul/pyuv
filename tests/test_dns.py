@@ -1,8 +1,7 @@
 
-import common
 import socket
-import unittest
 
+import common
 import pyuv
 
 
@@ -46,5 +45,6 @@ class DNSTest(common.UVTestCase):
 
 
 if __name__ == '__main__':
+    import unittest
     unittest.main()
 

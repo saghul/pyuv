@@ -1,8 +1,7 @@
 
 import os
-import common
-import unittest
 
+import common
 import pyuv
 
 
@@ -168,5 +167,6 @@ class ProcessTest(common.UVTestCase):
 
 
 if __name__ == '__main__':
+    import unittest
     unittest.main()
 

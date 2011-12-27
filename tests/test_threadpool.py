@@ -1,9 +1,8 @@
 
-import common
 import random
 import time
-import unittest
 
+import common
 import pyuv
 
 
@@ -26,5 +25,6 @@ class ThreadPoolTest(common.UVTestCase):
 
 
 if __name__ == '__main__':
+    import unittest
     unittest.main()
 

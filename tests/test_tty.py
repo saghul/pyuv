@@ -1,8 +1,7 @@
 
 import sys
-import common
-import unittest
 
+import common
 import pyuv
 
 
@@ -22,5 +21,6 @@ class TYTest(common.UVTestCase):
 
 
 if __name__ == '__main__':
+    import unittest
     unittest.main()
 
