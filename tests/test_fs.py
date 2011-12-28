@@ -603,6 +603,38 @@ class FSTestReaddir(common.UVTestCase):
         self.assertTrue(TEST_DIR2 in self.files)
 
 
+class FSTestSendfile(common.UVTestCase):
+
+    def setUp(self):
+        self.loop = pyuv.Loop.default_loop()
+        with open(TEST_FILE, 'w') as f:
+            f.write("begin\n")
+            os.lseek(f.fileno(), 65536, os.SEEK_CUR)
+            f.write("end\n")
+            f.flush()
+        self.file = open(TEST_FILE, 'r')
+        self.new_file = open(TEST_FILE2, 'w')
+
+    def tearDown(self):
+        self.file.close()
+        self.new_file.close()
+        os.remove(TEST_FILE)
+        os.remove(TEST_FILE2)
+
+    def sendfile_cb(self, loop, data, result, errorno):
+        self.result = result
+        self.errorno = errorno
+
+    def test_sendfile(self):
+        self.result = None
+        self.errorno = None
+        pyuv.fs.sendfile(self.loop, self.new_file.fileno(), self.file.fileno(), 0, 131072, self.sendfile_cb)
+        self.loop.run()
+        self.assertEqual(self.result, 65546)
+        self.assertEqual(self.errorno, 0)
+        self.assertEqual(open(TEST_FILE, 'r').read(), open(TEST_FILE2, 'r').read())
+
+
 if __name__ == '__main__':
     import unittest
     unittest.main()
