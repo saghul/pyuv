@@ -186,7 +186,7 @@ IOStream_func_close(IOStream *self, PyObject *args)
 {
     PyObject *callback = Py_None;
 
-    if (self->closed) {
+    if (!self->uv_handle) {
         PyErr_SetString(PyExc_IOStreamError, "IOStream is already closed");
         return NULL;
     }
@@ -206,8 +206,8 @@ IOStream_func_close(IOStream *self, PyObject *args)
     /* Increase refcount so that object is not removed before the callback is called */
     Py_INCREF(self);
 
-    self->closed = True;
     uv_close((uv_handle_t *)self->uv_handle, on_iostream_close);
+    self->uv_handle = NULL;
 
     Py_RETURN_NONE;
 }
@@ -221,7 +221,7 @@ IOStream_func_shutdown(IOStream *self, PyObject *args)
     uv_shutdown_t *req = NULL;
     iostream_req_data_t *req_data = NULL;
 
-    if (self->closed) {
+    if (!self->uv_handle) {
         PyErr_SetString(PyExc_IOStreamError, "IOStream is already closed");
         return NULL;
     }
@@ -277,7 +277,7 @@ IOStream_func_start_read(IOStream *self, PyObject *args, PyObject *kwargs)
     PyObject *tmp = NULL;
     PyObject *callback;
 
-    if (self->closed) {
+    if (!self->uv_handle) {
         PyErr_SetString(PyExc_IOStreamError, "IOStream is closed");
         return NULL;
     }
@@ -309,7 +309,7 @@ IOStream_func_start_read(IOStream *self, PyObject *args, PyObject *kwargs)
 static PyObject *
 IOStream_func_stop_read(IOStream *self, PyObject *args, PyObject *kwargs)
 {
-    if (self->closed) {
+    if (!self->uv_handle) {
         PyErr_SetString(PyExc_IOStreamError, "IOStream is closed");
         return NULL;
     }
@@ -341,7 +341,7 @@ IOStream_func_write(IOStream *self, PyObject *args)
     iostream_req_data_t *req_data = NULL;
     iostream_write_data_t *write_data = NULL;
 
-    if (self->closed) {
+    if (!self->uv_handle) {
         PyErr_SetString(PyExc_IOStreamError, "IOStream is closed");
         return NULL;
     }
@@ -468,7 +468,7 @@ IOStream_tp_init(IOStream *self, PyObject *args, PyObject *kwargs)
 {
     Loop *loop;
 
-    if (self->initialized) {
+    if (self->uv_handle) {
         PyErr_SetString(PyExc_IOStreamError, "Object already initialized");
         return -1;
     }
@@ -479,8 +479,6 @@ IOStream_tp_init(IOStream *self, PyObject *args, PyObject *kwargs)
 
     Py_INCREF(loop);
     self->loop = loop;
-
-    self->initialized = True;
 
     /* Subclasses MUST call the parent and initialize uv_stream */
 
@@ -495,8 +493,6 @@ IOStream_tp_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
     if (!self) {
         return NULL;
     }
-    self->initialized = False;
-    self->closed = False;
     self->uv_handle = NULL;
     return (PyObject *)self;
 }
@@ -527,8 +523,9 @@ IOStream_tp_clear(IOStream *self)
 static void
 IOStream_tp_dealloc(IOStream *self)
 {
-    if (!self->closed && self->uv_handle) {
+    if (self->uv_handle) {
         uv_close((uv_handle_t *)self->uv_handle, on_iostream_dealloc_close);
+        self->uv_handle = NULL;
     }
     Py_TYPE(self)->tp_clear((PyObject *)self);
     Py_TYPE(self)->tp_free((PyObject *)self);

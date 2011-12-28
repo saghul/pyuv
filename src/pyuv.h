@@ -59,8 +59,6 @@ typedef struct {
     PyObject *callback;
     PyObject *data;
     uv_async_t *uv_handle;
-    Bool initialized;
-    Bool closed;
 } Async;
 
 static PyTypeObject AsyncType;
@@ -73,8 +71,6 @@ typedef struct {
     PyObject *callback;
     PyObject *data;
     uv_timer_t *uv_handle;
-    Bool initialized;
-    Bool closed;
 } Timer;
 
 static PyTypeObject TimerType;
@@ -87,8 +83,6 @@ typedef struct {
     PyObject *callback;
     PyObject *data;
     uv_prepare_t *uv_handle;
-    Bool initialized;
-    Bool closed;
 } Prepare;
 
 static PyTypeObject PrepareType;
@@ -101,8 +95,6 @@ typedef struct {
     PyObject *callback;
     PyObject *data;
     uv_idle_t *uv_handle;
-    Bool initialized;
-    Bool closed;
 } Idle;
 
 static PyTypeObject IdleType;
@@ -115,8 +107,6 @@ typedef struct {
     PyObject *callback;
     PyObject *data;
     uv_check_t *uv_handle;
-    Bool initialized;
-    Bool closed;
 } Check;
 
 static PyTypeObject CheckType;
@@ -128,8 +118,6 @@ typedef struct {
     PyObject *on_close_cb;
     PyObject *data;
     uv_prepare_t *uv_handle;
-    Bool initialized;
-    Bool closed;
 } Signal;
 
 static PyTypeObject SignalType;
@@ -142,8 +130,6 @@ typedef struct {
     PyObject *on_close_cb;
     PyObject *data;
     uv_stream_t *uv_handle;
-    Bool initialized;
-    Bool closed;
 } IOStream;
 
 static PyTypeObject IOStreamType;
@@ -179,8 +165,6 @@ typedef struct {
     PyObject *on_close_cb;
     PyObject *data;
     uv_udp_t *uv_handle;
-    Bool initialized;
-    Bool closed;
 } UDP;
 
 static PyTypeObject UDPType;

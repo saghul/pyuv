@@ -72,7 +72,7 @@ Async_func_send(Async *self, PyObject *args)
     PyObject *tmp = NULL;
     PyObject *callback;
 
-    if (self->closed) {
+    if (!self->uv_handle) {
         PyErr_SetString(PyExc_AsyncError, "async is closed");
         return NULL;
     }
@@ -106,7 +106,7 @@ Async_func_close(Async *self, PyObject *args)
 {
     PyObject *callback = Py_None;
 
-    if (self->closed) {
+    if (!self->uv_handle) {
         PyErr_SetString(PyExc_AsyncError, "Async is already closed");
         return NULL;
     }
@@ -126,8 +126,8 @@ Async_func_close(Async *self, PyObject *args)
     /* Increase refcount so that object is not removed before the callback is called */
     Py_INCREF(self);
 
-    self->closed = True;
     uv_close((uv_handle_t *)self->uv_handle, on_async_close);
+    self->uv_handle = NULL;
 
     Py_RETURN_NONE;
 }
@@ -140,7 +140,7 @@ Async_tp_init(Async *self, PyObject *args, PyObject *kwargs)
     Loop *loop;
     uv_async_t *uv_async = NULL;
 
-    if (self->initialized) {
+    if (self->uv_handle) {
         PyErr_SetString(PyExc_AsyncError, "Object already initialized");
         return -1;
     }
@@ -168,8 +168,6 @@ Async_tp_init(Async *self, PyObject *args, PyObject *kwargs)
     uv_async->data = (void *)self;
     self->uv_handle = uv_async;
 
-    self->initialized = True;
-
     return 0;
 }
 
@@ -181,8 +179,6 @@ Async_tp_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
     if (!self) {
         return NULL;
     }
-    self->initialized = False;
-    self->closed = False;
     self->uv_handle = NULL;
     return (PyObject *)self;
 }
@@ -213,8 +209,9 @@ Async_tp_clear(Async *self)
 static void
 Async_tp_dealloc(Async *self)
 {
-    if (!self->closed && self->uv_handle) {
+    if (self->uv_handle) {
         uv_close((uv_handle_t *)self->uv_handle, on_async_dealloc_close);
+        self->uv_handle = NULL;
     }
     Async_tp_clear(self);
     Py_TYPE(self)->tp_free((PyObject *)self);

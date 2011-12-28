@@ -76,7 +76,7 @@ Timer_func_start(Timer *self, PyObject *args, PyObject *kwargs)
 
     static char *kwlist[] = {"callback", "timeout", "repeat", NULL};
 
-    if (self->closed) {
+    if (!self->uv_handle) {
         PyErr_SetString(PyExc_TimerError, "Timer is closed");
         return NULL;
     }
@@ -118,7 +118,7 @@ Timer_func_start(Timer *self, PyObject *args, PyObject *kwargs)
 static PyObject *
 Timer_func_stop(Timer *self)
 {
-    if (self->closed) {
+    if (!self->uv_handle) {
         PyErr_SetString(PyExc_TimerError, "Timer is closed");
         return NULL;
     }
@@ -136,7 +136,7 @@ Timer_func_stop(Timer *self)
 static PyObject *
 Timer_func_again(Timer *self)
 {
-    if (self->closed) {
+    if (!self->uv_handle) {
         PyErr_SetString(PyExc_TimerError, "Timer is closed");
         return NULL;
     }
@@ -156,7 +156,7 @@ Timer_func_close(Timer *self, PyObject *args)
 {
     PyObject *callback = Py_None;
 
-    if (self->closed) {
+    if (!self->uv_handle) {
         PyErr_SetString(PyExc_TimerError, "Timer is already closed");
         return NULL;
     }
@@ -176,8 +176,8 @@ Timer_func_close(Timer *self, PyObject *args)
     /* Increase refcount so that object is not removed before the callback is called */
     Py_INCREF(self);
 
-    self->closed = True;
     uv_close((uv_handle_t *)self->uv_handle, on_timer_close);
+    self->uv_handle = NULL;
 
     Py_RETURN_NONE;
 }
@@ -186,14 +186,18 @@ Timer_func_close(Timer *self, PyObject *args)
 static PyObject *
 Timer_active_get(Timer *self, void *closure)
 {
-    return PyBool_FromLong((long)uv_is_active((uv_handle_t *)self->uv_handle));
+    if (!self->uv_handle) {
+        Py_RETURN_FALSE;
+    } else {
+        return PyBool_FromLong((long)uv_is_active((uv_handle_t *)self->uv_handle));
+    }
 }
 
 
 static PyObject *
 Timer_repeat_get(Timer *self, void *closure)
 {
-    if (self->closed) {
+    if (!self->uv_handle) {
         PyErr_SetString(PyExc_TimerError, "Timer is closed");
         return NULL;
     }
@@ -207,7 +211,7 @@ Timer_repeat_set(Timer *self, PyObject *value, void *closure)
 {
     double repeat;
 
-    if (self->closed) {
+    if (!self->uv_handle) {
         PyErr_SetString(PyExc_TimerError, "Timer is closed");
         return -1;
     }
@@ -240,7 +244,7 @@ Timer_tp_init(Timer *self, PyObject *args, PyObject *kwargs)
     Loop *loop;
     uv_timer_t *uv_timer = NULL;
 
-    if (self->initialized) {
+    if (self->uv_handle) {
         PyErr_SetString(PyExc_TimerError, "Object already initialized");
         return -1;
     }
@@ -268,8 +272,6 @@ Timer_tp_init(Timer *self, PyObject *args, PyObject *kwargs)
     uv_timer->data = (void *)self;
     self->uv_handle = uv_timer;
 
-    self->initialized = True;
-
     return 0;
 }
 
@@ -281,8 +283,6 @@ Timer_tp_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
     if (!self) {
         return NULL;
     }
-    self->initialized = False;
-    self->closed = False;
     self->uv_handle = NULL;
     return (PyObject *)self;
 }
@@ -313,7 +313,7 @@ Timer_tp_clear(Timer *self)
 static void
 Timer_tp_dealloc(Timer *self)
 {
-    if (!self->closed && self->uv_handle) {
+    if (self->uv_handle) {
         uv_close((uv_handle_t *)self->uv_handle, on_timer_dealloc_close);
     }
     Timer_tp_clear(self);

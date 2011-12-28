@@ -88,7 +88,7 @@ TCP_func_bind(TCP *self, PyObject *args)
 
     IOStream *base = (IOStream *)self;
 
-    if (base->closed) {
+    if (!base->uv_handle) {
         PyErr_SetString(PyExc_TCPError, "already closed");
         return NULL;
     }
@@ -136,7 +136,7 @@ TCP_func_listen(TCP *self, PyObject *args)
 
     IOStream *base = (IOStream *)self;
 
-    if (base->closed) {
+    if (!base->uv_handle) {
         PyErr_SetString(PyExc_TCPError, "already closed");
         return NULL;
     }
@@ -177,7 +177,7 @@ TCP_func_accept(TCP *self)
 
     IOStream *base = (IOStream *)self;
 
-    if (base->closed) {
+    if (!base->uv_handle) {
         PyErr_SetString(PyExc_TCPError, "already closed");
         return NULL;
     }
@@ -211,7 +211,7 @@ TCP_func_connect(TCP *self, PyObject *args, PyObject *kwargs)
 
     IOStream *base = (IOStream *)self;
 
-    if (base->closed) {
+    if (!base->uv_handle) {
         PyErr_SetString(PyExc_TCPError, "closed");
         return NULL;
     }
@@ -300,7 +300,7 @@ TCP_func_getsockname(TCP *self)
 
     IOStream *base = (IOStream *)self;
 
-    if (base->closed) {
+    if (!base->uv_handle) {
         PyErr_SetString(PyExc_TCPError, "closed");
         return NULL;
     }
@@ -340,7 +340,7 @@ TCP_func_getpeername(TCP *self)
 
     IOStream *base = (IOStream *)self;
 
-    if (base->closed) {
+    if (!base->uv_handle) {
         PyErr_SetString(PyExc_TCPError, "closed");
         return NULL;
     }
@@ -376,7 +376,7 @@ TCP_func_nodelay(TCP *self, PyObject *args)
 
     IOStream *base = (IOStream *)self;
 
-    if (base->closed) {
+    if (!base->uv_handle) {
         PyErr_SetString(PyExc_TCPError, "already closed");
         return NULL;
     }
@@ -404,7 +404,7 @@ TCP_func_keepalive(TCP *self, PyObject *args)
 
     IOStream *base = (IOStream *)self;
 
-    if (base->closed) {
+    if (!base->uv_handle) {
         PyErr_SetString(PyExc_TCPError, "already closed");
         return NULL;
     }
@@ -440,7 +440,7 @@ TCP_func_simultaneous_accepts(TCP *self, PyObject *args)
 
     IOStream *base = (IOStream *)self;
 
-    if (base->closed) {
+    if (!base->uv_handle) {
         PyErr_SetString(PyExc_TCPError, "already closed");
         return NULL;
     }

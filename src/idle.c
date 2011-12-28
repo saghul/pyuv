@@ -73,7 +73,7 @@ Idle_func_start(Idle *self, PyObject *args, PyObject *kwargs)
     PyObject *tmp = NULL;
     PyObject *callback;
 
-    if (self->closed) {
+    if (!self->uv_handle) {
         PyErr_SetString(PyExc_IdleError, "Idle is closed");
         return NULL;
     }
@@ -105,7 +105,7 @@ Idle_func_start(Idle *self, PyObject *args, PyObject *kwargs)
 static PyObject *
 Idle_func_stop(Idle *self)
 {
-    if (self->closed) {
+    if (!self->uv_handle) {
         PyErr_SetString(PyExc_IdleError, "Idle is already closed");
         return NULL;
     }
@@ -125,7 +125,7 @@ Idle_func_close(Idle *self, PyObject *args)
 {
     PyObject *callback = Py_None;
 
-    if (self->closed) {
+    if (!self->uv_handle) {
         PyErr_SetString(PyExc_IdleError, "Idle is already closed");
         return NULL;
     }
@@ -145,8 +145,8 @@ Idle_func_close(Idle *self, PyObject *args)
     /* Increase refcount so that object is not removed before the callback is called */
     Py_INCREF(self);
 
-    self->closed = True;
     uv_close((uv_handle_t *)self->uv_handle, on_idle_close);
+    self->uv_handle = NULL;
 
     Py_RETURN_NONE;
 }
@@ -166,7 +166,7 @@ Idle_tp_init(Idle *self, PyObject *args, PyObject *kwargs)
     Loop *loop;
     uv_idle_t *uv_idle = NULL;
 
-    if (self->initialized) {
+    if (self->uv_handle) {
         PyErr_SetString(PyExc_IdleError, "Object already initialized");
         return -1;
     }
@@ -194,8 +194,6 @@ Idle_tp_init(Idle *self, PyObject *args, PyObject *kwargs)
     uv_idle->data = (void *)self;
     self->uv_handle = uv_idle;
 
-    self->initialized = True;
-
     return 0;
 }
 
@@ -207,8 +205,6 @@ Idle_tp_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
     if (!self) {
         return NULL;
     }
-    self->initialized = False;
-    self->closed = False;
     self->uv_handle = NULL;
     return (PyObject *)self;
 }
@@ -239,8 +235,9 @@ Idle_tp_clear(Idle *self)
 static void
 Idle_tp_dealloc(Idle *self)
 {
-    if (!self->closed && self->uv_handle) {
+    if (self->uv_handle) {
         uv_close((uv_handle_t *)self->uv_handle, on_idle_dealloc_close);
+        self->uv_handle = NULL;
     }
     Idle_tp_clear(self);
     Py_TYPE(self)->tp_free((PyObject *)self);

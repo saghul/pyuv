@@ -173,7 +173,7 @@ UDP_func_bind(UDP *self, PyObject *args)
     struct in_addr addr4;
     struct in6_addr addr6;
 
-    if (self->closed) {
+    if (!self->uv_handle) {
         PyErr_SetString(PyExc_UDPError, "closed");
         return NULL;
     }
@@ -218,7 +218,7 @@ UDP_func_start_recv(UDP *self, PyObject *args)
     PyObject *tmp = NULL;
     PyObject *callback;
 
-    if (self->closed) {
+    if (!self->uv_handle) {
         PyErr_SetString(PyExc_UDPError, "closed");
         return NULL;
     }
@@ -252,7 +252,7 @@ UDP_func_stop_recv(UDP *self)
 {
     int r = 0;
 
-    if (self->closed) {
+    if (!self->uv_handle) {
         PyErr_SetString(PyExc_UDPError, "closed");
         return NULL;
     }
@@ -289,7 +289,7 @@ UDP_func_send(UDP *self, PyObject *args)
     PyObject *address_tuple;
     PyObject *callback = Py_None;
 
-    if (self->closed) {
+    if (!self->uv_handle) {
         PyErr_SetString(PyExc_UDPError, "closed");
         return NULL;
     }
@@ -434,7 +434,7 @@ UDP_func_set_membership(UDP *self, PyObject *args)
     char *interface_address = NULL;
     int membership;
 
-    if (self->closed) {
+    if (!self->uv_handle) {
         PyErr_SetString(PyExc_UDPError, "closed");
         return NULL;
     }
@@ -458,7 +458,7 @@ UDP_func_close(UDP *self, PyObject *args)
 {
     PyObject *callback = Py_None;
 
-    if (self->closed) {
+    if (!self->uv_handle) {
         PyErr_SetString(PyExc_UDPError, "UDP is already closed");
         return NULL;
     }
@@ -478,8 +478,8 @@ UDP_func_close(UDP *self, PyObject *args)
     /* Increase refcount so that object is not removed before the callback is called */
     Py_INCREF(self);
 
-    self->closed = True;
     uv_close((uv_handle_t *)self->uv_handle, on_udp_close);
+    self->uv_handle = NULL;
 
     Py_RETURN_NONE;
 }
@@ -496,7 +496,7 @@ UDP_func_getsockname(UDP *self)
     char ip6[INET6_ADDRSTRLEN];
     int namelen = sizeof(sockname);
 
-    if (self->closed) {
+    if (!self->uv_handle) {
         PyErr_SetString(PyExc_UDPError, "closed");
         return NULL;
     }
@@ -531,7 +531,7 @@ UDP_tp_init(UDP *self, PyObject *args, PyObject *kwargs)
     Loop *loop;
     uv_udp_t *uv_udp_handle = NULL;
 
-    if (self->initialized) {
+    if (self->uv_handle) {
         PyErr_SetString(PyExc_UDPError, "Object already initialized");
         return -1;
     }
@@ -558,8 +558,6 @@ UDP_tp_init(UDP *self, PyObject *args, PyObject *kwargs)
     uv_udp_handle->data = (void *)self;
     self->uv_handle = uv_udp_handle;
 
-    self->initialized = True;
-
     return 0;
 }
 
@@ -571,8 +569,6 @@ UDP_tp_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
     if (!self) {
         return NULL;
     }
-    self->initialized = False;
-    self->closed = False;
     self->uv_handle = NULL;
     return (PyObject *)self;
 }
@@ -601,8 +597,9 @@ UDP_tp_clear(UDP *self)
 static void
 UDP_tp_dealloc(UDP *self)
 {
-    if (!self->closed && self->uv_handle) {
+    if (self->uv_handle) {
         uv_close((uv_handle_t *)self->uv_handle, on_udp_dealloc_close);
+        self->uv_handle = NULL;
     }
     UDP_tp_clear(self);
     Py_TYPE(self)->tp_free((PyObject *)self);

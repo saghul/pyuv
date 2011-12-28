@@ -73,7 +73,7 @@ Prepare_func_start(Prepare *self, PyObject *args, PyObject *kwargs)
     PyObject *tmp = NULL;
     PyObject *callback;
 
-    if (self->closed) {
+    if (!self->uv_handle) {
         PyErr_SetString(PyExc_PrepareError, "Prepare is closed");
         return NULL;
     }
@@ -105,7 +105,7 @@ Prepare_func_start(Prepare *self, PyObject *args, PyObject *kwargs)
 static PyObject *
 Prepare_func_stop(Prepare *self)
 {
-    if (self->closed) {
+    if (!self->uv_handle) {
         PyErr_SetString(PyExc_PrepareError, "Prepare is already closed");
         return NULL;
     }
@@ -125,7 +125,7 @@ Prepare_func_close(Prepare *self, PyObject *args)
 {
     PyObject *callback = Py_None;
 
-    if (self->closed) {
+    if (!self->uv_handle) {
         PyErr_SetString(PyExc_PrepareError, "Prepare is already closed");
         return NULL;
     }
@@ -145,8 +145,8 @@ Prepare_func_close(Prepare *self, PyObject *args)
     /* Increase refcount so that object is not removed before the callback is called */
     Py_INCREF(self);
 
-    self->closed = True;
     uv_close((uv_handle_t *)self->uv_handle, on_prepare_close);
+    self->uv_handle = NULL;
 
     Py_RETURN_NONE;
 }
@@ -166,7 +166,7 @@ Prepare_tp_init(Prepare *self, PyObject *args, PyObject *kwargs)
     Loop *loop;
     uv_prepare_t *uv_prepare = NULL;
 
-    if (self->initialized) {
+    if (self->uv_handle) {
         PyErr_SetString(PyExc_PrepareError, "Object already initialized");
         return -1;
     }
@@ -194,8 +194,6 @@ Prepare_tp_init(Prepare *self, PyObject *args, PyObject *kwargs)
     uv_prepare->data = (void *)self;
     self->uv_handle = uv_prepare;
 
-    self->initialized = True;
-
     return 0;
 }
 
@@ -207,8 +205,6 @@ Prepare_tp_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
     if (!self) {
         return NULL;
     }
-    self->initialized = False;
-    self->closed = False;
     self->uv_handle = NULL;
     return (PyObject *)self;
 }
@@ -239,8 +235,9 @@ Prepare_tp_clear(Prepare *self)
 static void
 Prepare_tp_dealloc(Prepare *self)
 {
-    if (!self->closed && self->uv_handle) {
+    if (self->uv_handle) {
         uv_close((uv_handle_t *)self->uv_handle, on_prepare_dealloc_close);
+        self->uv_handle = NULL;
     }
     Prepare_tp_clear(self);
     Py_TYPE(self)->tp_free((PyObject *)self);

@@ -71,7 +71,7 @@ on_signal_callback(uv_prepare_t *handle, int status)
 static PyObject *
 Signal_func_start(Signal *self)
 {
-    if (self->closed) {
+    if (!self->uv_handle) {
         PyErr_SetString(PyExc_SignalError, "Signal is closed");
         return NULL;
     }
@@ -89,7 +89,7 @@ Signal_func_start(Signal *self)
 static PyObject *
 Signal_func_stop(Signal *self)
 {
-    if (self->closed) {
+    if (!self->uv_handle) {
         PyErr_SetString(PyExc_SignalError, "Signal is already closed");
         return NULL;
     }
@@ -109,7 +109,7 @@ Signal_func_close(Signal *self, PyObject *args)
 {
     PyObject *callback = Py_None;
 
-    if (self->closed) {
+    if (!self->uv_handle) {
         PyErr_SetString(PyExc_SignalError, "Signal is already closed");
         return NULL;
     }
@@ -129,8 +129,8 @@ Signal_func_close(Signal *self, PyObject *args)
     /* Increase refcount so that object is not removed before the callback is called */
     Py_INCREF(self);
 
-    self->closed = True;
     uv_close((uv_handle_t *)self->uv_handle, on_signal_close);
+    self->uv_handle = NULL;
 
     Py_RETURN_NONE;
 }
@@ -150,7 +150,7 @@ Signal_tp_init(Signal *self, PyObject *args, PyObject *kwargs)
     Loop *loop;
     uv_prepare_t *uv_prepare = NULL;
 
-    if (self->initialized) {
+    if (self->uv_handle) {
         PyErr_SetString(PyExc_SignalError, "Object already initialized");
         return -1;
     }
@@ -178,8 +178,6 @@ Signal_tp_init(Signal *self, PyObject *args, PyObject *kwargs)
     uv_prepare->data = (void *)self;
     self->uv_handle = uv_prepare;
 
-    self->initialized = True;
-
     return 0;
 }
 
@@ -191,8 +189,6 @@ Signal_tp_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
     if (!self) {
         return NULL;
     }
-    self->initialized = False;
-    self->closed = False;
     self->uv_handle = NULL;
     return (PyObject *)self;
 }
@@ -221,8 +217,9 @@ Signal_tp_clear(Signal *self)
 static void
 Signal_tp_dealloc(Signal *self)
 {
-    if (!self->closed && self->uv_handle) {
+    if (self->uv_handle) {
         uv_close((uv_handle_t *)self->uv_handle, on_signal_dealloc_close);
+        self->uv_handle = NULL;
     }
     Signal_tp_clear(self);
     Py_TYPE(self)->tp_free((PyObject *)self);

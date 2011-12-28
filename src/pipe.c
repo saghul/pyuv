@@ -84,7 +84,7 @@ Pipe_func_bind(Pipe *self, PyObject *args)
 
     IOStream *base = (IOStream *)self;
 
-    if (base->closed) {
+    if (!base->uv_handle) {
         PyErr_SetString(PyExc_PipeError, "already closed");
         return NULL;
     }
@@ -113,7 +113,7 @@ Pipe_func_listen(Pipe *self, PyObject *args)
 
     IOStream *base = (IOStream *)self;
 
-    if (base->closed) {
+    if (!base->uv_handle) {
         PyErr_SetString(PyExc_PipeError, "already closed");
         return NULL;
     }
@@ -154,7 +154,7 @@ Pipe_func_accept(Pipe *self)
 
     IOStream *base = (IOStream *)self;
 
-    if (base->closed) {
+    if (!base->uv_handle) {
         PyErr_SetString(PyExc_PipeError, "already closed");
         return NULL;
     }
@@ -182,7 +182,7 @@ Pipe_func_connect(Pipe *self, PyObject *args, PyObject *kwargs)
 
     IOStream *base = (IOStream *)self;
 
-    if (base->closed) {
+    if (!base->uv_handle) {
         PyErr_SetString(PyExc_PipeError, "closed");
         return NULL;
     }
@@ -239,7 +239,7 @@ Pipe_func_open(Pipe *self, PyObject *args)
 
     IOStream *base = (IOStream *)self;
 
-    if (base->closed) {
+    if (!base->uv_handle) {
         PyErr_SetString(PyExc_PipeError, "closed");
         return NULL;
     }
@@ -262,7 +262,7 @@ Pipe_func_pending_instances(Pipe *self, PyObject *args)
 
     IOStream *base = (IOStream *)self;
 
-    if (base->closed) {
+    if (!base->uv_handle) {
         PyErr_SetString(PyExc_PipeError, "closed");
         return NULL;
     }

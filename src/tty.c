@@ -10,7 +10,7 @@ TTY_func_set_mode(TTY *self, PyObject *args)
 
     IOStream *base = (IOStream *)self;
 
-    if (base->closed) {
+    if (!base->uv_handle) {
         PyErr_SetString(PyExc_TTYError, "already closed");
         return NULL;
     }
@@ -45,7 +45,7 @@ TTY_func_get_winsize(TTY *self)
 
     IOStream *base = (IOStream *)self;
 
-    if (base->closed) {
+    if (!base->uv_handle) {
         PyErr_SetString(PyExc_TTYError, "already closed");
         return NULL;
     }
@@ -66,12 +66,11 @@ TTY_tp_init(TTY *self, PyObject *args, PyObject *kwargs)
     int fd;
     int r = 0;
     Loop *loop;
-    PyObject *tmp = NULL;
     uv_tty_t *uv_stream;
 
     IOStream *base = (IOStream *)self;
 
-    if (base->initialized) {
+    if (base->uv_handle) {
         PyErr_SetString(PyExc_IOStreamError, "Object already initialized");
         return -1;
     }
@@ -85,12 +84,8 @@ TTY_tp_init(TTY *self, PyObject *args, PyObject *kwargs)
         return -1;
     }
 
-    tmp = (PyObject *)base->loop;
     Py_INCREF(loop);
     base->loop = loop;
-    Py_XDECREF(tmp);
-
-    base->initialized = True;
 
     uv_stream = PyMem_Malloc(sizeof(uv_tty_t));
     if (!uv_stream) {

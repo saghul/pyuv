@@ -73,7 +73,7 @@ Check_func_start(Check *self, PyObject *args, PyObject *kwargs)
     PyObject *tmp = NULL;
     PyObject *callback;
 
-    if (self->closed) {
+    if (!self->uv_handle) {
         PyErr_SetString(PyExc_CheckError, "Check is closed");
         return NULL;
     }
@@ -105,7 +105,7 @@ Check_func_start(Check *self, PyObject *args, PyObject *kwargs)
 static PyObject *
 Check_func_stop(Check *self)
 {
-    if (self->closed) {
+    if (!self->uv_handle) {
         PyErr_SetString(PyExc_CheckError, "Check is already closed");
         return NULL;
     }
@@ -125,7 +125,7 @@ Check_func_close(Check *self, PyObject *args)
 {
     PyObject *callback = Py_None;
 
-    if (self->closed) {
+    if (!self->uv_handle) {
         PyErr_SetString(PyExc_CheckError, "Check is already closed");
         return NULL;
     }
@@ -145,8 +145,8 @@ Check_func_close(Check *self, PyObject *args)
     /* Increase refcount so that object is not removed before the callback is called */
     Py_INCREF(self);
 
-    self->closed = True;
     uv_close((uv_handle_t *)self->uv_handle, on_check_close);
+    self->uv_handle = NULL;
 
     Py_RETURN_NONE;
 }
@@ -166,7 +166,7 @@ Check_tp_init(Check *self, PyObject *args, PyObject *kwargs)
     Loop *loop;
     uv_check_t *uv_check = NULL;
 
-    if (self->initialized) {
+    if (self->uv_handle) {
         PyErr_SetString(PyExc_CheckError, "Object already initialized");
         return -1;
     }
@@ -194,8 +194,6 @@ Check_tp_init(Check *self, PyObject *args, PyObject *kwargs)
     uv_check->data = (void *)self;
     self->uv_handle = uv_check;
 
-    self->initialized = True;
-
     return 0;
 }
 
@@ -207,8 +205,6 @@ Check_tp_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
     if (!self) {
         return NULL;
     }
-    self->initialized = False;
-    self->closed = False;
     self->uv_handle = NULL;
     return (PyObject *)self;
 }
@@ -239,8 +235,9 @@ Check_tp_clear(Check *self)
 static void
 Check_tp_dealloc(Check *self)
 {
-    if (!self->closed && self->uv_handle) {
+    if (self->uv_handle) {
         uv_close((uv_handle_t *)self->uv_handle, on_check_dealloc_close);
+        self->uv_handle = NULL;
     }
     Check_tp_clear(self);
     Py_TYPE(self)->tp_free((PyObject *)self);
