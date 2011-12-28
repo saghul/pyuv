@@ -315,6 +315,16 @@ Process_func_close(Process *self, PyObject *args)
 }
 
 
+static PyObject *
+Process_pid_get(Process *self, void *closure)
+{
+    if (!self->uv_handle) {
+        Py_RETURN_NONE;
+    }
+    return PyInt_FromLong((long)self->uv_handle->pid);
+}
+
+
 static int
 Process_tp_init(Process *self, PyObject *args, PyObject *kwargs)
 {
@@ -424,6 +434,12 @@ static PyMemberDef Process_tp_members[] = {
 };
 
 
+static PyGetSetDef Process_tp_getsets[] = {
+    {"pid", (getter)Process_pid_get, NULL, "Process ID", NULL},
+    {NULL}
+};
+
+
 static PyTypeObject ProcessType = {
     PyVarObject_HEAD_INIT(NULL, 0)
     "pyuv.Process",                                                 /*tp_name*/
@@ -454,7 +470,7 @@ static PyTypeObject ProcessType = {
     0,                                                              /*tp_iternext*/
     Process_tp_methods,                                             /*tp_methods*/
     Process_tp_members,                                             /*tp_members*/
-    0,                                                              /*tp_getsets*/
+    Process_tp_getsets,                                             /*tp_getsets*/
     0,                                                              /*tp_base*/
     0,                                                              /*tp_dict*/
     0,                                                              /*tp_descr_get*/

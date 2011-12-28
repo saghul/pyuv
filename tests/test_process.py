@@ -19,9 +19,11 @@ class ProcessTest(common.UVTestCase):
         loop = pyuv.Loop.default_loop()
         proc = pyuv.Process(loop)
         proc.spawn(file="./proc_basic.py", exit_callback=proc_exit_cb)
+        pid = proc.pid
         loop.run()
         self.assertEqual(self.exit_cb_called, 1)
         self.assertEqual(self.close_cb_called, 1)
+        self.assertNotEqual(pid, None)
 
     def test_process_cwd(self):
         self.exit_cb_called = 0
