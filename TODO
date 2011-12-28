@@ -14,5 +14,3 @@
 
 - Test it on Windows (MinGW)
 
-- better memory allocation strategy for environment (Process)
-

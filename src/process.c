@@ -88,6 +88,7 @@ Process_func_spawn(Process *self, PyObject *args, PyObject *kwargs)
     char *tmp_str;
     char *key_str;
     char *value_str;
+    char **ptr = NULL;
     char **process_args = NULL;
     char **process_env = NULL;
     Py_ssize_t i, n, pos;
@@ -101,6 +102,7 @@ Process_func_spawn(Process *self, PyObject *args, PyObject *kwargs)
     PyObject *stdout_pipe = Py_None;
     PyObject *stderr_pipe = Py_None;
     uv_process_t *uv_process;
+    uv_process_options_t options;
 
     static char *kwlist[] = {"file", "exit_callback", "args", "env", "cwd", "stdin", "stdout", "stderr", NULL};
 
@@ -143,9 +145,9 @@ Process_func_spawn(Process *self, PyObject *args, PyObject *kwargs)
     self->stderr_pipe = stderr_pipe;
     Py_XDECREF(tmp);
 
-    memset(&(self->process_options), 0, sizeof(uv_process_options_t));
+    memset(&options, 0, sizeof(uv_process_options_t));
 
-    self->process_options.exit_cb = on_process_exit;
+    options.exit_cb = on_process_exit;
 
     file2 = (char *) PyMem_Malloc(strlen(file) + 1);
     if (!file2) {
@@ -153,7 +155,7 @@ Process_func_spawn(Process *self, PyObject *args, PyObject *kwargs)
         goto error;
     }
     strcpy(file2, file);
-    self->process_options.file = file2;
+    options.file = file2;
 
     if (arguments) {
         n = PySequence_Length(arguments);
@@ -184,7 +186,7 @@ Process_func_spawn(Process *self, PyObject *args, PyObject *kwargs)
         process_args[0] = file2;
         process_args[1] = NULL;
     }
-    self->process_options.args = process_args;
+    options.args = process_args;
 
     if (cwd) {
         cwd2 = (char *) PyMem_Malloc(strlen(cwd) + 1);
@@ -193,7 +195,7 @@ Process_func_spawn(Process *self, PyObject *args, PyObject *kwargs)
             goto error;
         }
         strcpy(cwd2, cwd);
-        self->process_options.cwd = cwd2;
+        options.cwd = cwd2;
     }
 
     if (env) {
@@ -219,16 +221,16 @@ Process_func_spawn(Process *self, PyObject *args, PyObject *kwargs)
             process_env[i] = NULL;
         }
     }
-    self->process_options.env = process_env;
+    options.env = process_env;
 
     if (stdin_pipe != Py_None)
-        self->process_options.stdin_stream = (uv_pipe_t *)((IOStream *)stdin_pipe)->uv_handle;
+        options.stdin_stream = (uv_pipe_t *)((IOStream *)stdin_pipe)->uv_handle;
 
     if (stdout_pipe != Py_None)
-        self->process_options.stdout_stream = (uv_pipe_t *)((IOStream *)stdout_pipe)->uv_handle;
+        options.stdout_stream = (uv_pipe_t *)((IOStream *)stdout_pipe)->uv_handle;
 
     if (stderr_pipe != Py_None)
-        self->process_options.stderr_stream = (uv_pipe_t *)((IOStream *)stderr_pipe)->uv_handle;
+        options.stderr_stream = (uv_pipe_t *)((IOStream *)stderr_pipe)->uv_handle;
 
     uv_process = PyMem_Malloc(sizeof(uv_process_t));
     if (!uv_process) {
@@ -238,7 +240,24 @@ Process_func_spawn(Process *self, PyObject *args, PyObject *kwargs)
     uv_process->data = (void *)self;
     self->uv_handle = uv_process;
 
-    r = uv_spawn(UV_LOOP(self), self->uv_handle, self->process_options);
+    r = uv_spawn(UV_LOOP(self), self->uv_handle, options);
+
+    if (options.args) {
+        for (ptr = options.args; *ptr != NULL; ptr++) {
+            PyMem_Free(*ptr);
+        }
+        PyMem_Free(options.args);
+    }
+    if (options.cwd) {
+        PyMem_Free(options.cwd);
+    }
+    if (options.env) {
+        for (ptr = options.env; *ptr != NULL; ptr++) {
+            PyMem_Free(*ptr);
+        }
+        PyMem_Free(options.env);
+    }
+
     if (r != 0) {
         raise_uv_exception(self->loop, PyExc_ProcessError);
         PyMem_Free(uv_process);
@@ -392,26 +411,9 @@ Process_tp_clear(Process *self)
 static void
 Process_tp_dealloc(Process *self)
 {
-    char **ptr;
-
     if (self->uv_handle) {
         uv_close((uv_handle_t *)self->uv_handle, on_process_dealloc_close);
         self->uv_handle = NULL;
-    }
-    if (self->process_options.args) {
-        for (ptr = self->process_options.args; *ptr != NULL; ptr++) {
-            PyMem_Free(*ptr);
-        }
-        PyMem_Free(self->process_options.args);
-    }
-    if (self->process_options.cwd) {
-        PyMem_Free(self->process_options.cwd);
-    }
-    if (self->process_options.env) {
-        for (ptr = self->process_options.env; *ptr != NULL; ptr++) {
-            PyMem_Free(*ptr);
-        }
-        PyMem_Free(self->process_options.env);
     }
     Process_tp_clear(self);
     Py_TYPE(self)->tp_free((PyObject *)self);

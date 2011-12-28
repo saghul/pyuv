@@ -197,7 +197,6 @@ typedef struct {
     PyObject *stderr_pipe;
     PyObject *data;
     uv_process_t *uv_handle;
-    uv_process_options_t process_options;
 } Process;
 
 static PyTypeObject ProcessType;
