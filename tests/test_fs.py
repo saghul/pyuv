@@ -635,6 +635,45 @@ class FSTestSendfile(common.UVTestCase):
         self.assertEqual(open(TEST_FILE, 'r').read(), open(TEST_FILE2, 'r').read())
 
 
+class FSTestUtime(common.UVTestCase):
+
+    def setUp(self):
+        self.loop = pyuv.Loop.default_loop()
+        with open(TEST_FILE, 'w') as f:
+            f.write("test")
+        self.file = open(TEST_FILE, 'r')
+
+    def tearDown(self):
+        self.file.close()
+        os.remove(TEST_FILE)
+
+    def utime_cb(self, loop, data, result, errorno):
+        self.result = result
+        self.errorno = errorno
+
+    def test_utime(self):
+        self.result = None
+        self.errorno = None
+        atime = mtime = 400497753
+        pyuv.fs.utime(self.loop, TEST_FILE, atime, mtime, self.utime_cb)
+        self.loop.run()
+        self.assertEqual(self.result, 0)
+        self.assertEqual(self.errorno, 0)
+        s = os.stat(TEST_FILE)
+        self.assertTrue(s.st_atime == atime and s.st_mtime == mtime)
+
+    def test_futime(self):
+        self.result = None
+        self.errorno = None
+        atime = mtime = 400497753
+        pyuv.fs.futime(self.loop, self.file.fileno(), atime, mtime, self.utime_cb)
+        self.loop.run()
+        self.assertEqual(self.result, 0)
+        self.assertEqual(self.errorno, 0)
+        s = os.stat(TEST_FILE)
+        self.assertTrue(s.st_atime == atime and s.st_mtime == mtime)
+
+
 if __name__ == '__main__':
     import unittest
     unittest.main()
