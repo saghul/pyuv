@@ -1,10 +1,7 @@
 - Evaluate if allocating memory from the Python heap reduces performance
   (what about the mallocs libuv does on its own?)
 
-- FS module with all filesystem related functions from libuv +  uv_fs_event
-    - sendfile
-    - utime
-    - futime
+- fs event watcher (uv_fs_event)
 
 - IPC: uv_start_read2, uv_write2
 
@@ -16,8 +13,6 @@
 - Python 3 support
 
 - Test it on Windows (MinGW)
-
-- pid property to Process
 
 - better memory allocation strategy for environment (Process)
 
