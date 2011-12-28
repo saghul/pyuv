@@ -38,7 +38,6 @@ host_cb(void *arg, int status, int timeouts, struct hostent *hostent)
     PyObject *dns_result = PyList_New(0);
     PyObject *tmp;
     PyObject *result;
-    int r;
 
     if (!(dns_status && dns_timeouts && dns_name && dns_aliases && dns_result)) {
         PyErr_NoMemory();
@@ -53,11 +52,8 @@ host_cb(void *arg, int status, int timeouts, struct hostent *hostent)
                 if (tmp == NULL) {
                     break;
                 }
-                r = PyList_Append(dns_aliases, tmp);
+                PyList_Append(dns_aliases, tmp);
                 Py_DECREF(tmp);
-                if (r != 0) {
-                    break;
-                }
             }
         }
         for (ptr = hostent->h_addr_list; *ptr != NULL; ptr++) {
@@ -71,11 +67,8 @@ host_cb(void *arg, int status, int timeouts, struct hostent *hostent)
             if (tmp == NULL) {
                 break;
             }
-            r = PyList_Append(dns_result, tmp);
+            PyList_Append(dns_result, tmp);
             Py_DECREF(tmp);
-            if (r != 0) {
-                break;
-            }
         }
     }
 
@@ -159,8 +152,7 @@ makesockaddr(struct sockaddr *addr, int addrlen)
 
     if (addrlen == 0) {
         /* No address */
-        Py_INCREF(Py_None);
-        return Py_None;
+        Py_RETURN_NONE;
     }
 
     switch (addr->sa_family) {
