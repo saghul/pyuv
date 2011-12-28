@@ -104,11 +104,6 @@ Process_func_spawn(Process *self, PyObject *args, PyObject *kwargs)
 
     static char *kwlist[] = {"file", "exit_callback", "args", "env", "cwd", "stdin", "stdout", "stderr", NULL};
 
-    if (self->closed) {
-        PyErr_SetString(PyExc_ProcessError, "Process already closed");
-        return NULL;
-    }
-
     if (self->uv_handle) {
         PyErr_SetString(PyExc_ProcessError, "Process already spawned");
         return NULL;
@@ -274,11 +269,6 @@ Process_func_kill(Process *self, PyObject *args)
         return NULL;
     }
 
-    if (self->closed) {
-        PyErr_SetString(PyExc_ProcessError, "Process is closed");
-        return NULL;
-    }
-
     if (!PyArg_ParseTuple(args, "i:kill", &signum)) {
         return NULL;
     }
@@ -303,11 +293,6 @@ Process_func_close(Process *self, PyObject *args)
         return NULL;
     }
 
-    if (self->closed) {
-        PyErr_SetString(PyExc_ProcessError, "Process is already closed");
-        return NULL;
-    }
-
     if (!PyArg_ParseTuple(args, "|O:close", &callback)) {
         return NULL;
     }
@@ -323,8 +308,8 @@ Process_func_close(Process *self, PyObject *args)
     /* Increase refcount so that object is not removed before the callback is called */
     Py_INCREF(self);
 
-    self->closed = True;
     uv_close((uv_handle_t *)self->uv_handle, on_process_close);
+    self->uv_handle = NULL;
 
     Py_RETURN_NONE;
 }
@@ -333,9 +318,10 @@ Process_func_close(Process *self, PyObject *args)
 static int
 Process_tp_init(Process *self, PyObject *args, PyObject *kwargs)
 {
+    PyObject *tmp = NULL;
     Loop *loop;
 
-    if (self->initialized) {
+    if (self->uv_handle) {
         PyErr_SetString(PyExc_ProcessError, "Object already initialized");
         return -1;
     }
@@ -344,10 +330,10 @@ Process_tp_init(Process *self, PyObject *args, PyObject *kwargs)
         return -1;
     }
 
+    tmp = (PyObject *)self->loop;
     Py_INCREF(loop);
     self->loop = loop;
-
-    self->initialized = True;
+    Py_XDECREF(tmp);
 
     return 0;
 }
@@ -360,8 +346,6 @@ Process_tp_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
     if (!self) {
         return NULL;
     }
-    self->initialized = False;
-    self->closed = False;
     self->uv_handle = NULL;
     return (PyObject *)self;
 }
@@ -400,8 +384,9 @@ Process_tp_dealloc(Process *self)
 {
     char **ptr;
 
-    if (!self->closed && self->uv_handle) {
+    if (self->uv_handle) {
         uv_close((uv_handle_t *)self->uv_handle, on_process_dealloc_close);
+        self->uv_handle = NULL;
     }
     if (self->process_options.args) {
         for (ptr = self->process_options.args; *ptr != NULL; ptr++) {

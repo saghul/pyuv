@@ -198,8 +198,6 @@ typedef struct {
     PyObject *data;
     uv_process_t *uv_handle;
     uv_process_options_t process_options;
-    Bool initialized;
-    Bool closed;
 } Process;
 
 static PyTypeObject ProcessType;
