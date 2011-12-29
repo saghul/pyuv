@@ -201,6 +201,18 @@ typedef struct {
 
 static PyTypeObject ProcessType;
 
+/* FSEvent */
+typedef struct {
+    PyObject_HEAD
+    Loop *loop;
+    PyObject *on_fsevent_cb;
+    PyObject *on_close_cb;
+    PyObject *data;
+    uv_fs_event_t *uv_handle;
+} FSEvent;
+
+static PyTypeObject FSEventType;
+
 #endif
 
 

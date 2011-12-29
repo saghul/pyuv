@@ -2423,6 +2423,297 @@ FS_methods[] = {
 };
 
 
+static PyObject* PyExc_FSEventError;
+
+
+static void
+on_fsevent_close(uv_handle_t *handle)
+{
+    PyGILState_STATE gstate = PyGILState_Ensure();
+    ASSERT(handle);
+    FSEvent *self = (FSEvent *)handle->data;
+    ASSERT(self);
+
+    PyObject *result;
+
+    if (self->on_close_cb != Py_None) {
+        result = PyObject_CallFunctionObjArgs(self->on_close_cb, self, NULL);
+        if (result == NULL) {
+            PyErr_WriteUnraisable(self->on_close_cb);
+        }
+        Py_XDECREF(result);
+    }
+
+    handle->data = NULL;
+    PyMem_Free(handle);
+
+    /* Refcount was increased in func_close */
+    Py_DECREF(self);
+
+    PyGILState_Release(gstate);
+}
+
+
+static void
+on_fsevent_dealloc_close(uv_handle_t *handle)
+{
+    PyGILState_STATE gstate = PyGILState_Ensure();
+    ASSERT(handle);
+    handle->data = NULL;
+    PyMem_Free(handle);
+    PyGILState_Release(gstate);
+}
+
+
+static void
+on_fsevent_callback(uv_fs_event_t *handle, const char *filename, int events, int status)
+{
+    PyGILState_STATE gstate = PyGILState_Ensure();
+    ASSERT(handle);
+    ASSERT(status == 0);
+
+    FSEvent *self = (FSEvent *)handle->data;
+    ASSERT(self);
+    /* Object could go out of scope in the callback, increase refcount to avoid it */
+    Py_INCREF(self);
+
+    PyObject *result, *py_filename, *py_events, *py_status;
+
+    if (filename) {
+        py_filename = PyString_FromString(filename);
+    } else {
+        py_filename = Py_None;
+        Py_INCREF(Py_None);
+    }
+    py_events = PyInt_FromLong((long)events);
+    py_status = PyInt_FromLong((long)status);
+
+    if (!py_filename || !py_events || !py_status) {
+        PyErr_NoMemory();
+        PyErr_WriteUnraisable(self->on_fsevent_cb);
+    } else {
+        result = PyObject_CallFunctionObjArgs(self->on_fsevent_cb, self, py_filename, py_events, py_status, NULL);
+        if (result == NULL) {
+            PyErr_WriteUnraisable(self->on_fsevent_cb);
+        }
+        Py_XDECREF(result);
+    }
+
+    Py_DECREF(self);
+    PyGILState_Release(gstate);
+}
+
+
+static PyObject *
+FSEvent_func_start(FSEvent *self, PyObject *args, PyObject *kwargs)
+{
+    int r = 0;
+    int flags;
+    char *path;
+    PyObject *tmp = NULL;
+    PyObject *callback;
+    uv_fs_event_t *fs_event = NULL;
+
+    static char *kwlist[] = {"path", "callback", "flags", NULL};
+
+    if (self->uv_handle) {
+        PyErr_SetString(PyExc_FSEventError, "FSEvent was already started");
+        return NULL;
+    }
+
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "sOi:start", kwlist, &path, &callback, &flags)) {
+        return NULL;
+    }
+
+    if (!PyCallable_Check(callback)) {
+        PyErr_SetString(PyExc_TypeError, "a callable is required");
+        return NULL;
+    }
+
+    fs_event = PyMem_Malloc(sizeof(uv_fs_event_t));
+    if (!fs_event) {
+        PyErr_NoMemory();
+        return NULL;
+    }
+    fs_event->data = (void *)self;
+    self->uv_handle = fs_event;
+
+    r = uv_fs_event_init(UV_LOOP(self), self->uv_handle, path, on_fsevent_callback, flags);
+    if (r != 0) {
+        raise_uv_exception(self->loop, PyExc_FSEventError);
+        PyMem_Free(fs_event);
+        self->uv_handle = NULL;
+        return NULL;
+    }
+
+    tmp = self->on_fsevent_cb;
+    Py_INCREF(callback);
+    self->on_fsevent_cb = callback;
+    Py_XDECREF(tmp);
+
+    Py_RETURN_NONE;
+}
+
+
+static PyObject *
+FSEvent_func_close(FSEvent *self, PyObject *args)
+{
+    PyObject *callback = Py_None;
+
+    if (!self->uv_handle) {
+        PyErr_SetString(PyExc_FSEventError, "FSEvent has not been started");
+        return NULL;
+    }
+
+    if (!PyArg_ParseTuple(args, "|O:close", &callback)) {
+        return NULL;
+    }
+
+    if (callback != Py_None && !PyCallable_Check(callback)) {
+        PyErr_SetString(PyExc_TypeError, "a callable or None is required");
+        return NULL;
+    }
+
+    Py_INCREF(callback);
+    self->on_close_cb = callback;
+
+    /* Increase refcount so that object is not removed before the callback is called */
+    Py_INCREF(self);
+
+    uv_close((uv_handle_t *)self->uv_handle, on_fsevent_close);
+    self->uv_handle = NULL;
+
+    Py_RETURN_NONE;
+}
+
+
+static int
+FSEvent_tp_init(FSEvent *self, PyObject *args, PyObject *kwargs)
+{
+    PyObject *tmp = NULL;
+    Loop *loop;
+
+    if (self->uv_handle) {
+        PyErr_SetString(PyExc_FSEventError, "Object already initialized");
+        return -1;
+    }
+
+    if (!PyArg_ParseTuple(args, "O!:__init__", &LoopType, &loop)) {
+        return -1;
+    }
+
+    tmp = (PyObject *)self->loop;
+    Py_INCREF(loop);
+    self->loop = loop;
+    Py_XDECREF(tmp);
+
+    return 0;
+}
+
+
+static PyObject *
+FSEvent_tp_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
+{
+    FSEvent *self = (FSEvent *)PyType_GenericNew(type, args, kwargs);
+    if (!self) {
+        return NULL;
+    }
+    self->uv_handle = NULL;
+    return (PyObject *)self;
+}
+
+
+static int
+FSEvent_tp_traverse(FSEvent *self, visitproc visit, void *arg)
+{
+    Py_VISIT(self->data);
+    Py_VISIT(self->on_fsevent_cb);
+    Py_VISIT(self->on_close_cb);
+    Py_VISIT(self->loop);
+    return 0;
+}
+
+
+static int
+FSEvent_tp_clear(FSEvent *self)
+{
+    Py_CLEAR(self->data);
+    Py_CLEAR(self->on_fsevent_cb);
+    Py_CLEAR(self->on_close_cb);
+    Py_CLEAR(self->loop);
+    return 0;
+}
+
+
+static void
+FSEvent_tp_dealloc(FSEvent *self)
+{
+    if (self->uv_handle) {
+        uv_close((uv_handle_t *)self->uv_handle, on_fsevent_dealloc_close);
+        self->uv_handle = NULL;
+    }
+    FSEvent_tp_clear(self);
+    Py_TYPE(self)->tp_free((PyObject *)self);
+}
+
+
+static PyMethodDef
+FSEvent_tp_methods[] = {
+    { "start", (PyCFunction)FSEvent_func_start, METH_VARARGS|METH_KEYWORDS, "Start the FSEvent." },
+    { "close", (PyCFunction)FSEvent_func_close, METH_VARARGS, "Close the FSEvent." },
+    { NULL }
+};
+
+
+static PyMemberDef FSEvent_tp_members[] = {
+    {"loop", T_OBJECT_EX, offsetof(FSEvent, loop), READONLY, "Loop where this FSEvent is running on."},
+    {"data", T_OBJECT, offsetof(FSEvent, data), 0, "Arbitrary data."},
+    {NULL}
+};
+
+
+static PyTypeObject FSEventType = {
+    PyVarObject_HEAD_INIT(NULL, 0)
+    "pyuv.fs.FSEvent",                                              /*tp_name*/
+    sizeof(FSEvent),                                                /*tp_basicsize*/
+    0,                                                              /*tp_itemsize*/
+    (destructor)FSEvent_tp_dealloc,                                 /*tp_dealloc*/
+    0,                                                              /*tp_print*/
+    0,                                                              /*tp_getattr*/
+    0,                                                              /*tp_setattr*/
+    0,                                                              /*tp_compare*/
+    0,                                                              /*tp_repr*/
+    0,                                                              /*tp_as_number*/
+    0,                                                              /*tp_as_sequence*/
+    0,                                                              /*tp_as_mapping*/
+    0,                                                              /*tp_hash */
+    0,                                                              /*tp_call*/
+    0,                                                              /*tp_str*/
+    0,                                                              /*tp_getattro*/
+    0,                                                              /*tp_setattro*/
+    0,                                                              /*tp_as_buffer*/
+    Py_TPFLAGS_DEFAULT | Py_TPFLAGS_HAVE_GC,                        /*tp_flags*/
+    0,                                                              /*tp_doc*/
+    (traverseproc)FSEvent_tp_traverse,                              /*tp_traverse*/
+    (inquiry)FSEvent_tp_clear,                                      /*tp_clear*/
+    0,                                                              /*tp_richcompare*/
+    0,                                                              /*tp_weaklistoffset*/
+    0,                                                              /*tp_iter*/
+    0,                                                              /*tp_iternext*/
+    FSEvent_tp_methods,                                             /*tp_methods*/
+    FSEvent_tp_members,                                             /*tp_members*/
+    0,                                                              /*tp_getsets*/
+    0,                                                              /*tp_base*/
+    0,                                                              /*tp_dict*/
+    0,                                                              /*tp_descr_get*/
+    0,                                                              /*tp_descr_set*/
+    0,                                                              /*tp_dictoffset*/
+    (initproc)FSEvent_tp_init,                                      /*tp_init*/
+    0,                                                              /*tp_alloc*/
+    FSEvent_tp_new,                                                 /*tp_new*/
+};
+
+
 PyObject *
 init_fs(void)
 {
@@ -2433,6 +2724,12 @@ init_fs(void)
     }
 
     PyModule_AddIntMacro(module, UV_FS_SYMLINK_DIR);
+    PyModule_AddIntMacro(module, UV_RENAME);
+    PyModule_AddIntMacro(module, UV_CHANGE);
+    PyModule_AddIntMacro(module, UV_FS_EVENT_WATCH_ENTRY);
+    PyModule_AddIntMacro(module, UV_FS_EVENT_STAT);
+
+    PyUVModule_AddType(module, "FSEvent", &FSEventType);
 
     return module;
 }
