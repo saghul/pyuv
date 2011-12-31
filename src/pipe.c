@@ -305,25 +305,37 @@ static int
 Pipe_tp_init(Pipe *self, PyObject *args, PyObject *kwargs)
 {
     int r = 0;
+    Loop *loop;
+    PyObject *tmp = NULL;
     uv_pipe_t *uv_stream;
 
     IOStream *base = (IOStream *)self;
 
-    if (IOStreamType.tp_init((PyObject *)self, args, kwargs) < 0) {
+    if (base->uv_handle) {
+        PyErr_SetString(PyExc_PipeError, "Object already initialized");
         return -1;
     }
+
+    if (!PyArg_ParseTuple(args, "O!:__init__", &LoopType, &loop)) {
+        return -1;
+    }
+
+    tmp = (PyObject *)base->loop;
+    Py_INCREF(loop);
+    base->loop = loop;
+    Py_XDECREF(tmp);
 
     uv_stream = PyMem_Malloc(sizeof(uv_pipe_t));
     if (!uv_stream) {
         PyErr_NoMemory();
-        Py_DECREF(base->loop);
+        Py_DECREF(loop);
         return -1;
     }
 
     r = uv_pipe_init(UV_LOOP(base), (uv_pipe_t *)uv_stream, 0);
     if (r != 0) {
         raise_uv_exception(base->loop, PyExc_PipeError);
-        Py_DECREF(base->loop);
+        Py_DECREF(loop);
         return -1;
     }
     uv_stream->data = (void *)self;

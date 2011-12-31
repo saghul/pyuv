@@ -463,29 +463,6 @@ error:
 }
 
 
-static int
-IOStream_tp_init(IOStream *self, PyObject *args, PyObject *kwargs)
-{
-    Loop *loop;
-
-    if (self->uv_handle) {
-        PyErr_SetString(PyExc_IOStreamError, "Object already initialized");
-        return -1;
-    }
-
-    if (!PyArg_ParseTuple(args, "O!:__init__", &LoopType, &loop)) {
-        return -1;
-    }
-
-    Py_INCREF(loop);
-    self->loop = loop;
-
-    /* Subclasses MUST call the parent and initialize uv_stream */
-
-    return 0;
-}
-
-
 static PyObject *
 IOStream_tp_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
 {
@@ -586,7 +563,7 @@ static PyTypeObject IOStreamType = {
     0,                                                             /*tp_descr_get*/
     0,                                                             /*tp_descr_set*/
     0,                                                             /*tp_dictoffset*/
-    (initproc)IOStream_tp_init,                                    /*tp_init*/
+    0,                                                             /*tp_init*/
     0,                                                             /*tp_alloc*/
     IOStream_tp_new,                                               /*tp_new*/
 };

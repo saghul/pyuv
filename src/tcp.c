@@ -463,25 +463,37 @@ static int
 TCP_tp_init(TCP *self, PyObject *args, PyObject *kwargs)
 {
     int r = 0;
+    Loop *loop;
+    PyObject *tmp = NULL;
     uv_tcp_t *uv_stream;
 
     IOStream *base = (IOStream *)self;
 
-    if (IOStreamType.tp_init((PyObject *)self, args, kwargs) < 0) {
+    if (base->uv_handle) {
+        PyErr_SetString(PyExc_TCPError, "Object already initialized");
         return -1;
     }
+
+    if (!PyArg_ParseTuple(args, "O!:__init__", &LoopType, &loop)) {
+        return -1;
+    }
+
+    tmp = (PyObject *)base->loop;
+    Py_INCREF(loop);
+    base->loop = loop;
+    Py_XDECREF(tmp);
 
     uv_stream = PyMem_Malloc(sizeof(uv_tcp_t));
     if (!uv_stream) {
         PyErr_NoMemory();
-        Py_DECREF(base->loop);
+        Py_DECREF(loop);
         return -1;
     }
 
     r = uv_tcp_init(UV_LOOP(base), (uv_tcp_t *)uv_stream);
     if (r != 0) {
         raise_uv_exception(base->loop, PyExc_TCPError);
-        Py_DECREF(base->loop);
+        Py_DECREF(loop);
         return -1;
     }
     uv_stream->data = (void *)self;

@@ -66,6 +66,7 @@ TTY_tp_init(TTY *self, PyObject *args, PyObject *kwargs)
     int fd;
     int r = 0;
     Loop *loop;
+    PyObject *tmp = NULL;
     uv_tty_t *uv_stream;
 
     IOStream *base = (IOStream *)self;
@@ -84,20 +85,22 @@ TTY_tp_init(TTY *self, PyObject *args, PyObject *kwargs)
         return -1;
     }
 
+    tmp = (PyObject *)base->loop;
     Py_INCREF(loop);
     base->loop = loop;
+    Py_XDECREF(tmp);
 
     uv_stream = PyMem_Malloc(sizeof(uv_tty_t));
     if (!uv_stream) {
         PyErr_NoMemory();
-        Py_DECREF(base->loop);
+        Py_DECREF(loop);
         return -1;
     }
 
     r = uv_tty_init(UV_LOOP(base), uv_stream, fd, (fd == 0)?1:0);
     if (r != 0) {
         raise_uv_exception(base->loop, PyExc_TTYError);
-        Py_DECREF(base->loop);
+        Py_DECREF(loop);
         return -1;
     }
     uv_stream->data = (void *)self;
