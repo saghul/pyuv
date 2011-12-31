@@ -164,6 +164,7 @@ Check_tp_init(Check *self, PyObject *args, PyObject *kwargs)
 {
     int r = 0;
     Loop *loop;
+    PyObject *tmp = NULL;
     uv_check_t *uv_check = NULL;
 
     if (self->uv_handle) {
@@ -175,8 +176,10 @@ Check_tp_init(Check *self, PyObject *args, PyObject *kwargs)
         return -1;
     }
 
+    tmp = (PyObject *)self->loop;
     Py_INCREF(loop);
     self->loop = loop;
+    Py_XDECREF(tmp);
 
     uv_check = PyMem_Malloc(sizeof(uv_check_t));
     if (!uv_check) {

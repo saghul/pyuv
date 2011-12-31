@@ -164,6 +164,7 @@ Prepare_tp_init(Prepare *self, PyObject *args, PyObject *kwargs)
 {
     int r = 0;
     Loop *loop;
+    PyObject *tmp = NULL;
     uv_prepare_t *uv_prepare = NULL;
 
     if (self->uv_handle) {
@@ -175,8 +176,10 @@ Prepare_tp_init(Prepare *self, PyObject *args, PyObject *kwargs)
         return -1;
     }
 
+    tmp = (PyObject *)self->loop;
     Py_INCREF(loop);
     self->loop = loop;
+    Py_XDECREF(tmp);
 
     uv_prepare = PyMem_Malloc(sizeof(uv_prepare_t));
     if (!uv_prepare) {

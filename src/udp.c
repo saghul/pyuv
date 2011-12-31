@@ -529,6 +529,7 @@ UDP_tp_init(UDP *self, PyObject *args, PyObject *kwargs)
 {
     int r = 0;
     Loop *loop;
+    PyObject *tmp = NULL;
     uv_udp_t *uv_udp_handle = NULL;
 
     if (self->uv_handle) {
@@ -540,8 +541,10 @@ UDP_tp_init(UDP *self, PyObject *args, PyObject *kwargs)
         return -1;
     }
 
+    tmp = (PyObject *)self->loop;
     Py_INCREF(loop);
     self->loop = loop;
+    Py_XDECREF(tmp);
 
     uv_udp_handle = PyMem_Malloc(sizeof(uv_udp_t));
     if (!uv_udp_handle) {

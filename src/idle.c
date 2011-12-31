@@ -164,6 +164,7 @@ Idle_tp_init(Idle *self, PyObject *args, PyObject *kwargs)
 {
     int r = 0;
     Loop *loop;
+    PyObject *tmp = NULL;
     uv_idle_t *uv_idle = NULL;
 
     if (self->uv_handle) {
@@ -175,8 +176,10 @@ Idle_tp_init(Idle *self, PyObject *args, PyObject *kwargs)
         return -1;
     }
 
+    tmp = (PyObject *)self->loop;
     Py_INCREF(loop);
     self->loop = loop;
+    Py_XDECREF(tmp);
 
     uv_idle = PyMem_Malloc(sizeof(uv_idle_t));
     if (!uv_idle) {

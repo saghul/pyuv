@@ -138,6 +138,7 @@ Async_tp_init(Async *self, PyObject *args, PyObject *kwargs)
 {
     int r = 0;
     Loop *loop;
+    PyObject *tmp = NULL;
     uv_async_t *uv_async = NULL;
 
     if (self->uv_handle) {
@@ -149,8 +150,10 @@ Async_tp_init(Async *self, PyObject *args, PyObject *kwargs)
         return -1;
     }
 
+    tmp = (PyObject *)self->loop;
     Py_INCREF(loop);
     self->loop = loop;
+    Py_XDECREF(tmp);
 
     uv_async = PyMem_Malloc(sizeof(uv_async_t));
     if (!uv_async) {
