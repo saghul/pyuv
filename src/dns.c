@@ -589,6 +589,11 @@ DNSResolver_tp_init(DNSResolver *self, PyObject *args, PyObject *kwargs)
 
     static char *kwlist[] = {"loop", "servers", NULL};
 
+    if (self->channel) {
+        PyErr_SetString(PyExc_DNSError, "Object already initialized");
+        return -1;
+    }
+
     if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!|O:__init__", kwlist, &LoopType, &loop, &servers)) {
         return -1;
     }
@@ -657,6 +662,7 @@ DNSResolver_tp_dealloc(DNSResolver *self)
 {
     if (self->channel) {
         uv_ares_destroy(UV_LOOP(self), self->channel);
+        self->channel = NULL;
     }
     DNSResolver_tp_clear(self);
     Py_TYPE(self)->tp_free((PyObject *)self);
