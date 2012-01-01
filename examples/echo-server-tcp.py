@@ -21,7 +21,8 @@ def on_read(client, data):
     client.shutdown(on_client_shutdown)
 
 def on_connection(server):
-    client = server.accept()
+    client = pyuv.TCP(server.loop)
+    server.accept(client)
     clients.append(client)
     client.start_read(on_read)
 

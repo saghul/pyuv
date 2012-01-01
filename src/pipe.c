@@ -148,9 +148,10 @@ Pipe_func_listen(Pipe *self, PyObject *args)
 
 
 static PyObject *
-Pipe_func_accept(Pipe *self)
+Pipe_func_accept(TCP *self, PyObject *args)
 {
     int r = 0;
+    PyObject *client;
 
     IOStream *base = (IOStream *)self;
 
@@ -159,16 +160,22 @@ Pipe_func_accept(Pipe *self)
         return NULL;
     }
 
-    Pipe *connection;
-    connection = (Pipe *)PyObject_CallFunction((PyObject *)&PipeType, "O", base->loop);
+    if (!PyArg_ParseTuple(args, "O:accept", &client)) {
+        return NULL;
+    }
 
-    r = uv_accept(base->uv_handle, ((IOStream *)connection)->uv_handle);
+    if (!PyObject_IsSubclass((PyObject *)client->ob_type, (PyObject *)&IOStreamType)) {
+        PyErr_SetString(PyExc_TypeError, "Only stream objects are supported for accept");
+        return NULL;
+    }
+
+    r = uv_accept(base->uv_handle, ((IOStream *)client)->uv_handle);
     if (r != 0) {
         raise_uv_exception(base->loop, PyExc_PipeError);
         return NULL;
     }
 
-    return (PyObject *)connection;
+    Py_RETURN_NONE;
 }
 
 
@@ -378,7 +385,7 @@ static PyMethodDef
 Pipe_tp_methods[] = {
     { "bind", (PyCFunction)Pipe_func_bind, METH_VARARGS, "Bind to the specified Pipe name." },
     { "listen", (PyCFunction)Pipe_func_listen, METH_VARARGS, "Start listening for connections on the Pipe." },
-    { "accept", (PyCFunction)Pipe_func_accept, METH_NOARGS, "Accept incoming connection." },
+    { "accept", (PyCFunction)Pipe_func_accept, METH_VARARGS, "Accept incoming connection." },
     { "connect", (PyCFunction)Pipe_func_connect, METH_VARARGS, "Start connecion to the remote Pipe." },
     { "open", (PyCFunction)Pipe_func_open, METH_VARARGS, "Open the specified file descriptor and manage it as a Pipe." },
     { "pending_instances", (PyCFunction)Pipe_func_pending_instances, METH_VARARGS, "Set the number of pending pipe instance handles when the pipe server is waiting for connections." },

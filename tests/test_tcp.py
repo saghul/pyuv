@@ -29,7 +29,8 @@ class TCPTest(common.UVTestCase):
         self.client_connections = []
 
     def on_connection(self, server):
-        client = server.accept()
+        client = pyuv.TCP(pyuv.Loop.default_loop())
+        server.accept(client)
         self.client_connections.append(client)
         client.start_read(self.on_client_connection_read)
         client.write("PING"+os.linesep)
@@ -69,7 +70,8 @@ class TCPTestList(common.UVTestCase):
         self.client_connections = []
 
     def on_connection(self, server):
-        client = server.accept()
+        client = pyuv.TCP(pyuv.Loop.default_loop())
+        server.accept(client)
         self.client_connections.append(client)
         client.start_read(self.on_client_connection_read)
         client.write(["PING1", "PING2", "PING3", "PING4", "PING5", os.linesep])
@@ -109,7 +111,8 @@ class TCPShutdownTest(common.UVTestCase):
         self.client_connections = []
 
     def on_connection(self, server):
-        client = server.accept()
+        client = pyuv.TCP(pyuv.Loop.default_loop())
+        server.accept(client)
         self.client_connections.append(client)
         client.start_read(self.on_client_connection_read)
         client.write("PING"+os.linesep)
@@ -138,7 +141,7 @@ class TCPShutdownTest(common.UVTestCase):
         self.assertEquals(data, "PING")
         client.shutdown(self.on_client_shutdown)
 
-    def test_tcp1(self):
+    def test_tcp_shutdown(self):
         self.shutdown_cb_called = 0
         self.close_cb_called = 0
         self.server = pyuv.TCP(self.loop)

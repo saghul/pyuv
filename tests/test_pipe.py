@@ -31,7 +31,8 @@ class PipeTest(common.UVTestCase):
         self.client_connections = []
 
     def on_connection(self, server):
-        client = server.accept()
+        client = pyuv.Pipe(self.loop)
+        server.accept(client)
         self.client_connections.append(client)
         client.start_read(self.on_client_connection_read)
         client.write("PING"+os.linesep)
@@ -72,7 +73,8 @@ class PipeShutdownTest(common.UVTestCase):
         self.client_connections = []
 
     def on_connection(self, server):
-        client = server.accept()
+        client = pyuv.Pipe(self.loop)
+        server.accept(client)
         self.client_connections.append(client)
         client.start_read(self.on_client_connection_read)
         client.write("PING"+os.linesep)

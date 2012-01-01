@@ -171,9 +171,10 @@ TCP_func_listen(TCP *self, PyObject *args)
 
 
 static PyObject *
-TCP_func_accept(TCP *self)
+TCP_func_accept(TCP *self, PyObject *args)
 {
     int r = 0;
+    PyObject *client;
 
     IOStream *base = (IOStream *)self;
 
@@ -182,16 +183,22 @@ TCP_func_accept(TCP *self)
         return NULL;
     }
 
-    TCP *connection;
-    connection = (TCP *)PyObject_CallFunction((PyObject *)&TCPType, "O", base->loop);
+    if (!PyArg_ParseTuple(args, "O:accept", &client)) {
+        return NULL;
+    }
 
-    r = uv_accept(base->uv_handle, ((IOStream *)connection)->uv_handle);
+    if (!PyObject_IsSubclass((PyObject *)client->ob_type, (PyObject *)&IOStreamType)) {
+        PyErr_SetString(PyExc_TypeError, "Only stream objects are supported for accept");
+        return NULL;
+    }
+
+    r = uv_accept(base->uv_handle, ((IOStream *)client)->uv_handle);
     if (r != 0) {
         raise_uv_exception(base->loop, PyExc_TCPError);
         return NULL;
     }
 
-    return (PyObject *)connection;
+    Py_RETURN_NONE;
 }
 
 
@@ -536,7 +543,7 @@ static PyMethodDef
 TCP_tp_methods[] = {
     { "bind", (PyCFunction)TCP_func_bind, METH_VARARGS, "Bind to the specified IP and port." },
     { "listen", (PyCFunction)TCP_func_listen, METH_VARARGS, "Start listening for TCP connections." },
-    { "accept", (PyCFunction)TCP_func_accept, METH_NOARGS, "Accept incoming TCP connection." },
+    { "accept", (PyCFunction)TCP_func_accept, METH_VARARGS, "Accept incoming connection." },
     { "connect", (PyCFunction)TCP_func_connect, METH_VARARGS, "Start connecion to remote endpoint." },
     { "getsockname", (PyCFunction)TCP_func_getsockname, METH_NOARGS, "Get local socket information." },
     { "getpeername", (PyCFunction)TCP_func_getpeername, METH_NOARGS, "Get remote socket information." },
