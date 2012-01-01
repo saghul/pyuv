@@ -102,7 +102,7 @@ on_iostream_shutdown(uv_shutdown_t* req, int status)
 
 
 static void
-on_iostream_read(uv_tcp_t* handle, int nread, uv_buf_t buf)
+on_iostream_read(uv_stream_t* handle, int nread, uv_buf_t buf)
 {
     PyGILState_STATE gstate = PyGILState_Ensure();
     ASSERT(handle);
