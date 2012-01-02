@@ -1,8 +1,6 @@
 - Evaluate if allocating memory from the Python heap reduces performance
   (what about the mallocs libuv does on its own?)
 
-- IPC: uv_start_read2, uv_write2
-
 - Better docstrings
 
 - Use PyStructSequence (similar to a named tuple) on stat and perhaps
