@@ -76,6 +76,43 @@ on_pipe_client_connection(uv_connect_t *req, int status)
 }
 
 
+static void
+on_pipe_read2(uv_pipe_t* handle, int nread, uv_buf_t buf, uv_handle_type pending)
+{
+    PyGILState_STATE gstate = PyGILState_Ensure();
+    ASSERT(handle);
+
+    IOStream *self = (IOStream *)handle->data;
+    ASSERT(self);
+    /* Object could go out of scope in the callback, increase refcount to avoid it */
+    Py_INCREF(self);
+
+    PyObject *data;
+    PyObject *result;
+
+    if (nread >= 0) {
+        data = PyString_FromStringAndSize(buf.base, nread);
+    } else if (nread < 0) {
+        uv_err_t err = uv_last_error(UV_LOOP(self));
+        // TODO: pass error code to callback. 'status' attribute?
+        UNUSED_ARG(err);
+        data = Py_None;
+        Py_INCREF(Py_None);
+    }
+
+    result = PyObject_CallFunctionObjArgs(self->on_read_cb, self, data, PyInt_FromLong((long)pending), NULL);
+    if (result == NULL) {
+        PyErr_WriteUnraisable(self->on_read_cb);
+    }
+    Py_XDECREF(result);
+
+    PyMem_Free(buf.base);
+
+    Py_DECREF(self);
+    PyGILState_Release(gstate);
+}
+
+
 static PyObject *
 Pipe_func_bind(Pipe *self, PyObject *args)
 {
@@ -308,12 +345,193 @@ Pipe_func_pair(PyObject *cls, PyObject *args)
 }
 
 
+static PyObject *
+Pipe_func_start_read2(Pipe *self, PyObject *args)
+{
+    int r = 0;
+    PyObject *tmp = NULL;
+    PyObject *callback;
+
+    IOStream *base = (IOStream *)self;
+
+    if (!base->uv_handle) {
+        PyErr_SetString(PyExc_PipeError, "Pipe is closed");
+        return NULL;
+    }
+
+    if (!PyArg_ParseTuple(args, "O:start_read2", &callback)) {
+        return NULL;
+    }
+
+    if (!PyCallable_Check(callback)) {
+        PyErr_SetString(PyExc_TypeError, "a callable is required");
+        return NULL;
+    }
+
+    r = uv_read2_start((uv_stream_t *)base->uv_handle, (uv_alloc_cb)on_iostream_alloc, (uv_read2_cb)on_pipe_read2);
+    if (r != 0) {
+        raise_uv_exception(base->loop, PyExc_PipeError);
+        return NULL;
+    }
+
+    tmp = base->on_read_cb;
+    Py_INCREF(callback);
+    base->on_read_cb = callback;
+    Py_XDECREF(tmp);
+
+    Py_RETURN_NONE;
+}
+
+
+static PyObject *
+Pipe_func_write2(Pipe *self, PyObject *args)
+{
+    int i, n;
+    int r = 0;
+    int buf_count = 0;
+    char *data_str;
+    char *tmp;
+    PyObject *item;
+    PyObject *data;
+    PyObject *callback = Py_None;
+    TCP *send_handle;
+    uv_buf_t tmpbuf;
+    uv_buf_t *bufs = NULL;
+    uv_write_t *wr = NULL;
+    iostream_req_data_t *req_data = NULL;
+    iostream_write_data_t *write_data = NULL;
+
+    IOStream *base = (IOStream *)self;
+
+    if (!base->uv_handle) {
+        PyErr_SetString(PyExc_PipeError, "Pipe is closed");
+        return NULL;
+    }
+
+    if (!PyArg_ParseTuple(args, "OO!|O:write2", &data, &TCPType, &send_handle, &callback)) {
+        return NULL;
+    }
+
+    if (!PyString_Check(data) && !PySequence_Check(data)) {
+        PyErr_SetString(PyExc_TypeError, "only strings and iterables are supported");
+        return NULL;
+    }
+
+    if (callback != Py_None && !PyCallable_Check(callback)) {
+        PyErr_SetString(PyExc_TypeError, "a callable or None is required");
+        return NULL;
+    }
+
+    wr = (uv_write_t *)PyMem_Malloc(sizeof(uv_write_t));
+    if (!wr) {
+        PyErr_NoMemory();
+        goto error;
+    }
+
+    req_data = (iostream_req_data_t*) PyMem_Malloc(sizeof(iostream_req_data_t));
+    if (!req_data) {
+        PyErr_NoMemory();
+        goto error;
+    }
+
+    write_data = (iostream_write_data_t *) PyMem_Malloc(sizeof(iostream_write_data_t));
+    if (!write_data) {
+        PyErr_NoMemory();
+        goto error;
+    }
+
+    req_data->obj = (PyObject *)base;
+    Py_INCREF(callback);
+    req_data->callback = callback;
+    wr->data = (void *)req_data;
+
+    if (PyString_Check(data)) {
+        // We have a single string
+        bufs = (uv_buf_t *) PyMem_Malloc(sizeof(uv_buf_t));
+        if (!bufs) {
+            PyErr_NoMemory();
+            goto error;
+        }
+        data_str = PyString_AsString(data);
+        tmp = (char *) PyMem_Malloc(strlen(data_str) + 1);
+        if (!tmp) {
+            PyMem_Free(bufs);
+            PyErr_NoMemory();
+            goto error;
+        }
+        strcpy(tmp, data_str);
+        tmpbuf = uv_buf_init(tmp, strlen(tmp));
+        bufs[0] = tmpbuf;
+        buf_count = 1;
+    } else {
+        // We have a list
+        buf_count = 0;
+        n = PySequence_Length(data);
+        bufs = (uv_buf_t *) PyMem_Malloc(sizeof(uv_buf_t) * n);
+        if (!bufs) {
+            PyErr_NoMemory();
+            goto error;
+        }
+        for (i = 0;i < n; i++) {
+            item = PySequence_GetItem(data, i);
+            if (!item || !PyString_Check(item))
+                continue;
+            data_str = PyString_AsString(item);
+            tmp = (char *) PyMem_Malloc(strlen(data_str) + 1);
+            if (!tmp)
+                continue;
+            strcpy(tmp, data_str);
+            tmpbuf = uv_buf_init(tmp, strlen(tmp));
+            bufs[i] = tmpbuf;
+            buf_count++;
+        }
+
+    }
+
+    write_data->bufs = bufs;
+    write_data->buf_count = buf_count;
+    req_data->data = (void *)write_data;
+
+    r = uv_write2(wr, base->uv_handle, bufs, buf_count, (uv_stream_t *)((IOStream *)send_handle)->uv_handle, on_iostream_write);
+    if (r != 0) {
+        raise_uv_exception(base->loop, PyExc_PipeError);
+        goto error;
+    }
+
+    Py_RETURN_NONE;
+
+error:
+    if (bufs) {
+        for (i = 0; i < buf_count; i++) {
+            PyMem_Free(bufs[i].base);
+        }
+        PyMem_Free(bufs);
+    }
+    if (write_data) {
+        PyMem_Free(write_data);
+    }
+    if (req_data) {
+        Py_DECREF(callback);
+        req_data->obj = NULL;
+        req_data->callback = NULL;
+        req_data->data = NULL;
+        PyMem_Free(req_data);
+    }
+    if (wr) {
+        wr->data = NULL;
+        PyMem_Free(wr);
+    }
+    return NULL;
+}
+
+
 static int
 Pipe_tp_init(Pipe *self, PyObject *args, PyObject *kwargs)
 {
     int r = 0;
     Loop *loop;
     PyObject *tmp = NULL;
+    PyObject *ipc = Py_False;
     uv_pipe_t *uv_stream;
 
     IOStream *base = (IOStream *)self;
@@ -323,7 +541,7 @@ Pipe_tp_init(Pipe *self, PyObject *args, PyObject *kwargs)
         return -1;
     }
 
-    if (!PyArg_ParseTuple(args, "O!:__init__", &LoopType, &loop)) {
+    if (!PyArg_ParseTuple(args, "O!|O!:__init__", &LoopType, &loop, &PyBool_Type, &ipc)) {
         return -1;
     }
 
@@ -339,7 +557,7 @@ Pipe_tp_init(Pipe *self, PyObject *args, PyObject *kwargs)
         return -1;
     }
 
-    r = uv_pipe_init(UV_LOOP(base), (uv_pipe_t *)uv_stream, 0);
+    r = uv_pipe_init(UV_LOOP(base), (uv_pipe_t *)uv_stream, (ipc == Py_True) ? 1 : 0);
     if (r != 0) {
         raise_uv_exception(base->loop, PyExc_PipeError);
         Py_DECREF(loop);
@@ -390,6 +608,8 @@ Pipe_tp_methods[] = {
     { "open", (PyCFunction)Pipe_func_open, METH_VARARGS, "Open the specified file descriptor and manage it as a Pipe." },
     { "pending_instances", (PyCFunction)Pipe_func_pending_instances, METH_VARARGS, "Set the number of pending pipe instance handles when the pipe server is waiting for connections." },
     { "pair", (PyCFunction)Pipe_func_pair, METH_CLASS|METH_VARARGS, "Connects two initialized pipes on different loops." },
+    { "start_read2", (PyCFunction)Pipe_func_start_read2, METH_VARARGS, "Extended read methods for receiving handles over a pipe. The pipe must be initialized with ipc set to True." },
+    { "write2", (PyCFunction)Pipe_func_write2, METH_VARARGS, "Write data and send handle over a pipe." },
     { NULL }
 };
 
