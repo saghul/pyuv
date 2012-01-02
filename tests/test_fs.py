@@ -749,7 +749,7 @@ class FSEventTest(common.UVTestCase):
         timer.start(self.timer_cb3, 0.1, 0)
         self.loop.run()
         self.assertEqual(self.status, 0)
-        self.assertTrue(self.filename == None or self.filename == TEST_FILE2)
+        self.assertTrue(self.filename == None or self.filename == TEST_FILE)
         self.assertTrue(self.events & pyuv.fs.UV_CHANGE)
 
 
