@@ -25,15 +25,6 @@ class UtilTest(common.UVTestCase):
         r = pyuv.util.uptime()
         self.assertTrue(r)
 
-    #def test_process_title(self):
-    #    title = 'my process'
-    #    r = pyuv.util.get_process_title()
-    #    self.assertTrue(r)
-    #    r = pyuv.util.set_process_title(title)
-    #    self.assertEquals(r, None)
-    #    r = pyuv.util.get_process_title()
-    #    self.assertEqual(r, title)
-
     def test_resident_set_memory(self):
         r = pyuv.util.resident_set_memory()
         self.assertTrue(r)
