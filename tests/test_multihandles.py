@@ -47,5 +47,6 @@ class MultiHandleTest(common.UVTestCase):
 
 if __name__ == '__main__':
     import unittest
-    unittest.main()
+    tests = unittest.TestSuite(common.suites)
+    unittest.TextTestRunner(verbosity=2).run(tests)
 

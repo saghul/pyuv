@@ -8,10 +8,15 @@ import unittest
 loader = unittest.TestLoader()
 suites = []
 
+platform = 'linux' if sys.platform.startswith('linux') else sys.platform
+
 class TestCaseMeta(type):
     def __init__(cls, name, bases, dic):
         super(TestCaseMeta, cls).__init__(name, bases, dic)
-        suites.append(loader.loadTestsFromTestCase(cls))
+        if name == 'UVTestCase':
+            return
+        if platform not in dic.get('__disabled__', []):
+            suites.append(loader.loadTestsFromTestCase(cls))
 
 class UVTestCase(unittest.TestCase):
     __metaclass__ = TestCaseMeta
