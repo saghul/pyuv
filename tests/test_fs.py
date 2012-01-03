@@ -674,6 +674,48 @@ class FSTestUtime(common.UVTestCase):
         self.assertTrue(s.st_atime == atime and s.st_mtime == mtime)
 
 
+class FSEventTestBasic(common.UVTestCase):
+    __disabled__ = ["linux"]
+
+    def setUp(self):
+        self.loop = pyuv.Loop.default_loop()
+        with open(TEST_FILE, 'w') as f:
+            f.write("test")
+
+    def tearDown(self):
+        try:
+            os.remove(TEST_FILE)
+        except OSError:
+            pass
+        try:
+            os.remove(TEST_FILE2)
+        except OSError:
+            pass
+
+    def on_fsevent_cb(self, handle, filename, events, status):
+        handle.close()
+        self.filename = filename
+        self.events = events
+        self.status = status
+
+    def timer_cb(self, timer):
+        timer.close()
+        os.rename(TEST_FILE, TEST_FILE2)
+
+    def test_fsevent_basic(self):
+        self.status = None
+        self.events = None
+        self.filename = None
+        fs_event = pyuv.fs.FSEvent(self.loop)
+        fs_event.start(TEST_FILE, self.on_fsevent_cb, 0)
+        timer = pyuv.Timer(self.loop)
+        timer.start(self.timer_cb, 0.1, 0)
+        self.loop.run()
+        self.assertEqual(self.status, 0)
+        self.assertTrue(self.filename == None or self.filename == TEST_FILE)
+        self.assertTrue(self.events & pyuv.fs.UV_RENAME)
+
+
 class FSEventTest(common.UVTestCase):
 
     def setUp(self):
@@ -700,23 +742,6 @@ class FSEventTest(common.UVTestCase):
         self.filename = filename
         self.events = events
         self.status = status
-
-    def timer_cb(self, timer):
-        timer.close()
-        os.rename(TEST_FILE, TEST_FILE2)
-
-    def test_fsevent(self):
-        self.status = None
-        self.events = None
-        self.filename = None
-        fs_event = pyuv.fs.FSEvent(self.loop)
-        fs_event.start(TEST_FILE, self.on_fsevent_cb, 0)
-        timer = pyuv.Timer(self.loop)
-        timer.start(self.timer_cb, 0.1, 0)
-        self.loop.run()
-        self.assertEqual(self.status, 0)
-        self.assertTrue(self.filename == None or self.filename == TEST_FILE)
-        self.assertTrue(self.events & pyuv.fs.UV_RENAME)
 
     def timer_cb2(self, timer):
         timer.close()
