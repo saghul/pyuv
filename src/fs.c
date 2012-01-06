@@ -1054,7 +1054,7 @@ FS_func_rmdir(PyObject *self, PyObject *args, PyObject *kwargs)
     char *path;
     Loop *loop;
     PyObject *callback;
-    PyObject *data;
+    PyObject *data = Py_None;
     uv_fs_t *fs_req = NULL;
     fs_req_data_t *req_data = NULL;
 
