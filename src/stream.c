@@ -418,7 +418,7 @@ IOStream_func_write(IOStream *self, PyObject *args)
         }
         for (i = 0;i < n; i++) {
             item = PySequence_GetItem(data, i);
-            if (!item || (!PyString_Check(item)))
+            if (!item || !PyString_Check(item))
                 continue;
             Py_ssize_t len = PyString_Size(item);
             data_str = PyString_AsString(item);
