@@ -1859,7 +1859,9 @@ FS_func_write(PyObject *self, PyObject *args, PyObject *kwargs)
     int r;
     int fd;
     int offset;
-    char *write_data = NULL;
+    PyObject *write_data;
+    Py_ssize_t write_len;
+    char *write_str = NULL;
     char *buf_data = NULL;
     Loop *loop;
     PyObject *callback;
@@ -1869,7 +1871,7 @@ FS_func_write(PyObject *self, PyObject *args, PyObject *kwargs)
 
     static char *kwlist[] = {"loop", "fd", "write_data", "offset", "callback", "data", NULL};
 
-    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!isiO|O:write", kwlist, &LoopType, &loop, &fd, &write_data, &offset, &callback, &data)) {
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!iOiO|O:write", kwlist, &LoopType, &loop, &fd, &write_data, &offset, &callback, &data)) {
         return NULL;
     }
 
@@ -1890,12 +1892,14 @@ FS_func_write(PyObject *self, PyObject *args, PyObject *kwargs)
         goto error;
     }
 
-    buf_data = (char *)PyMem_Malloc(strlen(write_data)+1);
+    write_len = PyString_Size(write_data);
+    write_str = PyString_AsString(write_data);
+    buf_data = (char *)PyMem_Malloc(write_len+1);
     if (!buf_data) {
         PyErr_NoMemory();
         goto error;
     }
-    strcpy(buf_data, write_data);
+    memcpy(buf_data, write_str, write_len+1);
 
     Py_INCREF(loop);
     Py_INCREF(callback);
@@ -1904,7 +1908,7 @@ FS_func_write(PyObject *self, PyObject *args, PyObject *kwargs)
     req_data->loop = loop;
     req_data->callback = callback;
     req_data->data = data;
-    req_data->buf = uv_buf_init(buf_data, strlen(buf_data));
+    req_data->buf = uv_buf_init(buf_data, write_len);
 
     fs_req->data = (void *)req_data;
     r = uv_fs_write(loop->uv_loop, fs_req, fd, req_data->buf.base, req_data->buf.len, offset, write_cb);
