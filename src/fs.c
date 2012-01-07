@@ -1859,9 +1859,8 @@ FS_func_write(PyObject *self, PyObject *args, PyObject *kwargs)
     int r;
     int fd;
     int offset;
-    PyObject *write_data;
-    Py_ssize_t write_len;
     char *write_str = NULL;
+    int write_len;
     char *buf_data = NULL;
     Loop *loop;
     PyObject *callback;
@@ -1871,7 +1870,7 @@ FS_func_write(PyObject *self, PyObject *args, PyObject *kwargs)
 
     static char *kwlist[] = {"loop", "fd", "write_data", "offset", "callback", "data", NULL};
 
-    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!iOiO|O:write", kwlist, &LoopType, &loop, &fd, &write_data, &offset, &callback, &data)) {
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!is#iO|O:write", kwlist, &LoopType, &loop, &fd, &write_str, &write_len, &offset, &callback, &data)) {
         return NULL;
     }
 
@@ -1892,8 +1891,6 @@ FS_func_write(PyObject *self, PyObject *args, PyObject *kwargs)
         goto error;
     }
 
-    write_len = PyString_Size(write_data);
-    write_str = PyString_AsString(write_data);
     buf_data = (char *)PyMem_Malloc(write_len+1);
     if (!buf_data) {
         PyErr_NoMemory();
