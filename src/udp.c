@@ -77,9 +77,7 @@ on_udp_read(uv_udp_t* handle, int nread, uv_buf_t buf, struct sockaddr* addr, un
     struct sockaddr_in addr4;
     struct sockaddr_in6 addr6;
 
-    PyObject *address_tuple;
-    PyObject *data;
-    PyObject *result;
+    PyObject *result, *address_tuple, *data, *py_errorno;
 
     ASSERT(handle);
     ASSERT(flags == 0);
@@ -102,17 +100,24 @@ on_udp_read(uv_udp_t* handle, int nread, uv_buf_t buf, struct sockaddr* addr, un
             ASSERT(r == 0);
             address_tuple = Py_BuildValue("(si)", ip6, ntohs(addr6.sin6_port));
         }
-
         data = PyString_FromStringAndSize(buf.base, nread);
+        py_errorno = Py_None;
+        Py_INCREF(Py_None);
+    } else if (nread < 0) {
+        address_tuple = Py_None;
+        Py_INCREF(Py_None);
+        data = Py_None;
+        Py_INCREF(Py_None);
+        uv_err_t err = uv_last_error(UV_LOOP(self));
+        py_errorno = PyInt_FromLong((long)err.code);
+    }
 
-        result = PyObject_CallFunctionObjArgs(self->on_read_cb, self, address_tuple, data, NULL);
+    if (nread != 0) {
+        result = PyObject_CallFunctionObjArgs(self->on_read_cb, self, address_tuple, data, py_errorno, NULL);
         if (result == NULL) {
             PyErr_WriteUnraisable(self->on_read_cb);
         }
         Py_XDECREF(result);
-    } else {
-        ASSERT(addr == NULL);
-        UNUSED_ARG(r);
     }
 
     PyMem_Free(buf.base);
@@ -140,9 +145,17 @@ on_udp_send(uv_udp_send_t* req, int status)
     /* Object could go out of scope in the callback, increase refcount to avoid it */
     Py_INCREF(self);
 
-    PyObject *result;
+    PyObject *result, *py_errorno;
+
     if (callback != Py_None) {
-        result = PyObject_CallFunctionObjArgs(callback, self, PyInt_FromLong(status), NULL);
+        if (status < 0) {
+            uv_err_t err = uv_last_error(UV_LOOP(self));
+            py_errorno = PyInt_FromLong((long)err.code);
+        } else {
+            py_errorno = Py_None;
+            Py_INCREF(Py_None);
+        }
+        result = PyObject_CallFunctionObjArgs(callback, self, py_errorno, NULL);
         if (result == NULL) {
             PyErr_WriteUnraisable(callback);
         }

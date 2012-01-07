@@ -11,8 +11,8 @@ BAD_PIPE = '/pipe/that/does/not/exist'
 
 class PipeErrorTest(common.UVTestCase):
 
-    def on_client_connect_error(self, client_pipe, status):
-        self.assertNotEqual(status, 0)
+    def on_client_connect_error(self, client_pipe, error):
+        self.assertNotEqual(error, None)
         client_pipe.close()
 
     def test_client1(self):
@@ -30,25 +30,25 @@ class PipeTest(common.UVTestCase):
         self.client = None
         self.client_connections = []
 
-    def on_connection(self, server):
+    def on_connection(self, server, error):
         client = pyuv.Pipe(self.loop)
         server.accept(client)
         self.client_connections.append(client)
         client.start_read(self.on_client_connection_read)
         client.write("PING"+os.linesep)
 
-    def on_client_connection_read(self, client, data):
+    def on_client_connection_read(self, client, data, error):
         if data is None:
             client.close()
             self.client_connections.remove(client)
             self.server.close()
             return
 
-    def on_client_connection(self, client, status):
-        self.assertEquals(status, 0)
+    def on_client_connection(self, client, error):
+        self.assertEquals(error, None)
         client.start_read(self.on_client_read)
 
-    def on_client_read(self, client, data):
+    def on_client_read(self, client, data, error):
         self.assertNotEqual(data, None)
         data = data.strip()
         self.assertEquals(data, "PING")
@@ -72,32 +72,32 @@ class PipeShutdownTest(common.UVTestCase):
         self.client = None
         self.client_connections = []
 
-    def on_connection(self, server):
+    def on_connection(self, server, error):
         client = pyuv.Pipe(self.loop)
         server.accept(client)
         self.client_connections.append(client)
         client.start_read(self.on_client_connection_read)
         client.write("PING"+os.linesep)
 
-    def on_client_connection_read(self, client, data):
+    def on_client_connection_read(self, client, data, error):
         if data is None:
             client.close(self.on_close)
             self.client_connections.remove(client)
             self.server.close(self.on_close)
             return
 
-    def on_client_connection(self, client, status):
-        self.assertEquals(status, 0)
+    def on_client_connection(self, client, error):
+        self.assertEquals(error, None)
         client.start_read(self.on_client_read)
 
     def on_close(self, handle):
         self.close_cb_called += 1
 
-    def on_client_shutdown(self, client):
+    def on_client_shutdown(self, client, error):
         self.shutdown_cb_called += 1
         client.close(self.on_close)
 
-    def on_client_read(self, client, data):
+    def on_client_read(self, client, data, error):
         self.assertNotEqual(data, None)
         data = data.strip()
         self.assertEquals(data, "PING")
@@ -118,11 +118,11 @@ class PipeShutdownTest(common.UVTestCase):
 
 class PipePairTest(common.UVTestCase):
 
-    def on_pipe1_read(self, handle, data):
+    def on_pipe1_read(self, handle, data, error):
         self.data = data
         handle.close()
 
-    def on_pipe2_read(self, handle, data):
+    def on_pipe2_read(self, handle, data, error):
         handle.close()
 
     def run_loop2(self):

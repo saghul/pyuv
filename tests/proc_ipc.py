@@ -9,12 +9,12 @@ import pyuv
 TEST_PORT = 1234
 
 
-def on_channel_write(handle, status):
+def on_channel_write(handle, error):
     global channel, tcp_server
     channel.close()
     tcp_server.close()
 
-def on_ipc_connection(handle):
+def on_ipc_connection(handle, error):
     global channel, connection_accepted, loop, tcp_server
     if connection_accepted:
         return

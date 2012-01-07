@@ -51,7 +51,7 @@ class ProcessTest(common.UVTestCase):
             self.assertEqual(exit_status, 0)
             self.exit_cb_called += 1
             proc.close(handle_close_cb)
-        def stdout_read_cb(handle, data):
+        def stdout_read_cb(handle, data, error):
             self.received_output = data.strip()
             handle.close(handle_close_cb)
         loop = pyuv.Loop.default_loop()
@@ -74,7 +74,7 @@ class ProcessTest(common.UVTestCase):
             self.assertEqual(exit_status, 0)
             self.exit_cb_called += 1
             proc.close(handle_close_cb)
-        def stdout_read_cb(handle, data):
+        def stdout_read_cb(handle, data, error):
             self.received_output = data.strip()
             handle.close(handle_close_cb)
         loop = pyuv.Loop.default_loop()
@@ -97,7 +97,7 @@ class ProcessTest(common.UVTestCase):
             self.assertEqual(exit_status, 0)
             self.exit_cb_called += 1
             proc.close(handle_close_cb)
-        def stdout_read_cb(handle, data):
+        def stdout_read_cb(handle, data, error):
             self.received_output = data.strip()
             handle.close(handle_close_cb)
         loop = pyuv.Loop.default_loop()
@@ -123,11 +123,11 @@ class ProcessTest(common.UVTestCase):
             self.exit_status = exit_status
             self.term_signal = term_signal
             proc.close(handle_close_cb)
-        def stdout_read_cb(handle, data):
+        def stdout_read_cb(handle, data, error):
             if data:
                 self.received_output = data.strip()
             handle.close(handle_close_cb)
-        def stdin_write_cb(handle, data):
+        def stdin_write_cb(handle, error):
             handle.close(handle_close_cb)
         loop = pyuv.Loop.default_loop()
         stdin_pipe = pyuv.Pipe(loop)

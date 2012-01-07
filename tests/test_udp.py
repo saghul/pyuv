@@ -19,12 +19,12 @@ class UDPTest(common.UVTestCase):
     def on_close(self, handle):
         self.on_close_called += 1
 
-    def on_server_recv(self, handle, (ip, port), data):
+    def on_server_recv(self, handle, (ip, port), data, error):
         data = data.strip()
         self.assertEquals(data, "PING")
         self.server.send("PONG"+os.linesep, (ip, port))
 
-    def on_client_recv(self, handle, (ip, port), data):
+    def on_client_recv(self, handle, (ip, port), data, error):
         data = data.strip()
         self.assertEquals(data, "PONG")
         self.client.close(self.on_close)
@@ -58,12 +58,12 @@ class UDPTestList(common.UVTestCase):
     def on_close(self, handle):
         self.on_close_called += 1
 
-    def on_server_recv(self, handle, (ip, port), data):
+    def on_server_recv(self, handle, (ip, port), data, error):
         data = data.strip()
         self.assertEquals(data, "PING")
         self.server.send(["PONG", os.linesep], (ip, port))
 
-    def on_client_recv(self, handle, (ip, port), data):
+    def on_client_recv(self, handle, (ip, port), data, error):
         data = data.strip()
         self.assertEquals(data, "PONG")
         self.client.close(self.on_close)
@@ -98,12 +98,12 @@ class UDPTestMulticast(common.UVTestCase):
     def on_close(self, handle):
         self.on_close_called += 1
 
-    def on_client_recv(self, handle, (ip, port), data):
+    def on_client_recv(self, handle, (ip, port), data, error):
         self.received_data = data.strip()
         self.client.set_membership(MULTICAST_ADDRESS, pyuv.UV_LEAVE_GROUP)
         self.client.close(self.on_close)
 
-    def on_server_send(self, handle, status):
+    def on_server_send(self, handle, error):
         handle.close(self.on_close)
 
     def test_udp_multicast(self):

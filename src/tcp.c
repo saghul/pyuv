@@ -15,18 +15,21 @@ on_tcp_connection(uv_stream_t* server, int status)
 
     IOStream *base = (IOStream *)self;
 
+    PyObject *result, *py_errorno;
+
     if (status != 0) {
         uv_err_t err = uv_last_error(UV_LOOP(base));
-        PyErr_SetString(PyExc_TCPError, uv_strerror(err));
-        PyErr_WriteUnraisable(PyExc_TCPError);
+        py_errorno = PyInt_FromLong((long)err.code);
     } else {
-        PyObject *result;
-        result = PyObject_CallFunctionObjArgs(self->on_new_connection_cb, self, NULL);
-        if (result == NULL) {
-            PyErr_WriteUnraisable(self->on_new_connection_cb);
-        }
-        Py_XDECREF(result);
+        py_errorno = Py_None;
+        Py_INCREF(Py_None);
     }
+
+    result = PyObject_CallFunctionObjArgs(self->on_new_connection_cb, self, py_errorno, NULL);
+    if (result == NULL) {
+        PyErr_WriteUnraisable(self->on_new_connection_cb);
+    }
+    Py_XDECREF(result);
 
     Py_DECREF(self);
     PyGILState_Release(gstate);
@@ -44,8 +47,7 @@ on_tcp_client_connection(uv_connect_t *req, int status)
     TCP *self = (TCP *)req_data->obj;
     PyObject *callback = req_data->callback;
 
-    PyObject *py_status;
-    PyObject *result;
+    PyObject *result, *py_errorno;
 
     ASSERT(self);
     /* Object could go out of scope in the callback, increase refcount to avoid it */
@@ -55,12 +57,13 @@ on_tcp_client_connection(uv_connect_t *req, int status)
 
     if (status != 0) {
         uv_err_t err = uv_last_error(UV_LOOP(base));
-        py_status = PyInt_FromLong(err.code);
+        py_errorno = PyInt_FromLong(err.code);
     } else {
-        py_status = PyInt_FromLong(0);
+        py_errorno = Py_None;
+        Py_INCREF(Py_None);
     }
 
-    result = PyObject_CallFunctionObjArgs(callback, self, py_status, NULL);
+    result = PyObject_CallFunctionObjArgs(callback, self, py_errorno, NULL);
     if (result == NULL) {
         PyErr_WriteUnraisable(callback);
     }

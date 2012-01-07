@@ -13,7 +13,7 @@ class IPCTest(common.UVTestCase):
     def proc_exit_cb(self, proc, exit_status, term_signal):
         proc.close()
 
-    def on_client_connection(self, client, status):
+    def on_client_connection(self, client, error):
         client.close()
         self.connections.remove(client)
 
@@ -23,7 +23,7 @@ class IPCTest(common.UVTestCase):
             self.connections.append(conn)
             conn.connect(("127.0.0.1", TEST_PORT), self.on_client_connection)
 
-    def on_ipc_connection(self, handle):
+    def on_ipc_connection(self, handle, error):
         if self.local_conn_accepted:
             return
         conn = pyuv.TCP(self.loop)
@@ -32,7 +32,7 @@ class IPCTest(common.UVTestCase):
         self.tcp_server.close()
         self.local_conn_accepted = True
 
-    def on_channel_read(self, handle, data, pending):
+    def on_channel_read(self, handle, data, error, pending):
         if self.tcp_server is None:
             self.assertEqual(pending, pyuv.UV_TCP)
             self.tcp_server = pyuv.TCP(self.loop)

@@ -81,10 +81,17 @@ on_iostream_shutdown(uv_shutdown_t* req, int status)
     /* Object could go out of scope in the callback, increase refcount to avoid it */
     Py_INCREF(self);
 
-    PyObject *result;
+    PyObject *result, *py_errorno;
 
     if (callback != Py_None) {
-        result = PyObject_CallFunctionObjArgs(callback, self, NULL);
+        if (status < 0) {
+            uv_err_t err = uv_last_error(UV_LOOP(self));
+            py_errorno = PyInt_FromLong((long)err.code);
+        } else {
+            py_errorno = Py_None;
+            Py_INCREF(Py_None);
+        }
+        result = PyObject_CallFunctionObjArgs(callback, self, py_errorno, NULL);
         if (result == NULL) {
             PyErr_WriteUnraisable(callback);
         }
@@ -112,20 +119,20 @@ on_iostream_read(uv_stream_t* handle, int nread, uv_buf_t buf)
     /* Object could go out of scope in the callback, increase refcount to avoid it */
     Py_INCREF(self);
 
-    PyObject *data;
-    PyObject *result;
+    PyObject *result, *data, *py_errorno;
 
     if (nread >= 0) {
         data = PyString_FromStringAndSize(buf.base, nread);
+        py_errorno = Py_None;
+        Py_INCREF(Py_None);
     } else if (nread < 0) {
-        uv_err_t err = uv_last_error(UV_LOOP(self));
-        // TODO: pass error code to callback. 'status' attribute?
-        UNUSED_ARG(err);
         data = Py_None;
         Py_INCREF(Py_None);
+        uv_err_t err = uv_last_error(UV_LOOP(self));
+        py_errorno = PyInt_FromLong((long)err.code);
     }
 
-    result = PyObject_CallFunctionObjArgs(self->on_read_cb, self, data, NULL);
+    result = PyObject_CallFunctionObjArgs(self->on_read_cb, self, data, py_errorno, NULL);
     if (result == NULL) {
         PyErr_WriteUnraisable(self->on_read_cb);
     }
@@ -156,10 +163,17 @@ on_iostream_write(uv_write_t* req, int status)
     /* Object could go out of scope in the callback, increase refcount to avoid it */
     Py_INCREF(self);
 
-    PyObject *result;
+    PyObject *result, *py_errorno;
 
     if (callback != Py_None) {
-        result = PyObject_CallFunctionObjArgs(callback, self, PyInt_FromLong(status), NULL);
+        if (status < 0) {
+            uv_err_t err = uv_last_error(UV_LOOP(self));
+            py_errorno = PyInt_FromLong((long)err.code);
+        } else {
+            py_errorno = Py_None;
+            Py_INCREF(Py_None);
+        }
+        result = PyObject_CallFunctionObjArgs(callback, self, py_errorno, NULL);
         if (result == NULL) {
             PyErr_WriteUnraisable(callback);
         }

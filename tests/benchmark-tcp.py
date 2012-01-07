@@ -13,11 +13,11 @@ RESPONSE = "HTTP/1.1 200 OK\r\n" \
            "hello world\n"
 
 
-def on_client_shutdown(client):
+def on_client_shutdown(client, error):
     client.close()
     clients.remove(client)
 
-def on_read(client, data):
+def on_read(client, data, error):
     if data is None:
         client.close()
         clients.remove(client)
@@ -28,7 +28,7 @@ def on_read(client, data):
     client.write(RESPONSE)
     client.shutdown(on_client_shutdown)
 
-def on_connection(server):
+def on_connection(server, error):
     client = pyuv.TCP(server.loop)
     server.accept(client)
     clients.append(client)

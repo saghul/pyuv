@@ -15,18 +15,21 @@ on_pipe_connection(uv_stream_t* server, int status)
 
     IOStream *base = (IOStream *)self;
 
+    PyObject *result, *py_errorno;
+
     if (status != 0) {
         uv_err_t err = uv_last_error(UV_LOOP(base));
-        PyErr_SetString(PyExc_PipeError, uv_strerror(err));
-            PyErr_WriteUnraisable(PyExc_PipeError);
+        py_errorno = PyInt_FromLong((long)err.code);
     } else {
-        PyObject *result;
-        result = PyObject_CallFunctionObjArgs(self->on_new_connection_cb, self, NULL);
-        if (result == NULL) {
-            PyErr_WriteUnraisable(self->on_new_connection_cb);
-        }
-        Py_XDECREF(result);
+        py_errorno = Py_None;
+        Py_INCREF(Py_None);
     }
+
+    result = PyObject_CallFunctionObjArgs(self->on_new_connection_cb, self, py_errorno, NULL);
+    if (result == NULL) {
+        PyErr_WriteUnraisable(self->on_new_connection_cb);
+    }
+    Py_XDECREF(result);
 
     Py_DECREF(self);
     PyGILState_Release(gstate);
@@ -44,8 +47,7 @@ on_pipe_client_connection(uv_connect_t *req, int status)
     Pipe *self = (Pipe *)req_data->obj;
     PyObject *callback = req_data->callback;
 
-    PyObject *py_status;
-    PyObject *result;
+    PyObject *result, *py_errorno;
 
     ASSERT(self);
     /* Object could go out of scope in the callback, increase refcount to avoid it */
@@ -55,12 +57,13 @@ on_pipe_client_connection(uv_connect_t *req, int status)
 
     if (status != 0) {
         uv_err_t err = uv_last_error(UV_LOOP(base));
-        py_status = PyInt_FromLong(err.code);
+        py_errorno = PyInt_FromLong(err.code);
     } else {
-        py_status = PyInt_FromLong(0);
+        py_errorno = Py_None;
+        Py_INCREF(Py_None);
     }
 
-    result = PyObject_CallFunctionObjArgs(callback, self, py_status, NULL);
+    result = PyObject_CallFunctionObjArgs(callback, self, py_errorno, NULL);
     if (result == NULL) {
         PyErr_WriteUnraisable(callback);
     }
@@ -87,20 +90,20 @@ on_pipe_read2(uv_pipe_t* handle, int nread, uv_buf_t buf, uv_handle_type pending
     /* Object could go out of scope in the callback, increase refcount to avoid it */
     Py_INCREF(self);
 
-    PyObject *data;
-    PyObject *result;
+    PyObject *result, *data, *py_errorno;
 
     if (nread >= 0) {
         data = PyString_FromStringAndSize(buf.base, nread);
+        py_errorno = Py_None;
+        Py_INCREF(Py_None);
     } else if (nread < 0) {
-        uv_err_t err = uv_last_error(UV_LOOP(self));
-        // TODO: pass error code to callback. 'status' attribute?
-        UNUSED_ARG(err);
         data = Py_None;
         Py_INCREF(Py_None);
+        uv_err_t err = uv_last_error(UV_LOOP(self));
+        py_errorno = PyInt_FromLong((long)err.code);
     }
 
-    result = PyObject_CallFunctionObjArgs(self->on_read_cb, self, data, PyInt_FromLong((long)pending), NULL);
+    result = PyObject_CallFunctionObjArgs(self->on_read_cb, self, data, py_errorno, PyInt_FromLong((long)pending), NULL);
     if (result == NULL) {
         PyErr_WriteUnraisable(self->on_read_cb);
     }

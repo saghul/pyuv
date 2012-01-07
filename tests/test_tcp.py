@@ -9,8 +9,8 @@ TEST_PORT = 1234
 
 class TCPErrorTest(common.UVTestCase):
 
-    def on_client_connect_error(self, client, status):
-        self.assertNotEqual(status, 0)
+    def on_client_connect_error(self, client, error):
+        self.assertNotEqual(error, None)
         client.close()
 
     def test_client1(self):
@@ -28,25 +28,26 @@ class TCPTest(common.UVTestCase):
         self.client = None
         self.client_connections = []
 
-    def on_connection(self, server):
+    def on_connection(self, server, error):
+        self.assertEqual(error, None)
         client = pyuv.TCP(pyuv.Loop.default_loop())
         server.accept(client)
         self.client_connections.append(client)
         client.start_read(self.on_client_connection_read)
         client.write("PING"+os.linesep)
 
-    def on_client_connection_read(self, client, data):
+    def on_client_connection_read(self, client, data, error):
         if data is None:
             client.close()
             self.client_connections.remove(client)
             self.server.close()
             return
 
-    def on_client_connection(self, client, status):
-        self.assertEquals(status, 0)
+    def on_client_connection(self, client, error):
+        self.assertEqual(error, None)
         client.start_read(self.on_client_read)
 
-    def on_client_read(self, client, data):
+    def on_client_read(self, client, data, error):
         self.assertNotEqual(data, None)
         data = data.strip()
         self.assertEquals(data, "PING")
@@ -69,25 +70,25 @@ class TCPTestList(common.UVTestCase):
         self.client = None
         self.client_connections = []
 
-    def on_connection(self, server):
+    def on_connection(self, server, error):
         client = pyuv.TCP(pyuv.Loop.default_loop())
         server.accept(client)
         self.client_connections.append(client)
         client.start_read(self.on_client_connection_read)
         client.write(["PING1", "PING2", "PING3", "PING4", "PING5", os.linesep])
 
-    def on_client_connection_read(self, client, data):
+    def on_client_connection_read(self, client, data, error):
         if data is None:
             client.close()
             self.client_connections.remove(client)
             self.server.close()
             return
 
-    def on_client_connection(self, client, status):
-        self.assertEquals(status, 0)
+    def on_client_connection(self, client, error):
+        self.assertEquals(error, None)
         client.start_read(self.on_client_read)
 
-    def on_client_read(self, client, data):
+    def on_client_read(self, client, data, error):
         self.assertNotEqual(data, None)
         data = data.strip()
         self.assertEquals(data, "PING1PING2PING3PING4PING5")
@@ -110,32 +111,32 @@ class TCPShutdownTest(common.UVTestCase):
         self.client = None
         self.client_connections = []
 
-    def on_connection(self, server):
+    def on_connection(self, server, error):
         client = pyuv.TCP(pyuv.Loop.default_loop())
         server.accept(client)
         self.client_connections.append(client)
         client.start_read(self.on_client_connection_read)
         client.write("PING"+os.linesep)
 
-    def on_client_connection_read(self, client, data):
+    def on_client_connection_read(self, client, data, error):
         if data is None:
             client.close(self.on_close)
             self.client_connections.remove(client)
             self.server.close(self.on_close)
             return
 
-    def on_client_connection(self, client, status):
-        self.assertEquals(status, 0)
+    def on_client_connection(self, client, error):
+        self.assertEquals(error, None)
         client.start_read(self.on_client_read)
 
     def on_close(self, handle):
         self.close_cb_called += 1
 
-    def on_client_shutdown(self, client):
+    def on_client_shutdown(self, client, error):
         self.shutdown_cb_called += 1
         client.close(self.on_close)
 
-    def on_client_read(self, client, data):
+    def on_client_read(self, client, data, error):
         self.assertNotEqual(data, None)
         data = data.strip()
         self.assertEquals(data, "PING")
