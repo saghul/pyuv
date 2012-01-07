@@ -299,16 +299,11 @@ UDP_func_send(UDP *self, PyObject *args)
         return NULL;
     }
 
-    if (!PySequence_Check(data)) {
+    if (!PySequence_Check(data) || PyUnicode_Check(data)) {
         PyErr_SetString(PyExc_TypeError, "only strings and iterables are supported");
         return NULL;
     }
-
-    if(PyUnicode_Check(data)) {
-        // Explicit check to disallow Unicode sequences.
-        PyErr_SetString(PyExc_TypeError, "unicode strings are not supported.");
-    }
-
+    
     if (callback != Py_None && !PyCallable_Check(callback)) {
         PyErr_SetString(PyExc_TypeError, "a callable or None is required");
         return NULL;
