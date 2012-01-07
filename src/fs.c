@@ -37,11 +37,11 @@ stat_cb(uv_fs_t* req) {
     unsigned long ansec, mnsec, cnsec;
     PyObject *result, *errorno, *stat_data;
 
-    result = PyInt_FromLong((long)req->result);
     if (req->result < 0) {
         errorno = PyInt_FromLong((long)req->errorno);
     } else {
-        errorno = PyInt_FromLong(0);
+        errorno = Py_None;
+        Py_INCREF(Py_None);
     }
 
     stat_data = PyTuple_New(13);
@@ -109,11 +109,11 @@ stat_cb(uv_fs_t* req) {
 #endif
     }
 
-    PyObject *cb_result = PyObject_CallFunctionObjArgs(req_data->callback, req_data->loop, req_data->data, result, errorno, stat_data, NULL);
-    if (cb_result == NULL) {
+    result = PyObject_CallFunctionObjArgs(req_data->callback, req_data->loop, req_data->data, stat_data, errorno, NULL);
+    if (result == NULL) {
         PyErr_WriteUnraisable(req_data->callback);
     }
-    Py_XDECREF(cb_result);
+    Py_XDECREF(result);
 
 end:
 
@@ -139,18 +139,18 @@ unlink_cb(uv_fs_t* req) {
 
     PyObject *result, *errorno;
 
-    result = PyInt_FromLong((long)req->result);
     if (req->result < 0) {
         errorno = PyInt_FromLong((long)req->errorno);
     } else {
-        errorno = PyInt_FromLong(0);
+        errorno = Py_None;
+        Py_INCREF(Py_None);
     }
 
-    PyObject *cb_result = PyObject_CallFunctionObjArgs(req_data->callback, req_data->loop, req_data->data, result, errorno, NULL);
-    if (cb_result == NULL) {
+    result = PyObject_CallFunctionObjArgs(req_data->callback, req_data->loop, req_data->data, errorno, NULL);
+    if (result == NULL) {
         PyErr_WriteUnraisable(req_data->callback);
     }
-    Py_XDECREF(cb_result);
+    Py_XDECREF(result);
 
     uv_fs_req_cleanup(req);
     Py_DECREF(req_data->loop);
@@ -173,18 +173,18 @@ mkdir_cb(uv_fs_t* req) {
 
     PyObject *result, *errorno;
 
-    result = PyInt_FromLong((long)req->result);
     if (req->result < 0) {
         errorno = PyInt_FromLong((long)req->errorno);
     } else {
-        errorno = PyInt_FromLong(0);
+        errorno = Py_None;
+        Py_INCREF(Py_None);
     }
 
-    PyObject *cb_result = PyObject_CallFunctionObjArgs(req_data->callback, req_data->loop, req_data->data, result, errorno, NULL);
-    if (cb_result == NULL) {
+    result = PyObject_CallFunctionObjArgs(req_data->callback, req_data->loop, req_data->data, errorno, NULL);
+    if (result == NULL) {
         PyErr_WriteUnraisable(req_data->callback);
     }
-    Py_XDECREF(cb_result);
+    Py_XDECREF(result);
 
     uv_fs_req_cleanup(req);
     Py_DECREF(req_data->loop);
@@ -207,18 +207,18 @@ rmdir_cb(uv_fs_t* req) {
 
     PyObject *result, *errorno;
 
-    result = PyInt_FromLong((long)req->result);
     if (req->result < 0) {
         errorno = PyInt_FromLong((long)req->errorno);
     } else {
-        errorno = PyInt_FromLong(0);
+        errorno = Py_None;
+        Py_INCREF(Py_None);
     }
 
-    PyObject *cb_result = PyObject_CallFunctionObjArgs(req_data->callback, req_data->loop, req_data->data, result, errorno, NULL);
-    if (cb_result == NULL) {
+    result = PyObject_CallFunctionObjArgs(req_data->callback, req_data->loop, req_data->data, errorno, NULL);
+    if (result == NULL) {
         PyErr_WriteUnraisable(req_data->callback);
     }
-    Py_XDECREF(cb_result);
+    Py_XDECREF(result);
 
     uv_fs_req_cleanup(req);
     Py_DECREF(req_data->loop);
@@ -241,18 +241,18 @@ rename_cb(uv_fs_t* req) {
 
     PyObject *result, *errorno;
 
-    result = PyInt_FromLong((long)req->result);
     if (req->result < 0) {
         errorno = PyInt_FromLong((long)req->errorno);
     } else {
-        errorno = PyInt_FromLong(0);
+        errorno = Py_None;
+        Py_INCREF(Py_None);
     }
 
-    PyObject *cb_result = PyObject_CallFunctionObjArgs(req_data->callback, req_data->loop, req_data->data, result, errorno, NULL);
-    if (cb_result == NULL) {
+    result = PyObject_CallFunctionObjArgs(req_data->callback, req_data->loop, req_data->data, errorno, NULL);
+    if (result == NULL) {
         PyErr_WriteUnraisable(req_data->callback);
     }
-    Py_XDECREF(cb_result);
+    Py_XDECREF(result);
 
     uv_fs_req_cleanup(req);
     Py_DECREF(req_data->loop);
@@ -275,18 +275,18 @@ chmod_cb(uv_fs_t* req) {
 
     PyObject *result, *errorno;
 
-    result = PyInt_FromLong((long)req->result);
     if (req->result < 0) {
         errorno = PyInt_FromLong((long)req->errorno);
     } else {
-        errorno = PyInt_FromLong(0);
+        errorno = Py_None;
+        Py_INCREF(Py_None);
     }
 
-    PyObject *cb_result = PyObject_CallFunctionObjArgs(req_data->callback, req_data->loop, req_data->data, result, errorno, NULL);
-    if (cb_result == NULL) {
+    result = PyObject_CallFunctionObjArgs(req_data->callback, req_data->loop, req_data->data, errorno, NULL);
+    if (result == NULL) {
         PyErr_WriteUnraisable(req_data->callback);
     }
-    Py_XDECREF(cb_result);
+    Py_XDECREF(result);
 
     uv_fs_req_cleanup(req);
     Py_DECREF(req_data->loop);
@@ -309,18 +309,18 @@ link_cb(uv_fs_t* req) {
 
     PyObject *result, *errorno;
 
-    result = PyInt_FromLong((long)req->result);
     if (req->result < 0) {
         errorno = PyInt_FromLong((long)req->errorno);
     } else {
-        errorno = PyInt_FromLong(0);
+        errorno = Py_None;
+        Py_INCREF(Py_None);
     }
 
-    PyObject *cb_result = PyObject_CallFunctionObjArgs(req_data->callback, req_data->loop, req_data->data, result, errorno, NULL);
-    if (cb_result == NULL) {
+    result = PyObject_CallFunctionObjArgs(req_data->callback, req_data->loop, req_data->data, errorno, NULL);
+    if (result == NULL) {
         PyErr_WriteUnraisable(req_data->callback);
     }
-    Py_XDECREF(cb_result);
+    Py_XDECREF(result);
 
     uv_fs_req_cleanup(req);
     Py_DECREF(req_data->loop);
@@ -343,18 +343,18 @@ symlink_cb(uv_fs_t* req) {
 
     PyObject *result, *errorno;
 
-    result = PyInt_FromLong((long)req->result);
     if (req->result < 0) {
         errorno = PyInt_FromLong((long)req->errorno);
     } else {
-        errorno = PyInt_FromLong(0);
+        errorno = Py_None;
+        Py_INCREF(Py_None);
     }
 
-    PyObject *cb_result = PyObject_CallFunctionObjArgs(req_data->callback, req_data->loop, req_data->data, result, errorno, NULL);
-    if (cb_result == NULL) {
+    result = PyObject_CallFunctionObjArgs(req_data->callback, req_data->loop, req_data->data, errorno, NULL);
+    if (result == NULL) {
         PyErr_WriteUnraisable(req_data->callback);
     }
-    Py_XDECREF(cb_result);
+    Py_XDECREF(result);
 
     uv_fs_req_cleanup(req);
     Py_DECREF(req_data->loop);
@@ -377,20 +377,20 @@ readlink_cb(uv_fs_t* req) {
 
     PyObject *result, *errorno, *path;
 
-    result = PyInt_FromLong((long)req->result);
     if (req->result < 0) {
         errorno = PyInt_FromLong((long)req->errorno);
         path = Py_None;
     } else {
-        errorno = PyInt_FromLong(0);
+        errorno = Py_None;
+        Py_INCREF(Py_None);
         path = PyString_FromString(req->ptr);
     }
 
-    PyObject *cb_result = PyObject_CallFunctionObjArgs(req_data->callback, req_data->loop, req_data->data, result, errorno, path, NULL);
-    if (cb_result == NULL) {
+    result = PyObject_CallFunctionObjArgs(req_data->callback, req_data->loop, req_data->data, path, errorno, NULL);
+    if (result == NULL) {
         PyErr_WriteUnraisable(req_data->callback);
     }
-    Py_XDECREF(cb_result);
+    Py_XDECREF(result);
 
     uv_fs_req_cleanup(req);
     Py_DECREF(req_data->loop);
@@ -413,18 +413,18 @@ chown_cb(uv_fs_t* req) {
 
     PyObject *result, *errorno;
 
-    result = PyInt_FromLong((long)req->result);
     if (req->result < 0) {
         errorno = PyInt_FromLong((long)req->errorno);
     } else {
-        errorno = PyInt_FromLong(0);
+        errorno = Py_None;
+        Py_INCREF(Py_None);
     }
 
-    PyObject *cb_result = PyObject_CallFunctionObjArgs(req_data->callback, req_data->loop, req_data->data, result, errorno, NULL);
-    if (cb_result == NULL) {
+    result = PyObject_CallFunctionObjArgs(req_data->callback, req_data->loop, req_data->data, errorno, NULL);
+    if (result == NULL) {
         PyErr_WriteUnraisable(req_data->callback);
     }
-    Py_XDECREF(cb_result);
+    Py_XDECREF(result);
 
     uv_fs_req_cleanup(req);
     Py_DECREF(req_data->loop);
@@ -445,20 +445,21 @@ open_cb(uv_fs_t* req) {
 
     fs_req_data_t *req_data = (fs_req_data_t*)(req->data);
 
-    PyObject *result, *errorno;
+    PyObject *result, *fd, *errorno;
 
-    result = PyInt_FromLong((long)req->result);
+    fd = PyInt_FromLong((long)req->result);
     if (req->result < 0) {
         errorno = PyInt_FromLong((long)req->errorno);
     } else {
-        errorno = PyInt_FromLong(0);
+        errorno = Py_None;
+        Py_INCREF(Py_None);
     }
 
-    PyObject *cb_result = PyObject_CallFunctionObjArgs(req_data->callback, req_data->loop, req_data->data, result, errorno, NULL);
-    if (cb_result == NULL) {
+    result = PyObject_CallFunctionObjArgs(req_data->callback, req_data->loop, req_data->data, fd, errorno, NULL);
+    if (result == NULL) {
         PyErr_WriteUnraisable(req_data->callback);
     }
-    Py_XDECREF(cb_result);
+    Py_XDECREF(result);
 
     uv_fs_req_cleanup(req);
     Py_DECREF(req_data->loop);
@@ -481,18 +482,18 @@ close_cb(uv_fs_t* req) {
 
     PyObject *result, *errorno;
 
-    result = PyInt_FromLong((long)req->result);
     if (req->result < 0) {
         errorno = PyInt_FromLong((long)req->errorno);
     } else {
-        errorno = PyInt_FromLong(0);
+        errorno = Py_None;
+        Py_INCREF(Py_None);
     }
 
-    PyObject *cb_result = PyObject_CallFunctionObjArgs(req_data->callback, req_data->loop, req_data->data, result, errorno, NULL);
-    if (cb_result == NULL) {
+    result = PyObject_CallFunctionObjArgs(req_data->callback, req_data->loop, req_data->data, errorno, NULL);
+    if (result == NULL) {
         PyErr_WriteUnraisable(req_data->callback);
     }
-    Py_XDECREF(cb_result);
+    Py_XDECREF(result);
 
     uv_fs_req_cleanup(req);
     Py_DECREF(req_data->loop);
@@ -515,21 +516,21 @@ read_cb(uv_fs_t* req) {
 
     PyObject *result, *errorno, *read_data;
 
-    result = PyInt_FromLong((long)req->result);
     if (req->result < 0) {
         errorno = PyInt_FromLong((long)req->errorno);
         read_data = Py_None;
         Py_INCREF(Py_None);
     } else {
-        errorno = PyInt_FromLong(0);
+        errorno = Py_None;
+        Py_INCREF(Py_None);
         read_data = PyString_FromStringAndSize(req_data->buf.base, req->result);
     }
 
-    PyObject *cb_result = PyObject_CallFunctionObjArgs(req_data->callback, req_data->loop, req_data->data, result, errorno, read_data, NULL);
-    if (cb_result == NULL) {
+    result = PyObject_CallFunctionObjArgs(req_data->callback, req_data->loop, req_data->data, read_data, errorno, NULL);
+    if (result == NULL) {
         PyErr_WriteUnraisable(req_data->callback);
     }
-    Py_XDECREF(cb_result);
+    Py_XDECREF(result);
 
     uv_fs_req_cleanup(req);
     Py_DECREF(req_data->loop);
@@ -551,20 +552,21 @@ write_cb(uv_fs_t* req) {
 
     fs_req_data_t *req_data = (fs_req_data_t*)(req->data);
 
-    PyObject *result, *errorno;
+    PyObject *result, *errorno, *bytes_written;
 
-    result = PyInt_FromLong((long)req->result);
+    bytes_written = PyInt_FromLong((long)req->result);
     if (req->result < 0) {
         errorno = PyInt_FromLong((long)req->errorno);
     } else {
-        errorno = PyInt_FromLong(0);
+        errorno = Py_None;
+        Py_INCREF(Py_None);
     }
 
-    PyObject *cb_result = PyObject_CallFunctionObjArgs(req_data->callback, req_data->loop, req_data->data, result, errorno, NULL);
-    if (cb_result == NULL) {
+    result = PyObject_CallFunctionObjArgs(req_data->callback, req_data->loop, req_data->data, bytes_written, errorno, NULL);
+    if (result == NULL) {
         PyErr_WriteUnraisable(req_data->callback);
     }
-    Py_XDECREF(cb_result);
+    Py_XDECREF(result);
 
     uv_fs_req_cleanup(req);
     Py_DECREF(req_data->loop);
@@ -588,18 +590,18 @@ fsync_cb(uv_fs_t* req) {
 
     PyObject *result, *errorno;
 
-    result = PyInt_FromLong((long)req->result);
     if (req->result < 0) {
         errorno = PyInt_FromLong((long)req->errorno);
     } else {
-        errorno = PyInt_FromLong(0);
+        errorno = Py_None;
+        Py_INCREF(Py_None);
     }
 
-    PyObject *cb_result = PyObject_CallFunctionObjArgs(req_data->callback, req_data->loop, req_data->data, result, errorno, NULL);
-    if (cb_result == NULL) {
+    result = PyObject_CallFunctionObjArgs(req_data->callback, req_data->loop, req_data->data, errorno, NULL);
+    if (result == NULL) {
         PyErr_WriteUnraisable(req_data->callback);
     }
-    Py_XDECREF(cb_result);
+    Py_XDECREF(result);
 
     uv_fs_req_cleanup(req);
     Py_DECREF(req_data->loop);
@@ -622,18 +624,18 @@ ftruncate_cb(uv_fs_t* req) {
 
     PyObject *result, *errorno;
 
-    result = PyInt_FromLong((long)req->result);
     if (req->result < 0) {
         errorno = PyInt_FromLong((long)req->errorno);
     } else {
-        errorno = PyInt_FromLong(0);
+        errorno = Py_None;
+        Py_INCREF(Py_None);
     }
 
-    PyObject *cb_result = PyObject_CallFunctionObjArgs(req_data->callback, req_data->loop, req_data->data, result, errorno, NULL);
-    if (cb_result == NULL) {
+    result = PyObject_CallFunctionObjArgs(req_data->callback, req_data->loop, req_data->data, errorno, NULL);
+    if (result == NULL) {
         PyErr_WriteUnraisable(req_data->callback);
     }
-    Py_XDECREF(cb_result);
+    Py_XDECREF(result);
 
     uv_fs_req_cleanup(req);
     Py_DECREF(req_data->loop);
@@ -658,13 +660,13 @@ readdir_cb(uv_fs_t* req) {
     char *ptr;
     PyObject *result, *errorno, *files, *item;
 
-    result = PyInt_FromLong((long)req->result);
     if (req->result < 0) {
         errorno = PyInt_FromLong((long)req->errorno);
         files = Py_None;
         Py_INCREF(Py_None);
     } else {
-        errorno = PyInt_FromLong(0);
+        errorno = Py_None;
+        Py_INCREF(Py_None);
         files = PyList_New(0);
         if (!files) {
             PyErr_NoMemory();
@@ -683,11 +685,11 @@ readdir_cb(uv_fs_t* req) {
         }
     }
 
-    PyObject *cb_result = PyObject_CallFunctionObjArgs(req_data->callback, req_data->loop, req_data->data, result, errorno, files, NULL);
-    if (cb_result == NULL) {
+    result = PyObject_CallFunctionObjArgs(req_data->callback, req_data->loop, req_data->data, files, errorno, NULL);
+    if (result == NULL) {
         PyErr_WriteUnraisable(req_data->callback);
     }
-    Py_XDECREF(cb_result);
+    Py_XDECREF(result);
 
     uv_fs_req_cleanup(req);
     Py_DECREF(req_data->loop);
@@ -708,20 +710,21 @@ sendfile_cb(uv_fs_t* req) {
 
     fs_req_data_t *req_data = (fs_req_data_t*)(req->data);
 
-    PyObject *result, *errorno;
+    PyObject *result, *errorno, *bytes_written;
 
-    result = PyInt_FromLong((long)req->result);
+    bytes_written = PyInt_FromLong((long)req->result);
     if (req->result < 0) {
         errorno = PyInt_FromLong((long)req->errorno);
     } else {
-        errorno = PyInt_FromLong(0);
+        errorno = Py_None;
+        Py_INCREF(Py_None);
     }
 
-    PyObject *cb_result = PyObject_CallFunctionObjArgs(req_data->callback, req_data->loop, req_data->data, result, errorno, NULL);
-    if (cb_result == NULL) {
+    result = PyObject_CallFunctionObjArgs(req_data->callback, req_data->loop, req_data->data, bytes_written, errorno, NULL);
+    if (result == NULL) {
         PyErr_WriteUnraisable(req_data->callback);
     }
-    Py_XDECREF(cb_result);
+    Py_XDECREF(result);
 
     uv_fs_req_cleanup(req);
     Py_DECREF(req_data->loop);
@@ -744,18 +747,18 @@ utime_cb(uv_fs_t* req) {
 
     PyObject *result, *errorno;
 
-    result = PyInt_FromLong((long)req->result);
     if (req->result < 0) {
         errorno = PyInt_FromLong((long)req->errorno);
     } else {
-        errorno = PyInt_FromLong(0);
+        errorno = Py_None;
+        Py_INCREF(Py_None);
     }
 
-    PyObject *cb_result = PyObject_CallFunctionObjArgs(req_data->callback, req_data->loop, req_data->data, result, errorno, NULL);
-    if (cb_result == NULL) {
+    result = PyObject_CallFunctionObjArgs(req_data->callback, req_data->loop, req_data->data, errorno, NULL);
+    if (result == NULL) {
         PyErr_WriteUnraisable(req_data->callback);
     }
-    Py_XDECREF(cb_result);
+    Py_XDECREF(result);
 
     uv_fs_req_cleanup(req);
     Py_DECREF(req_data->loop);

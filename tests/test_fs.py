@@ -27,41 +27,29 @@ class FSTestStat(common.UVTestCase):
         os.remove(TEST_FILE)
         os.remove(TEST_LINK)
 
-    def stat_error_cb(self, loop, data, result, errorno, stat_result):
-        self.result = result
+    def stat_cb(self, loop, data, stat_result, errorno):
         self.errorno = errorno
 
     def test_stat_error(self):
-        self.result = None
         self.errorno = None
-        pyuv.fs.stat(self.loop, BAD_FILE, self.stat_error_cb)
+        pyuv.fs.stat(self.loop, BAD_FILE, self.stat_cb)
         self.loop.run()
-        self.assertEqual(self.result, -1)
         self.assertEqual(self.errorno, pyuv.errno.UV_ENOENT)
 
-    def stat_cb(self, loop, data, result, errorno, stat_result):
-        self.result = result
-        self.errorno = errorno
-
     def test_stat(self):
-        self.result = None
         self.errorno = None
         pyuv.fs.stat(self.loop, TEST_FILE, self.stat_cb)
         self.loop.run()
-        self.assertEqual(self.result, 0)
-        self.assertEqual(self.errorno, 0)
+        self.assertEqual(self.errorno, None)
 
-    def lstat_cb(self, loop, data, result, errorno, stat_result):
-        self.result = result
+    def lstat_cb(self, loop, data, stat_result, errorno):
         self.errorno = errorno
 
     def test_lstat(self):
-        self.result = None
         self.errorno = None
         pyuv.fs.lstat(self.loop, TEST_LINK, self.lstat_cb)
         self.loop.run()
-        self.assertEqual(self.result, 0)
-        self.assertEqual(self.errorno, 0)
+        self.assertEqual(self.errorno, None)
 
 
 class FSTestFstat(common.UVTestCase):
@@ -75,17 +63,14 @@ class FSTestFstat(common.UVTestCase):
         self.file.close()
         os.remove(TEST_FILE)
 
-    def fstat_cb(self, loop, data, result, errorno, stat_data):
-        self.result = result
+    def fstat_cb(self, loop, data, stat_data, errorno):
         self.errorno = errorno
 
     def test_fstat(self):
-        self.result = None
         self.errorno = None
         pyuv.fs.fstat(self.loop, self.file.fileno(), self.fstat_cb)
         self.loop.run()
-        self.assertEqual(self.result, 0)
-        self.assertEqual(self.errorno, 0)
+        self.assertEqual(self.errorno, None)
 
 
 class FSTestUnlink(common.UVTestCase):
@@ -101,29 +86,23 @@ class FSTestUnlink(common.UVTestCase):
         except OSError:
             pass
 
-    def bad_unlink_cb(self, loop, data, result, errorno):
-        self.result = result
+    def bad_unlink_cb(self, loop, data, errorno):
         self.errorno = errorno
 
     def test_bad_unlink(self):
-        self.result = None
         self.errorno = None
         pyuv.fs.unlink(self.loop, BAD_FILE, self.bad_unlink_cb)
         self.loop.run()
-        self.assertEqual(self.result, -1)
         self.assertEqual(self.errorno, pyuv.errno.UV_ENOENT)
 
-    def unlink_cb(self, loop, data, result, errorno):
-        self.result = result
+    def unlink_cb(self, loop, data, errorno):
         self.errorno = errorno
 
     def test_unlink(self):
-        self.result = None
         self.errorno = None
         pyuv.fs.unlink(self.loop, TEST_FILE, self.unlink_cb)
         self.loop.run()
-        self.assertEqual(self.result, 0)
-        self.assertEqual(self.errorno, 0)
+        self.assertEqual(self.errorno, None)
 
 
 class FSTestMkdir(common.UVTestCase):
@@ -139,25 +118,20 @@ class FSTestMkdir(common.UVTestCase):
         except OSError:
             pass
 
-    def mkdir_cb(self, loop, data, result, errorno):
-        self.result = result
+    def mkdir_cb(self, loop, data, errorno):
         self.errorno = errorno
 
     def test_bad_mkdir(self):
-        self.result = None
         self.errorno = None
         pyuv.fs.mkdir(self.loop, BAD_DIR, 0755, self.mkdir_cb)
         self.loop.run()
-        self.assertEqual(self.result, -1)
         self.assertEqual(self.errorno, pyuv.errno.UV_EEXIST)
 
     def test_mkdir(self):
-        self.result = None
         self.errorno = None
         pyuv.fs.mkdir(self.loop, TEST_DIR, 0755, self.mkdir_cb)
         self.loop.run()
-        self.assertEqual(self.result, 0)
-        self.assertEqual(self.errorno, 0)
+        self.assertEqual(self.errorno, None)
         self.assertTrue(os.path.isdir(TEST_DIR))
 
 
@@ -173,25 +147,20 @@ class FSTestRmdir(common.UVTestCase):
         except OSError:
             pass
 
-    def rmdir_cb(self, loop, data, result, errorno):
-        self.result = result
+    def rmdir_cb(self, loop, data, errorno):
         self.errorno = errorno
 
     def test_bad_rmdir(self):
-        self.result = None
         self.errorno = None
         pyuv.fs.rmdir(self.loop, BAD_DIR, self.rmdir_cb)
         self.loop.run()
-        self.assertEqual(self.result, -1)
         self.assertEqual(self.errorno, pyuv.errno.UV_ENOENT)
 
     def test_rmdir(self):
-        self.result = None
         self.errorno = None
         pyuv.fs.rmdir(self.loop, TEST_DIR, self.rmdir_cb)
         self.loop.run()
-        self.assertEqual(self.result, 0)
-        self.assertEqual(self.errorno, 0)
+        self.assertEqual(self.errorno, None)
         self.assertFalse(os.path.isdir(TEST_DIR))
 
 
@@ -212,17 +181,14 @@ class FSTestRename(common.UVTestCase):
         except OSError:
             pass
 
-    def rename_cb(self, loop, data, result, errorno):
-        self.result = result
+    def rename_cb(self, loop, data, errorno):
         self.errorno = errorno
 
     def test_rename(self):
-        self.result = None
         self.errorno = None
         pyuv.fs.rename(self.loop, TEST_FILE, TEST_FILE2, self.rename_cb)
         self.loop.run()
-        self.assertEqual(self.result, 0)
-        self.assertEqual(self.errorno, 0)
+        self.assertEqual(self.errorno, None)
         self.assertFalse(os.path.exists(TEST_FILE))
         self.assertTrue(os.path.exists(TEST_FILE2))
 
@@ -237,17 +203,14 @@ class FSTestChmod(common.UVTestCase):
     def tearDown(self):
         os.remove(TEST_FILE)
 
-    def chmod_cb(self, loop, data, result, errorno):
-        self.result = result
+    def chmod_cb(self, loop, data, errorno):
         self.errorno = errorno
 
     def test_chmod(self):
-        self.result = None
         self.errorno = None
         pyuv.fs.chmod(self.loop, TEST_FILE, 0777, self.chmod_cb)
         self.loop.run()
-        self.assertEqual(self.result, 0)
-        self.assertEqual(self.errorno, 0)
+        self.assertEqual(self.errorno, None)
         mode = os.stat(TEST_FILE).st_mode
         self.assertTrue(bool(mode & stat.S_IRWXU) and bool(mode & stat.S_IRWXG) and bool(mode & stat.S_IRWXO))
 
@@ -263,17 +226,14 @@ class FSTestFchmod(common.UVTestCase):
         self.file.close()
         os.remove(TEST_FILE)
 
-    def fchmod_cb(self, loop, data, result, errorno):
-        self.result = result
+    def fchmod_cb(self, loop, data, errorno):
         self.errorno = errorno
 
     def test_fchmod(self):
-        self.result = None
         self.errorno = None
         pyuv.fs.fchmod(self.loop, self.file.fileno(), 0777, self.fchmod_cb)
         self.loop.run()
-        self.assertEqual(self.result, 0)
-        self.assertEqual(self.errorno, 0)
+        self.assertEqual(self.errorno, None)
         mode = os.stat(TEST_FILE).st_mode
         self.assertTrue(bool(mode & stat.S_IRWXU) and bool(mode & stat.S_IRWXG) and bool(mode & stat.S_IRWXO))
 
@@ -289,17 +249,14 @@ class FSTestLink(common.UVTestCase):
         os.remove(TEST_FILE)
         os.remove(TEST_LINK)
 
-    def link_cb(self, loop, data, result, errorno):
-        self.result = result
+    def link_cb(self, loop, data, errorno):
         self.errorno = errorno
 
     def test_link(self):
-        self.result = None
         self.errorno = None
         pyuv.fs.link(self.loop, TEST_FILE, TEST_LINK, self.link_cb)
         self.loop.run()
-        self.assertEqual(self.result, 0)
-        self.assertEqual(self.errorno, 0)
+        self.assertEqual(self.errorno, None)
         self.assertEqual(os.stat(TEST_FILE).st_ino, os.stat(TEST_LINK).st_ino)
 
 
@@ -314,17 +271,14 @@ class FSTestSymlink(common.UVTestCase):
         os.remove(TEST_FILE)
         os.remove(TEST_LINK)
 
-    def symlink_cb(self, loop, data, result, errorno):
-        self.result = result
+    def symlink_cb(self, loop, data, errorno):
         self.errorno = errorno
 
     def test_symlink(self):
-        self.result = None
         self.errorno = None
         pyuv.fs.symlink(self.loop, TEST_FILE, TEST_LINK, 0, self.symlink_cb)
         self.loop.run()
-        self.assertEqual(self.result, 0)
-        self.assertEqual(self.errorno, 0)
+        self.assertEqual(self.errorno, None)
         self.assertTrue(os.path.islink(TEST_LINK))
 
 
@@ -340,19 +294,16 @@ class FSTestReadlink(common.UVTestCase):
         os.remove(TEST_FILE)
         os.remove(TEST_LINK)
 
-    def readlink_cb(self, loop, data, result, errorno, path):
-        self.result = result
+    def readlink_cb(self, loop, data, path, errorno):
         self.errorno = errorno
         self.link_path = path
 
     def test_readlink(self):
-        self.result = None
         self.errorno = None
         self.link_path = None
         pyuv.fs.readlink(self.loop, TEST_LINK, self.readlink_cb)
         self.loop.run()
-        self.assertEqual(self.result, 0)
-        self.assertEqual(self.errorno, 0)
+        self.assertEqual(self.errorno, None)
         self.assertEqual(self.link_path, TEST_FILE)
 
 
@@ -366,17 +317,14 @@ class FSTestChown(common.UVTestCase):
     def tearDown(self):
         os.remove(TEST_FILE)
 
-    def chown_cb(self, loop, data, result, errorno):
-        self.result = result
+    def chown_cb(self, loop, data, errorno):
         self.errorno = errorno
 
     def test_chown(self):
-        self.result = None
         self.errorno = None
         pyuv.fs.chown(self.loop, TEST_FILE, -1, -1, self.chown_cb)
         self.loop.run()
-        self.assertEqual(self.result, 0)
-        self.assertEqual(self.errorno, 0)
+        self.assertEqual(self.errorno, None)
 
 
 class FSTestFchown(common.UVTestCase):
@@ -390,17 +338,14 @@ class FSTestFchown(common.UVTestCase):
         self.file.close()
         os.remove(TEST_FILE)
 
-    def fchown_cb(self, loop, data, result, errorno):
-        self.result = result
+    def fchown_cb(self, loop, data, errorno):
         self.errorno = errorno
 
     def test_fchown(self):
-        self.result = None
         self.errorno = None
         pyuv.fs.fchown(self.loop, self.file.fileno(), -1, -1, self.fchown_cb)
         self.loop.run()
-        self.assertEqual(self.result, 0)
-        self.assertEqual(self.errorno, 0)
+        self.assertEqual(self.errorno, None)
 
 
 class FSTestOpen(common.UVTestCase):
@@ -414,34 +359,30 @@ class FSTestOpen(common.UVTestCase):
         except OSError:
             pass
 
-    def close_cb(self, loop, data, result, errorno):
-        self.result = result
+    def close_cb(self, loop, data, errorno):
         self.errorno = errorno
 
-    def open_cb(self, loop, data, result, errorno):
-        fd = result
+    def open_cb(self, loop, data, fd, errorno):
         self.assertNotEqual(fd, -1)
-        self.assertEqual(errorno, 0)
+        self.assertEqual(errorno, None)
         pyuv.fs.close(self.loop, fd, self.close_cb)
 
     def test_open_create(self):
-        self.result = None
         self.errorno = None
         pyuv.fs.open(self.loop, TEST_FILE, os.O_WRONLY|os.O_CREAT, stat.S_IREAD|stat.S_IWRITE, self.open_cb)
         self.loop.run()
-        self.assertEqual(self.result, 0)
-        self.assertEqual(self.errorno, 0)
+        self.assertEqual(self.errorno, None)
 
-    def open_noent_cb(self, loop, data, result, errorno):
-        self.result = result
+    def open_noent_cb(self, loop, data, fd, errorno):
+        self.fd = fd
         self.errorno = errorno
 
     def test_open_noent(self):
-        self.result = None
+        self.fd = None
         self.errorno = None
         pyuv.fs.open(self.loop, BAD_FILE, os.O_RDONLY, 0, self.open_noent_cb)
         self.loop.run()
-        self.assertEqual(self.result, -1)
+        self.assertEqual(self.fd, -1)
         self.assertEqual(self.errorno, pyuv.errno.UV_ENOENT)
 
 
@@ -457,19 +398,16 @@ class FSTestRead(common.UVTestCase):
         self.file.close()
         os.remove(TEST_FILE)
 
-    def read_cb(self, loop, data, result, errorno, read_data):
-        self.result = result
+    def read_cb(self, loop, data, read_data, errorno):
         self.errorno = errorno
         self.data = read_data
 
     def test_read(self):
         self.data = None
-        self.result = None
         self.errorno = None
         pyuv.fs.read(self.loop, self.file.fileno(), 4, -1, self.read_cb)
         self.loop.run()
-        self.assertEqual(self.result, 4)
-        self.assertEqual(self.errorno, 0)
+        self.assertEqual(self.errorno, None)
         self.assertEqual(self.data, 'test')
 
 
@@ -482,18 +420,18 @@ class FSTestWrite(common.UVTestCase):
     def tearDown(self):
         os.remove(TEST_FILE)
 
-    def write_cb(self, loop, data, result, errorno):
+    def write_cb(self, loop, data, bytes_written, errorno):
         self.file.close()
-        self.result = result
+        self.bytes_written = bytes_written
         self.errorno = errorno
 
     def test_write(self):
-        self.result = None
+        self.bytes_written = None
         self.errorno = None
         pyuv.fs.write(self.loop, self.file.fileno(), "TEST", -1, self.write_cb)
         self.loop.run()
-        self.assertEqual(self.result, 4)
-        self.assertEqual(self.errorno, 0)
+        self.assertEqual(self.bytes_written, 4)
+        self.assertEqual(self.errorno, None)
         self.assertEqual(open(TEST_FILE, 'r').read(), "TEST")
 
 
@@ -506,19 +444,17 @@ class FSTestFsync(common.UVTestCase):
     def tearDown(self):
         os.remove(TEST_FILE)
 
-    def write_cb(self, loop, data, result, errorno):
-        self.assertEqual(result, 4)
-        self.assertEqual(errorno, 0)
+    def write_cb(self, loop, data, bytes_written, errorno):
+        self.assertEqual(bytes_written, 4)
+        self.assertEqual(errorno, None)
         pyuv.fs.fdatasync(self.loop, self.file.fileno(), self.fdatasync_cb)
 
-    def fdatasync_cb(self, loop, data, result, errorno):
-        self.assertNotEqual(result, -1)
-        self.assertEqual(errorno, 0)
+    def fdatasync_cb(self, loop, data, errorno):
+        self.assertEqual(errorno, None)
         pyuv.fs.fsync(self.loop, self.file.fileno(), self.fsync_cb)
 
-    def fsync_cb(self, loop, data, result, errorno):
-        self.assertNotEqual(result, -1)
-        self.assertEqual(errorno, 0)
+    def fsync_cb(self, loop, data, errorno):
+        self.assertEqual(errorno, None)
 
     def test_fsync(self):
         pyuv.fs.write(self.loop, self.file.fileno(), "TEST", -1, self.write_cb)
@@ -539,26 +475,21 @@ class FSTestFtruncate(common.UVTestCase):
         self.file.close()
         os.remove(TEST_FILE)
 
-    def ftruncate_cb(self, loop, data, result, errorno):
-        self.result = result
+    def ftruncate_cb(self, loop, data, errorno):
         self.errorno = errorno
 
     def test_ftruncate1(self):
-        self.result = None
         self.errorno = None
         pyuv.fs.ftruncate(self.loop, self.file.fileno(), 4, self.ftruncate_cb)
         self.loop.run()
-        self.assertEqual(self.result, 0)
-        self.assertEqual(self.errorno, 0)
+        self.assertEqual(self.errorno, None)
         self.assertEqual(open(TEST_FILE, 'r').read(), "test")
 
     def test_ftruncate2(self):
-        self.result = None
         self.errorno = None
         pyuv.fs.ftruncate(self.loop, self.file.fileno(), 0, self.ftruncate_cb)
         self.loop.run()
-        self.assertEqual(self.result, 0)
-        self.assertEqual(self.errorno, 0)
+        self.assertEqual(self.errorno, None)
         self.assertEqual(open(TEST_FILE, 'r').read(), "")
 
 
@@ -576,28 +507,23 @@ class FSTestReaddir(common.UVTestCase):
     def tearDown(self):
         shutil.rmtree(TEST_DIR)
 
-    def readdir_cb(self, loop, data, result, errorno, files):
-        self.result = result
+    def readdir_cb(self, loop, data, files, errorno):
         self.errorno = errorno
         self.files = files
 
     def test_bad_readdir(self):
-        self.result = None
         self.errorno = None
         self.files = None
         pyuv.fs.readdir(self.loop, BAD_DIR, 0, self.readdir_cb)
         self.loop.run()
-        self.assertEqual(self.result, -1)
         self.assertEqual(self.errorno, pyuv.errno.UV_ENOENT)
 
     def test_readdir(self):
-        self.result = None
         self.errorno = None
         self.files = None
         pyuv.fs.readdir(self.loop, TEST_DIR, 0, self.readdir_cb)
         self.loop.run()
-        self.assertNotEqual(self.result, -1)
-        self.assertEqual(self.errorno, 0)
+        self.assertEqual(self.errorno, None)
         self.assertTrue(TEST_FILE in self.files)
         self.assertTrue(TEST_FILE2 in self.files)
         self.assertTrue(TEST_DIR2 in self.files)
@@ -621,8 +547,8 @@ class FSTestSendfile(common.UVTestCase):
         os.remove(TEST_FILE)
         os.remove(TEST_FILE2)
 
-    def sendfile_cb(self, loop, data, result, errorno):
-        self.result = result
+    def sendfile_cb(self, loop, data, bytes_written, errorno):
+        self.bytes_written = bytes_written
         self.errorno = errorno
 
     def test_sendfile(self):
@@ -630,8 +556,8 @@ class FSTestSendfile(common.UVTestCase):
         self.errorno = None
         pyuv.fs.sendfile(self.loop, self.new_file.fileno(), self.file.fileno(), 0, 131072, self.sendfile_cb)
         self.loop.run()
-        self.assertEqual(self.result, 65546)
-        self.assertEqual(self.errorno, 0)
+        self.assertEqual(self.bytes_written, 65546)
+        self.assertEqual(self.errorno, None)
         self.assertEqual(open(TEST_FILE, 'r').read(), open(TEST_FILE2, 'r').read())
 
 
@@ -647,29 +573,24 @@ class FSTestUtime(common.UVTestCase):
         self.file.close()
         os.remove(TEST_FILE)
 
-    def utime_cb(self, loop, data, result, errorno):
-        self.result = result
+    def utime_cb(self, loop, data, errorno):
         self.errorno = errorno
 
     def test_utime(self):
-        self.result = None
         self.errorno = None
         atime = mtime = 400497753
         pyuv.fs.utime(self.loop, TEST_FILE, atime, mtime, self.utime_cb)
         self.loop.run()
-        self.assertEqual(self.result, 0)
-        self.assertEqual(self.errorno, 0)
+        self.assertEqual(self.errorno, None)
         s = os.stat(TEST_FILE)
         self.assertTrue(s.st_atime == atime and s.st_mtime == mtime)
 
     def test_futime(self):
-        self.result = None
         self.errorno = None
         atime = mtime = 400497753
         pyuv.fs.futime(self.loop, self.file.fileno(), atime, mtime, self.utime_cb)
         self.loop.run()
-        self.assertEqual(self.result, 0)
-        self.assertEqual(self.errorno, 0)
+        self.assertEqual(self.errorno, None)
         s = os.stat(TEST_FILE)
         self.assertTrue(s.st_atime == atime and s.st_mtime == mtime)
 
