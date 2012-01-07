@@ -413,7 +413,7 @@ Pipe_func_write2(Pipe *self, PyObject *args)
         return NULL;
     }
 
-    if (!PyString_Check(data) && !PySequence_Check(data)) {
+    if (!PyString_Check(data) || PyUnicode_Check(data)) {
         PyErr_SetString(PyExc_TypeError, "only strings and iterables are supported");
         return NULL;
     }
