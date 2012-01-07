@@ -330,7 +330,7 @@ IOStream_func_write(IOStream *self, PyObject *args)
     int i, n;
     int r = 0;
     int buf_count = 0;
-    Py_buffer *data_buf;
+    char *data_str;
     char *tmp;
     PyObject *item;
     PyObject *data;
@@ -350,9 +350,14 @@ IOStream_func_write(IOStream *self, PyObject *args)
         return NULL;
     }
 
-    if (!PyString_Check(data) && !PySequence_Check(data)) {
+    if (!PySequence_Check(data)) {
         PyErr_SetString(PyExc_TypeError, "only strings and iterables are supported");
         return NULL;
+    }
+
+    if(PyUnicode_Check(data)) {
+        // Explicit check to disallow Unicode sequences.
+        PyErr_SetString(PyExc_TypeError, "unicode strings are not supported.");
     }
 
     if (callback != Py_None && !PyCallable_Check(callback)) {
@@ -383,31 +388,22 @@ IOStream_func_write(IOStream *self, PyObject *args)
     req_data->callback = callback;
     wr->data = (void *)req_data;
 
-    if (PyString_Check(data) || PyUnicode_Check(data)) {
+    if (PyString_Check(data)) {
         // We have a single string
         bufs = (uv_buf_t *) PyMem_Malloc(sizeof(uv_buf_t));
         if (!bufs) {
             PyErr_NoMemory();
             goto error;
         }
-        if(PyString_Check(data)){
-            item = data;
-        }
-        else{
-            // Convert Unicode String to UTF-8 so binary
-            // string interpreted as created in python.
-            item = PyUnicode_AsUTF8String(data);
-        }
-        Py_ssize_t len = PyString_Size(item);
-        data_buf = (Py_buffer *)PyMemoryView_FromObject(item);
-        PyObject_GetBuffer(item, data_buf, PyBUF_SIMPLE);
+        Py_ssize_t len = PyString_Size(data);
+        data_str = PyString_AsString(data);
         tmp = (char *) PyMem_Malloc(len+1);
         if (!tmp) {
             PyMem_Free(bufs);
             PyErr_NoMemory();
             goto error;
         }
-        memcpy(tmp, data_buf->buf, data_buf->len);
+        memcpy(tmp, data_str, len+1);
         tmpbuf = uv_buf_init(tmp, len);
         bufs[0] = tmpbuf;
         buf_count = 1;
@@ -422,19 +418,14 @@ IOStream_func_write(IOStream *self, PyObject *args)
         }
         for (i = 0;i < n; i++) {
             item = PySequence_GetItem(data, i);
-            if (!item || (!PyString_Check(item) && !PyUnicode_Check(item)))
+            if (!item || (!PyString_Check(item)))
                 continue;
-            
-            if(PyUnicode_Check(data)){
-                item = PyUnicode_AsUTF8String(item);
-            }
             Py_ssize_t len = PyString_Size(item);
-            data_buf = (Py_buffer *)PyMemoryView_FromObject(item);
-            PyObject_GetBuffer(item, data_buf, PyBUF_SIMPLE);
+            data_str = PyString_AsString(item);
             tmp = (char *) PyMem_Malloc(len + 1);
             if (!tmp)
                 continue;
-            memcpy(tmp, data_buf->buf, data_buf->len);
+            memcpy(tmp, data_str, len+1);
             tmpbuf = uv_buf_init(tmp, len);
             bufs[i] = tmpbuf;
             buf_count++;
