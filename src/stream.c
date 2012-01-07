@@ -332,6 +332,7 @@ IOStream_func_write(IOStream *self, PyObject *args)
     int buf_count = 0;
     char *data_str;
     char *tmp;
+    Py_ssize_t data_len;
     PyObject *item;
     PyObject *data;
     PyObject *callback = Py_None;
@@ -395,16 +396,16 @@ IOStream_func_write(IOStream *self, PyObject *args)
             PyErr_NoMemory();
             goto error;
         }
-        Py_ssize_t len = PyString_Size(data);
+        data_len = PyString_Size(data);
         data_str = PyString_AsString(data);
-        tmp = (char *) PyMem_Malloc(len+1);
+        tmp = (char *) PyMem_Malloc(data_len+1);
         if (!tmp) {
             PyMem_Free(bufs);
             PyErr_NoMemory();
             goto error;
         }
-        memcpy(tmp, data_str, len+1);
-        tmpbuf = uv_buf_init(tmp, len);
+        memcpy(tmp, data_str, data_len+1);
+        tmpbuf = uv_buf_init(tmp, data_len);
         bufs[0] = tmpbuf;
         buf_count = 1;
     } else {
@@ -420,13 +421,13 @@ IOStream_func_write(IOStream *self, PyObject *args)
             item = PySequence_GetItem(data, i);
             if (!item || !PyString_Check(item))
                 continue;
-            Py_ssize_t len = PyString_Size(item);
+            data_len = PyString_Size(item);
             data_str = PyString_AsString(item);
-            tmp = (char *) PyMem_Malloc(len + 1);
+            tmp = (char *) PyMem_Malloc(data_len + 1);
             if (!tmp)
                 continue;
-            memcpy(tmp, data_str, len+1);
-            tmpbuf = uv_buf_init(tmp, len);
+            memcpy(tmp, data_str, data_len+1);
+            tmpbuf = uv_buf_init(tmp, data_len);
             bufs[i] = tmpbuf;
             buf_count++;
         }
