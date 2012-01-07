@@ -351,14 +351,9 @@ IOStream_func_write(IOStream *self, PyObject *args)
         return NULL;
     }
 
-    if (!PySequence_Check(data)) {
+    if (!PySequence_Check(data) || PyUnicode_Check(data)) {
         PyErr_SetString(PyExc_TypeError, "only strings and iterables are supported");
         return NULL;
-    }
-
-    if(PyUnicode_Check(data)) {
-        // Explicit check to disallow Unicode sequences.
-        PyErr_SetString(PyExc_TypeError, "unicode strings are not supported.");
     }
 
     if (callback != Py_None && !PyCallable_Check(callback)) {
