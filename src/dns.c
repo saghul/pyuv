@@ -27,7 +27,7 @@ host_cb(void *arg, int status, int timeouts, struct hostent *hostent)
 
     PyObject *dns_name;
     if (hostent != NULL) {
-        dns_name = PyBytes_FromString(hostent->h_name);
+        dns_name = PyString_FromString(hostent->h_name);
     } else {
         Py_INCREF(Py_None);
         dns_name = Py_None;
@@ -48,7 +48,7 @@ host_cb(void *arg, int status, int timeouts, struct hostent *hostent)
     if (hostent != NULL) {
         for (ptr = hostent->h_aliases; *ptr != NULL; ptr++) {
             if (*ptr != hostent->h_name && strcmp(*ptr, hostent->h_name)) {
-                tmp = PyBytes_FromString(*ptr);
+                tmp = PyString_FromString(*ptr);
                 if (tmp == NULL) {
                     break;
                 }
@@ -59,10 +59,10 @@ host_cb(void *arg, int status, int timeouts, struct hostent *hostent)
         for (ptr = hostent->h_addr_list; *ptr != NULL; ptr++) {
             if (hostent->h_addrtype == AF_INET) {
                 inet_ntop(AF_INET, *ptr, ip4, INET_ADDRSTRLEN);
-                tmp = PyBytes_FromString(ip4);
+                tmp = PyString_FromString(ip4);
             } else {
                 inet_ntop(AF_INET6, *ptr, ip6, INET6_ADDRSTRLEN);
-                tmp = PyBytes_FromString(ip6);
+                tmp = PyString_FromString(ip6);
             }
             if (tmp == NULL) {
                 break;
@@ -105,14 +105,14 @@ nameinfo_cb(void *arg, int status, int timeouts, char *node, char *service)
     PyObject *dns_timeouts = PyLong_FromLong((long) timeouts);
     PyObject *dns_node;
     if (node) {
-        dns_node = PyBytes_FromString(node);
+        dns_node = PyString_FromString(node);
     } else {
         Py_INCREF(Py_None);
         dns_node = Py_None;
     }
     PyObject *dns_service;
     if (service) {
-        dns_service = PyBytes_FromString(service);
+        dns_service = PyString_FromString(service);
     } else {
         Py_INCREF(Py_None);
         dns_service = Py_None;
@@ -555,10 +555,10 @@ DNSResolver_servers_get(DNSResolver *self, void *closure)
     for (server = servers; server != NULL; server = server->next) {
         if (server->family == AF_INET) {
             inet_ntop(AF_INET, &(server->addr.addr4), ip4, INET_ADDRSTRLEN);
-            tmp = PyBytes_FromString(ip4);
+            tmp = PyString_FromString(ip4);
         } else {
             inet_ntop(AF_INET6, &(server->addr.addr6), ip6, INET6_ADDRSTRLEN);
-            tmp = PyBytes_FromString(ip6);
+            tmp = PyString_FromString(ip6);
         }
         if (tmp == NULL) {
             break;
