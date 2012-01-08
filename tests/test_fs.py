@@ -27,7 +27,7 @@ class FSTestStat(common.UVTestCase):
         os.remove(TEST_FILE)
         os.remove(TEST_LINK)
 
-    def stat_cb(self, loop, data, stat_result, errorno):
+    def stat_cb(self, loop, data, path, stat_result, errorno):
         self.errorno = errorno
 
     def test_stat_error(self):
@@ -42,7 +42,7 @@ class FSTestStat(common.UVTestCase):
         self.loop.run()
         self.assertEqual(self.errorno, None)
 
-    def lstat_cb(self, loop, data, stat_result, errorno):
+    def lstat_cb(self, loop, data, path, stat_result, errorno):
         self.errorno = errorno
 
     def test_lstat(self):
@@ -63,7 +63,7 @@ class FSTestFstat(common.UVTestCase):
         self.file.close()
         os.remove(TEST_FILE)
 
-    def fstat_cb(self, loop, data, stat_data, errorno):
+    def fstat_cb(self, loop, data, path, stat_data, errorno):
         self.errorno = errorno
 
     def test_fstat(self):
@@ -86,7 +86,7 @@ class FSTestUnlink(common.UVTestCase):
         except OSError:
             pass
 
-    def bad_unlink_cb(self, loop, data, errorno):
+    def bad_unlink_cb(self, loop, data, path, errorno):
         self.errorno = errorno
 
     def test_bad_unlink(self):
@@ -95,7 +95,7 @@ class FSTestUnlink(common.UVTestCase):
         self.loop.run()
         self.assertEqual(self.errorno, pyuv.errno.UV_ENOENT)
 
-    def unlink_cb(self, loop, data, errorno):
+    def unlink_cb(self, loop, data, path, errorno):
         self.errorno = errorno
 
     def test_unlink(self):
@@ -118,7 +118,7 @@ class FSTestMkdir(common.UVTestCase):
         except OSError:
             pass
 
-    def mkdir_cb(self, loop, data, errorno):
+    def mkdir_cb(self, loop, data, path, errorno):
         self.errorno = errorno
 
     def test_bad_mkdir(self):
@@ -147,7 +147,7 @@ class FSTestRmdir(common.UVTestCase):
         except OSError:
             pass
 
-    def rmdir_cb(self, loop, data, errorno):
+    def rmdir_cb(self, loop, data, path, errorno):
         self.errorno = errorno
 
     def test_bad_rmdir(self):
@@ -181,7 +181,7 @@ class FSTestRename(common.UVTestCase):
         except OSError:
             pass
 
-    def rename_cb(self, loop, data, errorno):
+    def rename_cb(self, loop, data, path, errorno):
         self.errorno = errorno
 
     def test_rename(self):
@@ -203,7 +203,7 @@ class FSTestChmod(common.UVTestCase):
     def tearDown(self):
         os.remove(TEST_FILE)
 
-    def chmod_cb(self, loop, data, errorno):
+    def chmod_cb(self, loop, data, path, errorno):
         self.errorno = errorno
 
     def test_chmod(self):
@@ -226,7 +226,7 @@ class FSTestFchmod(common.UVTestCase):
         self.file.close()
         os.remove(TEST_FILE)
 
-    def fchmod_cb(self, loop, data, errorno):
+    def fchmod_cb(self, loop, data, path, errorno):
         self.errorno = errorno
 
     def test_fchmod(self):
@@ -249,7 +249,7 @@ class FSTestLink(common.UVTestCase):
         os.remove(TEST_FILE)
         os.remove(TEST_LINK)
 
-    def link_cb(self, loop, data, errorno):
+    def link_cb(self, loop, data, path, errorno):
         self.errorno = errorno
 
     def test_link(self):
@@ -271,7 +271,7 @@ class FSTestSymlink(common.UVTestCase):
         os.remove(TEST_FILE)
         os.remove(TEST_LINK)
 
-    def symlink_cb(self, loop, data, errorno):
+    def symlink_cb(self, loop, data, path, errorno):
         self.errorno = errorno
 
     def test_symlink(self):
@@ -317,7 +317,7 @@ class FSTestChown(common.UVTestCase):
     def tearDown(self):
         os.remove(TEST_FILE)
 
-    def chown_cb(self, loop, data, errorno):
+    def chown_cb(self, loop, data, path, errorno):
         self.errorno = errorno
 
     def test_chown(self):
@@ -338,7 +338,7 @@ class FSTestFchown(common.UVTestCase):
         self.file.close()
         os.remove(TEST_FILE)
 
-    def fchown_cb(self, loop, data, errorno):
+    def fchown_cb(self, loop, data, path, errorno):
         self.errorno = errorno
 
     def test_fchown(self):
@@ -359,10 +359,10 @@ class FSTestOpen(common.UVTestCase):
         except OSError:
             pass
 
-    def close_cb(self, loop, data, errorno):
+    def close_cb(self, loop, data, path, errorno):
         self.errorno = errorno
 
-    def open_cb(self, loop, data, fd, errorno):
+    def open_cb(self, loop, data, path, fd, errorno):
         self.assertNotEqual(fd, -1)
         self.assertEqual(errorno, None)
         pyuv.fs.close(self.loop, fd, self.close_cb)
@@ -373,7 +373,7 @@ class FSTestOpen(common.UVTestCase):
         self.loop.run()
         self.assertEqual(self.errorno, None)
 
-    def open_noent_cb(self, loop, data, fd, errorno):
+    def open_noent_cb(self, loop, data, path, fd, errorno):
         self.fd = fd
         self.errorno = errorno
 
@@ -398,7 +398,7 @@ class FSTestRead(common.UVTestCase):
         self.file.close()
         os.remove(TEST_FILE)
 
-    def read_cb(self, loop, data, read_data, errorno):
+    def read_cb(self, loop, data, path, read_data, errorno):
         self.errorno = errorno
         self.data = read_data
 
@@ -420,7 +420,7 @@ class FSTestWrite(common.UVTestCase):
     def tearDown(self):
         os.remove(TEST_FILE)
 
-    def write_cb(self, loop, data, bytes_written, errorno):
+    def write_cb(self, loop, data, path, bytes_written, errorno):
         self.file.close()
         self.bytes_written = bytes_written
         self.errorno = errorno
@@ -452,16 +452,16 @@ class FSTestFsync(common.UVTestCase):
     def tearDown(self):
         os.remove(TEST_FILE)
 
-    def write_cb(self, loop, data, bytes_written, errorno):
+    def write_cb(self, loop, data, path, bytes_written, errorno):
         self.assertEqual(bytes_written, 4)
         self.assertEqual(errorno, None)
         pyuv.fs.fdatasync(self.loop, self.file.fileno(), self.fdatasync_cb)
 
-    def fdatasync_cb(self, loop, data, errorno):
+    def fdatasync_cb(self, loop, data, path, errorno):
         self.assertEqual(errorno, None)
         pyuv.fs.fsync(self.loop, self.file.fileno(), self.fsync_cb)
 
-    def fsync_cb(self, loop, data, errorno):
+    def fsync_cb(self, loop, data, path, errorno):
         self.assertEqual(errorno, None)
 
     def test_fsync(self):
@@ -483,7 +483,7 @@ class FSTestFtruncate(common.UVTestCase):
         self.file.close()
         os.remove(TEST_FILE)
 
-    def ftruncate_cb(self, loop, data, errorno):
+    def ftruncate_cb(self, loop, data, path, errorno):
         self.errorno = errorno
 
     def test_ftruncate1(self):
@@ -515,7 +515,7 @@ class FSTestReaddir(common.UVTestCase):
     def tearDown(self):
         shutil.rmtree(TEST_DIR)
 
-    def readdir_cb(self, loop, data, files, errorno):
+    def readdir_cb(self, loop, data, path, files, errorno):
         self.errorno = errorno
         self.files = files
 
@@ -555,7 +555,7 @@ class FSTestSendfile(common.UVTestCase):
         os.remove(TEST_FILE)
         os.remove(TEST_FILE2)
 
-    def sendfile_cb(self, loop, data, bytes_written, errorno):
+    def sendfile_cb(self, loop, data, path, bytes_written, errorno):
         self.bytes_written = bytes_written
         self.errorno = errorno
 
@@ -581,7 +581,7 @@ class FSTestUtime(common.UVTestCase):
         self.file.close()
         os.remove(TEST_FILE)
 
-    def utime_cb(self, loop, data, errorno):
+    def utime_cb(self, loop, data, path, errorno):
         self.errorno = errorno
 
     def test_utime(self):
