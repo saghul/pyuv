@@ -34,7 +34,7 @@ class TCPTest(common.UVTestCase):
         server.accept(client)
         self.client_connections.append(client)
         client.start_read(self.on_client_connection_read)
-        client.write("PING"+os.linesep)
+        client.write("PIN\x00G"+os.linesep)
 
     def on_client_connection_read(self, client, data, error):
         if data is None:
@@ -50,7 +50,7 @@ class TCPTest(common.UVTestCase):
     def on_client_read(self, client, data, error):
         self.assertNotEqual(data, None)
         data = data.strip()
-        self.assertEquals(data, "PING")
+        self.assertEquals(data, "PIN\x00G")
         client.close()
 
     def test_tcp1(self):
@@ -75,7 +75,8 @@ class TCPTestList(common.UVTestCase):
         server.accept(client)
         self.client_connections.append(client)
         client.start_read(self.on_client_connection_read)
-        client.write(["PING1", "PING2", "PING3", "PING4", "PING5", os.linesep])
+        client.write(["PING1", "PING2", "PING3", "PING4", "PING5", 
+            "PING\x00\xFF6", os.linesep])
 
     def on_client_connection_read(self, client, data, error):
         if data is None:
@@ -91,10 +92,62 @@ class TCPTestList(common.UVTestCase):
     def on_client_read(self, client, data, error):
         self.assertNotEqual(data, None)
         data = data.strip()
-        self.assertEquals(data, "PING1PING2PING3PING4PING5")
+        self.assertEquals(data, "PING1PING2PING3PING4PING5PING\x00\xFF6")
         client.close()
 
     def test_tcp1(self):
+        self.server = pyuv.TCP(self.loop)
+        self.server.bind(("0.0.0.0", TEST_PORT))
+        self.server.listen(self.on_connection)
+        self.client = pyuv.TCP(self.loop)
+        self.client.connect(("127.0.0.1", TEST_PORT), self.on_client_connection)
+        self.loop.run()
+
+class TCPTestInvalidData(common.UVTestCase):
+
+    def setUp(self):
+        self.loop = pyuv.Loop.default_loop()
+        self.server = None
+        self.client = None
+        self.client_connections = []
+
+    def on_connection(self, server):
+        client = pyuv.TCP(pyuv.Loop.default_loop())
+        server.accept(client)
+        self.client_connections.append(client)
+        client.start_read(self.on_client_connection_read)
+        try:
+            # Send Unicode data.
+            client.write(u'Unicode Data')
+        except TypeError:
+            pass # Expect failure.
+        
+        try:
+            # Send Non-Sequence data.
+            client.write(1)
+        except TypeError:
+            pass # Expect failure.
+        
+        client.close()
+        self.client_connections.remove(client)
+        self.server.close()
+
+    def on_client_connection_read(self, client, data):
+        client.close()
+        self.client_connections.remove(client)
+        self.server.close()
+        self.fail('Expected write to fail.' % data)
+        return
+
+    def on_client_connection(self, client, status):
+        self.assertEquals(status, 0)
+        client.start_read(self.on_client_read)
+
+    def on_client_read(self, client, data):
+        self.assertEqual(data, None)
+        client.close()
+
+    def test_invalid_data(self):
         self.server = pyuv.TCP(self.loop)
         self.server.bind(("0.0.0.0", TEST_PORT))
         self.server.listen(self.on_connection)

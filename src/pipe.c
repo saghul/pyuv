@@ -394,6 +394,7 @@ Pipe_func_write2(Pipe *self, PyObject *args)
     int buf_count = 0;
     char *data_str;
     char *tmp;
+    Py_ssize_t data_len;
     PyObject *item;
     PyObject *data;
     PyObject *callback = Py_None;
@@ -415,7 +416,7 @@ Pipe_func_write2(Pipe *self, PyObject *args)
         return NULL;
     }
 
-    if (!PyString_Check(data) && !PySequence_Check(data)) {
+    if (!PyString_Check(data) || PyUnicode_Check(data)) {
         PyErr_SetString(PyExc_TypeError, "only strings and iterables are supported");
         return NULL;
     }
@@ -455,15 +456,16 @@ Pipe_func_write2(Pipe *self, PyObject *args)
             PyErr_NoMemory();
             goto error;
         }
+        data_len = PyString_Size(data);
         data_str = PyString_AsString(data);
-        tmp = (char *) PyMem_Malloc(strlen(data_str) + 1);
+        tmp = (char *) PyMem_Malloc(data_len + 1);
         if (!tmp) {
             PyMem_Free(bufs);
             PyErr_NoMemory();
             goto error;
         }
-        strcpy(tmp, data_str);
-        tmpbuf = uv_buf_init(tmp, strlen(tmp));
+        memcpy(tmp, data_str, data_len + 1);
+        tmpbuf = uv_buf_init(tmp, data_len);
         bufs[0] = tmpbuf;
         buf_count = 1;
     } else {
@@ -479,12 +481,13 @@ Pipe_func_write2(Pipe *self, PyObject *args)
             item = PySequence_GetItem(data, i);
             if (!item || !PyString_Check(item))
                 continue;
+            data_len = PyString_Size(item);
             data_str = PyString_AsString(item);
-            tmp = (char *) PyMem_Malloc(strlen(data_str) + 1);
+            tmp = (char *) PyMem_Malloc(data_len + 1);
             if (!tmp)
                 continue;
             strcpy(tmp, data_str);
-            tmpbuf = uv_buf_init(tmp, strlen(tmp));
+            tmpbuf = uv_buf_init(tmp, data_len);
             bufs[i] = tmpbuf;
             buf_count++;
         }

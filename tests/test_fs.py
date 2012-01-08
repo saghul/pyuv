@@ -428,12 +428,20 @@ class FSTestWrite(common.UVTestCase):
     def test_write(self):
         self.bytes_written = None
         self.errorno = None
-        pyuv.fs.write(self.loop, self.file.fileno(), "TEST", -1, self.write_cb)
+        pyuv.fs.write(self.loop, self.file.fileno(), "TES\x00T", -1, self.write_cb)
         self.loop.run()
         self.assertEqual(self.bytes_written, 4)
         self.assertEqual(self.errorno, None)
         self.assertEqual(open(TEST_FILE, 'r').read(), "TEST")
 
+    def test_write_null(self):
+        self.bytes_written = None
+        self.errorno = None
+        pyuv.fs.write(self.loop, self.file.fileno(), "TES\x00T", -1, self.write_cb)
+        self.loop.run()
+        self.assertEqual(self.bytes_written, 5)
+        self.assertEqual(self.errorno, 0)
+        self.assertEqual(open(TEST_FILE, 'r').read(), "TES\x00T")
 
 class FSTestFsync(common.UVTestCase):
 
