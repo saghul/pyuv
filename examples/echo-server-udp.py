@@ -5,7 +5,7 @@ import threading
 import pyuv
 
 
-def on_read(handle, (ip, port), data):
+def on_read(handle, (ip, port), data, error):
     data = data.strip()
     if data:
 	handle.send(data+os.linesep, (ip, port))

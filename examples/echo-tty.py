@@ -4,7 +4,7 @@ import sys
 import pyuv
 
 
-def on_tty_read(handle, data):
+def on_tty_read(handle, data, error):
     data = data.strip()
     if data == "exit":
         tty_stdin.close()

@@ -4,7 +4,7 @@ import sys
 import pyuv
 
 
-def on_pipe_read(handle, data):
+def on_pipe_read(handle, data, error):
     data = data.strip()
     if data == "exit":
         pipe_stdin.close()
