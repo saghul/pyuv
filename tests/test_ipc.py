@@ -32,7 +32,7 @@ class IPCTest(common.UVTestCase):
         self.tcp_server.close()
         self.local_conn_accepted = True
 
-    def on_channel_read(self, handle, data, error, pending):
+    def on_channel_read(self, handle, data, pending, error):
         if self.tcp_server is None:
             self.assertEqual(pending, pyuv.UV_TCP)
             self.tcp_server = pyuv.TCP(self.loop)

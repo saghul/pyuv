@@ -90,7 +90,9 @@ on_pipe_read2(uv_pipe_t* handle, int nread, uv_buf_t buf, uv_handle_type pending
     /* Object could go out of scope in the callback, increase refcount to avoid it */
     Py_INCREF(self);
 
-    PyObject *result, *data, *py_errorno;
+    PyObject *result, *data, *py_errorno, *py_pending;
+
+    py_pending = PyInt_FromLong((long)pending);
 
     if (nread >= 0) {
         data = PyString_FromStringAndSize(buf.base, nread);
@@ -103,7 +105,7 @@ on_pipe_read2(uv_pipe_t* handle, int nread, uv_buf_t buf, uv_handle_type pending
         py_errorno = PyInt_FromLong((long)err.code);
     }
 
-    result = PyObject_CallFunctionObjArgs(self->on_read_cb, self, data, py_errorno, PyInt_FromLong((long)pending), NULL);
+    result = PyObject_CallFunctionObjArgs(self->on_read_cb, self, data, py_pending, py_errorno, NULL);
     if (result == NULL) {
         PyErr_WriteUnraisable(self->on_read_cb);
     }
