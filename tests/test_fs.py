@@ -621,18 +621,18 @@ class FSEventTestBasic(common.UVTestCase):
         except OSError:
             pass
 
-    def on_fsevent_cb(self, handle, filename, events, status):
+    def on_fsevent_cb(self, handle, filename, events, errorno):
         handle.close()
         self.filename = filename
         self.events = events
-        self.status = status
+        self.errorno = errorno
 
     def timer_cb(self, timer):
         timer.close()
         os.rename(TEST_FILE, TEST_FILE2)
 
     def test_fsevent_basic(self):
-        self.status = None
+        self.errorno = None
         self.events = None
         self.filename = None
         fs_event = pyuv.fs.FSEvent(self.loop)
@@ -640,7 +640,7 @@ class FSEventTestBasic(common.UVTestCase):
         timer = pyuv.Timer(self.loop)
         timer.start(self.timer_cb, 0.1, 0)
         self.loop.run()
-        self.assertEqual(self.status, 0)
+        self.assertEqual(self.errorno, None)
         self.assertTrue(self.filename == None or self.filename == TEST_FILE)
         self.assertTrue(self.events & pyuv.fs.UV_RENAME)
 
@@ -666,18 +666,18 @@ class FSEventTest(common.UVTestCase):
         except OSError:
             pass
 
-    def on_fsevent_cb(self, handle, filename, events, status):
+    def on_fsevent_cb(self, handle, filename, events, errorno):
         handle.close()
         self.filename = filename
         self.events = events
-        self.status = status
+        self.errorno = errorno
 
     def timer_cb2(self, timer):
         timer.close()
         os.rename(os.path.join(TEST_DIR, TEST_FILE), os.path.join(TEST_DIR, TEST_FILE2))
 
     def test_fsevent_dir(self):
-        self.status = None
+        self.errorno = None
         self.events = None
         self.filename = None
         fs_event = pyuv.fs.FSEvent(self.loop)
@@ -685,7 +685,7 @@ class FSEventTest(common.UVTestCase):
         timer = pyuv.Timer(self.loop)
         timer.start(self.timer_cb2, 0.1, 0)
         self.loop.run()
-        self.assertEqual(self.status, 0)
+        self.assertEqual(self.errorno, None)
         self.assertTrue(self.filename == None or self.filename == TEST_FILE)
         self.assertTrue(self.events & pyuv.fs.UV_RENAME)
 
@@ -694,7 +694,7 @@ class FSEventTest(common.UVTestCase):
         os.utime(os.path.join(TEST_DIR, TEST_FILE), None)
 
     def test_fsevent_nrefile(self):
-        self.status = None
+        self.errorno = None
         self.events = None
         self.filename = None
         fs_event = pyuv.fs.FSEvent(self.loop)
@@ -702,7 +702,7 @@ class FSEventTest(common.UVTestCase):
         timer = pyuv.Timer(self.loop)
         timer.start(self.timer_cb3, 0.1, 0)
         self.loop.run()
-        self.assertEqual(self.status, 0)
+        self.assertEqual(self.errorno, None)
         self.assertTrue(self.filename == None or self.filename == TEST_FILE)
         self.assertTrue(self.events & pyuv.fs.UV_CHANGE)
 

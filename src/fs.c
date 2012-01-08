@@ -2611,7 +2611,7 @@ on_fsevent_callback(uv_fs_event_t *handle, const char *filename, int events, int
     /* Object could go out of scope in the callback, increase refcount to avoid it */
     Py_INCREF(self);
 
-    PyObject *result, *py_filename, *py_events, *py_status;
+    PyObject *result, *py_filename, *py_events, *errorno;
 
     if (filename) {
         py_filename = PyString_FromString(filename);
@@ -2619,19 +2619,22 @@ on_fsevent_callback(uv_fs_event_t *handle, const char *filename, int events, int
         py_filename = Py_None;
         Py_INCREF(Py_None);
     }
-    py_events = PyInt_FromLong((long)events);
-    py_status = PyInt_FromLong((long)status);
 
-    if (!py_filename || !py_events || !py_status) {
-        PyErr_NoMemory();
-        PyErr_WriteUnraisable(self->on_fsevent_cb);
+    if (status < 0) {
+        uv_err_t err = uv_last_error(UV_LOOP(self));
+        errorno = PyInt_FromLong((long)err.code);
     } else {
-        result = PyObject_CallFunctionObjArgs(self->on_fsevent_cb, self, py_filename, py_events, py_status, NULL);
-        if (result == NULL) {
-            PyErr_WriteUnraisable(self->on_fsevent_cb);
-        }
-        Py_XDECREF(result);
+        errorno = Py_None;
+        Py_INCREF(Py_None);
     }
+
+    py_events = PyInt_FromLong((long)events);
+
+    result = PyObject_CallFunctionObjArgs(self->on_fsevent_cb, self, py_filename, py_events, errorno, NULL);
+    if (result == NULL) {
+	PyErr_WriteUnraisable(self->on_fsevent_cb);
+    }
+    Py_XDECREF(result);
 
     Py_DECREF(self);
     PyGILState_Release(gstate);
