@@ -380,6 +380,7 @@ readlink_cb(uv_fs_t* req) {
     if (req->result < 0) {
         errorno = PyInt_FromLong((long)req->errorno);
         path = Py_None;
+        Py_INCREF(Py_None);
     } else {
         errorno = Py_None;
         Py_INCREF(Py_None);
