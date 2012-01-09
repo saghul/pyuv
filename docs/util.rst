@@ -30,16 +30,6 @@
 
     Get the current uptime.
 
-.. py:function:: pyuv.util.get_process_title
-
-    Get the current process title.
-
-.. py:function:: pyuv.util.set_process_title(title)
-
-    :param string title: New title for the current process.
-
-    Set the current process title.
-
 .. py:function:: pyuv.util.resident_set_size
 
     Get the current resident memory size.

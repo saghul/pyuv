@@ -11,30 +11,29 @@ libuv is a high performance asynchronous networking library used as the platform
 for NodeJS. It's built on top of liev and libeio on Unix and IOCP on Windows systems
 providing a consistent API on top of them.
 
+libuv is written and maintained by Joyent Inc. and contributors.
+
+
+.. note::
+    pyuv's source code is hosted `on GitHub <http://github.com/saghul/pyuv>`_
+
 Features:
 #########
 
  * Non-blocking TCP sockets
  * Non-blocking named pipes
- * UDP
+ * UDP support
  * Timers
  * Child process spawning
- * Asynchronous DNS via c-ares or ``uv_getaddrinfo``.
- * Asynchronous file system APIs ``uv_fs_*``
- * High resolution time ``uv_hrtime``
- * Current executable path look up ``uv_exepath``
- * Thread pool scheduling ``uv_queue_work``
- * ANSI escape code controlled TTY ``uv_tty_t``
- * File system events Currently supports inotify, ``ReadDirectoryChangesW`` and kqueue. Event ports in the near future. ``uv_fs_event_t``
- * IPC and socket sharing between processes ``uv_write2``
-
-libuv is written and maintained by Joyent Inc. and contributors.
+ * Asynchronous DNS
+ * Asynchronous file system APIs
+ * Thread pool scheduling
+ * ANSI escape code controlled TTY
+ * File system events
+ * IPC and TCP socket sharing between processes
 
 .. seealso::
-    `libuv's source code <http://github.com/joyent/libuv>`_.
-
-.. note::
-    puyv does not yet wrap all functionality of libuv.
+    `libuv's source code <http://github.com/joyent/libuv>`_
 
 Contents
 ########

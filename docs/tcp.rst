@@ -36,9 +36,11 @@
 
         Start listening for new connections.
 
-        Callback signature: ``callback(tcp_handle)``.
+        Callback signature: ``callback(tcp_handle, error)``.
 
-    .. py:method:: accept
+    .. py:method:: accept(client)
+
+        :param object client: Client object where to accept the connection.
 
         Accept a new incoming connection which was pending. This function needs to be
         called in the callback given to the :py:meth:`listen` function.
@@ -54,7 +56,7 @@
 
         Initiate a client connection to the specified IP address and port.
 
-        Callback signature: ``callback(tcp_handle, status)``.
+        Callback signature: ``callback(tcp_handle, error)``.
 
     .. py:method:: getsockname
 
@@ -70,7 +72,7 @@
 
         Shutdown the outgoing (write) direction of the ``TCP`` connection.
 
-        Callback signature: ``callback(tcp_handle)``.
+        Callback signature: ``callback(tcp_handle, error)``.
 
     .. py:method:: close([callback])
 
@@ -83,14 +85,15 @@
 
     .. py:method:: write(data, [callback])
 
-        :param string data: Data to be written on the ``TCP`` connection.
+        :param object data: Data to be written on the ``TCP`` connection. It can be either
+            a string or any iterable containing strings.
 
         :param callable callback: Callback to be called after the write operation
             has been performed.
 
         Write data on the ``TCP`` connection.
 
-        Callback signature: ``callback(tcp_handle, status)``.
+        Callback signature: ``callback(tcp_handle, error)``.
 
     .. py:method:: start_read(callback)
 
@@ -99,7 +102,7 @@
 
         Start reading for incoming data from the remote endpoint.
 
-        Callback signature: ``callback(tcp_handle, data)``.
+        Callback signature: ``callback(tcp_handle, data, error)``.
 
     .. py:method:: stop_read
 

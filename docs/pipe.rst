@@ -34,12 +34,15 @@
 
         Start listening for new connections.
 
-        Callback signature: ``callback(pipe_handle)``.
+        Callback signature: ``callback(pipe_handle, error)``.
 
-    .. py:method:: accept
+    .. py:method:: accept(client)
+
+        :param object client: Client object where to accept the connection.
 
         Accept a new incoming connection which was pending. This function needs to be
-        called in the callback given to the :py:meth:`listen` function.
+        called in the callback given to the :py:meth:`listen` function or in the callback
+        given to the :py:meth:`start_read2` is there is any pending handle.
 
     .. py:method:: connect(name, callback)
 
@@ -50,7 +53,7 @@
 
         Initiate a client connection to the specified named pipe.
 
-        Callback signature: ``callback(pipe_handle, status)``.
+        Callback signature: ``callback(pipe_handle, error)``.
 
     .. py:method:: shutdown([callback])
 
@@ -58,7 +61,7 @@
 
         Shutdown the outgoing (write) direction of the ``Pipe`` connection.
 
-        Callback signature: ``callback(pipe_handle)``.
+        Callback signature: ``callback(pipe_handle, error)``.
 
     .. py:method:: close([callback])
 
@@ -71,14 +74,30 @@
 
     .. py:method:: write(data, [callback])
 
-        :param string data: Data to be written on the ``Pipe`` connection.
+        :param object data: Data to be written on the ``Pipe`` connection. It can be either
+            a string or any iterable containing strings.
 
         :param callable callback: Callback to be called after the write operation
             has been performed.
 
         Write data on the ``Pipe`` connection.
 
-        Callback signature: ``callback(pipe_handle, status)``.
+        Callback signature: ``callback(pipe_handle, error)``.
+
+    .. py:method:: write2(data, handle, [callback])
+
+        :param object data: Data to be written on the ``Pipe`` connection. It can be either
+            a string or any iterable containing strings.
+
+        :param object handle: Handle to send over the ``Pipe``. Currently only ``TCP`` handles
+            are supported.
+
+        :param callable callback: Callback to be called after the write operation
+            has been performed.
+
+        Write data on the ``Pipe`` connection.
+
+        Callback signature: ``callback(pipe_handle, error)``.
 
     .. py:method:: start_read(callback)
 
@@ -87,7 +106,16 @@
 
         Start reading for incoming data from the remote endpoint.
 
-        Callback signature: ``callback(pipe_handle, data)``.
+        Callback signature: ``callback(pipe_handle, data, error)``.
+
+    .. py:method:: start_read2(callback)
+
+        :param callable callback: Callback to be called when data is read from the
+            remote endpoint.
+
+        Start reading for incoming data or a handle from the remote endpoint.
+
+        Callback signature: ``callback(pipe_handle, data, pending, error)``.
 
     .. py:method:: stop_read
 
@@ -99,6 +127,14 @@
 
         This setting applies to Windows only. Set the number of pending pipe instance
         handles when the pipe server is waiting for connections.
+
+    .. py:classmethod:: pair(pipe1, pipe2)
+
+        :param ``Pipe`` pipe1: First ``Pipe`` object of the pair.
+
+        :param ``Pipe`` pipe2: Second ``Pipe`` object of the pair.
+
+        Connect the two given pipes from different loops.
 
     .. py:attribute:: loop
 

@@ -68,4 +68,10 @@
 
         Any Python object attached to this handle.
 
+    .. py:attribute:: pid
+
+        *Read only*
+
+        PID of the spawned process.
+
 

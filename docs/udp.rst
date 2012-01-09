@@ -37,14 +37,15 @@
 
     .. py:method:: send(data, [callback])
 
-        :param string data: Data to be sent over the ``UDP`` connection.
+        :param object data: Data to be sent over the ``UDP`` connection. It can be either
+            a string or any iterable containing strings.
 
         :param callable callback: Callback to be called after the send operation
             has been performed.
 
         Send data over the ``UDP`` connection.
 
-        Callback signature: ``callback(udp_handle, status)``.
+        Callback signature: ``callback(udp_handle, error)``.
 
     .. py:method:: start_recv(callback)
 
@@ -53,7 +54,7 @@
 
         Start receiving data on the bound IP address and port.
 
-        Callback signature: ``callback(udp_handle, (ip, port), data)``.
+        Callback signature: ``callback(udp_handle, (ip, port), data, error)``.
 
     .. py:method:: stop_recv
 

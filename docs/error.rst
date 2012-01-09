@@ -33,6 +33,10 @@ are used throughout `puyv`.
 
     Exception raised if an error is found when calling funcions from the :py:mod:`fs` module.
 
+.. py:exception:: FSEventError()
+
+    Exception raised if an error is found when calling ``FSEvent`` handle functions.
+
 .. py:exception:: IdleError()
 
     Exception raised if an error is found when calling ``Idle`` handle functions.
