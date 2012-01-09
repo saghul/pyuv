@@ -14,7 +14,7 @@ setup(name         = "pyuv",
       description  = "Python interface for libuv",
       platforms    = ["POSIX"],
       classifiers  = [
-          "Development Status :: 3 - Alpha",
+          "Development Status :: 4 - Beta",
           "Intended Audience :: Developers",
           "License :: OSI Approved :: MIT License",
           "Operating System :: POSIX",
