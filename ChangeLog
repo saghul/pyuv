@@ -1,3 +1,22 @@
+Version 0.3.0
+=============
+ - Added new functions to fs module: open, close, read, write, fsync,
+   fdatasync, ftruncate, readdir, sendfile, utime, futime
+ - Added FSEvent handle, for monitoring filesystem events
+ - Added IPC support (start_read2 and write2 methods on Pipe handles)
+ - Added pid property to Process
+ - Refactored accept function on TCP and Pipe handles
+ - Removed get/set_process_title functions
+ - Added more test cases to the test suite
+ - Added ability to skip tests based on platform
+ - Removed unneded arguments from fs callbacks and properly set errorno attribute
+   to None if no error occurred
+ - Added path attribute to fs callbacks
+ - Fixed write operations in NULL bytes are present
+ - Enhanced error reporting by passing an 'error' argument to several callbacks
+ - Raised libuv revision to 51ea46d
+
+
 Version 0.2.0
 =============
  - Made the default loop a singleton
