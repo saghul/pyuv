@@ -128,14 +128,6 @@
         This setting applies to Windows only. Set the number of pending pipe instance
         handles when the pipe server is waiting for connections.
 
-    .. py:classmethod:: pair(pipe1, pipe2)
-
-        :param ``Pipe`` pipe1: First ``Pipe`` object of the pair.
-
-        :param ``Pipe`` pipe2: Second ``Pipe`` object of the pair.
-
-        Connect the two given pipes from different loops.
-
     .. py:attribute:: loop
 
         *Read only*

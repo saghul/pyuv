@@ -327,30 +327,6 @@ Pipe_func_pending_instances(Pipe *self, PyObject *args)
 
 
 static PyObject *
-Pipe_func_pair(PyObject *cls, PyObject *args)
-{
-    Pipe *pipe1, *pipe2;
-    uv_err_t err;
-
-    if (!PyArg_ParseTuple(args, "O!O!:pair", &PipeType, &pipe1, &PipeType, &pipe2)) {
-        return NULL;
-    }
-
-    err = uv_pipe_pair((uv_pipe_t *)((IOStream *)pipe1)->uv_handle, (uv_pipe_t *)((IOStream *)pipe2)->uv_handle);
-    if (err.code == UV_OK) {
-        Py_RETURN_NONE;
-    } else {
-        PyObject *exc_data = Py_BuildValue("(is)", err.code, uv_strerror(err));
-        if (exc_data != NULL) {
-            PyErr_SetObject(PyExc_PipeError, exc_data);
-            Py_DECREF(exc_data);
-        }
-        return NULL;
-    }
-}
-
-
-static PyObject *
 Pipe_func_start_read2(Pipe *self, PyObject *args)
 {
     int r = 0;
@@ -615,7 +591,6 @@ Pipe_tp_methods[] = {
     { "connect", (PyCFunction)Pipe_func_connect, METH_VARARGS, "Start connecion to the remote Pipe." },
     { "open", (PyCFunction)Pipe_func_open, METH_VARARGS, "Open the specified file descriptor and manage it as a Pipe." },
     { "pending_instances", (PyCFunction)Pipe_func_pending_instances, METH_VARARGS, "Set the number of pending pipe instance handles when the pipe server is waiting for connections." },
-    { "pair", (PyCFunction)Pipe_func_pair, METH_CLASS|METH_VARARGS, "Connects two initialized pipes on different loops." },
     { "start_read2", (PyCFunction)Pipe_func_start_read2, METH_VARARGS, "Extended read methods for receiving handles over a pipe. The pipe must be initialized with ipc set to True." },
     { "write2", (PyCFunction)Pipe_func_write2, METH_VARARGS, "Write data and send handle over a pipe." },
     { NULL }
