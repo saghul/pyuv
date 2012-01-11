@@ -2850,12 +2850,29 @@ static PyTypeObject FSEventType = {
     FSEvent_tp_new,                                                 /*tp_new*/
 };
 
+#ifdef PY3
+/* pyuv_module */
+static PyModuleDef pyuv_fs_module = {
+    PyModuleDef_HEAD_INIT,
+    "pyuv.fs",                                   /*m_name*/
+    NULL,                                     /*m_doc*/
+    -1,                                       /*m_size*/
+    FS_methods,                                     /*m_methods*/
+};
 
 PyObject *
+PyInit_fs(void)
+#else
+PyObject *
 init_fs(void)
+#endif
 {
     PyObject *module;
+#ifdef PY3
+    module = PyModule_Create(&pyuv_fs_module);
+#else
     module = Py_InitModule("pyuv.fs", FS_methods);
+#endif
     if (module == NULL) {
         return NULL;
     }

@@ -19,16 +19,32 @@ inscode(PyObject *module_dict, PyObject *other_dict, const char *name, int code)
     Py_XDECREF(error_code);
 }
 
+#ifdef PY3
+/* pyuv_module */
+static PyModuleDef pyuv_errorno_module = {
+    PyModuleDef_HEAD_INIT,
+    "pyuv.errorno",                                   /*m_name*/
+    NULL,                                     /*m_doc*/
+    -1,                                       /*m_size*/
+    NULL,                                     /*m_methods*/
+};
 
 PyObject *
+PyInit_errno(void)
+#else
+PyObject *
 init_errno(void)
+#endif
 {
     PyObject *module;
     PyObject *module_dict;
     PyObject *errorcode_dict;
     PyObject *ares_errorcode_dict;
-
+#ifdef PY3
+    module = PyModule_Create(&pyuv_errorno_module);
+#else
     module = Py_InitModule("pyuv.errno", NULL);
+#endif
     if (module == NULL) {
         return NULL;
     }
