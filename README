@@ -45,7 +45,8 @@ Mac OSX:
     ./build_inplace
 
 Microsoft Windows:
-    Not currently supported.
+    (MinGW and MSYS need to be installed)
+    ./build_inplace
 
 
 Author

@@ -18,6 +18,7 @@ setup(name         = "pyuv",
           "Intended Audience :: Developers",
           "License :: OSI Approved :: MIT License",
           "Operating System :: POSIX",
+          "Operating System :: Microsoft :: Windows",
           "Programming Language :: C"
       ],
       cmdclass     = {'build_ext': libuv_build_ext,
