@@ -8,6 +8,7 @@ import pyuv
 
 
 class SignalTest(common.UVTestCase):
+    __disabled__ = ['win32']
 
     def setUp(self):
         self.async_cb_called = 0

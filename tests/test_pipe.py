@@ -1,12 +1,16 @@
 
 import os
+import sys
 import threading
 
 import common
 import pyuv
 
 
-TEST_PIPE = 'test-pipe'
+if sys.platform == 'win32':
+    TEST_PIPE = '\\\\.\\pipe\\test-pipe'
+else:
+    TEST_PIPE = 'test-pipe'
 BAD_PIPE = '/pipe/that/does/not/exist'
 
 class PipeErrorTest(common.UVTestCase):
@@ -107,6 +111,7 @@ class PipeTestNull(common.UVTestCase):
 
 
 class PipeTestList(common.UVTestCase):
+    __disabled__ = ['win32']
 
     def setUp(self):
         self.loop = pyuv.Loop.default_loop()
@@ -149,6 +154,7 @@ class PipeTestList(common.UVTestCase):
 
 
 class PipeTestListNull(common.UVTestCase):
+    __disabled__ = ['win32']
 
     def setUp(self):
         self.loop = pyuv.Loop.default_loop()

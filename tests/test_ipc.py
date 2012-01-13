@@ -1,4 +1,6 @@
 
+import sys
+
 import common
 import pyuv
 
@@ -6,6 +8,7 @@ import pyuv
 TEST_PORT = 1234
 
 class IPCTest(common.UVTestCase):
+    __disabled__ = 'win32'
 
     def setUp(self):
         self.loop = pyuv.Loop.default_loop()
@@ -52,7 +55,10 @@ class IPCTest(common.UVTestCase):
         self.tcp_server = None
         self.channel = pyuv.Pipe(self.loop, True)
         proc = pyuv.Process(self.loop)
-        proc.spawn(file="./proc_ipc.py", args=["listen_before_write"], exit_callback=self.proc_exit_cb, stdin=self.channel)
+        if sys.platform == 'win32':
+            proc.spawn(file="cmd.exe", args=["/c", "proc_ipc.py", "listen_before_write"], exit_callback=self.proc_exit_cb, stdin=self.channel)
+        else:
+            proc.spawn(file="./proc_ipc.py", args=["listen_before_write"], exit_callback=self.proc_exit_cb, stdin=self.channel)
         self.channel.start_read2(self.on_channel_read)
         self.loop.run()
 
@@ -62,7 +68,10 @@ class IPCTest(common.UVTestCase):
         self.tcp_server = None
         self.channel = pyuv.Pipe(self.loop, True)
         proc = pyuv.Process(self.loop)
-        proc.spawn(file="./proc_ipc.py", args=["listen_after_write"], exit_callback=self.proc_exit_cb, stdin=self.channel)
+        if sys.platform == 'win32':
+            proc.spawn(file="cmd.exe", args=["/c", "proc_ipc.py", "listen_after_write"], exit_callback=self.proc_exit_cb, stdin=self.channel)
+        else:
+            proc.spawn(file="./proc_ipc.py", args=["listen_after_write"], exit_callback=self.proc_exit_cb, stdin=self.channel)
         self.channel.start_read2(self.on_channel_read)
         self.loop.run()
 

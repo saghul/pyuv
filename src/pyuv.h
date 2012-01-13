@@ -6,10 +6,6 @@
 #include "Python.h"
 #include "structmember.h"
 
-/* system */
-#include <arpa/inet.h>
-#include <sys/socket.h>
-
 /* libuv */
 #include "uv.h"
 
@@ -22,7 +18,7 @@ typedef int Bool;
 
 /* Utility macros */
 #ifndef __STRING
-#define __STRING(x) #x
+    #define __STRING(x) #x
 #endif
 #define __MSTR(x) __STRING(x)
 
@@ -38,6 +34,10 @@ typedef int Bool;
     } while(0)                                                              \
 
 #define UV_LOOP(x) x->loop->uv_loop
+
+#if defined(__MINGW32__) || defined(_MSC_VER)
+    #define PYUV_WINDOWS
+#endif
 
 
 /* Python types definitions */

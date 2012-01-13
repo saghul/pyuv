@@ -58,10 +58,10 @@ host_cb(void *arg, int status, int timeouts, struct hostent *hostent)
         }
         for (ptr = hostent->h_addr_list; *ptr != NULL; ptr++) {
             if (hostent->h_addrtype == AF_INET) {
-                inet_ntop(AF_INET, *ptr, ip4, INET_ADDRSTRLEN);
+                uv_inet_ntop(AF_INET, *ptr, ip4, INET_ADDRSTRLEN);
                 tmp = PyString_FromString(ip4);
             } else {
-                inet_ntop(AF_INET6, *ptr, ip6, INET6_ADDRSTRLEN);
+                uv_inet_ntop(AF_INET6, *ptr, ip6, INET6_ADDRSTRLEN);
                 tmp = PyString_FromString(ip6);
             }
             if (tmp == NULL) {
@@ -302,11 +302,11 @@ DNSResolver_func_gethostbyaddr(DNSResolver *self, PyObject *args, PyObject *kwar
         return NULL;
     }
 
-    if (inet_pton(AF_INET, name, &addr4) == 1) {
+    if (uv_inet_pton(AF_INET, name, &addr4) == 1) {
         family = AF_INET;
         length = sizeof(struct in_addr);
         address = (void *)&addr4;
-    } else if (inet_pton(AF_INET6, name, &addr6) == 1) {
+    } else if (uv_inet_pton(AF_INET6, name, &addr6) == 1) {
         family = AF_INET6;
         length = sizeof(struct in6_addr);
         address = (void *)&addr6;
@@ -361,11 +361,11 @@ DNSResolver_func_getnameinfo(DNSResolver *self, PyObject *args, PyObject *kwargs
         return NULL;
     }
 
-    if (inet_pton(AF_INET, name, &addr4) == 1) {
+    if (uv_inet_pton(AF_INET, name, &addr4) == 1) {
         sa4 = uv_ip4_addr(name, port);
         sa = (struct sockaddr *)&sa4;
         length = sizeof(struct sockaddr_in);
-    } else if (inet_pton(AF_INET6, name, &addr6) == 1) {
+    } else if (uv_inet_pton(AF_INET6, name, &addr6) == 1) {
         sa6 = uv_ip6_addr(name, port);
         sa = (struct sockaddr *)&sa6;
         length = sizeof(struct sockaddr_in6);
@@ -495,9 +495,9 @@ set_dns_servers(DNSResolver *self, PyObject *value)
             goto servers_set_end;
         }
 
-        if (inet_pton(AF_INET, server, &servers[i].addr.addr4) == 1) {
+        if (uv_inet_pton(AF_INET, server, &servers[i].addr.addr4) == 1) {
             servers[i].family = AF_INET;
-        } else if (inet_pton(AF_INET6, server, &servers[i].addr.addr6) == 1) {
+        } else if (uv_inet_pton(AF_INET6, server, &servers[i].addr.addr6) == 1) {
             servers[i].family = AF_INET6;
         } else {
             PyErr_SetString(PyExc_ValueError, "invalid IP address");
@@ -554,10 +554,10 @@ DNSResolver_servers_get(DNSResolver *self, void *closure)
 
     for (server = servers; server != NULL; server = server->next) {
         if (server->family == AF_INET) {
-            inet_ntop(AF_INET, &(server->addr.addr4), ip4, INET_ADDRSTRLEN);
+            uv_inet_ntop(AF_INET, &(server->addr.addr4), ip4, INET_ADDRSTRLEN);
             tmp = PyString_FromString(ip4);
         } else {
-            inet_ntop(AF_INET6, &(server->addr.addr6), ip6, INET6_ADDRSTRLEN);
+            uv_inet_ntop(AF_INET6, &(server->addr.addr6), ip6, INET6_ADDRSTRLEN);
             tmp = PyString_FromString(ip6);
         }
         if (tmp == NULL) {

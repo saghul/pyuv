@@ -25,6 +25,7 @@ class ThreadPoolTest(common.UVTestCase):
 
 
 class ThreadPoolMultiLoopTest(common.UVTestCase):
+    __disabled__ = ['win32']
 
     def setUp(self):
         self.pool_cb_called = 0

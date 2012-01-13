@@ -8,13 +8,13 @@ class PollTest(common.UVTestCase):
     def test_poll1(self):
         self.cb_called = 0
         def prepare_cb(handle):
+            handle.close()
             self.cb_called += 1
         loop = pyuv.Loop.default_loop()
-        prepare = pyuv.Prepare(loop)
-        prepare.start(prepare_cb)
         for i in xrange(500):
+            prepare = pyuv.Prepare(loop)
+            prepare.start(prepare_cb)
             loop.poll()
-        prepare.close()
         self.assertEqual(self.cb_called, 500)
 
 

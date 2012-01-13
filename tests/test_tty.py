@@ -6,6 +6,7 @@ import pyuv
 
 
 class TYTest(common.UVTestCase):
+    __disabled__ = ['win32']
 
     def test_tty1(self):
         loop = pyuv.Loop.default_loop()

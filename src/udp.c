@@ -200,9 +200,9 @@ UDP_func_bind(UDP *self, PyObject *args)
         return NULL;
     }
 
-    if (inet_pton(AF_INET, bind_ip, &addr4) == 1) {
+    if (uv_inet_pton(AF_INET, bind_ip, &addr4) == 1) {
         address_type = AF_INET;
-    } else if (inet_pton(AF_INET6, bind_ip, &addr6) == 1) {
+    } else if (uv_inet_pton(AF_INET6, bind_ip, &addr6) == 1) {
         address_type = AF_INET6;
     } else {
         PyErr_SetString(PyExc_ValueError, "invalid IP address");
@@ -331,9 +331,9 @@ UDP_func_send(UDP *self, PyObject *args)
         return NULL;
     }
 
-    if (inet_pton(AF_INET, dest_ip, &addr4) == 1) {
+    if (uv_inet_pton(AF_INET, dest_ip, &addr4) == 1) {
         address_type = AF_INET;
-    } else if (inet_pton(AF_INET6, dest_ip, &addr6) == 1) {
+    } else if (uv_inet_pton(AF_INET6, dest_ip, &addr6) == 1) {
         address_type = AF_INET6;
     } else {
         PyErr_SetString(PyExc_ValueError, "invalid IP address");

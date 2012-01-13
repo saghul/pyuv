@@ -30,6 +30,7 @@ new_loop(PyTypeObject *type, PyObject *args, PyObject *kwargs, int is_default)
         Py_INCREF(default_loop);
         return (PyObject *)default_loop;
     } else {
+#ifndef PYUV_WINDOWS
         Loop *self = (Loop *)PyType_GenericNew(type, args, kwargs);
         if (!self) {
             return NULL;
@@ -37,6 +38,10 @@ new_loop(PyTypeObject *type, PyObject *args, PyObject *kwargs, int is_default)
         self->uv_loop = uv_loop_new();
         self->is_default = 0;
         return (PyObject *)self;
+#else
+        PyErr_SetString(PyExc_NotImplementedError, "Only the default loop is implemented in Windows");
+        return NULL;
+#endif
     }
 }
 
@@ -193,7 +198,9 @@ static void
 Loop_tp_dealloc(Loop *self)
 {
     if (self->uv_loop) {
+#ifndef PYUV_WINDOWS
         uv_loop_delete(self->uv_loop);
+#endif
     }
     Loop_tp_clear(self);
     Py_TYPE(self)->tp_free((PyObject *)self);

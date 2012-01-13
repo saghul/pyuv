@@ -1,4 +1,17 @@
-/* Some helper functions */
+/* Some helper stuff */
+
+
+// Temporary hack: libuv should provide uv_inet_pton and uv_inet_ntop.
+#ifdef PYUV_WINDOWS
+    #include <inet_net_pton.h>
+    #include <inet_ntop.h>
+    #define uv_inet_pton ares_inet_pton
+    #define uv_inet_ntop ares_inet_ntop
+#else // __POSIX__
+    #include <arpa/inet.h>
+    #define uv_inet_pton inet_pton
+    #define uv_inet_ntop inet_ntop
+#endif
 
 
 /* Add a type to a module */

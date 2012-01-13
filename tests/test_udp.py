@@ -202,6 +202,7 @@ class UDPTestInvalidData(common.UVTestCase):
 
 
 class UDPTestMulticast(common.UVTestCase):
+    __disabled__ = ['win32']
 
     def setUp(self):
         self.loop = pyuv.Loop.default_loop()

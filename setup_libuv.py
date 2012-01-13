@@ -75,12 +75,17 @@ class libuv_build_ext(build_ext):
     def finalize_options(self):
         build_ext.finalize_options(self)
         self.include_dirs.append(os.path.join(self.libuv_dir, 'include'))
+        self.include_dirs.append(os.path.join(self.libuv_dir, 'src', 'ares'))
         self.library_dirs.append(self.libuv_dir)
+        self.libraries.append('uv')
         if sys.platform.startswith('linux'):
             self.libraries.append('rt')
         elif sys.platform == 'darwin':
             self.extensions[0].extra_link_args = ['-framework', 'CoreServices']
-        self.extensions[0].extra_objects = [os.path.join(self.libuv_dir, 'uv.a')]
+        elif sys.platform == 'win32':
+            self.libraries.append('iphlpapi')
+            self.libraries.append('psapi')
+            self.libraries.append('ws2_32')
 
     def get_libuv(self):
         #self.debug_mode =  bool(self.debug) or hasattr(sys, 'gettotalrefcount')
@@ -98,6 +103,7 @@ class libuv_build_ext(build_ext):
             env['CFLAGS'] = ' '.join(x for x in (cflags, env.get('CFLAGS', None)) if x)
             log.info('Building libuv...')
             exec_process(['make', 'uv.a'], cwd=self.libuv_dir, env=env)
+            shutil.move(os.path.join(self.libuv_dir, 'uv.a'), os.path.join(self.libuv_dir, 'libuv.a'))
         if self.libuv_force_fetch:
             rmtree('deps')
         if not os.path.exists(self.libuv_dir):
@@ -107,7 +113,7 @@ class libuv_build_ext(build_ext):
         else:
             if self.libuv_clean_compile:
                 exec_process(['make', 'clean'], cwd=self.libuv_dir)
-            if not os.path.exists(os.path.join(self.libuv_dir, 'uv.a')):
+            if not os.path.exists(os.path.join(self.libuv_dir, 'libuv.a')):
                 log.info('libuv needs to be compiled.')
                 build_libuv()
             else:

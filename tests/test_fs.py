@@ -15,17 +15,16 @@ TEST_DIR = 'test-dir'
 TEST_DIR2 = 'test-dir_2'
 BAD_DIR = 'test-dir-bad'
 
+
 class FSTestStat(common.UVTestCase):
 
     def setUp(self):
         self.loop = pyuv.Loop.default_loop()
         with open(TEST_FILE, 'w') as f:
             f.write('test')
-        os.symlink(TEST_FILE, TEST_LINK)
 
     def tearDown(self):
         os.remove(TEST_FILE)
-        os.remove(TEST_LINK)
 
     def stat_cb(self, loop, data, path, stat_result, errorno):
         self.errorno = errorno
@@ -42,17 +41,38 @@ class FSTestStat(common.UVTestCase):
         self.loop.run()
         self.assertEqual(self.errorno, None)
 
-    def lstat_cb(self, loop, data, path, stat_result, errorno):
+
+class FSTestLstat(common.UVTestCase):
+    __disabled__ = ['win32']
+
+    def setUp(self):
+        self.loop = pyuv.Loop.default_loop()
+        with open(TEST_FILE, 'w') as f:
+            f.write('test')
+        os.symlink(TEST_FILE, TEST_LINK)
+
+    def tearDown(self):
+        os.remove(TEST_FILE)
+        os.remove(TEST_LINK)
+
+    def stat_cb(self, loop, data, path, stat_result, errorno):
         self.errorno = errorno
+
+    def test_stat(self):
+        self.errorno = None
+        pyuv.fs.stat(self.loop, TEST_FILE, self.stat_cb)
+        self.loop.run()
+        self.assertEqual(self.errorno, None)
 
     def test_lstat(self):
         self.errorno = None
-        pyuv.fs.lstat(self.loop, TEST_LINK, self.lstat_cb)
+        pyuv.fs.lstat(self.loop, TEST_LINK, self.stat_cb)
         self.loop.run()
         self.assertEqual(self.errorno, None)
 
 
 class FSTestFstat(common.UVTestCase):
+    __disabled__ = ['win32']
 
     def setUp(self):
         self.loop = pyuv.Loop.default_loop()
@@ -216,6 +236,7 @@ class FSTestChmod(common.UVTestCase):
 
 
 class FSTestFchmod(common.UVTestCase):
+    __disabled__ = ['win32']
 
     def setUp(self):
         self.loop = pyuv.Loop.default_loop()
@@ -261,6 +282,7 @@ class FSTestLink(common.UVTestCase):
 
 
 class FSTestSymlink(common.UVTestCase):
+    __disabled__ = ['win32']
 
     def setUp(self):
         self.loop = pyuv.Loop.default_loop()
@@ -269,7 +291,10 @@ class FSTestSymlink(common.UVTestCase):
 
     def tearDown(self):
         os.remove(TEST_FILE)
-        os.remove(TEST_LINK)
+        try:
+            os.remove(TEST_LINK)
+        except OSError:
+            pass
 
     def symlink_cb(self, loop, data, path, errorno):
         self.errorno = errorno
@@ -283,6 +308,7 @@ class FSTestSymlink(common.UVTestCase):
 
 
 class FSTestReadlink(common.UVTestCase):
+    __disabled__ = ['win32']
 
     def setUp(self):
         self.loop = pyuv.Loop.default_loop()
@@ -387,6 +413,7 @@ class FSTestOpen(common.UVTestCase):
 
 
 class FSTestRead(common.UVTestCase):
+    __disabled__ = ['win32']
 
     def setUp(self):
         self.loop = pyuv.Loop.default_loop()
@@ -412,6 +439,7 @@ class FSTestRead(common.UVTestCase):
 
 
 class FSTestWrite(common.UVTestCase):
+    __disabled__ = ['win32']
 
     def setUp(self):
         self.loop = pyuv.Loop.default_loop()
@@ -444,6 +472,7 @@ class FSTestWrite(common.UVTestCase):
         self.assertEqual(open(TEST_FILE, 'r').read(), "TES\x00T")
 
 class FSTestFsync(common.UVTestCase):
+    __disabled__ = ['win32']
 
     def setUp(self):
         self.loop = pyuv.Loop.default_loop()
@@ -472,6 +501,7 @@ class FSTestFsync(common.UVTestCase):
 
 
 class FSTestFtruncate(common.UVTestCase):
+    __disabled__ = ['win32']
 
     def setUp(self):
         self.loop = pyuv.Loop.default_loop()
@@ -538,6 +568,7 @@ class FSTestReaddir(common.UVTestCase):
 
 
 class FSTestSendfile(common.UVTestCase):
+    __disabled__ = ['win32']
 
     def setUp(self):
         self.loop = pyuv.Loop.default_loop()
@@ -570,6 +601,7 @@ class FSTestSendfile(common.UVTestCase):
 
 
 class FSTestUtime(common.UVTestCase):
+    __disabled__ = ['win32']
 
     def setUp(self):
         self.loop = pyuv.Loop.default_loop()
@@ -591,7 +623,8 @@ class FSTestUtime(common.UVTestCase):
         self.loop.run()
         self.assertEqual(self.errorno, None)
         s = os.stat(TEST_FILE)
-        self.assertTrue(s.st_atime == atime and s.st_mtime == mtime)
+        self.assertEqual(s.st_atime, atime)
+        self.assertEqual(s.st_mtime, mtime)
 
     def test_futime(self):
         self.errorno = None
@@ -667,7 +700,11 @@ class FSEventTest(common.UVTestCase):
             pass
 
     def on_fsevent_cb(self, handle, filename, events, errorno):
-        handle.close()
+        try:
+            handle.close()
+        except pyuv.error.FSEventError:
+            # This shouldn't happen, need to verify with libuv
+	    return
         self.filename = filename
         self.events = events
         self.errorno = errorno
