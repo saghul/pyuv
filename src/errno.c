@@ -4,7 +4,11 @@
 static void
 inscode(PyObject *module_dict, PyObject *other_dict, const char *name, int code)
 {
+#ifdef PY3
+    PyObject *error_name = PyUnicode_FromString(name);
+#else
     PyObject *error_name = PyString_FromString(name);
+#endif
     PyObject *error_code = PyInt_FromLong((long) code);
 
     /* Don't bother checking for errors; they'll be caught at the end
@@ -23,14 +27,14 @@ inscode(PyObject *module_dict, PyObject *other_dict, const char *name, int code)
 /* pyuv_module */
 static PyModuleDef pyuv_errorno_module = {
     PyModuleDef_HEAD_INIT,
-    "pyuv.errorno",                                   /*m_name*/
+    "pyuv.errno",                                   /*m_name*/
     NULL,                                     /*m_doc*/
     -1,                                       /*m_size*/
     NULL,                                     /*m_methods*/
 };
 
 PyObject *
-PyInit_errno(void)
+PyInit_pyuverrno(void)
 #else
 PyObject *
 init_errno(void)

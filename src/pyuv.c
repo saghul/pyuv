@@ -54,7 +54,7 @@ initialize_module(void)
     /* Errno module */
     PyObject *errno_module;
 #ifdef PY3
-    errno_module = PyInit_errno();
+    errno_module = PyInit_pyuverrno();
 #else
     errno_module = init_errno();
 #endif
@@ -66,7 +66,7 @@ initialize_module(void)
     /* Error module */
     PyObject *error;
 #ifdef PY3
-    error = PyInit_errno();
+    error = PyInit_error(); 
 #else
     error = init_error();
 #endif
