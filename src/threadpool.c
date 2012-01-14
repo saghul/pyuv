@@ -43,7 +43,6 @@ after_work_cb(uv_work_t *req)
     Py_XDECREF(data->kwargs);
 
     PyMem_Free(req->data);
-    req->data = NULL;
     PyMem_Free(req);
     PyGILState_Release(gstate);
 }
@@ -114,7 +113,6 @@ ThreadPool_func_run(PyObject *cls, PyObject *args)
 
 error:
     if (work_req) {
-        work_req->data = NULL;
         PyMem_Free(work_req);
     }
     if (req_data) {

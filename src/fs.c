@@ -127,12 +127,11 @@ stat_cb(uv_fs_t* req) {
 
 end:
 
+    uv_fs_req_cleanup(req);
     Py_DECREF(req_data->loop);
     Py_DECREF(req_data->callback);
     Py_DECREF(req_data->data);
     PyMem_Free(req_data);
-    req->data = NULL;
-    uv_fs_req_cleanup(req);
     PyMem_Free(req);
 
     PyGILState_Release(gstate);

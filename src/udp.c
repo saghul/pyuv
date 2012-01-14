@@ -165,7 +165,6 @@ on_udp_send(uv_udp_send_t* req, int status)
     PyMem_Free(send_data);
     Py_DECREF(callback);
     PyMem_Free(req_data);
-    req->data = NULL;
     PyMem_Free(req);
 
     Py_DECREF(self);
@@ -426,13 +425,9 @@ error:
     }
     if (req_data) {
         Py_DECREF(callback);
-        req_data->obj = NULL;
-        req_data->callback = NULL;
-        req_data->data = NULL;
         PyMem_Free(req_data);
     }
     if (wr) {
-        wr->data = NULL;
         PyMem_Free(wr);
     }
     return NULL;

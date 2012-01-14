@@ -71,7 +71,6 @@ on_tcp_client_connection(uv_connect_t *req, int status)
 
     Py_DECREF(callback);
     PyMem_Free(req_data);
-    req->data = NULL;
     PyMem_Free(req);
 
     Py_DECREF(self);
@@ -285,13 +284,10 @@ TCP_func_connect(TCP *self, PyObject *args)
 
 error:
     if (connect_req) {
-        connect_req->data = NULL;
         PyMem_Free(connect_req);
     }
     if (req_data) {
         Py_DECREF(callback);
-        req_data->obj = NULL;
-        req_data->callback = NULL;
         PyMem_Free(req_data);
     }
     return NULL;

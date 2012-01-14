@@ -231,7 +231,6 @@ getaddrinfo_end:
 
     Py_DECREF(callback);
     uv_freeaddrinfo(res);
-    handle->data = NULL;
     PyMem_Free(handle);
     PyMem_Free(data);
 

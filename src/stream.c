@@ -101,7 +101,6 @@ on_iostream_shutdown(uv_shutdown_t* req, int status)
 
     Py_DECREF(callback);
     PyMem_Free(req_data);
-    req->data = NULL;
     PyMem_Free(req);
 
     Py_DECREF(self);
@@ -188,7 +187,6 @@ on_iostream_write(uv_write_t* req, int status)
     PyMem_Free(write_data);
     Py_DECREF(callback);
     PyMem_Free(req_data);
-    req->data = NULL;
     PyMem_Free(req);
 
     Py_DECREF(self);
@@ -273,12 +271,9 @@ IOStream_func_shutdown(IOStream *self, PyObject *args)
 error:
     if (req_data) {
         Py_DECREF(callback);
-        req_data->obj = NULL;
-        req_data->callback = NULL;
         PyMem_Free(req_data);
     }
     if (req) {
-        req->data = NULL;
         PyMem_Free(req);
     }
     return NULL;
@@ -468,13 +463,9 @@ error:
     }
     if (req_data) {
         Py_DECREF(callback);
-        req_data->obj = NULL;
-        req_data->callback = NULL;
-        req_data->data = NULL;
         PyMem_Free(req_data);
     }
     if (wr) {
-        wr->data = NULL;
         PyMem_Free(wr);
     }
     return NULL;
