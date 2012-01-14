@@ -35,3 +35,11 @@ def load_tests():
     return loaded_modules
 
 
+PY3 = (sys.version_info >= (3, 0))
+
+if PY3:
+    b = lambda s: s.encode('latin-1')
+    u = lambda s: s
+else:
+    b = lambda s: s
+    u = lambda s: unicode(s, "unicode_escape")

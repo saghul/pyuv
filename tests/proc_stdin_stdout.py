@@ -2,7 +2,7 @@
 
 import sys
 
-c = raw_input()
+c = sys.stdin.readline()
 print c
 sys.stdout.flush()
 

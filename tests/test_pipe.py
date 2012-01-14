@@ -3,6 +3,7 @@ import os
 import threading
 
 import common
+from common import b
 import pyuv
 
 
@@ -35,7 +36,7 @@ class PipeTest(common.UVTestCase):
         server.accept(client)
         self.client_connections.append(client)
         client.start_read(self.on_client_connection_read)
-        client.write("PING"+os.linesep)
+        client.write(b"PING"+b(os.linesep))
 
     def on_client_connection_read(self, client, data, error):
         if data is None:
@@ -51,7 +52,7 @@ class PipeTest(common.UVTestCase):
     def on_client_read(self, client, data, error):
         self.assertNotEqual(data, None)
         data = data.strip()
-        self.assertEquals(data, "PING")
+        self.assertEquals(data, b"PING")
         client.close()
 
     def test_pipe1(self):
@@ -77,7 +78,7 @@ class PipeTestNull(common.UVTestCase):
         server.accept(client)
         self.client_connections.append(client)
         client.start_read(self.on_client_connection_read)
-        client.write("PIN\x00G"+os.linesep)
+        client.write(b"PIN\x00G"+b(os.linesep))
 
     def on_client_connection_read(self, client, data, error):
         if data is None:
@@ -93,7 +94,7 @@ class PipeTestNull(common.UVTestCase):
     def on_client_read(self, client, data, error):
         self.assertNotEqual(data, None)
         data = data.strip()
-        self.assertEquals(data, "PIN\x00G")
+        self.assertEquals(data, b"PIN\x00G")
         client.close()
 
     def test_pipe_null(self):
@@ -119,7 +120,7 @@ class PipeTestList(common.UVTestCase):
         server.accept(client)
         self.client_connections.append(client)
         client.start_read(self.on_client_connection_read)
-        client.write(["PING", os.linesep])
+        client.write([b"PING", b(os.linesep)])
 
     def on_client_connection_read(self, client, data, error):
         if data is None:
@@ -135,7 +136,7 @@ class PipeTestList(common.UVTestCase):
     def on_client_read(self, client, data, error):
         self.assertNotEqual(data, None)
         data = data.strip()
-        self.assertEquals(data, "PING")
+        self.assertEquals(data, b"PING")
         client.close()
 
     def test_pipe_list(self):
@@ -161,7 +162,7 @@ class PipeTestListNull(common.UVTestCase):
         server.accept(client)
         self.client_connections.append(client)
         client.start_read(self.on_client_connection_read)
-        client.write(["PING", "\x00", os.linesep])
+        client.write([b"PING", b"\x00", b(os.linesep)])
 
     def on_client_connection_read(self, client, data, error):
         if data is None:
@@ -177,7 +178,7 @@ class PipeTestListNull(common.UVTestCase):
     def on_client_read(self, client, data, error):
         self.assertNotEqual(data, None)
         data = data.strip()
-        self.assertEquals(data, "PING\x00")
+        self.assertEquals(data, b"PING\x00")
         client.close()
 
     def test_pipe_list_null(self):
@@ -203,7 +204,7 @@ class PipeShutdownTest(common.UVTestCase):
         server.accept(client)
         self.client_connections.append(client)
         client.start_read(self.on_client_connection_read)
-        client.write("PING"+os.linesep)
+        client.write(b"PING"+b(os.linesep))
 
     def on_client_connection_read(self, client, data, error):
         if data is None:
@@ -226,7 +227,7 @@ class PipeShutdownTest(common.UVTestCase):
     def on_client_read(self, client, data, error):
         self.assertNotEqual(data, None)
         data = data.strip()
-        self.assertEquals(data, "PING")
+        self.assertEquals(data, b"PING")
         client.shutdown(self.on_client_shutdown)
 
     def test_pipe1(self):
