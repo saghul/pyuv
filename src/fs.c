@@ -474,9 +474,9 @@ readlink_cb(uv_fs_t* req) {
         errorno = Py_None;
         Py_INCREF(Py_None);
 #ifdef PY3
-        path = PyUnicode_FromString(req->path);
+        path = PyUnicode_FromString(req->ptr);
 #else
-        path = PyString_FromString(req->path);
+        path = PyString_FromString(req->ptr);
 #endif
     }
 
