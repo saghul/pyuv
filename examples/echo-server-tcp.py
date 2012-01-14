@@ -1,9 +1,14 @@
 
 import os
+import sys
 import signal
 import threading
 import pyuv
 
+if (sys.version_info >= (3, 0)):
+    LINESEP = os.linesep.encode('latin-1')
+else:
+    LINESEP = os.linesep
 
 def on_client_shutdown(client, error):
     client.close()
@@ -17,7 +22,7 @@ def on_read(client, data, error):
     data = data.strip()
     if not data:
         return
-    client.write(data+os.linesep)
+    client.write(data+LINESEP)
     client.shutdown(on_client_shutdown)
 
 def on_connection(server, error):

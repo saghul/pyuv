@@ -3,6 +3,10 @@ import os
 import sys
 import pyuv
 
+if (sys.version_info >= (3, 0)):
+    LINESEP = os.linesep.encode('latin-1')
+else:
+    LINESEP = os.linesep
 
 def on_tty_read(handle, data, error):
     data = data.strip()
@@ -10,7 +14,7 @@ def on_tty_read(handle, data, error):
         tty_stdin.close()
         tty_stdout.close()
     else:
-        tty_stdout.write([data, os.linesep])
+        tty_stdout.write([data, LINESEP])
 
 loop = pyuv.Loop.default_loop()
 

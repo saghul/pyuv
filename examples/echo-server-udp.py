@@ -1,14 +1,19 @@
 
 import os
+import sys
 import signal
 import threading
 import pyuv
 
+if (sys.version_info >= (3, 0)):
+    LINESEP = os.linesep.encode('latin-1')
+else:
+    LINESEP = os.linesep
 
 def on_read(handle, (ip, port), data, error):
     data = data.strip()
     if data:
-	handle.send(data+os.linesep, (ip, port))
+	handle.send(data+LINESEP, (ip, port))
 
 def async_exit(async):
     async.close()

@@ -3,6 +3,10 @@ import os
 import sys
 import pyuv
 
+if (sys.version_info >= (3, 0)):
+    LINESEP = os.linesep.encode('latin-1')
+else:
+    LINESEP = os.linesep
 
 def on_pipe_read(handle, data, error):
     data = data.strip()
@@ -10,7 +14,7 @@ def on_pipe_read(handle, data, error):
         pipe_stdin.close()
         pipe_stdout.close()
     else:
-        pipe_stdout.write([data, os.linesep])
+        pipe_stdout.write([data, LINESEP])
 
 
 loop = pyuv.Loop.default_loop()
