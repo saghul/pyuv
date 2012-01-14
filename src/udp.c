@@ -447,7 +447,7 @@ UDP_func_set_membership(UDP *self, PyObject *args)
         return NULL;
     }
 
-    if (!PyArg_ParseTuple(args, "si|:set_membership", &multicast_address, &membership, &interface_address)) {
+    if (!PyArg_ParseTuple(args, "si|s:set_membership", &multicast_address, &membership, &interface_address)) {
         return NULL;
     }
 
