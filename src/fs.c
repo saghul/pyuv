@@ -662,7 +662,11 @@ read_cb(uv_fs_t* req) {
     } else {
         errorno = Py_None;
         Py_INCREF(Py_None);
+#ifdef PY3
+        read_data = PyUnicode_FromStringAndSize(req_data->buf.base, req->result);
+#else
         read_data = PyString_FromStringAndSize(req_data->buf.base, req->result);
+#endif
     }
 
     result = PyObject_CallFunctionObjArgs(req_data->callback, req_data->loop, req_data->data, path, read_data, errorno, NULL);
