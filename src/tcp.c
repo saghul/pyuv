@@ -304,8 +304,7 @@ TCP_func_getsockname(TCP *self)
     struct sockaddr sockname;
     struct sockaddr_in *addr4;
     struct sockaddr_in6 *addr6;
-    char ip4[INET_ADDRSTRLEN];
-    char ip6[INET6_ADDRSTRLEN];
+    char ip[INET6_ADDRSTRLEN];
     int namelen = sizeof(sockname);
 
     IOStream *base = (IOStream *)self;
@@ -323,14 +322,14 @@ TCP_func_getsockname(TCP *self)
 
     if (sockname.sa_family == AF_INET) {
         addr4 = (struct sockaddr_in*)&sockname;
-        r = uv_ip4_name(addr4, ip4, INET_ADDRSTRLEN);
+        r = uv_ip4_name(addr4, ip, INET_ADDRSTRLEN);
         ASSERT(r == 0);
-        return Py_BuildValue("si", ip4, ntohs(addr4->sin_port));
+        return Py_BuildValue("si", ip, ntohs(addr4->sin_port));
     } else if (sockname.sa_family == AF_INET6) {
         addr6 = (struct sockaddr_in6*)&sockname;
-        r = uv_ip6_name(addr6, ip6, INET6_ADDRSTRLEN);
+        r = uv_ip6_name(addr6, ip, INET6_ADDRSTRLEN);
         ASSERT(r == 0);
-        return Py_BuildValue("si", ip6, ntohs(addr6->sin6_port));
+        return Py_BuildValue("si", ip, ntohs(addr6->sin6_port));
     } else {
         PyErr_SetString(PyExc_TCPError, "unknown address type detected");
         return NULL;
@@ -344,8 +343,7 @@ TCP_func_getpeername(TCP *self)
     struct sockaddr peername;
     struct sockaddr_in *addr4;
     struct sockaddr_in6 *addr6;
-    char ip4[INET_ADDRSTRLEN];
-    char ip6[INET6_ADDRSTRLEN];
+    char ip[INET6_ADDRSTRLEN];
     int namelen = sizeof(peername);
 
     IOStream *base = (IOStream *)self;
@@ -363,14 +361,14 @@ TCP_func_getpeername(TCP *self)
 
     if (peername.sa_family == AF_INET) {
         addr4 = (struct sockaddr_in*)&peername;
-        r = uv_ip4_name(addr4, ip4, INET_ADDRSTRLEN);
+        r = uv_ip4_name(addr4, ip, INET_ADDRSTRLEN);
         ASSERT(r == 0);
-        return Py_BuildValue("si", ip4, ntohs(addr4->sin_port));
+        return Py_BuildValue("si", ip, ntohs(addr4->sin_port));
     } else if (peername.sa_family == AF_INET6) {
         addr6 = (struct sockaddr_in6*)&peername;
-        r = uv_ip6_name(addr6, ip6, INET6_ADDRSTRLEN);
+        r = uv_ip6_name(addr6, ip, INET6_ADDRSTRLEN);
         ASSERT(r == 0);
-        return Py_BuildValue("si", ip6, ntohs(addr6->sin6_port));
+        return Py_BuildValue("si", ip, ntohs(addr6->sin6_port));
     } else {
         PyErr_SetString(PyExc_TCPError, "unknown address type detected");
         return NULL;

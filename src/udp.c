@@ -72,9 +72,7 @@ on_udp_read(uv_udp_t* handle, int nread, uv_buf_t buf, struct sockaddr* addr, un
 {
     PyGILState_STATE gstate = PyGILState_Ensure();
 
-    char ip4[INET_ADDRSTRLEN];
-    char ip6[INET6_ADDRSTRLEN];
-    int r = 0;
+    char ip[INET6_ADDRSTRLEN];
     struct sockaddr_in addr4;
     struct sockaddr_in6 addr6;
 
@@ -92,14 +90,12 @@ on_udp_read(uv_udp_t* handle, int nread, uv_buf_t buf, struct sockaddr* addr, un
         ASSERT(addr);
         if (addr->sa_family == AF_INET) {
             addr4 = *(struct sockaddr_in*)addr;
-            r = uv_ip4_name(&addr4, ip4, INET_ADDRSTRLEN);
-            ASSERT(r == 0);
-            address_tuple = Py_BuildValue("(si)", ip4, ntohs(addr4.sin_port));
+            uv_ip4_name(&addr4, ip, INET_ADDRSTRLEN);
+            address_tuple = Py_BuildValue("(si)", ip, ntohs(addr4.sin_port));
         } else {
             addr6 = *(struct sockaddr_in6*)addr;
-            r = uv_ip6_name(&addr6, ip6, INET6_ADDRSTRLEN);
-            ASSERT(r == 0);
-            address_tuple = Py_BuildValue("(si)", ip6, ntohs(addr6.sin6_port));
+            uv_ip6_name(&addr6, ip, INET6_ADDRSTRLEN);
+            address_tuple = Py_BuildValue("(si)", ip, ntohs(addr6.sin6_port));
         }
         data = PyString_FromStringAndSize(buf.base, nread);
         py_errorno = Py_None;
@@ -509,8 +505,7 @@ UDP_func_getsockname(UDP *self)
     struct sockaddr sockname;
     struct sockaddr_in *addr4;
     struct sockaddr_in6 *addr6;
-    char ip4[INET_ADDRSTRLEN];
-    char ip6[INET6_ADDRSTRLEN];
+    char ip[INET6_ADDRSTRLEN];
     int namelen = sizeof(sockname);
 
     if (!self->uv_handle) {
@@ -526,14 +521,12 @@ UDP_func_getsockname(UDP *self)
 
     if (sockname.sa_family == AF_INET) {
         addr4 = (struct sockaddr_in*)&sockname;
-        r = uv_ip4_name(addr4, ip4, INET_ADDRSTRLEN);
-        ASSERT(r == 0);
-        return Py_BuildValue("si", ip4, ntohs(addr4->sin_port));
+        uv_ip4_name(addr4, ip, INET_ADDRSTRLEN);
+        return Py_BuildValue("si", ip, ntohs(addr4->sin_port));
     } else if (sockname.sa_family == AF_INET6) {
         addr6 = (struct sockaddr_in6*)&sockname;
-        r = uv_ip6_name(addr6, ip6, INET6_ADDRSTRLEN);
-        ASSERT(r == 0);
-        return Py_BuildValue("si", ip6, ntohs(addr6->sin6_port));
+        uv_ip6_name(addr6, ip, INET6_ADDRSTRLEN);
+        return Py_BuildValue("si", ip, ntohs(addr6->sin6_port));
     } else {
         PyErr_SetString(PyExc_UDPError, "unknown address type detected");
         return NULL;

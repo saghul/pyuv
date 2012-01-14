@@ -108,8 +108,7 @@ Util_func_interface_addresses(PyObject *obj)
 
     int i;
     int count;
-    char ip4[INET_ADDRSTRLEN];
-    char ip6[INET6_ADDRSTRLEN];
+    char ip[INET6_ADDRSTRLEN];
     uv_interface_address_t* interfaces;
     uv_err_t err;
     PyObject *result, *item;
@@ -129,11 +128,11 @@ Util_func_interface_addresses(PyObject *obj)
             PyDict_SetItemString(item, "name", PyString_FromString(interfaces[i].name));
             PyDict_SetItemString(item, "is_internal", PyBool_FromLong((long)interfaces[i].is_internal));
             if (interfaces[i].address.address4.sin_family == AF_INET) {
-                uv_ip4_name(&interfaces[i].address.address4, ip4, INET_ADDRSTRLEN);
-                PyDict_SetItemString(item, "address", PyString_FromString(ip4));
+                uv_ip4_name(&interfaces[i].address.address4, ip, INET_ADDRSTRLEN);
+                PyDict_SetItemString(item, "address", PyString_FromString(ip));
             } else if (interfaces[i].address.address4.sin_family == AF_INET6) {
-                uv_ip6_name(&interfaces[i].address.address6, ip6, INET6_ADDRSTRLEN);
-                PyDict_SetItemString(item, "address", PyString_FromString(ip6));
+                uv_ip6_name(&interfaces[i].address.address6, ip, INET6_ADDRSTRLEN);
+                PyDict_SetItemString(item, "address", PyString_FromString(ip));
             }
             if (PyList_Append(result, item))
                 continue;

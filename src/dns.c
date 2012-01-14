@@ -21,8 +21,7 @@ host_cb(void *arg, int status, int timeouts, struct hostent *hostent)
     /* Object could go out of scope in the callback, increase refcount to avoid it */
     Py_INCREF(self);
 
-    char ip4[INET_ADDRSTRLEN];
-    char ip6[INET6_ADDRSTRLEN];
+    char ip[INET6_ADDRSTRLEN];
     char **ptr;
 
     PyObject *dns_name;
@@ -58,11 +57,11 @@ host_cb(void *arg, int status, int timeouts, struct hostent *hostent)
         }
         for (ptr = hostent->h_addr_list; *ptr != NULL; ptr++) {
             if (hostent->h_addrtype == AF_INET) {
-                uv_inet_ntop(AF_INET, *ptr, ip4, INET_ADDRSTRLEN);
-                tmp = PyString_FromString(ip4);
+                uv_inet_ntop(AF_INET, *ptr, ip, INET_ADDRSTRLEN);
+                tmp = PyString_FromString(ip);
             } else {
-                uv_inet_ntop(AF_INET6, *ptr, ip6, INET6_ADDRSTRLEN);
-                tmp = PyString_FromString(ip6);
+                uv_inet_ntop(AF_INET6, *ptr, ip, INET6_ADDRSTRLEN);
+                tmp = PyString_FromString(ip);
             }
             if (tmp == NULL) {
                 break;
@@ -146,9 +145,7 @@ makesockaddr(struct sockaddr *addr, int addrlen)
 {
     struct sockaddr_in *addr4;
     struct sockaddr_in6 *addr6;
-    char ip4[INET_ADDRSTRLEN];
-    char ip6[INET6_ADDRSTRLEN];
-    int r = 0;
+    char ip[INET6_ADDRSTRLEN];
 
     if (addrlen == 0) {
         /* No address */
@@ -159,17 +156,15 @@ makesockaddr(struct sockaddr *addr, int addrlen)
     case AF_INET:
     {
         addr4 = (struct sockaddr_in*)addr;
-        r = uv_ip4_name(addr4, ip4, INET_ADDRSTRLEN);
-        ASSERT(r == 0);
-        return Py_BuildValue("si", ip4, ntohs(addr4->sin_port));
+        uv_ip4_name(addr4, ip, INET_ADDRSTRLEN);
+        return Py_BuildValue("si", ip, ntohs(addr4->sin_port));
     }
 
     case AF_INET6:
     {
         addr6 = (struct sockaddr_in6*)addr;
-        r = uv_ip6_name(addr6, ip6, INET6_ADDRSTRLEN);
-        ASSERT(r == 0);
-        return Py_BuildValue("siii", ip6, ntohs(addr6->sin6_port), addr6->sin6_flowinfo, addr6->sin6_scope_id);
+        uv_ip6_name(addr6, ip, INET6_ADDRSTRLEN);
+        return Py_BuildValue("siii", ip, ntohs(addr6->sin6_port), addr6->sin6_flowinfo, addr6->sin6_scope_id);
     }
 
     default:
@@ -534,8 +529,7 @@ DNSResolver_servers_get(DNSResolver *self, void *closure)
 {
     UNUSED_ARG(closure);
 
-    char ip4[INET_ADDRSTRLEN];
-    char ip6[INET6_ADDRSTRLEN];
+    char ip[INET6_ADDRSTRLEN];
     struct ares_addr_node *server;
     struct ares_addr_node *servers;
 
@@ -556,11 +550,11 @@ DNSResolver_servers_get(DNSResolver *self, void *closure)
 
     for (server = servers; server != NULL; server = server->next) {
         if (server->family == AF_INET) {
-            uv_inet_ntop(AF_INET, &(server->addr.addr4), ip4, INET_ADDRSTRLEN);
-            tmp = PyString_FromString(ip4);
+            uv_inet_ntop(AF_INET, &(server->addr.addr4), ip, INET_ADDRSTRLEN);
+            tmp = PyString_FromString(ip);
         } else {
-            uv_inet_ntop(AF_INET6, &(server->addr.addr6), ip6, INET6_ADDRSTRLEN);
-            tmp = PyString_FromString(ip6);
+            uv_inet_ntop(AF_INET6, &(server->addr.addr6), ip, INET6_ADDRSTRLEN);
+            tmp = PyString_FromString(ip);
         }
         if (tmp == NULL) {
             break;
