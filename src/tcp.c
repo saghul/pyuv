@@ -322,13 +322,11 @@ TCP_func_getsockname(TCP *self)
 
     if (sockname.sa_family == AF_INET) {
         addr4 = (struct sockaddr_in*)&sockname;
-        r = uv_ip4_name(addr4, ip, INET_ADDRSTRLEN);
-        ASSERT(r == 0);
+        uv_ip4_name(addr4, ip, INET_ADDRSTRLEN);
         return Py_BuildValue("si", ip, ntohs(addr4->sin_port));
     } else if (sockname.sa_family == AF_INET6) {
         addr6 = (struct sockaddr_in6*)&sockname;
-        r = uv_ip6_name(addr6, ip, INET6_ADDRSTRLEN);
-        ASSERT(r == 0);
+        uv_ip6_name(addr6, ip, INET6_ADDRSTRLEN);
         return Py_BuildValue("si", ip, ntohs(addr6->sin6_port));
     } else {
         PyErr_SetString(PyExc_TCPError, "unknown address type detected");
