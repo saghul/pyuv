@@ -67,7 +67,7 @@ on_idle_callback(uv_idle_t *handle, int status)
 
 
 static PyObject *
-Idle_func_start(Idle *self, PyObject *args, PyObject *kwargs)
+Idle_func_start(Idle *self, PyObject *args)
 {
     int r = 0;
     PyObject *tmp = NULL;
@@ -155,6 +155,7 @@ Idle_func_close(Idle *self, PyObject *args)
 static PyObject *
 Idle_active_get(Idle *self, void *closure)
 {
+    UNUSED_ARG(closure);
     return PyBool_FromLong((long)uv_is_active((uv_handle_t *)self->uv_handle));
 }
 
@@ -162,6 +163,8 @@ Idle_active_get(Idle *self, void *closure)
 static int
 Idle_tp_init(Idle *self, PyObject *args, PyObject *kwargs)
 {
+    UNUSED_ARG(kwargs);
+
     int r = 0;
     Loop *loop;
     PyObject *tmp = NULL;
@@ -249,7 +252,7 @@ Idle_tp_dealloc(Idle *self)
 
 static PyMethodDef
 Idle_tp_methods[] = {
-    { "start", (PyCFunction)Idle_func_start, METH_VARARGS|METH_KEYWORDS, "Start the Idle." },
+    { "start", (PyCFunction)Idle_func_start, METH_VARARGS, "Start the Idle." },
     { "stop", (PyCFunction)Idle_func_stop, METH_NOARGS, "Stop the Idle." },
     { "close", (PyCFunction)Idle_func_close, METH_VARARGS, "Close the Idle." },
     { NULL }

@@ -136,6 +136,8 @@ Async_func_close(Async *self, PyObject *args)
 static int
 Async_tp_init(Async *self, PyObject *args, PyObject *kwargs)
 {
+    UNUSED_ARG(kwargs);
+
     int r = 0;
     Loop *loop;
     PyObject *tmp = NULL;

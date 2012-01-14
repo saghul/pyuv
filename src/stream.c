@@ -17,6 +17,7 @@ typedef struct {
 static uv_buf_t
 on_iostream_alloc(uv_stream_t* handle, size_t suggested_size)
 {
+    UNUSED_ARG(handle);
     PyGILState_STATE gstate = PyGILState_Ensure();
     uv_buf_t buf = uv_buf_init(PyMem_Malloc(suggested_size), suggested_size);
     PyGILState_Release(gstate);
@@ -285,7 +286,7 @@ error:
 
 
 static PyObject *
-IOStream_func_start_read(IOStream *self, PyObject *args, PyObject *kwargs)
+IOStream_func_start_read(IOStream *self, PyObject *args)
 {
     int r = 0;
     PyObject *tmp = NULL;
@@ -321,7 +322,7 @@ IOStream_func_start_read(IOStream *self, PyObject *args, PyObject *kwargs)
 
 
 static PyObject *
-IOStream_func_stop_read(IOStream *self, PyObject *args, PyObject *kwargs)
+IOStream_func_stop_read(IOStream *self)
 {
     if (!self->uv_handle) {
         PyErr_SetString(PyExc_IOStreamError, "IOStream is closed");

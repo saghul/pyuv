@@ -532,6 +532,8 @@ servers_set_end:
 static PyObject *
 DNSResolver_servers_get(DNSResolver *self, void *closure)
 {
+    UNUSED_ARG(closure);
+
     char ip4[INET_ADDRSTRLEN];
     char ip6[INET6_ADDRSTRLEN];
     struct ares_addr_node *server;
@@ -577,6 +579,7 @@ DNSResolver_servers_get(DNSResolver *self, void *closure)
 static int
 DNSResolver_servers_set(DNSResolver *self, PyObject *value, void *closure)
 {
+    UNUSED_ARG(closure);
     return set_dns_servers(self, value);
 }
 

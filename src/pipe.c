@@ -222,7 +222,7 @@ Pipe_func_accept(TCP *self, PyObject *args)
 
 
 static PyObject *
-Pipe_func_connect(Pipe *self, PyObject *args, PyObject *kwargs)
+Pipe_func_connect(Pipe *self, PyObject *args)
 {
     char *name;
     uv_connect_t *connect_req = NULL;
@@ -512,6 +512,8 @@ error:
 static int
 Pipe_tp_init(Pipe *self, PyObject *args, PyObject *kwargs)
 {
+    UNUSED_ARG(kwargs);
+
     int r = 0;
     Loop *loop;
     PyObject *tmp = NULL;

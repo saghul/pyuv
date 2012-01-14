@@ -337,6 +337,8 @@ Process_func_close(Process *self, PyObject *args)
 static PyObject *
 Process_pid_get(Process *self, void *closure)
 {
+    UNUSED_ARG(closure);
+
     if (!self->uv_handle) {
         Py_RETURN_NONE;
     }
@@ -347,6 +349,8 @@ Process_pid_get(Process *self, void *closure)
 static int
 Process_tp_init(Process *self, PyObject *args, PyObject *kwargs)
 {
+    UNUSED_ARG(kwargs);
+
     PyObject *tmp = NULL;
     Loop *loop;
 

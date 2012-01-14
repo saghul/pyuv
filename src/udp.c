@@ -58,6 +58,7 @@ on_udp_dealloc_close(uv_handle_t *handle)
 static uv_buf_t
 on_udp_alloc(uv_udp_t* handle, size_t suggested_size)
 {
+    UNUSED_ARG(handle);
     PyGILState_STATE gstate = PyGILState_Ensure();
     ASSERT(suggested_size <= UDP_MAX_BUF_SIZE);
     uv_buf_t buf = uv_buf_init(PyMem_Malloc(suggested_size), suggested_size);
@@ -543,6 +544,8 @@ UDP_func_getsockname(UDP *self)
 static int
 UDP_tp_init(UDP *self, PyObject *args, PyObject *kwargs)
 {
+    UNUSED_ARG(kwargs);
+
     int r = 0;
     Loop *loop;
     PyObject *tmp = NULL;

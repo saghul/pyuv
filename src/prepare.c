@@ -67,7 +67,7 @@ on_prepare_callback(uv_prepare_t *handle, int status)
 
 
 static PyObject *
-Prepare_func_start(Prepare *self, PyObject *args, PyObject *kwargs)
+Prepare_func_start(Prepare *self, PyObject *args)
 {
     int r = 0;
     PyObject *tmp = NULL;
@@ -155,6 +155,7 @@ Prepare_func_close(Prepare *self, PyObject *args)
 static PyObject *
 Prepare_active_get(Prepare *self, void *closure)
 {
+    UNUSED_ARG(closure);
     return PyBool_FromLong((long)uv_is_active((uv_handle_t *)self->uv_handle));
 }
 
@@ -162,6 +163,8 @@ Prepare_active_get(Prepare *self, void *closure)
 static int
 Prepare_tp_init(Prepare *self, PyObject *args, PyObject *kwargs)
 {
+    UNUSED_ARG(kwargs);
+
     int r = 0;
     Loop *loop;
     PyObject *tmp = NULL;
@@ -249,7 +252,7 @@ Prepare_tp_dealloc(Prepare *self)
 
 static PyMethodDef
 Prepare_tp_methods[] = {
-    { "start", (PyCFunction)Prepare_func_start, METH_VARARGS|METH_KEYWORDS, "Start the Prepare." },
+    { "start", (PyCFunction)Prepare_func_start, METH_VARARGS, "Start the Prepare." },
     { "stop", (PyCFunction)Prepare_func_stop, METH_NOARGS, "Stop the Prepare." },
     { "close", (PyCFunction)Prepare_func_close, METH_VARARGS, "Close the Prepare." },
     { NULL }

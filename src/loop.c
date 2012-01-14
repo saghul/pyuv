@@ -106,6 +106,7 @@ Loop_func_update_time(Loop *self)
 static PyObject *
 Loop_func_default_loop(PyObject *cls)
 {
+    UNUSED_ARG(cls);
     return new_loop(&LoopType, NULL, NULL, 1);
 }
 
@@ -113,6 +114,7 @@ Loop_func_default_loop(PyObject *cls)
 static PyObject *
 Loop_default_get(Loop *self, void *closure)
 {
+    UNUSED_ARG(closure);
     if (self->is_default) {
         Py_RETURN_TRUE;
     } else {
@@ -136,6 +138,8 @@ set_counter_value(PyObject *dict, char *key, uint64_t value)
 static PyObject *
 Loop_counters_get(Loop *self, void *closure)
 {
+    UNUSED_ARG(closure);
+
     // TODO: use a named tuple here
     PyObject *counters;
     uv_counters_t* uv_counters = &self->uv_loop->counters;

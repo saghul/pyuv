@@ -52,6 +52,8 @@ after_work_cb(uv_work_t *req)
 static PyObject *
 ThreadPool_func_run(PyObject *cls, PyObject *args)
 {
+    UNUSED_ARG(cls);
+
     int r = 0;
     uv_work_t *work_req = NULL;
     tpool_req_data_t *req_data = NULL;
@@ -129,6 +131,10 @@ error:
 static PyObject *
 ThreadPool_tp_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
 {
+    UNUSED_ARG(type);
+    UNUSED_ARG(args);
+    UNUSED_ARG(kwargs);
+
     PyErr_SetString(PyExc_RuntimeError, "ThreadPool instances cannot be created");
     return NULL;
 }

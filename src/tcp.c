@@ -206,7 +206,7 @@ TCP_func_accept(TCP *self, PyObject *args)
 
 
 static PyObject *
-TCP_func_connect(TCP *self, PyObject *args, PyObject *kwargs)
+TCP_func_connect(TCP *self, PyObject *args)
 {
     int r;
     char *connect_ip;
@@ -472,6 +472,8 @@ TCP_func_simultaneous_accepts(TCP *self, PyObject *args)
 static int
 TCP_tp_init(TCP *self, PyObject *args, PyObject *kwargs)
 {
+    UNUSED_ARG(kwargs);
+
     int r = 0;
     Loop *loop;
     PyObject *tmp = NULL;

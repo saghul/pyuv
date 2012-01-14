@@ -32,6 +32,7 @@ TTY_func_set_mode(TTY *self, PyObject *args)
 static PyObject *
 TTY_func_reset_mode(PyObject *cls)
 {
+    UNUSED_ARG(cls);
     uv_tty_reset_mode();
     Py_RETURN_NONE;
 }
@@ -63,6 +64,8 @@ TTY_func_get_winsize(TTY *self)
 static int
 TTY_tp_init(TTY *self, PyObject *args, PyObject *kwargs)
 {
+    UNUSED_ARG(kwargs);
+
     int fd;
     int r = 0;
     Loop *loop;

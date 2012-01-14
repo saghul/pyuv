@@ -139,6 +139,7 @@ Signal_func_close(Signal *self, PyObject *args)
 static PyObject *
 Signal_active_get(Signal *self, void *closure)
 {
+    UNUSED_ARG(closure);
     return PyBool_FromLong((long)uv_is_active((uv_handle_t *)self->uv_handle));
 }
 
@@ -146,6 +147,8 @@ Signal_active_get(Signal *self, void *closure)
 static int
 Signal_tp_init(Signal *self, PyObject *args, PyObject *kwargs)
 {
+    UNUSED_ARG(kwargs);
+
     int r = 0;
     Loop *loop;
     PyObject *tmp = NULL;

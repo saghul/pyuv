@@ -2,8 +2,10 @@
 static PyObject* PyExc_UVError;
 
 static PyObject *
-Util_func_hrtime(PyObject *self)
+Util_func_hrtime(PyObject *obj)
 {
+    UNUSED_ARG(obj);
+
     PyObject *val;
 #if SIZEOF_TIME_T > SIZEOF_LONG
     val = PyLong_FromLongLong((PY_LONG_LONG)uv_hrtime());
@@ -15,8 +17,10 @@ Util_func_hrtime(PyObject *self)
 
 
 static PyObject *
-Util_func_get_free_memory(PyObject *self)
+Util_func_get_free_memory(PyObject *obj)
 {
+    UNUSED_ARG(obj);
+
     PyObject *val;
 #if SIZEOF_TIME_T > SIZEOF_LONG
     val = PyLong_FromLongLong((PY_LONG_LONG)uv_get_free_memory());
@@ -28,8 +32,10 @@ Util_func_get_free_memory(PyObject *self)
 
 
 static PyObject *
-Util_func_get_total_memory(PyObject *self)
+Util_func_get_total_memory(PyObject *obj)
 {
+    UNUSED_ARG(obj);
+
     PyObject *val;
 #if SIZEOF_TIME_T > SIZEOF_LONG
     val = PyLong_FromLongLong((PY_LONG_LONG)uv_get_total_memory());
@@ -41,8 +47,10 @@ Util_func_get_total_memory(PyObject *self)
 
 
 static PyObject *
-Util_func_loadavg(PyObject *self)
+Util_func_loadavg(PyObject *obj)
 {
+    UNUSED_ARG(obj);
+
     double avg[3];
     uv_loadavg(avg);
     return Py_BuildValue("(ddd)", avg[0], avg[1], avg[2]);
@@ -50,8 +58,10 @@ Util_func_loadavg(PyObject *self)
 
 
 static PyObject *
-Util_func_uptime(PyObject *self)
+Util_func_uptime(PyObject *obj)
 {
+    UNUSED_ARG(obj);
+
     double uptime;
     uv_err_t err;
 
@@ -70,8 +80,10 @@ Util_func_uptime(PyObject *self)
 
 
 static PyObject *
-Util_func_resident_set_memory(PyObject *self)
+Util_func_resident_set_memory(PyObject *obj)
 {
+    UNUSED_ARG(obj);
+
     size_t rss;
     uv_err_t err;
 
@@ -90,8 +102,10 @@ Util_func_resident_set_memory(PyObject *self)
 
 
 static PyObject *
-Util_func_interface_addresses(PyObject *self)
+Util_func_interface_addresses(PyObject *obj)
 {
+    UNUSED_ARG(obj);
+
     int i;
     int count;
     char ip4[INET_ADDRSTRLEN];
@@ -151,8 +165,10 @@ set_cpu_info_time_val(PyObject *dict, char *key, uint64_t v)
 }
 
 static PyObject *
-Util_func_cpu_info(PyObject *self)
+Util_func_cpu_info(PyObject *obj)
 {
+    UNUSED_ARG(obj);
+
     int i;
     int count;
     uv_cpu_info_t* cpus;

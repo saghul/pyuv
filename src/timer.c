@@ -186,6 +186,7 @@ Timer_func_close(Timer *self, PyObject *args)
 static PyObject *
 Timer_active_get(Timer *self, void *closure)
 {
+    UNUSED_ARG(closure);
     if (!self->uv_handle) {
         Py_RETURN_FALSE;
     } else {
@@ -197,11 +198,11 @@ Timer_active_get(Timer *self, void *closure)
 static PyObject *
 Timer_repeat_get(Timer *self, void *closure)
 {
+    UNUSED_ARG(closure);
     if (!self->uv_handle) {
         PyErr_SetString(PyExc_TimerError, "Timer is closed");
         return NULL;
     }
-
     return PyFloat_FromDouble(uv_timer_get_repeat(self->uv_handle)/1000.0);
 }
 
@@ -209,6 +210,8 @@ Timer_repeat_get(Timer *self, void *closure)
 static int
 Timer_repeat_set(Timer *self, PyObject *value, void *closure)
 {
+    UNUSED_ARG(closure);
+
     double repeat;
 
     if (!self->uv_handle) {
@@ -240,6 +243,8 @@ Timer_repeat_set(Timer *self, PyObject *value, void *closure)
 static int
 Timer_tp_init(Timer *self, PyObject *args, PyObject *kwargs)
 {
+    UNUSED_ARG(kwargs);
+
     int r = 0;
     Loop *loop;
     PyObject *tmp = NULL;

@@ -67,7 +67,7 @@ on_check_callback(uv_check_t *handle, int status)
 
 
 static PyObject *
-Check_func_start(Check *self, PyObject *args, PyObject *kwargs)
+Check_func_start(Check *self, PyObject *args)
 {
     int r = 0;
     PyObject *tmp = NULL;
@@ -155,6 +155,7 @@ Check_func_close(Check *self, PyObject *args)
 static PyObject *
 Check_active_get(Check *self, void *closure)
 {
+    UNUSED_ARG(closure);
     return PyBool_FromLong((long)uv_is_active((uv_handle_t *)self->uv_handle));
 }
 
@@ -162,6 +163,8 @@ Check_active_get(Check *self, void *closure)
 static int
 Check_tp_init(Check *self, PyObject *args, PyObject *kwargs)
 {
+    UNUSED_ARG(kwargs);
+
     int r = 0;
     Loop *loop;
     PyObject *tmp = NULL;
@@ -249,7 +252,7 @@ Check_tp_dealloc(Check *self)
 
 static PyMethodDef
 Check_tp_methods[] = {
-    { "start", (PyCFunction)Check_func_start, METH_VARARGS|METH_KEYWORDS, "Start the Check." },
+    { "start", (PyCFunction)Check_func_start, METH_VARARGS, "Start the Check." },
     { "stop", (PyCFunction)Check_func_stop, METH_NOARGS, "Stop the Check." },
     { "close", (PyCFunction)Check_func_close, METH_VARARGS, "Close the Check." },
     { NULL }

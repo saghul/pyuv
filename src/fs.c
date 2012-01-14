@@ -12,6 +12,9 @@ typedef struct {
 static PyObject *
 format_time(time_t sec, unsigned long nsec)
 {
+    // TODO: look at stat_float_times in Modules/posixmodule.c
+    UNUSED_ARG(nsec);
+
     PyObject *ival;
 #if SIZEOF_TIME_T > SIZEOF_LONG
     ival = PyLong_FromLongLong((PY_LONG_LONG)sec);
@@ -902,7 +905,7 @@ utime_cb(uv_fs_t* req) {
 
 
 static PyObject *
-stat_func(PyObject *self, PyObject *args, PyObject *kwargs, int type)
+stat_func(PyObject *args, PyObject *kwargs, int type)
 {
     int r;
     char *path;
@@ -971,22 +974,26 @@ error:
 
 
 static PyObject *
-FS_func_stat(PyObject *self, PyObject *args, PyObject *kwargs)
+FS_func_stat(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
-    return stat_func(self, args, kwargs, UV_FS_STAT);
+    UNUSED_ARG(obj);
+    return stat_func(args, kwargs, UV_FS_STAT);
 }
 
 
 static PyObject *
-FS_func_lstat(PyObject *self, PyObject *args, PyObject *kwargs)
+FS_func_lstat(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
-    return stat_func(self, args, kwargs, UV_FS_LSTAT);
+    UNUSED_ARG(obj);
+    return stat_func(args, kwargs, UV_FS_LSTAT);
 }
 
 
 static PyObject *
-FS_func_fstat(PyObject *self, PyObject *args, PyObject *kwargs)
+FS_func_fstat(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
+    UNUSED_ARG(obj);
+
     int r;
     int fd;
     Loop *loop;
@@ -1050,8 +1057,10 @@ error:
 
 
 static PyObject *
-FS_func_unlink(PyObject *self, PyObject *args, PyObject *kwargs)
+FS_func_unlink(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
+    UNUSED_ARG(obj);
+
     int r;
     char *path;
     Loop *loop;
@@ -1115,8 +1124,10 @@ error:
 
 
 static PyObject *
-FS_func_mkdir(PyObject *self, PyObject *args, PyObject *kwargs)
+FS_func_mkdir(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
+    UNUSED_ARG(obj);
+
     int r;
     int mode;
     char *path;
@@ -1181,8 +1192,10 @@ error:
 
 
 static PyObject *
-FS_func_rmdir(PyObject *self, PyObject *args, PyObject *kwargs)
+FS_func_rmdir(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
+    UNUSED_ARG(obj);
+
     int r;
     char *path;
     Loop *loop;
@@ -1246,8 +1259,10 @@ error:
 
 
 static PyObject *
-FS_func_rename(PyObject *self, PyObject *args, PyObject *kwargs)
+FS_func_rename(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
+    UNUSED_ARG(obj);
+
     int r;
     char *path;
     char *new_path;
@@ -1312,8 +1327,10 @@ error:
 
 
 static PyObject *
-FS_func_chmod(PyObject *self, PyObject *args, PyObject *kwargs)
+FS_func_chmod(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
+    UNUSED_ARG(obj);
+
     int r;
     int mode;
     char *path;
@@ -1378,8 +1395,10 @@ error:
 
 
 static PyObject *
-FS_func_fchmod(PyObject *self, PyObject *args, PyObject *kwargs)
+FS_func_fchmod(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
+    UNUSED_ARG(obj);
+
     int r;
     int mode;
     int fd;
@@ -1444,8 +1463,10 @@ error:
 
 
 static PyObject *
-FS_func_link(PyObject *self, PyObject *args, PyObject *kwargs)
+FS_func_link(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
+    UNUSED_ARG(obj);
+
     int r;
     char *path;
     char *new_path;
@@ -1510,8 +1531,10 @@ error:
 
 
 static PyObject *
-FS_func_symlink(PyObject *self, PyObject *args, PyObject *kwargs)
+FS_func_symlink(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
+    UNUSED_ARG(obj);
+
     int r;
     int flags;
     char *path;
@@ -1577,8 +1600,10 @@ error:
 
 
 static PyObject *
-FS_func_readlink(PyObject *self, PyObject *args, PyObject *kwargs)
+FS_func_readlink(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
+    UNUSED_ARG(obj);
+
     int r;
     char *path;
     Loop *loop;
@@ -1642,8 +1667,10 @@ error:
 
 
 static PyObject *
-FS_func_chown(PyObject *self, PyObject *args, PyObject *kwargs)
+FS_func_chown(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
+    UNUSED_ARG(obj);
+
     int r;
     int uid;
     int gid;
@@ -1709,8 +1736,10 @@ error:
 
 
 static PyObject *
-FS_func_fchown(PyObject *self, PyObject *args, PyObject *kwargs)
+FS_func_fchown(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
+    UNUSED_ARG(obj);
+
     int r;
     int fd;
     int uid;
@@ -1776,8 +1805,10 @@ error:
 
 
 static PyObject *
-FS_func_open(PyObject *self, PyObject *args, PyObject *kwargs)
+FS_func_open(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
+    UNUSED_ARG(obj);
+
     int r;
     int flags;
     int mode;
@@ -1843,8 +1874,10 @@ error:
 
 
 static PyObject *
-FS_func_close(PyObject *self, PyObject *args, PyObject *kwargs)
+FS_func_close(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
+    UNUSED_ARG(obj);
+
     int r;
     int fd;
     Loop *loop;
@@ -1908,8 +1941,10 @@ error:
 
 
 static PyObject *
-FS_func_read(PyObject *self, PyObject *args, PyObject *kwargs)
+FS_func_read(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
+    UNUSED_ARG(obj);
+
     int r;
     int fd;
     int length;
@@ -1987,8 +2022,10 @@ error:
 
 
 static PyObject *
-FS_func_write(PyObject *self, PyObject *args, PyObject *kwargs)
+FS_func_write(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
+    UNUSED_ARG(obj);
+
     int r;
     int fd;
     int offset;
@@ -2067,8 +2104,10 @@ error:
 
 
 static PyObject *
-FS_func_fsync(PyObject *self, PyObject *args, PyObject *kwargs)
+FS_func_fsync(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
+    UNUSED_ARG(obj);
+
     int r;
     int fd;
     Loop *loop;
@@ -2132,8 +2171,10 @@ error:
 
 
 static PyObject *
-FS_func_fdatasync(PyObject *self, PyObject *args, PyObject *kwargs)
+FS_func_fdatasync(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
+    UNUSED_ARG(obj);
+
     int r;
     int fd;
     Loop *loop;
@@ -2197,8 +2238,10 @@ error:
 
 
 static PyObject *
-FS_func_ftruncate(PyObject *self, PyObject *args, PyObject *kwargs)
+FS_func_ftruncate(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
+    UNUSED_ARG(obj);
+
     int r;
     int fd;
     int offset;
@@ -2264,8 +2307,10 @@ error:
 
 // Aapparently 'flags' doesn't do much (nothing on Windows) because libuv uses ptr from eio, instead of ptr2
 static PyObject *
-FS_func_readdir(PyObject *self, PyObject *args, PyObject *kwargs)
+FS_func_readdir(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
+    UNUSED_ARG(obj);
+
     int r;
     int flags;
     char *path;
@@ -2330,8 +2375,10 @@ error:
 
 
 static PyObject *
-FS_func_sendfile(PyObject *self, PyObject *args, PyObject *kwargs)
+FS_func_sendfile(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
+    UNUSED_ARG(obj);
+
     int r;
     int out_fd, in_fd, in_offset, length;
     Loop *loop;
@@ -2395,8 +2442,10 @@ error:
 
 
 static PyObject *
-FS_func_utime(PyObject *self, PyObject *args, PyObject *kwargs)
+FS_func_utime(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
+    UNUSED_ARG(obj);
+
     int r;
     double atime, mtime;
     char *path;
@@ -2461,8 +2510,10 @@ error:
 
 
 static PyObject *
-FS_func_futime(PyObject *self, PyObject *args, PyObject *kwargs)
+FS_func_futime(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
+    UNUSED_ARG(obj);
+
     int r;
     int fd;
     double atime, mtime;
@@ -2727,6 +2778,8 @@ FSEvent_func_close(FSEvent *self, PyObject *args)
 static int
 FSEvent_tp_init(FSEvent *self, PyObject *args, PyObject *kwargs)
 {
+    UNUSED_ARG(kwargs);
+
     PyObject *tmp = NULL;
     Loop *loop;
 
