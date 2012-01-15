@@ -226,21 +226,17 @@ Util_methods[] = {
 };
 
 #ifdef PYUV_PYTHON3
-/* pyuv_module */
 static PyModuleDef pyuv_util_module = {
     PyModuleDef_HEAD_INIT,
-    "pyuv.util",                                   /*m_name*/
-    NULL,                                     /*m_doc*/
-    -1,                                       /*m_size*/
-    Util_methods,                                     /*m_methods*/
+    "pyuv.util",            /*m_name*/
+    NULL,                   /*m_doc*/
+    -1,                     /*m_size*/
+    Util_methods,           /*m_methods*/
 };
+#endif
 
 PyObject *
-PyInit_util(void)
-#else
-PyObject *
 init_util(void)
-#endif
 {
     PyObject *module;
 #ifdef PYUV_PYTHON3

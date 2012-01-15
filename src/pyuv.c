@@ -27,19 +27,18 @@
 #define LIBUV_VERSION UV_VERSION_MAJOR.UV_VERSION_MINOR-LIBUV_REVISION
 
 #ifdef PYUV_PYTHON3
-/* pyuv_module */
 static PyModuleDef pyuv_module = {
     PyModuleDef_HEAD_INIT,
-    "pyuv",                                   /*m_name*/
-    NULL,                                     /*m_doc*/
-    -1,                                       /*m_size*/
-    NULL,                                     /*m_methods*/
+    "pyuv",                 /*m_name*/
+    NULL,                   /*m_doc*/
+    -1,                     /*m_size*/
+    NULL,                   /*m_methods*/
 };
 #endif
 
 /* Module */
-static PyObject*
-initialize_module(void)
+PyObject*
+init_pyuv(void)
 {
     /* Initialize GIL */
     PyEval_InitThreads();
@@ -52,63 +51,38 @@ initialize_module(void)
     pyuv = Py_InitModule("pyuv", NULL);
 #endif
     /* Errno module */
-    PyObject *errno_module;
-#ifdef PYUV_PYTHON3
-    errno_module = PyInit_pyuverrno();
-#else
-    errno_module = init_errno();
-#endif
+    PyObject *errno_module = init_errno();
     if (errno_module == NULL) {
-        return NULL;
+        goto fail;
     }
     PyUVModule_AddObject(pyuv, "errno", errno_module);
 
     /* Error module */
-    PyObject *error;
-#ifdef PYUV_PYTHON3
-    error = PyInit_error(); 
-#else
-    error = init_error();
-#endif
+    PyObject *error = init_error();
     if (error == NULL) {
-        return NULL;
+        goto fail;
     }
     PyUVModule_AddObject(pyuv, "error", error);
 
     /* DNS module */
-    PyObject *dns;
-#ifdef PYUV_PYTHON3
-    dns = PyInit_dns();
-#else
-    dns = init_dns();
-#endif
+    PyObject *dns = init_dns();
     if (dns == NULL) {
-        return NULL;
+        goto fail;
     }
     PyUVModule_AddObject(pyuv, "dns", dns);
     PyUVModule_AddType(dns, "DNSResolver", &DNSResolverType);
 
     /* FS module */
-    PyObject *fs;
-#ifdef PYUV_PYTHON3
-    fs = PyInit_fs();
-#else
-    fs = init_fs();
-#endif
+    PyObject *fs = init_fs();
     if (fs == NULL) {
-        return NULL;
+        goto fail;
     }
     PyUVModule_AddObject(pyuv, "fs", fs);
 
     /* Util module */
-    PyObject *util;
-#ifdef PYUV_PYTHON3
-    util = PyInit_util();
-#else
-    util = init_util();
-#endif
+    PyObject *util = init_util();
     if (util == NULL) {
-        return NULL;
+        goto fail;
     }
     PyUVModule_AddObject(pyuv, "util", util);
 
@@ -158,30 +132,27 @@ initialize_module(void)
     PyModule_AddStringConstant(pyuv, "LIBUV_VERSION", __MSTR(LIBUV_VERSION));
 
     return pyuv;
+
+fail:
+#ifdef PYUV_PYTHON3
+    Py_DECREF(pyuv);
+#endif
+    return NULL;
+
 }
 
 #ifdef PYUV_PYTHON3
-#define INITERROR return NULL
-
-PyObject *
+PyMODINIT_FUNC
 PyInit_pyuv(void)
-#else
-#define INITERROR return
-
-void
-initpyuv(void)
-#endif
 {
-    PyObject *m;
-    m = initialize_module();
-
-    if(m == NULL){
-        INITERROR;
-    }
-
-#ifdef PYUV_PYTHON3
-    return m;
-#endif
+    return init_pyuv();
 }
+#else
+PyMODINIT_FUNC
+initpyuv(void)
+{
+    init_pyuv();
+}
+#endif
 
 

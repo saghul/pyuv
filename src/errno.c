@@ -24,21 +24,17 @@ inscode(PyObject *module_dict, PyObject *other_dict, const char *name, int code)
 }
 
 #ifdef PYUV_PYTHON3
-/* pyuv_module */
 static PyModuleDef pyuv_errorno_module = {
     PyModuleDef_HEAD_INIT,
-    "pyuv.errno",                                   /*m_name*/
-    NULL,                                     /*m_doc*/
-    -1,                                       /*m_size*/
-    NULL,                                     /*m_methods*/
+    "pyuv.errno",           /*m_name*/
+    NULL,                   /*m_doc*/
+    -1,                     /*m_size*/
+    NULL,                   /*m_methods*/
 };
+#endif
 
 PyObject *
-PyInit_pyuverrno(void)
-#else
-PyObject *
 init_errno(void)
-#endif
 {
     PyObject *module;
     PyObject *module_dict;

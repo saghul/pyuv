@@ -730,23 +730,17 @@ static PyTypeObject DNSResolverType = {
 };
 
 #ifdef PYUV_PYTHON3
-/* pyuv_module */
 static PyModuleDef pyuv_dns_module = {
     PyModuleDef_HEAD_INIT,
-    "pyuv.dns",                                   /*m_name*/
-    NULL,                                     /*m_doc*/
-    -1,                                       /*m_size*/
-    NULL,                                     /*m_methods*/
+    "pyuv.dns",             /*m_name*/
+    NULL,                   /*m_doc*/
+    -1,                     /*m_size*/
+    NULL,                   /*m_methods*/
 };
 #endif
 
-#ifdef PYUV_PYTHON3
-PyObject *
-PyInit_dns(void)
-#else
 PyObject *
 init_dns(void)
-#endif
 {
     PyObject *module;
 #ifdef PYUV_PYTHON3
