@@ -10,7 +10,7 @@ else:
 
 def on_tty_read(handle, data, error):
     data = data.strip()
-    if data == "exit":
+    if data == b"exit":
         tty_stdin.close()
         tty_stdout.close()
     else:

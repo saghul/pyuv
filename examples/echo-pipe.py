@@ -10,7 +10,7 @@ else:
 
 def on_pipe_read(handle, data, error):
     data = data.strip()
-    if data == "exit":
+    if data == b"exit":
         pipe_stdin.close()
         pipe_stdout.close()
     else:
