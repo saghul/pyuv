@@ -91,6 +91,7 @@ class libuv_build_ext(build_ext):
         #self.debug_mode =  bool(self.debug) or hasattr(sys, 'gettotalrefcount')
         def download_libuv():
             log.info('Downloading libuv...')
+            makedirs(self.libuv_dir)
             exec_process(['git', 'clone', '-b', self.libuv_branch, self.libuv_repo, self.libuv_dir])
             exec_process(['git', 'checkout', self.libuv_revision], cwd=self.libuv_dir)
         def patch_libuv():
