@@ -3,8 +3,8 @@ import os
 import sys
 import pyuv
 
-if (sys.version_info >= (3, 0)):
-    LINESEP = os.linesep.encode('latin-1')
+if sys.version_info >= (3, 0):
+    LINESEP = os.linesep.encode()
 else:
     LINESEP = os.linesep
 
