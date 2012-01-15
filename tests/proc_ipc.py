@@ -21,7 +21,7 @@ def on_ipc_connection(handle, error):
     conn = pyuv.TCP(loop)
     tcp_server.accept(conn)
     conn.close()
-    channel.write("accepted_connection", on_channel_write)
+    channel.write(b"accepted_connection", on_channel_write)
     connection_accepted = True
 
 
