@@ -2,5 +2,5 @@
 
 rm -f core.* pyuv*.so
 rm -rf build deps
-python setup.py build_ext --inplace --force -g
+python setup.py build_ext --inplace --force
 
