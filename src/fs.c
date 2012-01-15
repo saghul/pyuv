@@ -41,7 +41,7 @@ stat_cb(uv_fs_t* req) {
     PyObject *result, *errorno, *stat_data, *path;
 
     if (req->path != NULL) {
-#ifdef PY3
+#ifdef PYUV_PYTHON3
         path = PyUnicode_FromString(req->path);
 #else
         path = PyString_FromString(req->path);
@@ -153,7 +153,7 @@ unlink_cb(uv_fs_t* req) {
     PyObject *result, *errorno, *path;
 
     if (req->path != NULL) {
-#ifdef PY3
+#ifdef PYUV_PYTHON3
         path = PyUnicode_FromString(req->path);
 #else
         path = PyString_FromString(req->path);
@@ -198,7 +198,7 @@ mkdir_cb(uv_fs_t* req) {
     PyObject *result, *errorno, *path;
 
     if (req->path != NULL) {
-#ifdef PY3
+#ifdef PYUV_PYTHON3
         path = PyUnicode_FromString(req->path);
 #else
         path = PyString_FromString(req->path);
@@ -243,7 +243,7 @@ rmdir_cb(uv_fs_t* req) {
     PyObject *result, *errorno, *path;
 
     if (req->path != NULL) {
-#ifdef PY3
+#ifdef PYUV_PYTHON3
         path = PyUnicode_FromString(req->path);
 #else
         path = PyString_FromString(req->path);
@@ -288,7 +288,7 @@ rename_cb(uv_fs_t* req) {
     PyObject *result, *errorno, *path;
 
     if (req->path != NULL) {
-#ifdef PY3
+#ifdef PYUV_PYTHON3
         path = PyUnicode_FromString(req->path);
 #else
         path = PyString_FromString(req->path);
@@ -334,7 +334,7 @@ chmod_cb(uv_fs_t* req) {
     PyObject *result, *errorno, *path;
 
     if (req->path != NULL) {
-#ifdef PY3
+#ifdef PYUV_PYTHON3
         path = PyUnicode_FromString(req->path);
 #else
         path = PyString_FromString(req->path);
@@ -379,7 +379,7 @@ link_cb(uv_fs_t* req) {
     PyObject *result, *errorno, *path;
 
     if (req->path != NULL) {
-#ifdef PY3
+#ifdef PYUV_PYTHON3
         path = PyUnicode_FromString(req->path);
 #else
         path = PyString_FromString(req->path);
@@ -424,7 +424,7 @@ symlink_cb(uv_fs_t* req) {
     PyObject *result, *errorno, *path;
 
     if (req->path != NULL) {
-#ifdef PY3
+#ifdef PYUV_PYTHON3
         path = PyUnicode_FromString(req->path);
 #else
         path = PyString_FromString(req->path);
@@ -475,7 +475,7 @@ readlink_cb(uv_fs_t* req) {
     } else {
         errorno = Py_None;
         Py_INCREF(Py_None);
-#ifdef PY3
+#ifdef PYUV_PYTHON3
         path = PyUnicode_FromString(req->ptr);
 #else
         path = PyString_FromString(req->ptr);
@@ -510,7 +510,7 @@ chown_cb(uv_fs_t* req) {
     PyObject *result, *errorno, *path;
 
     if (req->path != NULL) {
-#ifdef PY3
+#ifdef PYUV_PYTHON3
         path = PyUnicode_FromString(req->path);
 #else
         path = PyString_FromString(req->path);
@@ -557,7 +557,7 @@ open_cb(uv_fs_t* req) {
     fd = PyInt_FromLong((long)req->result);
 
     if (req->path != NULL) {
-#ifdef PY3
+#ifdef PYUV_PYTHON3
         path = PyUnicode_FromString(req->path);
 #else
         path = PyString_FromString(req->path);
@@ -602,7 +602,7 @@ close_cb(uv_fs_t* req) {
     PyObject *result, *errorno, *path;
 
     if (req->path != NULL) {
-#ifdef PY3
+#ifdef PYUV_PYTHON3
         path = PyUnicode_FromString(req->path);
 #else
         path = PyString_FromString(req->path);
@@ -647,7 +647,7 @@ read_cb(uv_fs_t* req) {
     PyObject *result, *errorno, *read_data, *path;
 
     if (req->path != NULL) {
-#ifdef PY3
+#ifdef PYUV_PYTHON3
         path = PyUnicode_FromString(req->path);
 #else
         path = PyString_FromString(req->path);
@@ -664,7 +664,7 @@ read_cb(uv_fs_t* req) {
     } else {
         errorno = Py_None;
         Py_INCREF(Py_None);
-#ifdef PY3
+#ifdef PYUV_PYTHON3
         read_data = PyUnicode_FromStringAndSize(req_data->buf.base, req->result);
 #else
         read_data = PyString_FromStringAndSize(req_data->buf.base, req->result);
@@ -702,7 +702,7 @@ write_cb(uv_fs_t* req) {
     bytes_written = PyInt_FromLong((long)req->result);
 
     if (req->path != NULL) {
-#ifdef PY3
+#ifdef PYUV_PYTHON3
         path = PyUnicode_FromString(req->path);
 #else
         path = PyString_FromString(req->path);
@@ -748,7 +748,7 @@ fsync_cb(uv_fs_t* req) {
     PyObject *result, *errorno, *path;
 
     if (req->path != NULL) {
-#ifdef PY3
+#ifdef PYUV_PYTHON3
         path = PyUnicode_FromString(req->path);
 #else
         path = PyString_FromString(req->path);
@@ -793,7 +793,7 @@ ftruncate_cb(uv_fs_t* req) {
     PyObject *result, *errorno, *path;
 
     if (req->path != NULL) {
-#ifdef PY3
+#ifdef PYUV_PYTHON3
         path = PyUnicode_FromString(req->path);
 #else
         path = PyString_FromString(req->path);
@@ -840,7 +840,7 @@ readdir_cb(uv_fs_t* req) {
     PyObject *result, *errorno, *files, *item, *path;
 
     if (req->path != NULL) {
-#ifdef PY3
+#ifdef PYUV_PYTHON3
         path = PyUnicode_FromString(req->path);
 #else
         path = PyString_FromString(req->path);
@@ -867,7 +867,7 @@ readdir_cb(uv_fs_t* req) {
             r = req->result;
             ptr = req->ptr;
             while (r--) {
-#ifdef PY3
+#ifdef PYUV_PYTHON3
 
                 item = PyUnicode_FromString(ptr);
 
@@ -911,7 +911,7 @@ sendfile_cb(uv_fs_t* req) {
     bytes_written = PyInt_FromLong((long)req->result);
 
     if (req->path != NULL) {
-#ifdef PY3
+#ifdef PYUV_PYTHON3
         path = PyUnicode_FromString(req->path);
 #else
         path = PyString_FromString(req->path);
@@ -956,7 +956,7 @@ utime_cb(uv_fs_t* req) {
     PyObject *result, *errorno, *path;
 
     if (req->path != NULL) {
-#ifdef PY3
+#ifdef PYUV_PYTHON3
         path = PyUnicode_FromString(req->path);
 #else
         path = PyString_FromString(req->path);
@@ -2751,7 +2751,7 @@ on_fsevent_callback(uv_fs_event_t *handle, const char *filename, int events, int
     PyObject *result, *py_filename, *py_events, *errorno;
 
     if (filename) {
-#ifdef PY3
+#ifdef PYUV_PYTHON3
         py_filename = PyUnicode_FromString(filename);
 #else
         py_filename = PyString_FromString(filename);
@@ -2993,7 +2993,7 @@ static PyTypeObject FSEventType = {
     FSEvent_tp_new,                                                 /*tp_new*/
 };
 
-#ifdef PY3
+#ifdef PYUV_PYTHON3
 /* pyuv_module */
 static PyModuleDef pyuv_fs_module = {
     PyModuleDef_HEAD_INIT,
@@ -3011,7 +3011,7 @@ init_fs(void)
 #endif
 {
     PyObject *module;
-#ifdef PY3
+#ifdef PYUV_PYTHON3
     module = PyModule_Create(&pyuv_fs_module);
 #else
     module = Py_InitModule("pyuv.fs", FS_methods);

@@ -729,7 +729,7 @@ static PyTypeObject DNSResolverType = {
     DNSResolver_tp_new,                                             /*tp_new*/
 };
 
-#ifdef PY3
+#ifdef PYUV_PYTHON3
 /* pyuv_module */
 static PyModuleDef pyuv_dns_module = {
     PyModuleDef_HEAD_INIT,
@@ -740,7 +740,7 @@ static PyModuleDef pyuv_dns_module = {
 };
 #endif
 
-#ifdef PY3
+#ifdef PYUV_PYTHON3
 PyObject *
 PyInit_dns(void)
 #else
@@ -749,7 +749,7 @@ init_dns(void)
 #endif
 {
     PyObject *module;
-#ifdef PY3
+#ifdef PYUV_PYTHON3
     module = PyModule_Create(&pyuv_dns_module);
 #else
     module = Py_InitModule("pyuv.dns", NULL);

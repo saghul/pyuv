@@ -1,7 +1,7 @@
 
 static PyObject* PyExc_UVError;
 
-#ifdef PY3
+#ifdef PYUV_PYTHON3
 /* pyuv_module */
 static PyModuleDef pyuv_error_module = {
     PyModuleDef_HEAD_INIT,
@@ -18,7 +18,7 @@ init_error(void)
 #endif
 {
     PyObject *module;
-#ifdef PY3
+#ifdef PYUV_PYTHON3
     module = PyModule_Create(&pyuv_error_module);
 #else
     module = Py_InitModule("pyuv.error", NULL);

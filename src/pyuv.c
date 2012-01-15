@@ -26,7 +26,7 @@
 
 #define LIBUV_VERSION UV_VERSION_MAJOR.UV_VERSION_MINOR-LIBUV_REVISION
 
-#ifdef PY3
+#ifdef PYUV_PYTHON3
 /* pyuv_module */
 static PyModuleDef pyuv_module = {
     PyModuleDef_HEAD_INIT,
@@ -46,14 +46,14 @@ initialize_module(void)
 
     /* Main module */
     PyObject *pyuv;
-#ifdef PY3
+#ifdef PYUV_PYTHON3
     pyuv = PyModule_Create(&pyuv_module);
 #else
     pyuv = Py_InitModule("pyuv", NULL);
 #endif
     /* Errno module */
     PyObject *errno_module;
-#ifdef PY3
+#ifdef PYUV_PYTHON3
     errno_module = PyInit_pyuverrno();
 #else
     errno_module = init_errno();
@@ -65,7 +65,7 @@ initialize_module(void)
 
     /* Error module */
     PyObject *error;
-#ifdef PY3
+#ifdef PYUV_PYTHON3
     error = PyInit_error(); 
 #else
     error = init_error();
@@ -77,7 +77,7 @@ initialize_module(void)
 
     /* DNS module */
     PyObject *dns;
-#ifdef PY3
+#ifdef PYUV_PYTHON3
     dns = PyInit_dns();
 #else
     dns = init_dns();
@@ -90,7 +90,7 @@ initialize_module(void)
 
     /* FS module */
     PyObject *fs;
-#ifdef PY3
+#ifdef PYUV_PYTHON3
     fs = PyInit_fs();
 #else
     fs = init_fs();
@@ -102,7 +102,7 @@ initialize_module(void)
 
     /* Util module */
     PyObject *util;
-#ifdef PY3
+#ifdef PYUV_PYTHON3
     util = PyInit_util();
 #else
     util = init_util();
@@ -160,7 +160,7 @@ initialize_module(void)
     return pyuv;
 }
 
-#ifdef PY3
+#ifdef PYUV_PYTHON3
 #define INITERROR return NULL
 
 PyObject *
@@ -179,7 +179,7 @@ initpyuv(void)
         INITERROR;
     }
 
-#ifdef PY3
+#ifdef PYUV_PYTHON3
     return m;
 #endif
 }

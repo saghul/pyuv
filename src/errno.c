@@ -4,7 +4,7 @@
 static void
 inscode(PyObject *module_dict, PyObject *other_dict, const char *name, int code)
 {
-#ifdef PY3
+#ifdef PYUV_PYTHON3
     PyObject *error_name = PyUnicode_FromString(name);
 #else
     PyObject *error_name = PyString_FromString(name);
@@ -23,7 +23,7 @@ inscode(PyObject *module_dict, PyObject *other_dict, const char *name, int code)
     Py_XDECREF(error_code);
 }
 
-#ifdef PY3
+#ifdef PYUV_PYTHON3
 /* pyuv_module */
 static PyModuleDef pyuv_errorno_module = {
     PyModuleDef_HEAD_INIT,
@@ -44,7 +44,7 @@ init_errno(void)
     PyObject *module_dict;
     PyObject *errorcode_dict;
     PyObject *ares_errorcode_dict;
-#ifdef PY3
+#ifdef PYUV_PYTHON3
     module = PyModule_Create(&pyuv_errorno_module);
 #else
     module = Py_InitModule("pyuv.errno", NULL);
