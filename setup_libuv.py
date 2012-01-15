@@ -14,7 +14,7 @@ from distutils.errors import DistutilsError
 def makedirs(path):
     try:
         os.makedirs(path)
-    except OSError, e:
+    except OSError as e:
         if e.errno==errno.EEXIST and os.path.isdir(path) and os.access(path, os.R_OK | os.W_OK | os.X_OK):
             return
         raise
@@ -22,7 +22,7 @@ def makedirs(path):
 def rmtree(path):
     try:
         shutil.rmtree(path)
-    except OSError, e:
+    except OSError as e:
         if e.errno != errno.ENOENT:
             raise
 
@@ -36,7 +36,7 @@ def exec_process(cmdline, silent=True, input=None, **kwargs):
         if not silent:
             sys.stdout.write(stdout)
             sys.stderr.write(stderr)
-    except OSError,e:
+    except OSError as e:
         if e.errno == 2:
             raise DistutilsError('"%s" is not present on this system' % cmdline[0])
         else:

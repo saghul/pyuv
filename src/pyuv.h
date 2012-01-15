@@ -6,6 +6,18 @@
 #include "Python.h"
 #include "structmember.h"
 
+/* Python3 */
+#if PY_VERSION_HEX >= 0x03000000
+    #define PY3
+    #define PyInt_FromSsize_t PyLong_FromSsize_t
+    #define PyInt_FromLong PyLong_FromLong
+    #define PyString_FromString PyBytes_FromString
+    #define PyString_AsString PyBytes_AsString
+    #define PyString_FromStringAndSize PyBytes_FromStringAndSize
+    #define PyString_Check PyBytes_Check
+    #define PyString_Size PyBytes_Size
+#endif
+
 /* libuv */
 #include "uv.h"
 
@@ -41,6 +53,7 @@ typedef int Bool;
 
 
 /* Python types definitions */
+
 /* Loop */
 typedef struct {
     PyObject_HEAD

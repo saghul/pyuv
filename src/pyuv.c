@@ -26,6 +26,16 @@
 
 #define LIBUV_VERSION UV_VERSION_MAJOR.UV_VERSION_MINOR-LIBUV_REVISION
 
+#ifdef PY3
+/* pyuv_module */
+static PyModuleDef pyuv_module = {
+    PyModuleDef_HEAD_INIT,
+    "pyuv",                                   /*m_name*/
+    NULL,                                     /*m_doc*/
+    -1,                                       /*m_size*/
+    NULL,                                     /*m_methods*/
+};
+#endif
 
 /* Module */
 static PyObject*
@@ -35,24 +45,43 @@ initialize_module(void)
     PyEval_InitThreads();
 
     /* Main module */
-    PyObject *pyuv = Py_InitModule("pyuv", NULL);
-
+    PyObject *pyuv;
+#ifdef PY3
+    pyuv = PyModule_Create(&pyuv_module);
+#else
+    pyuv = Py_InitModule("pyuv", NULL);
+#endif
     /* Errno module */
-    PyObject *errno_module = init_errno();
+    PyObject *errno_module;
+#ifdef PY3
+    errno_module = PyInit_pyuverrno();
+#else
+    errno_module = init_errno();
+#endif
     if (errno_module == NULL) {
         return NULL;
     }
     PyUVModule_AddObject(pyuv, "errno", errno_module);
 
     /* Error module */
-    PyObject *error = init_error();
+    PyObject *error;
+#ifdef PY3
+    error = PyInit_error(); 
+#else
+    error = init_error();
+#endif
     if (error == NULL) {
         return NULL;
     }
     PyUVModule_AddObject(pyuv, "error", error);
 
     /* DNS module */
-    PyObject *dns = init_dns();
+    PyObject *dns;
+#ifdef PY3
+    dns = PyInit_dns();
+#else
+    dns = init_dns();
+#endif
     if (dns == NULL) {
         return NULL;
     }
@@ -60,14 +89,24 @@ initialize_module(void)
     PyUVModule_AddType(dns, "DNSResolver", &DNSResolverType);
 
     /* FS module */
-    PyObject *fs = init_fs();
+    PyObject *fs;
+#ifdef PY3
+    fs = PyInit_fs();
+#else
+    fs = init_fs();
+#endif
     if (fs == NULL) {
         return NULL;
     }
     PyUVModule_AddObject(pyuv, "fs", fs);
 
     /* Util module */
-    PyObject *util = init_util();
+    PyObject *util;
+#ifdef PY3
+    util = PyInit_util();
+#else
+    util = init_util();
+#endif
     if (util == NULL) {
         return NULL;
     }
@@ -121,10 +160,28 @@ initialize_module(void)
     return pyuv;
 }
 
+#ifdef PY3
+#define INITERROR return NULL
+
+PyObject *
+PyInit_pyuv(void)
+#else
+#define INITERROR return
+
 void
 initpyuv(void)
+#endif
 {
-    initialize_module();
+    PyObject *m;
+    m = initialize_module();
+
+    if(m == NULL){
+        INITERROR;
+    }
+
+#ifdef PY3
+    return m;
+#endif
 }
 
 

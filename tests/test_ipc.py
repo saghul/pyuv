@@ -41,11 +41,11 @@ class IPCTest(common.UVTestCase):
             self.tcp_server = pyuv.TCP(self.loop)
             self.channel.accept(self.tcp_server)
             self.tcp_server.listen(self.on_ipc_connection, 12)
-            self.assertEqual(data.strip(), "hello")
-            self.channel.write("world")
+            self.assertEqual(data.strip(), b"hello")
+            self.channel.write(b"world")
             self.make_many_connections()
         else:
-            if data.strip() == "accepted_connection":
+            if data.strip() == b"accepted_connection":
                 self.assertEqual(pending, pyuv.UV_UNKNOWN_HANDLE)
                 self.channel.close()
 
@@ -56,9 +56,9 @@ class IPCTest(common.UVTestCase):
         self.channel = pyuv.Pipe(self.loop, True)
         proc = pyuv.Process(self.loop)
         if sys.platform == 'win32':
-            proc.spawn(file="cmd.exe", args=["/c", "proc_ipc.py", "listen_before_write"], exit_callback=self.proc_exit_cb, stdin=self.channel)
+            proc.spawn(file="cmd.exe", args=[b"/c", b"proc_ipc.py", b"listen_before_write"], exit_callback=self.proc_exit_cb, stdin=self.channel)
         else:
-            proc.spawn(file="./proc_ipc.py", args=["listen_before_write"], exit_callback=self.proc_exit_cb, stdin=self.channel)
+            proc.spawn(file="./proc_ipc.py", args=[b"listen_before_write"], exit_callback=self.proc_exit_cb, stdin=self.channel)
         self.channel.start_read2(self.on_channel_read)
         self.loop.run()
 
@@ -69,9 +69,9 @@ class IPCTest(common.UVTestCase):
         self.channel = pyuv.Pipe(self.loop, True)
         proc = pyuv.Process(self.loop)
         if sys.platform == 'win32':
-            proc.spawn(file="cmd.exe", args=["/c", "proc_ipc.py", "listen_after_write"], exit_callback=self.proc_exit_cb, stdin=self.channel)
+            proc.spawn(file="cmd.exe", args=[b"/c", b"proc_ipc.py", b"listen_after_write"], exit_callback=self.proc_exit_cb, stdin=self.channel)
         else:
-            proc.spawn(file="./proc_ipc.py", args=["listen_after_write"], exit_callback=self.proc_exit_cb, stdin=self.channel)
+            proc.spawn(file="./proc_ipc.py", args=[b"listen_after_write"], exit_callback=self.proc_exit_cb, stdin=self.channel)
         self.channel.start_read2(self.on_channel_read)
         self.loop.run()
 

@@ -41,7 +41,11 @@ stat_cb(uv_fs_t* req) {
     PyObject *result, *errorno, *stat_data, *path;
 
     if (req->path != NULL) {
+#ifdef PY3
+        path = PyUnicode_FromString(req->path);
+#else
         path = PyString_FromString(req->path);
+#endif
     } else {
         path = Py_None;
         Py_INCREF(Py_None);
@@ -149,7 +153,11 @@ unlink_cb(uv_fs_t* req) {
     PyObject *result, *errorno, *path;
 
     if (req->path != NULL) {
+#ifdef PY3
+        path = PyUnicode_FromString(req->path);
+#else
         path = PyString_FromString(req->path);
+#endif  
     } else {
         path = Py_None;
         Py_INCREF(Py_None);
@@ -190,7 +198,11 @@ mkdir_cb(uv_fs_t* req) {
     PyObject *result, *errorno, *path;
 
     if (req->path != NULL) {
+#ifdef PY3
+        path = PyUnicode_FromString(req->path);
+#else
         path = PyString_FromString(req->path);
+#endif
     } else {
         path = Py_None;
         Py_INCREF(Py_None);
@@ -231,7 +243,11 @@ rmdir_cb(uv_fs_t* req) {
     PyObject *result, *errorno, *path;
 
     if (req->path != NULL) {
+#ifdef PY3
+        path = PyUnicode_FromString(req->path);
+#else
         path = PyString_FromString(req->path);
+#endif
     } else {
         path = Py_None;
         Py_INCREF(Py_None);
@@ -272,7 +288,12 @@ rename_cb(uv_fs_t* req) {
     PyObject *result, *errorno, *path;
 
     if (req->path != NULL) {
+#ifdef PY3
+        path = PyUnicode_FromString(req->path);
+#else
         path = PyString_FromString(req->path);
+#endif
+
     } else {
         path = Py_None;
         Py_INCREF(Py_None);
@@ -313,7 +334,11 @@ chmod_cb(uv_fs_t* req) {
     PyObject *result, *errorno, *path;
 
     if (req->path != NULL) {
+#ifdef PY3
+        path = PyUnicode_FromString(req->path);
+#else
         path = PyString_FromString(req->path);
+#endif
     } else {
         path = Py_None;
         Py_INCREF(Py_None);
@@ -354,7 +379,11 @@ link_cb(uv_fs_t* req) {
     PyObject *result, *errorno, *path;
 
     if (req->path != NULL) {
+#ifdef PY3
+        path = PyUnicode_FromString(req->path);
+#else
         path = PyString_FromString(req->path);
+#endif
     } else {
         path = Py_None;
         Py_INCREF(Py_None);
@@ -395,7 +424,11 @@ symlink_cb(uv_fs_t* req) {
     PyObject *result, *errorno, *path;
 
     if (req->path != NULL) {
+#ifdef PY3
+        path = PyUnicode_FromString(req->path);
+#else
         path = PyString_FromString(req->path);
+#endif
     } else {
         path = Py_None;
         Py_INCREF(Py_None);
@@ -442,7 +475,11 @@ readlink_cb(uv_fs_t* req) {
     } else {
         errorno = Py_None;
         Py_INCREF(Py_None);
+#ifdef PY3
+        path = PyUnicode_FromString(req->ptr);
+#else
         path = PyString_FromString(req->ptr);
+#endif
     }
 
     result = PyObject_CallFunctionObjArgs(req_data->callback, req_data->loop, req_data->data, path, errorno, NULL);
@@ -473,7 +510,11 @@ chown_cb(uv_fs_t* req) {
     PyObject *result, *errorno, *path;
 
     if (req->path != NULL) {
+#ifdef PY3
+        path = PyUnicode_FromString(req->path);
+#else
         path = PyString_FromString(req->path);
+#endif
     } else {
         path = Py_None;
         Py_INCREF(Py_None);
@@ -516,7 +557,11 @@ open_cb(uv_fs_t* req) {
     fd = PyInt_FromLong((long)req->result);
 
     if (req->path != NULL) {
+#ifdef PY3
+        path = PyUnicode_FromString(req->path);
+#else
         path = PyString_FromString(req->path);
+#endif
     } else {
         path = Py_None;
         Py_INCREF(Py_None);
@@ -557,7 +602,11 @@ close_cb(uv_fs_t* req) {
     PyObject *result, *errorno, *path;
 
     if (req->path != NULL) {
+#ifdef PY3
+        path = PyUnicode_FromString(req->path);
+#else
         path = PyString_FromString(req->path);
+#endif
     } else {
         path = Py_None;
         Py_INCREF(Py_None);
@@ -598,7 +647,11 @@ read_cb(uv_fs_t* req) {
     PyObject *result, *errorno, *read_data, *path;
 
     if (req->path != NULL) {
+#ifdef PY3
+        path = PyUnicode_FromString(req->path);
+#else
         path = PyString_FromString(req->path);
+#endif
     } else {
         path = Py_None;
         Py_INCREF(Py_None);
@@ -611,7 +664,11 @@ read_cb(uv_fs_t* req) {
     } else {
         errorno = Py_None;
         Py_INCREF(Py_None);
+#ifdef PY3
+        read_data = PyUnicode_FromStringAndSize(req_data->buf.base, req->result);
+#else
         read_data = PyString_FromStringAndSize(req_data->buf.base, req->result);
+#endif
     }
 
     result = PyObject_CallFunctionObjArgs(req_data->callback, req_data->loop, req_data->data, path, read_data, errorno, NULL);
@@ -645,7 +702,11 @@ write_cb(uv_fs_t* req) {
     bytes_written = PyInt_FromLong((long)req->result);
 
     if (req->path != NULL) {
+#ifdef PY3
+        path = PyUnicode_FromString(req->path);
+#else
         path = PyString_FromString(req->path);
+#endif
     } else {
         path = Py_None;
         Py_INCREF(Py_None);
@@ -687,7 +748,11 @@ fsync_cb(uv_fs_t* req) {
     PyObject *result, *errorno, *path;
 
     if (req->path != NULL) {
+#ifdef PY3
+        path = PyUnicode_FromString(req->path);
+#else
         path = PyString_FromString(req->path);
+#endif
     } else {
         path = Py_None;
         Py_INCREF(Py_None);
@@ -728,7 +793,11 @@ ftruncate_cb(uv_fs_t* req) {
     PyObject *result, *errorno, *path;
 
     if (req->path != NULL) {
+#ifdef PY3
+        path = PyUnicode_FromString(req->path);
+#else
         path = PyString_FromString(req->path);
+#endif
     } else {
         path = Py_None;
         Py_INCREF(Py_None);
@@ -771,7 +840,11 @@ readdir_cb(uv_fs_t* req) {
     PyObject *result, *errorno, *files, *item, *path;
 
     if (req->path != NULL) {
+#ifdef PY3
+        path = PyUnicode_FromString(req->path);
+#else
         path = PyString_FromString(req->path);
+#endif
     } else {
         path = Py_None;
         Py_INCREF(Py_None);
@@ -794,7 +867,13 @@ readdir_cb(uv_fs_t* req) {
             r = req->result;
             ptr = req->ptr;
             while (r--) {
+#ifdef PY3
+
+                item = PyUnicode_FromString(ptr);
+
+#else
                 item = PyString_FromString(ptr);
+#endif
                 PyList_Append(files, item);
                 Py_DECREF(item);
                 ptr += strlen(ptr) + 1;
@@ -832,7 +911,11 @@ sendfile_cb(uv_fs_t* req) {
     bytes_written = PyInt_FromLong((long)req->result);
 
     if (req->path != NULL) {
+#ifdef PY3
+        path = PyUnicode_FromString(req->path);
+#else
         path = PyString_FromString(req->path);
+#endif
     } else {
         path = Py_None;
         Py_INCREF(Py_None);
@@ -873,7 +956,11 @@ utime_cb(uv_fs_t* req) {
     PyObject *result, *errorno, *path;
 
     if (req->path != NULL) {
+#ifdef PY3
+        path = PyUnicode_FromString(req->path);
+#else
         path = PyString_FromString(req->path);
+#endif
     } else {
         path = Py_None;
         Py_INCREF(Py_None);
@@ -2664,7 +2751,11 @@ on_fsevent_callback(uv_fs_event_t *handle, const char *filename, int events, int
     PyObject *result, *py_filename, *py_events, *errorno;
 
     if (filename) {
+#ifdef PY3
+        py_filename = PyUnicode_FromString(filename);
+#else
         py_filename = PyString_FromString(filename);
+#endif
     } else {
         py_filename = Py_None;
         Py_INCREF(Py_None);
@@ -2902,12 +2993,29 @@ static PyTypeObject FSEventType = {
     FSEvent_tp_new,                                                 /*tp_new*/
 };
 
+#ifdef PY3
+/* pyuv_module */
+static PyModuleDef pyuv_fs_module = {
+    PyModuleDef_HEAD_INIT,
+    "pyuv.fs",                                   /*m_name*/
+    NULL,                                     /*m_doc*/
+    -1,                                       /*m_size*/
+    FS_methods,                                     /*m_methods*/
+};
 
 PyObject *
+PyInit_fs(void)
+#else
+PyObject *
 init_fs(void)
+#endif
 {
     PyObject *module;
+#ifdef PY3
+    module = PyModule_Create(&pyuv_fs_module);
+#else
     module = Py_InitModule("pyuv.fs", FS_methods);
+#endif
     if (module == NULL) {
         return NULL;
     }

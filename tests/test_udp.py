@@ -2,6 +2,7 @@
 import os
 
 import common
+from common import b
 import pyuv
 
 
@@ -21,17 +22,17 @@ class UDPTest(common.UVTestCase):
 
     def on_server_recv(self, handle, (ip, port), data, error):
         data = data.strip()
-        self.assertEquals(data, "PING")
-        self.server.send("PONG"+os.linesep, (ip, port))
+        self.assertEquals(data, b"PING")
+        self.server.send(b"PONG"+b(os.linesep), (ip, port))
 
     def on_client_recv(self, handle, (ip, port), data, error):
         data = data.strip()
-        self.assertEquals(data, "PONG")
+        self.assertEquals(data, b"PONG")
         self.client.close(self.on_close)
         self.server.close(self.on_close)
 
     def timer_cb(self, timer):
-        self.client.send("PING"+os.linesep, ("127.0.0.1", TEST_PORT))
+        self.client.send(b"PING"+b(os.linesep), ("127.0.0.1", TEST_PORT))
         timer.close(self.on_close)
 
     def test_udp_pingpong(self):
@@ -60,17 +61,17 @@ class UDPTestNull(common.UVTestCase):
 
     def on_server_recv(self, handle, (ip, port), data, error):
         data = data.strip()
-        self.assertEquals(data, "PIN\x00G")
-        self.server.send("PONG"+os.linesep, (ip, port))
+        self.assertEquals(data, b"PIN\x00G")
+        self.server.send(b"PONG"+b(os.linesep), (ip, port))
 
     def on_client_recv(self, handle, (ip, port), data, error):
         data = data.strip()
-        self.assertEquals(data, "PONG")
+        self.assertEquals(data, b"PONG")
         self.client.close(self.on_close)
         self.server.close(self.on_close)
 
     def timer_cb(self, timer):
-        self.client.send("PIN\x00G"+os.linesep, ("127.0.0.1", TEST_PORT))
+        self.client.send(b"PIN\x00G"+b(os.linesep), ("127.0.0.1", TEST_PORT))
         timer.close(self.on_close)
 
     def test_udp_pingpong_null(self):
@@ -99,17 +100,17 @@ class UDPTestList(common.UVTestCase):
 
     def on_server_recv(self, handle, (ip, port), data, error):
         data = data.strip()
-        self.assertEquals(data, "PING")
-        self.server.send(["PONG", os.linesep], (ip, port))
+        self.assertEquals(data, b"PING")
+        self.server.send([b"PONG", b(os.linesep)], (ip, port))
 
     def on_client_recv(self, handle, (ip, port), data, error):
         data = data.strip()
-        self.assertEquals(data, "PONG")
+        self.assertEquals(data, b"PONG")
         self.client.close(self.on_close)
         self.server.close(self.on_close)
 
     def timer_cb(self, timer):
-        self.client.send(["PING", os.linesep], ("127.0.0.1", TEST_PORT))
+        self.client.send([b"PING", b(os.linesep)], ("127.0.0.1", TEST_PORT))
         timer.close(self.on_close)
 
     def test_udp_pingpong_list(self):
@@ -138,17 +139,17 @@ class UDPTestListNull(common.UVTestCase):
 
     def on_server_recv(self, handle, (ip, port), data, error):
         data = data.strip()
-        self.assertEquals(data, "PIN\x00G")
-        self.server.send(["PONG", os.linesep], (ip, port))
+        self.assertEquals(data, b"PIN\x00G")
+        self.server.send([b"PONG", b(os.linesep)], (ip, port))
 
     def on_client_recv(self, handle, (ip, port), data, error):
         data = data.strip()
-        self.assertEquals(data, "PONG")
+        self.assertEquals(data, b"PONG")
         self.client.close(self.on_close)
         self.server.close(self.on_close)
 
     def timer_cb(self, timer):
-        self.client.send(["PIN\x00G", os.linesep], ("127.0.0.1", TEST_PORT))
+        self.client.send([b"PIN\x00G", b(os.linesep)], ("127.0.0.1", TEST_PORT))
         timer.close(self.on_close)
 
     def test_udp_pingpong_list_null(self):
@@ -228,10 +229,10 @@ class UDPTestMulticast(common.UVTestCase):
         self.client.bind((MULTICAST_ADDRESS, TEST_PORT))
         self.client.set_membership(MULTICAST_ADDRESS, pyuv.UV_JOIN_GROUP)
         self.client.start_recv(self.on_client_recv)
-        self.server.send("PING", (MULTICAST_ADDRESS, TEST_PORT), self.on_server_send)
+        self.server.send(b"PING", (MULTICAST_ADDRESS, TEST_PORT), self.on_server_send)
         self.loop.run()
         self.assertEqual(self.on_close_called, 2)
-        self.assertEquals(self.received_data, "PING")
+        self.assertEquals(self.received_data, b"PING")
 
 
 if __name__ == '__main__':

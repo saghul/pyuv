@@ -225,12 +225,29 @@ Util_methods[] = {
     { NULL }
 };
 
+#ifdef PY3
+/* pyuv_module */
+static PyModuleDef pyuv_util_module = {
+    PyModuleDef_HEAD_INIT,
+    "pyuv.util",                                   /*m_name*/
+    NULL,                                     /*m_doc*/
+    -1,                                       /*m_size*/
+    Util_methods,                                     /*m_methods*/
+};
 
 PyObject *
+PyInit_util(void)
+#else
+PyObject *
 init_util(void)
+#endif
 {
     PyObject *module;
+#ifdef PY3
+    module = PyModule_Create(&pyuv_util_module);
+#else
     module = Py_InitModule("pyuv.util", Util_methods);
+#endif
     if (module == NULL) {
         return NULL;
     }
