@@ -1,6 +1,4 @@
 
-import os
-
 import common
 import pyuv
 

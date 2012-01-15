@@ -1,7 +1,5 @@
 
-import os
 import sys
-import threading
 
 import common
 import pyuv
