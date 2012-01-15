@@ -1,9 +1,9 @@
 #!/bin/bash
 
-rm -f core.* pyuv*.so
-rm -rf build deps
-rm -rf _tests
-python3.2 setup.py build_ext --inplace --force -g
-cp -r tests/ _tests/
-2to3 -w tests
+rm -f core.*
+rm -rf build
+rm -rf tests3
+python3.2 setup.py build_ext --inplace --force
+cp -r tests tests3
+2to3 -w tests3
 
