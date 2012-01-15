@@ -4,7 +4,6 @@ import sys
 import threading
 
 import common
-from common import b
 import pyuv
 
 
@@ -40,7 +39,7 @@ class PipeTest(common.UVTestCase):
         server.accept(client)
         self.client_connections.append(client)
         client.start_read(self.on_client_connection_read)
-        client.write(b"PING"+b(os.linesep))
+        client.write(b"PING"+common.linesep)
 
     def on_client_connection_read(self, client, data, error):
         if data is None:
@@ -82,7 +81,7 @@ class PipeTestNull(common.UVTestCase):
         server.accept(client)
         self.client_connections.append(client)
         client.start_read(self.on_client_connection_read)
-        client.write(b"PIN\x00G"+b(os.linesep))
+        client.write(b"PIN\x00G"+common.linesep)
 
     def on_client_connection_read(self, client, data, error):
         if data is None:
@@ -125,7 +124,7 @@ class PipeTestList(common.UVTestCase):
         server.accept(client)
         self.client_connections.append(client)
         client.start_read(self.on_client_connection_read)
-        client.write([b"PING", b(os.linesep)])
+        client.write([b"PING", common.linesep])
 
     def on_client_connection_read(self, client, data, error):
         if data is None:
@@ -168,7 +167,7 @@ class PipeTestListNull(common.UVTestCase):
         server.accept(client)
         self.client_connections.append(client)
         client.start_read(self.on_client_connection_read)
-        client.write([b"PING", b"\x00", b(os.linesep)])
+        client.write([b"PING", b"\x00", common.linesep])
 
     def on_client_connection_read(self, client, data, error):
         if data is None:
@@ -210,7 +209,7 @@ class PipeShutdownTest(common.UVTestCase):
         server.accept(client)
         self.client_connections.append(client)
         client.start_read(self.on_client_connection_read)
-        client.write(b"PING"+b(os.linesep))
+        client.write(b"PING"+common.linesep)
 
     def on_client_connection_read(self, client, data, error):
         if data is None:

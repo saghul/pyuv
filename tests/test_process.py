@@ -3,7 +3,6 @@ import os
 import sys
 
 import common
-from common import b
 import pyuv
 
 
@@ -158,7 +157,7 @@ class ProcessTest(common.UVTestCase):
         else:
             proc.spawn(file="./proc_stdin_stdout.py", exit_callback=proc_exit_cb, stdin=stdin_pipe, stdout=stdout_pipe)
         stdout_pipe.start_read(stdout_read_cb)
-        stdin_pipe.write(b"TEST"+b(os.linesep), stdin_write_cb)
+        stdin_pipe.write(b"TEST"+common.linesep, stdin_write_cb)
         loop.run()
         self.assertEqual(self.exit_cb_called, 1)
         self.assertEqual(self.close_cb_called, 3)

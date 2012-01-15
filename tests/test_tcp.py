@@ -2,7 +2,6 @@
 import os
 
 import common
-from common import b
 import pyuv
 
 
@@ -35,7 +34,7 @@ class TCPTest(common.UVTestCase):
         server.accept(client)
         self.client_connections.append(client)
         client.start_read(self.on_client_connection_read)
-        client.write(b"PING"+b(os.linesep))
+        client.write(b"PING"+common.linesep)
 
     def on_client_connection_read(self, client, data, error):
         if data is None:
@@ -77,7 +76,7 @@ class TCPTestNull(common.UVTestCase):
         server.accept(client)
         self.client_connections.append(client)
         client.start_read(self.on_client_connection_read)
-        client.write(b"PIN\x00G"+b(os.linesep))
+        client.write(b"PIN\x00G"+common.linesep)
 
     def on_client_connection_read(self, client, data, error):
         if data is None:
@@ -118,7 +117,7 @@ class TCPTestList(common.UVTestCase):
         server.accept(client)
         self.client_connections.append(client)
         client.start_read(self.on_client_connection_read)
-        client.write([b"PING1", b"PING2", b"PING3", b"PING4", b"PING5", b"PING6", b(os.linesep)])
+        client.write([b"PING1", b"PING2", b"PING3", b"PING4", b"PING5", b"PING6", common.linesep])
 
     def on_client_connection_read(self, client, data, error):
         if data is None:
@@ -159,7 +158,7 @@ class TCPTestListNull(common.UVTestCase):
         server.accept(client)
         self.client_connections.append(client)
         client.start_read(self.on_client_connection_read)
-        client.write([b"PING1", b"PING2", b"PING3", b"PING4", b"PING5", b"PING\x00\xFF6", b(os.linesep)])
+        client.write([b"PING1", b"PING2", b"PING3", b"PING4", b"PING5", b"PING\x00\xFF6", common.linesep])
 
     def on_client_connection_read(self, client, data, error):
         if data is None:
@@ -245,7 +244,7 @@ class TCPShutdownTest(common.UVTestCase):
         server.accept(client)
         self.client_connections.append(client)
         client.start_read(self.on_client_connection_read)
-        client.write(b"PING"+b(os.linesep))
+        client.write(b"PING"+common.linesep)
 
     def on_client_connection_read(self, client, data, error):
         if data is None:

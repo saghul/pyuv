@@ -10,6 +10,12 @@ suites = []
 
 platform = 'linux' if sys.platform.startswith('linux') else sys.platform
 
+if sys.version_info >= (3, 0):
+    linesep = os.linesep.encode()
+else:
+    linesep = os.linesep
+
+
 class TestCaseMeta(type):
     def __init__(cls, name, bases, dic):
         super(TestCaseMeta, cls).__init__(name, bases, dic)
@@ -35,11 +41,3 @@ def load_tests():
     return loaded_modules
 
 
-PY3 = (sys.version_info >= (3, 0))
-
-if PY3:
-    b = lambda s: s.encode('latin-1')
-    u = lambda s: s
-else:
-    b = lambda s: s
-    u = lambda s: unicode(s, "unicode_escape")
