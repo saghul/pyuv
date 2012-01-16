@@ -1,4 +1,4 @@
-include README LICENSE TODO ChangeLog build_inplace *.py
+include AUTHORS README LICENSE TODO ChangeLog build_inplace *.py
 recursive-include docs *
 recursive-include examples *
 recursive-include patches *
