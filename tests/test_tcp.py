@@ -1,4 +1,6 @@
 
+import sys
+
 import common
 import pyuv
 
@@ -198,7 +200,12 @@ class TCPTestInvalidData(common.UVTestCase):
         self.client_connections.append(client)
         client.start_read(self.on_client_connection_read)
 
-        self.assertRaises(TypeError, client.write, u'Unicode Data')
+        if sys.version_info >= (3, 0):
+            data = 'Unicode'
+        else:
+            data = unicode('Unicode')
+
+        self.assertRaises(TypeError, client.write, data)
         self.assertRaises(TypeError, client.write, 1)
 
         client.close()

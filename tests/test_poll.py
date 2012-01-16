@@ -11,7 +11,7 @@ class PollTest(common.UVTestCase):
             handle.close()
             self.cb_called += 1
         loop = pyuv.Loop.default_loop()
-        for i in xrange(500):
+        for i in range(500):
             prepare = pyuv.Prepare(loop)
             prepare.start(prepare_cb)
             loop.poll()

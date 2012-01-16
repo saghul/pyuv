@@ -21,7 +21,7 @@ class IPCTest(common.UVTestCase):
         self.connections.remove(client)
 
     def make_many_connections(self):
-        for i in xrange(100):
+        for i in range(100):
             conn = pyuv.TCP(self.loop)
             self.connections.append(conn)
             conn.connect(("127.0.0.1", TEST_PORT), self.on_client_connection)

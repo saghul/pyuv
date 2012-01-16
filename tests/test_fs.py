@@ -129,7 +129,7 @@ class FSTestMkdir(common.UVTestCase):
 
     def setUp(self):
         self.loop = pyuv.Loop.default_loop()
-        os.mkdir(BAD_DIR, 0755)
+        os.mkdir(BAD_DIR, 0o755)
 
     def tearDown(self):
         os.rmdir(BAD_DIR)
@@ -143,13 +143,13 @@ class FSTestMkdir(common.UVTestCase):
 
     def test_bad_mkdir(self):
         self.errorno = None
-        pyuv.fs.mkdir(self.loop, BAD_DIR, 0755, self.mkdir_cb)
+        pyuv.fs.mkdir(self.loop, BAD_DIR, 0o755, self.mkdir_cb)
         self.loop.run()
         self.assertEqual(self.errorno, pyuv.errno.UV_EEXIST)
 
     def test_mkdir(self):
         self.errorno = None
-        pyuv.fs.mkdir(self.loop, TEST_DIR, 0755, self.mkdir_cb)
+        pyuv.fs.mkdir(self.loop, TEST_DIR, 0o755, self.mkdir_cb)
         self.loop.run()
         self.assertEqual(self.errorno, None)
         self.assertTrue(os.path.isdir(TEST_DIR))
@@ -159,7 +159,7 @@ class FSTestRmdir(common.UVTestCase):
 
     def setUp(self):
         self.loop = pyuv.Loop.default_loop()
-        os.mkdir(TEST_DIR, 0755)
+        os.mkdir(TEST_DIR, 0o755)
 
     def tearDown(self):
         try:
@@ -228,7 +228,7 @@ class FSTestChmod(common.UVTestCase):
 
     def test_chmod(self):
         self.errorno = None
-        pyuv.fs.chmod(self.loop, TEST_FILE, 0777, self.chmod_cb)
+        pyuv.fs.chmod(self.loop, TEST_FILE, 0o777, self.chmod_cb)
         self.loop.run()
         self.assertEqual(self.errorno, None)
         mode = os.stat(TEST_FILE).st_mode
@@ -252,7 +252,7 @@ class FSTestFchmod(common.UVTestCase):
 
     def test_fchmod(self):
         self.errorno = None
-        pyuv.fs.fchmod(self.loop, self.file.fileno(), 0777, self.fchmod_cb)
+        pyuv.fs.fchmod(self.loop, self.file.fileno(), 0o777, self.fchmod_cb)
         self.loop.run()
         self.assertEqual(self.errorno, None)
         mode = os.stat(TEST_FILE).st_mode
@@ -535,8 +535,8 @@ class FSTestReaddir(common.UVTestCase):
 
     def setUp(self):
         self.loop = pyuv.Loop.default_loop()
-        os.mkdir(TEST_DIR, 0755)
-        os.mkdir(os.path.join(TEST_DIR, TEST_DIR2), 0755)
+        os.mkdir(TEST_DIR, 0o755)
+        os.mkdir(os.path.join(TEST_DIR, TEST_DIR2), 0o755)
         with open(os.path.join(TEST_DIR, TEST_FILE), 'w') as f:
             f.write('test')
         with open(os.path.join(TEST_DIR, TEST_FILE2), 'w') as f:
@@ -682,7 +682,7 @@ class FSEventTest(common.UVTestCase):
 
     def setUp(self):
         self.loop = pyuv.Loop.default_loop()
-        os.mkdir(TEST_DIR, 0755)
+        os.mkdir(TEST_DIR, 0o755)
         with open(os.path.join(TEST_DIR, TEST_FILE), 'w') as f:
             f.write("test")
         with open(TEST_FILE, 'w') as f:
@@ -704,7 +704,7 @@ class FSEventTest(common.UVTestCase):
             handle.close()
         except pyuv.error.FSEventError:
             # This shouldn't happen, need to verify with libuv
-	    return
+            return
         self.filename = filename
         self.events = events
         self.errorno = errorno

@@ -24,8 +24,7 @@ class TestCaseMeta(type):
         if platform not in dic.get('__disabled__', []):
             suites.append(loader.loadTestsFromTestCase(cls))
 
-class UVTestCase(unittest.TestCase):
-    __metaclass__ = TestCaseMeta
+UVTestCase = TestCaseMeta('UVTestCase', (unittest.TestCase,), {})
 
 
 def load_tests():

@@ -1,4 +1,6 @@
 
+from __future__ import print_function
+
 import sys
 sys.path.insert(0, '../')
 import signal
@@ -6,7 +8,7 @@ import threading
 import pyuv
 
 
-RESPONSE = "HTTP/1.1 200 OK\r\n" \
+RESPONSE = b"HTTP/1.1 200 OK\r\n" \
            "Content-Type: text/plain\r\n" \
            "Content-Length: 12\r\n" \
            "\r\n" \
@@ -44,7 +46,7 @@ def signal_cb(sig, frame):
     async.send(async_exit)
 
 
-print "PyUV version %s" % pyuv.__version__
+print("PyUV version %s" % pyuv.__version__)
 
 loop = pyuv.Loop.default_loop()
 
@@ -66,6 +68,6 @@ signal.pause()
 
 t.join()
 
-print "Stopped!"
+print("Stopped!")
 
 

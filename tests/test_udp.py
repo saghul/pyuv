@@ -1,5 +1,6 @@
 
 import os
+import sys
 
 import common
 import pyuv
@@ -19,12 +20,14 @@ class UDPTest(common.UVTestCase):
     def on_close(self, handle):
         self.on_close_called += 1
 
-    def on_server_recv(self, handle, (ip, port), data, error):
+    def on_server_recv(self, handle, ip_port, data, error):
+        ip, port = ip_port
         data = data.strip()
         self.assertEquals(data, b"PING")
         self.server.send(b"PONG"+common.linesep, (ip, port))
 
-    def on_client_recv(self, handle, (ip, port), data, error):
+    def on_client_recv(self, handle, ip_port, data, error):
+        ip, port = ip_port
         data = data.strip()
         self.assertEquals(data, b"PONG")
         self.client.close(self.on_close)
@@ -58,12 +61,14 @@ class UDPTestNull(common.UVTestCase):
     def on_close(self, handle):
         self.on_close_called += 1
 
-    def on_server_recv(self, handle, (ip, port), data, error):
+    def on_server_recv(self, handle, ip_port, data, error):
+        ip, port = ip_port
         data = data.strip()
         self.assertEquals(data, b"PIN\x00G")
         self.server.send(b"PONG"+common.linesep, (ip, port))
 
-    def on_client_recv(self, handle, (ip, port), data, error):
+    def on_client_recv(self, handle, ip_port, data, error):
+        ip, port = ip_port
         data = data.strip()
         self.assertEquals(data, b"PONG")
         self.client.close(self.on_close)
@@ -97,12 +102,14 @@ class UDPTestList(common.UVTestCase):
     def on_close(self, handle):
         self.on_close_called += 1
 
-    def on_server_recv(self, handle, (ip, port), data, error):
+    def on_server_recv(self, handle, ip_port, data, error):
+        ip, port = ip_port
         data = data.strip()
         self.assertEquals(data, b"PING")
         self.server.send([b"PONG", common.linesep], (ip, port))
 
-    def on_client_recv(self, handle, (ip, port), data, error):
+    def on_client_recv(self, handle, ip_port, data, error):
+        ip, port = ip_port
         data = data.strip()
         self.assertEquals(data, b"PONG")
         self.client.close(self.on_close)
@@ -136,12 +143,14 @@ class UDPTestListNull(common.UVTestCase):
     def on_close(self, handle):
         self.on_close_called += 1
 
-    def on_server_recv(self, handle, (ip, port), data, error):
+    def on_server_recv(self, handle, ip_port, data, error):
+        ip, port = ip_port
         data = data.strip()
         self.assertEquals(data, b"PIN\x00G")
         self.server.send([b"PONG", common.linesep], (ip, port))
 
-    def on_client_recv(self, handle, (ip, port), data, error):
+    def on_client_recv(self, handle, ip_port, data, error):
+        ip, port = ip_port
         data = data.strip()
         self.assertEquals(data, b"PONG")
         self.client.close(self.on_close)
@@ -175,13 +184,18 @@ class UDPTestInvalidData(common.UVTestCase):
     def on_close(self, handle):
         self.on_close_called += 1
 
-    def on_server_recv(self, handle, (ip, port), data):
+    def on_server_recv(self, handle, ip_port, data):
+        ip, port = ip_port
         self.client.close(self.on_close)
         self.server.close(self.on_close)
         self.fail("Expected send to fail.")
 
     def timer_cb(self, timer):
-        self.assertRaises(TypeError, self.client.send, u'Unicode' + os.linesep, ("127.0.0.1", TEST_PORT))
+        if sys.version_info >= (3, 0):
+            data = 'Unicode'
+        else:
+            data = unicode('Unicode')
+        self.assertRaises(TypeError, self.client.send, data+os.linesep, ("127.0.0.1", TEST_PORT))
         self.assertRaises(TypeError, self.client.send, 1, ("127.0.0.1", TEST_PORT))
 
         self.client.close(self.on_close)
@@ -213,7 +227,8 @@ class UDPTestMulticast(common.UVTestCase):
     def on_close(self, handle):
         self.on_close_called += 1
 
-    def on_client_recv(self, handle, (ip, port), data, error):
+    def on_client_recv(self, handle, ip_port, data, error):
+        ip, port = ip_port
         self.received_data = data.strip()
         self.client.set_membership(MULTICAST_ADDRESS, pyuv.UV_LEAVE_GROUP)
         self.client.close(self.on_close)
