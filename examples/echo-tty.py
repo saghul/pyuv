@@ -1,4 +1,6 @@
 
+from __future__ import print_function
+
 import os
 import sys
 import pyuv
@@ -23,7 +25,7 @@ tty_stdin.start_read(on_tty_read)
 
 tty_stdout = pyuv.TTY(loop, sys.stdout.fileno())
 
-print "Window size: (%d, %d)" % tty_stdin.get_winsize()
+print("Window size: (%d, %d)" % tty_stdin.get_winsize())
 
 loop.run()
 

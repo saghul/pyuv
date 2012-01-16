@@ -1,4 +1,6 @@
 
+from __future__ import print_function
+
 import os
 import sys
 import signal
@@ -10,9 +12,6 @@ if sys.version_info >= (3, 0):
 else:
     LINESEP = os.linesep
 
-def on_client_shutdown(client, error):
-    client.close()
-    clients.remove(client)
 
 def on_read(client, data, error):
     if data is None:
@@ -23,7 +22,6 @@ def on_read(client, data, error):
     if not data:
         return
     client.write(data+LINESEP)
-    client.shutdown(on_client_shutdown)
 
 def on_connection(server, error):
     client = pyuv.TCP(server.loop)
@@ -41,7 +39,7 @@ def signal_cb(sig, frame):
     async.send(async_exit)
 
 
-print "PyUV version %s" % pyuv.__version__
+print("PyUV version %s" % pyuv.__version__)
 
 loop = pyuv.Loop()
 
@@ -63,6 +61,6 @@ signal.pause()
 
 t.join()
 
-print "Stopped!"
+print("Stopped!")
 
 
