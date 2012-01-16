@@ -6,5 +6,3 @@
 - Use PyStructSequence (similar to a named tuple) on stat and perhaps
   somewhere else as well
 
-- Fix tests to avoid using 2to3
-
