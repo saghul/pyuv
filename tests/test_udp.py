@@ -4,6 +4,7 @@ import sys
 
 import common
 import pyuv
+from common import unittest2
 
 
 TEST_PORT = 12345
@@ -215,6 +216,7 @@ class UDPTestInvalidData(common.UVTestCase):
         self.assertEqual(self.on_close_called, 3)
 
 
+@unittest2.skipIf( common.is_windows, "Don't required Windows")
 class UDPTestMulticast(common.UVTestCase):
     __disabled__ = ['win32']
 

@@ -2,6 +2,7 @@
 import threading
 import time
 
+from common import unittest2
 import common
 import pyuv
 
@@ -24,6 +25,7 @@ class ThreadPoolTest(common.UVTestCase):
         self.assertEqual(self.pool_cb_called, 3)
 
 
+@unittest2.skipIf( common.is_windows, "Don't required Windows")
 class ThreadPoolMultiLoopTest(common.UVTestCase):
     __disabled__ = ['win32']
 

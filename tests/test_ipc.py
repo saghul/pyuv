@@ -3,10 +3,11 @@ import sys
 
 import common
 import pyuv
-
+from common import unittest2
 
 TEST_PORT = 1234
 
+@unittest2.skipIf( common.is_windows, "Don't required Windows")
 class IPCTest(common.UVTestCase):
     __disabled__ = 'win32'
 
