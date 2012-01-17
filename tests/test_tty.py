@@ -13,12 +13,12 @@ class TYTest(common.UVTestCase):
         tty = pyuv.TTY(loop, sys.stdin.fileno())
         w, h = tty.get_winsize()
         self.assertNotEqual((w, h), (None, None))
+        self.assertTrue(pyuv.TTY.isatty(sys.stdin.fileno()))
 
         tty.close()
 
         loop.run()
         tty.reset_mode()
-        self.assertTrue(True)
 
 
 if __name__ == '__main__':
