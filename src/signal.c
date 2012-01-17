@@ -59,7 +59,7 @@ on_signal_callback(uv_prepare_t *handle, int status)
     /* Object could go out of scope in the callback, increase refcount to avoid it */
     Py_INCREF(self);
 
-    if (PyErr_CheckSignals() < 0) {
+    if (PyErr_CheckSignals() < 0 && PyErr_Occurred()) {
         PyErr_Print();
     }
 
