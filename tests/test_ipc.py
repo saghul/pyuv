@@ -58,7 +58,7 @@ class IPCTest(common.UVTestCase):
         if sys.platform == 'win32':
             proc.spawn(file="cmd.exe", args=[b"/c", b"proc_ipc.py", b"listen_before_write"], exit_callback=self.proc_exit_cb, stdin=self.channel)
         else:
-            proc.spawn(file="./proc_ipc.py", args=[b"listen_before_write"], exit_callback=self.proc_exit_cb, stdin=self.channel)
+            proc.spawn(file=sys.executable , args=[b"proc_ipc.py", b"listen_before_write"], exit_callback=self.proc_exit_cb, stdin=self.channel)
         self.channel.start_read2(self.on_channel_read)
         self.loop.run()
 
@@ -71,7 +71,7 @@ class IPCTest(common.UVTestCase):
         if sys.platform == 'win32':
             proc.spawn(file="cmd.exe", args=[b"/c", b"proc_ipc.py", b"listen_after_write"], exit_callback=self.proc_exit_cb, stdin=self.channel)
         else:
-            proc.spawn(file="./proc_ipc.py", args=[b"listen_after_write"], exit_callback=self.proc_exit_cb, stdin=self.channel)
+            proc.spawn(file=sys.executable, args=[b"proc_ipc.py", b"listen_after_write"], exit_callback=self.proc_exit_cb, stdin=self.channel)
         self.channel.start_read2(self.on_channel_read)
         self.loop.run()
 
