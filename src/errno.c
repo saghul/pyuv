@@ -23,13 +23,38 @@ inscode(PyObject *module_dict, PyObject *other_dict, const char *name, int code)
     Py_XDECREF(error_code);
 }
 
+
+static PyObject *
+Errno_func_strerror(PyObject *obj, PyObject *args)
+{
+    UNUSED_ARG(obj);
+
+    int errorno;
+    uv_err_t err;
+
+    if (!PyArg_ParseTuple(args, "i:strerror", &errorno)) {
+        return NULL;
+    }
+
+    err.code = errorno;
+    return PyString_FromString(uv_strerror(err));
+}
+
+
+static PyMethodDef
+Errno_methods[] = {
+    { "strerror", (PyCFunction)Errno_func_strerror, METH_VARARGS, "Get string representation of an error code." },
+    { NULL }
+};
+
+
 #ifdef PYUV_PYTHON3
 static PyModuleDef pyuv_errorno_module = {
     PyModuleDef_HEAD_INIT,
     "pyuv.errno",           /*m_name*/
     NULL,                   /*m_doc*/
     -1,                     /*m_size*/
-    NULL,                   /*m_methods*/
+    Errno_methods,          /*m_methods*/
 };
 #endif
 
@@ -43,7 +68,7 @@ init_errno(void)
 #ifdef PYUV_PYTHON3
     module = PyModule_Create(&pyuv_errorno_module);
 #else
-    module = Py_InitModule("pyuv.errno", NULL);
+    module = Py_InitModule("pyuv.errno", Errno_methods);
 #endif
     if (module == NULL) {
         return NULL;
