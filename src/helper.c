@@ -15,7 +15,7 @@
 
 
 /* Add a type to a module */
-int
+static int
 PyUVModule_AddType(PyObject *module, const char *name, PyTypeObject *type)
 {
     if (PyType_Ready(type)) {
@@ -31,7 +31,7 @@ PyUVModule_AddType(PyObject *module, const char *name, PyTypeObject *type)
 
 
 /* Add a type to a module */
-int
+static int
 PyUVModule_AddObject(PyObject *module, const char *name, PyObject *value)
 {
     Py_INCREF(value);
@@ -44,7 +44,7 @@ PyUVModule_AddObject(PyObject *module, const char *name, PyObject *value)
 
 
 /* Raise appropriate exception when an error is produced inside libuv */
-inline void
+static inline void
 raise_uv_exception(Loop *loop, PyObject *exc_type)
 {
     uv_err_t err = uv_last_error(loop->uv_loop);
