@@ -3,7 +3,7 @@ import sys
 
 import common
 import pyuv
-from common import unittest2
+from common import unittest2, platform_skip
 
 if sys.platform == 'win32':
     TEST_PIPE = '\\\\.\\pipe\\test-pipe'
@@ -108,7 +108,7 @@ class PipeTestNull(common.UVTestCase):
         self.loop.run()
 
 
-@unittest2.skipIf( common.is_windows, "Don't required Windows")
+@platform_skip(["win32"])
 class PipeTestList(common.UVTestCase):
     __disabled__ = ['win32']
 
@@ -152,7 +152,7 @@ class PipeTestList(common.UVTestCase):
         self.loop.run()
 
 
-@unittest2.skipIf( common.is_windows, "Don't required Windows")
+@platform_skip(["win32"])
 class PipeTestListNull(common.UVTestCase):
     __disabled__ = ['win32']
 

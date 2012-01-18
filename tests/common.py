@@ -49,3 +49,13 @@ def load_tests():
     return loaded_modules
 
 
+# for class
+def platform_skip(platform_list):
+    def _platform_skip(c):
+        is_skip = (platform in platform_list)
+        for m in c.__dict__:
+            if m.startswith("test_"):
+                setattr(c, m, unittest2.skipIf(is_skip, 
+                    "Test disabled in the current platform")(getattr(c, m)))
+        return c
+    return _platform_skip

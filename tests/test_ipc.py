@@ -3,7 +3,7 @@ import sys
 
 import common
 import pyuv
-from common import unittest2
+from common import unittest2, platform_skip
 
 TEST_PORT = 1234
 
@@ -12,7 +12,8 @@ if sys.version_info > (3, 0):
 else:
   EXECUTABLE = sys.executable
 
-@unittest2.skipIf( common.is_windows, "Don't required Windows")
+
+@platform_skip(["win32"])
 class IPCTest(common.UVTestCase):
     __disabled__ = 'win32'
 

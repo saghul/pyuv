@@ -3,9 +3,10 @@ import sys
 
 import common
 import pyuv
-from common import unittest2
+from common import unittest2, platform_skip
 
-@unittest2.skipIf( common.is_windows, "Don't required Windows")
+
+@platform_skip(["win32"])
 class TYTest(common.UVTestCase):
     __disabled__ = ['win32']
 
