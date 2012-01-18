@@ -62,3 +62,4 @@ class TimerTest(unittest2.TestCase):
 
 if __name__ == '__main__':
     unittest2.main(verbosity=2)
+

@@ -1,15 +1,15 @@
 
 import sys
 
-import pyuv
 from common import unittest2, platform_skip
+import pyuv
 
 TEST_PORT = 1234
 
 if sys.version_info > (3, 0):
-  EXECUTABLE = sys.executable.encode()
+    EXECUTABLE = sys.executable.encode()
 else:
-  EXECUTABLE = sys.executable
+    EXECUTABLE = sys.executable
 
 
 @platform_skip(["win32"])

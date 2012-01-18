@@ -1,6 +1,5 @@
 
-from common import unittest2, platform_skip
-import common
+from common import unittest2
 import pyuv
 
 

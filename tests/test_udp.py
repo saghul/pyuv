@@ -2,9 +2,9 @@
 import os
 import sys
 
+from common import unittest2, platform_skip
 import common
 import pyuv
-from common import unittest2, platform_skip
 
 
 TEST_PORT = 12345
@@ -253,3 +253,4 @@ class UDPTestMulticast(unittest2.TestCase):
 
 if __name__ == '__main__':
     unittest2.main(verbosity=2)
+

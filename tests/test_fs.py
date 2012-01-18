@@ -3,8 +3,8 @@ import os
 import shutil
 import stat
 
-import pyuv
 from common import platform_skip, unittest2
+import pyuv
 
 
 BAD_FILE = 'test_file_bad'

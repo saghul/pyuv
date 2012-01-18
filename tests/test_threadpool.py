@@ -3,7 +3,6 @@ import threading
 import time
 
 from common import unittest2
-import common
 import pyuv
 
 
@@ -52,3 +51,4 @@ class ThreadPoolMultiLoopTest(unittest2.TestCase):
 
 if __name__ == '__main__':
     unittest2.main(verbosity=2)
+

@@ -1,15 +1,17 @@
 
 import sys
 
+from common import unittest2, platform_skip
 import common
 import pyuv
-from common import unittest2, platform_skip
 
 if sys.platform == 'win32':
     TEST_PIPE = '\\\\.\\pipe\\test-pipe'
 else:
     TEST_PIPE = 'test-pipe'
+
 BAD_PIPE = '/pipe/that/does/not/exist'
+
 
 class PipeErrorTest(unittest2.TestCase):
 
@@ -250,3 +252,4 @@ class PipeShutdownTest(unittest2.TestCase):
 
 if __name__ == '__main__':
     unittest2.main(verbosity=2)
+

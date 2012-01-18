@@ -1,9 +1,8 @@
 
 import sys
 
-import common
-import pyuv
 from common import unittest2, platform_skip
+import pyuv
 
 
 @platform_skip(["win32"])
@@ -25,3 +24,4 @@ class TYTest(unittest2.TestCase):
 
 if __name__ == '__main__':
     unittest2.main(verbosity=2)
+

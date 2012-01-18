@@ -1,8 +1,8 @@
 
 import sys
 
-import common
 from common import unittest2
+import common
 import pyuv
 
 
@@ -304,3 +304,4 @@ class TCPFlagsTest(unittest2.TestCase):
 
 if __name__ == '__main__':
     unittest2.main(verbosity=2)
+
