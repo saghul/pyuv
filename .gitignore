@@ -4,6 +4,7 @@
 build/*
 dist/*
 MANIFEST
+__pycache__/
 
 ## generic files to ignore
 *~
@@ -11,4 +12,8 @@ MANIFEST
 *.DS_Store
 *.swp
 *.out
+
+.tox/
+deps/
+docs/_build/
 
