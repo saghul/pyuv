@@ -7,7 +7,7 @@ from common import unittest2, platform_skip
 
 
 @platform_skip(["win32"])
-class TYTest(common.UVTestCase):
+class TYTest(unittest2.TestCase):
     __disabled__ = ['win32']
 
     def test_tty1(self):
@@ -24,7 +24,4 @@ class TYTest(common.UVTestCase):
 
 
 if __name__ == '__main__':
-    import unittest
-    tests = unittest.TestSuite(common.suites)
-    unittest.TextTestRunner(verbosity=2).run(tests)
-
+    unittest2.main(verbosity=2)

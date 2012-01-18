@@ -1,11 +1,11 @@
 
 import socket
 
-import common
+from common import unittest2
 import pyuv
 
 
-class DNSTest(common.UVTestCase):
+class DNSTest(unittest2.TestCase):
 
     def getaddrinfo_cb(self, resolver, status, result):
         self.assertEqual(status, 0)
@@ -45,7 +45,5 @@ class DNSTest(common.UVTestCase):
 
 
 if __name__ == '__main__':
-    import unittest
-    tests = unittest.TestSuite(common.suites)
-    unittest.TextTestRunner(verbosity=2).run(tests)
+    unittest2.main(verbosity=2)
 

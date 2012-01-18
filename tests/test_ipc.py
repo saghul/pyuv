@@ -1,7 +1,6 @@
 
 import sys
 
-import common
 import pyuv
 from common import unittest2, platform_skip
 
@@ -14,7 +13,7 @@ else:
 
 
 @platform_skip(["win32"])
-class IPCTest(common.UVTestCase):
+class IPCTest(unittest2.TestCase):
     __disabled__ = 'win32'
 
     def setUp(self):
@@ -84,7 +83,4 @@ class IPCTest(common.UVTestCase):
 
 
 if __name__ == '__main__':
-    import unittest
-    tests = unittest.TestSuite(common.suites)
-    unittest.TextTestRunner(verbosity=2).run(tests)
-
+    unittest2.main(verbosity=2)

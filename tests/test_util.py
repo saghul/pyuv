@@ -1,9 +1,9 @@
 
-import common
+from common import unittest2
 import pyuv
 
 
-class UtilTest(common.UVTestCase):
+class UtilTest(unittest2.TestCase):
 
     def test_hrtime(self):
         r = pyuv.util.hrtime()
@@ -39,7 +39,4 @@ class UtilTest(common.UVTestCase):
 
 
 if __name__ == '__main__':
-    import unittest
-    tests = unittest.TestSuite(common.suites)
-    unittest.TextTestRunner(verbosity=2).run(tests)
-
+    unittest2.main(verbosity=2)

@@ -1,9 +1,9 @@
 
-import common
+from common import unittest2
 import pyuv
 
 
-class CheckTest(common.UVTestCase):
+class CheckTest(unittest2.TestCase):
 
     def test_check1(self):
         self.check_cb_called = 0
@@ -26,7 +26,5 @@ class CheckTest(common.UVTestCase):
 
 
 if __name__ == '__main__':
-    import unittest
-    tests = unittest.TestSuite(common.suites)
-    unittest.TextTestRunner(verbosity=2).run(tests)
+    unittest2.main(verbosity=2)
 

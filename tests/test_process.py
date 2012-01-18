@@ -1,11 +1,12 @@
 
 import sys
 
+from common import unittest2
 import common
 import pyuv
 
 
-class ProcessTest(common.UVTestCase):
+class ProcessTest(unittest2.TestCase):
 
     def test_process_basic(self):
         self.exit_cb_called = 0
@@ -196,7 +197,5 @@ class ProcessTest(common.UVTestCase):
 
 
 if __name__ == '__main__':
-    import unittest
-    tests = unittest.TestSuite(common.suites)
-    unittest.TextTestRunner(verbosity=2).run(tests)
+    unittest2.main(verbosity=2)
 

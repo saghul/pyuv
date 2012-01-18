@@ -4,12 +4,11 @@ import signal
 import threading
 
 from common import unittest2, platform_skip
-import common
 import pyuv
 
 
 @platform_skip(["win32"])
-class SignalTest(common.UVTestCase):
+class SignalTest(unittest2.TestCase):
     __disabled__ = ['win32']
 
     def setUp(self):
@@ -45,7 +44,4 @@ class SignalTest(common.UVTestCase):
 
 
 if __name__ == '__main__':
-    import unittest
-    tests = unittest.TestSuite(common.suites)
-    unittest.TextTestRunner(verbosity=2).run(tests)
-
+    unittest2.main(verbosity=2)

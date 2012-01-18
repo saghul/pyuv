@@ -2,12 +2,13 @@
 import sys
 
 import common
+from common import unittest2
 import pyuv
 
 
 TEST_PORT = 1234
 
-class TCPErrorTest(common.UVTestCase):
+class TCPErrorTest(unittest2.TestCase):
 
     def on_client_connect_error(self, client, error):
         self.assertNotEqual(error, None)
@@ -20,7 +21,7 @@ class TCPErrorTest(common.UVTestCase):
         loop.run()
 
 
-class TCPTest(common.UVTestCase):
+class TCPTest(unittest2.TestCase):
 
     def setUp(self):
         self.loop = pyuv.Loop.default_loop()
@@ -62,7 +63,7 @@ class TCPTest(common.UVTestCase):
         self.loop.run()
 
 
-class TCPTestNull(common.UVTestCase):
+class TCPTestNull(unittest2.TestCase):
 
     def setUp(self):
         self.loop = pyuv.Loop.default_loop()
@@ -104,7 +105,7 @@ class TCPTestNull(common.UVTestCase):
         self.loop.run()
 
 
-class TCPTestList(common.UVTestCase):
+class TCPTestList(unittest2.TestCase):
 
     def setUp(self):
         self.loop = pyuv.Loop.default_loop()
@@ -145,7 +146,7 @@ class TCPTestList(common.UVTestCase):
         self.loop.run()
 
 
-class TCPTestListNull(common.UVTestCase):
+class TCPTestListNull(unittest2.TestCase):
 
     def setUp(self):
         self.loop = pyuv.Loop.default_loop()
@@ -186,7 +187,7 @@ class TCPTestListNull(common.UVTestCase):
         self.loop.run()
 
 
-class TCPTestInvalidData(common.UVTestCase):
+class TCPTestInvalidData(unittest2.TestCase):
 
     def setUp(self):
         self.loop = pyuv.Loop.default_loop()
@@ -236,7 +237,7 @@ class TCPTestInvalidData(common.UVTestCase):
         self.loop.run()
 
 
-class TCPShutdownTest(common.UVTestCase):
+class TCPShutdownTest(unittest2.TestCase):
 
     def setUp(self):
         self.loop = pyuv.Loop.default_loop()
@@ -288,7 +289,7 @@ class TCPShutdownTest(common.UVTestCase):
         self.assertEqual(self.close_cb_called, 3)
 
 
-class TCPFlagsTest(common.UVTestCase):
+class TCPFlagsTest(unittest2.TestCase):
 
     def test_tcp_flags(self):
         loop = pyuv.Loop.default_loop()
@@ -302,7 +303,4 @@ class TCPFlagsTest(common.UVTestCase):
 
 
 if __name__ == '__main__':
-    import unittest
-    tests = unittest.TestSuite(common.suites)
-    unittest.TextTestRunner(verbosity=2).run(tests)
-
+    unittest2.main(verbosity=2)

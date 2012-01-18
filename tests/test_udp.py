@@ -11,7 +11,7 @@ TEST_PORT = 12345
 TEST_PORT2 = 12346
 MULTICAST_ADDRESS = "239.255.0.1"
 
-class UDPTest(common.UVTestCase):
+class UDPTest(unittest2.TestCase):
 
     def setUp(self):
         self.loop = pyuv.Loop.default_loop()
@@ -52,7 +52,7 @@ class UDPTest(common.UVTestCase):
         self.assertEqual(self.on_close_called, 3)
 
 
-class UDPTestNull(common.UVTestCase):
+class UDPTestNull(unittest2.TestCase):
 
     def setUp(self):
         self.loop = pyuv.Loop.default_loop()
@@ -93,7 +93,7 @@ class UDPTestNull(common.UVTestCase):
         self.assertEqual(self.on_close_called, 3)
 
 
-class UDPTestList(common.UVTestCase):
+class UDPTestList(unittest2.TestCase):
 
     def setUp(self):
         self.loop = pyuv.Loop.default_loop()
@@ -134,7 +134,7 @@ class UDPTestList(common.UVTestCase):
         self.assertEqual(self.on_close_called, 3)
 
 
-class UDPTestListNull(common.UVTestCase):
+class UDPTestListNull(unittest2.TestCase):
 
     def setUp(self):
         self.loop = pyuv.Loop.default_loop()
@@ -175,7 +175,7 @@ class UDPTestListNull(common.UVTestCase):
         self.assertEqual(self.on_close_called, 3)
 
 
-class UDPTestInvalidData(common.UVTestCase):
+class UDPTestInvalidData(unittest2.TestCase):
 
     def setUp(self):
         self.loop = pyuv.Loop.default_loop()
@@ -217,7 +217,7 @@ class UDPTestInvalidData(common.UVTestCase):
 
 
 @platform_skip(["win32"])
-class UDPTestMulticast(common.UVTestCase):
+class UDPTestMulticast(unittest2.TestCase):
     __disabled__ = ['win32']
 
     def setUp(self):
@@ -252,7 +252,4 @@ class UDPTestMulticast(common.UVTestCase):
 
 
 if __name__ == '__main__':
-    import unittest
-    tests = unittest.TestSuite(common.suites)
-    unittest.TextTestRunner(verbosity=2).run(tests)
-
+    unittest2.main(verbosity=2)

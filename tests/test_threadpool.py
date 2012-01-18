@@ -7,7 +7,7 @@ import common
 import pyuv
 
 
-class ThreadPoolTest(common.UVTestCase):
+class ThreadPoolTest(unittest2.TestCase):
 
     def setUp(self):
         self.pool_cb_called = 0
@@ -25,7 +25,7 @@ class ThreadPoolTest(common.UVTestCase):
         self.assertEqual(self.pool_cb_called, 3)
 
 
-class ThreadPoolMultiLoopTest(common.UVTestCase):
+class ThreadPoolMultiLoopTest(unittest2.TestCase):
 
     def setUp(self):
         self.pool_cb_called = 0
@@ -51,7 +51,4 @@ class ThreadPoolMultiLoopTest(common.UVTestCase):
 
 
 if __name__ == '__main__':
-    import unittest
-    tests = unittest.TestSuite(common.suites)
-    unittest.TextTestRunner(verbosity=2).run(tests)
-
+    unittest2.main(verbosity=2)

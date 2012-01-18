@@ -1,9 +1,9 @@
 
-import common
+from common import unittest2
 import pyuv
 
 
-class PrepareTest(common.UVTestCase):
+class PrepareTest(unittest2.TestCase):
 
     def test_prepare1(self):
         self.prepare_cb_called = 0
@@ -19,7 +19,5 @@ class PrepareTest(common.UVTestCase):
 
 
 if __name__ == '__main__':
-    import unittest
-    tests = unittest.TestSuite(common.suites)
-    unittest.TextTestRunner(verbosity=2).run(tests)
+    unittest2.main(verbosity=2)
 
