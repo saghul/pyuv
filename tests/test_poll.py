@@ -14,7 +14,7 @@ class PollTest(unittest2.TestCase):
         for i in range(500):
             prepare = pyuv.Prepare(loop)
             prepare.start(prepare_cb)
-            loop.poll()
+            loop.run_once()
         self.assertEqual(self.cb_called, 500)
 
 

@@ -55,7 +55,7 @@ Loop_func_run(Loop *self)
 
 
 static PyObject *
-Loop_func_poll(Loop *self)
+Loop_func_run_once(Loop *self)
 {
     Py_BEGIN_ALLOW_THREADS
     uv_run_once(self->uv_loop);
@@ -207,7 +207,7 @@ Loop_tp_dealloc(Loop *self)
 static PyMethodDef
 Loop_tp_methods[] = {
     { "run", (PyCFunction)Loop_func_run, METH_NOARGS, "Run the event loop." },
-    { "poll", (PyCFunction)Loop_func_poll, METH_NOARGS, "Polls for new events without blocking." },
+    { "run_once", (PyCFunction)Loop_func_run_once, METH_NOARGS, "Run a single event loop iteration, waiting for events if necessary." },
     { "ref", (PyCFunction)Loop_func_ref, METH_NOARGS, "Increase the event loop reference count." },
     { "unref", (PyCFunction)Loop_func_unref, METH_NOARGS, "Decrease the event loop reference count." },
     { "now", (PyCFunction)Loop_func_now, METH_NOARGS, "Return event loop time, expressed in nanoseconds." },
