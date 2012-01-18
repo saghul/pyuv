@@ -25,7 +25,6 @@ class ThreadPoolTest(common.UVTestCase):
         self.assertEqual(self.pool_cb_called, 3)
 
 
-@unittest2.skipIf( common.is_windows, "Don't required Windows")
 class ThreadPoolMultiLoopTest(common.UVTestCase):
 
     def setUp(self):
