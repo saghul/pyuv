@@ -13,13 +13,17 @@ static void
 work_cb(uv_work_t *req)
 {
     PyGILState_STATE gstate = PyGILState_Ensure();
-    ASSERT(req);
-    tpool_req_data_t *data = (tpool_req_data_t*)(req->data);
-
-    PyObject *args = (data->args)?data->args:PyTuple_New(0);
-    PyObject *kw = data->kwargs;
-
+    tpool_req_data_t *data;
+    PyObject *args;
+    PyObject *kw;
     PyObject *result;
+
+    ASSERT(req);
+
+    data = (tpool_req_data_t*)(req->data);
+    args = (data->args)?data->args:PyTuple_New(0);
+    kw = data->kwargs;
+
     result = PyObject_Call(data->func, args, kw);
     if (result == NULL) {
         PyErr_WriteUnraisable(data->func);
@@ -34,9 +38,12 @@ static void
 after_work_cb(uv_work_t *req)
 {
     PyGILState_STATE gstate = PyGILState_Ensure();
+    tpool_req_data_t *data;
+
     ASSERT(req);
 
-    tpool_req_data_t *data = (tpool_req_data_t*)req->data;
+    data = (tpool_req_data_t*)req->data;
+
     Py_DECREF(data->loop);
     Py_DECREF(data->func);
     Py_XDECREF(data->args);
@@ -51,15 +58,19 @@ after_work_cb(uv_work_t *req)
 static PyObject *
 ThreadPool_func_run(PyObject *cls, PyObject *args)
 {
-    UNUSED_ARG(cls);
-
     int r = 0;
-    uv_work_t *work_req = NULL;
-    tpool_req_data_t *req_data = NULL;
+    uv_work_t *work_req;
+    tpool_req_data_t *req_data;
     Loop *loop;
     PyObject *func;
-    PyObject *func_args = NULL;
-    PyObject *func_kwargs = NULL;
+    PyObject *func_args;
+    PyObject *func_kwargs;
+
+    work_req = NULL;
+    req_data = NULL;
+    func = func_args = func_kwargs = NULL;
+
+    UNUSED_ARG(cls);
 
     if (!PyArg_ParseTuple(args, "O!O|OO:run", &LoopType, &loop, &func, &func_args, &func_kwargs)) {
         return NULL;

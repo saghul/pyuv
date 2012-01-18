@@ -6,11 +6,13 @@ static void
 on_check_close(uv_handle_t *handle)
 {
     PyGILState_STATE gstate = PyGILState_Ensure();
-    ASSERT(handle);
-    Check *self = (Check *)handle->data;
-    ASSERT(self);
-
+    Check *self;
     PyObject *result;
+
+    ASSERT(handle);
+
+    self = (Check *)handle->data;
+    ASSERT(self);
 
     if (self->on_close_cb != Py_None) {
         result = PyObject_CallFunctionObjArgs(self->on_close_cb, self, NULL);
@@ -45,15 +47,16 @@ static void
 on_check_callback(uv_check_t *handle, int status)
 {
     PyGILState_STATE gstate = PyGILState_Ensure();
+    Check *self;
+    PyObject *result;
+
     ASSERT(handle);
     ASSERT(status == 0);
 
-    Check *self = (Check *)handle->data;
+    self = (Check *)handle->data;
     ASSERT(self);
     /* Object could go out of scope in the callback, increase refcount to avoid it */
     Py_INCREF(self);
-
-    PyObject *result;
 
     result = PyObject_CallFunctionObjArgs(self->callback, self, NULL);
     if (result == NULL) {
@@ -105,12 +108,14 @@ Check_func_start(Check *self, PyObject *args)
 static PyObject *
 Check_func_stop(Check *self)
 {
+    int r;
+
     if (!self->uv_handle) {
         PyErr_SetString(PyExc_CheckError, "Check is already closed");
         return NULL;
     }
 
-    int r = uv_check_stop(self->uv_handle);
+    r = uv_check_stop(self->uv_handle);
     if (r != 0) {
         raise_uv_exception(self->loop, PyExc_CheckError);
         return NULL;
@@ -163,12 +168,12 @@ Check_active_get(Check *self, void *closure)
 static int
 Check_tp_init(Check *self, PyObject *args, PyObject *kwargs)
 {
-    UNUSED_ARG(kwargs);
-
     int r = 0;
     Loop *loop;
     PyObject *tmp = NULL;
     uv_check_t *uv_check = NULL;
+
+    UNUSED_ARG(kwargs);
 
     if (self->uv_handle) {
         PyErr_SetString(PyExc_CheckError, "Object already initialized");

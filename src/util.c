@@ -4,9 +4,10 @@ static PyObject* PyExc_UVError;
 static PyObject *
 Util_func_hrtime(PyObject *obj)
 {
+    PyObject *val;
+
     UNUSED_ARG(obj);
 
-    PyObject *val;
 #if SIZEOF_TIME_T > SIZEOF_LONG
     val = PyLong_FromLongLong((PY_LONG_LONG)uv_hrtime());
 #else
@@ -19,9 +20,10 @@ Util_func_hrtime(PyObject *obj)
 static PyObject *
 Util_func_get_free_memory(PyObject *obj)
 {
+    PyObject *val;
+
     UNUSED_ARG(obj);
 
-    PyObject *val;
 #if SIZEOF_TIME_T > SIZEOF_LONG
     val = PyLong_FromLongLong((PY_LONG_LONG)uv_get_free_memory());
 #else
@@ -34,9 +36,10 @@ Util_func_get_free_memory(PyObject *obj)
 static PyObject *
 Util_func_get_total_memory(PyObject *obj)
 {
+    PyObject *val;
+
     UNUSED_ARG(obj);
 
-    PyObject *val;
 #if SIZEOF_TIME_T > SIZEOF_LONG
     val = PyLong_FromLongLong((PY_LONG_LONG)uv_get_total_memory());
 #else
@@ -49,9 +52,10 @@ Util_func_get_total_memory(PyObject *obj)
 static PyObject *
 Util_func_loadavg(PyObject *obj)
 {
+    double avg[3];
+
     UNUSED_ARG(obj);
 
-    double avg[3];
     uv_loadavg(avg);
     return Py_BuildValue("(ddd)", avg[0], avg[1], avg[2]);
 }
@@ -60,16 +64,17 @@ Util_func_loadavg(PyObject *obj)
 static PyObject *
 Util_func_uptime(PyObject *obj)
 {
-    UNUSED_ARG(obj);
-
     double uptime;
     uv_err_t err;
+    PyObject *exc_data;
+
+    UNUSED_ARG(obj);
 
     err = uv_uptime(&uptime);
     if (err.code == UV_OK) {
         return PyFloat_FromDouble(uptime);
     } else {
-        PyObject *exc_data = Py_BuildValue("(is)", err.code, uv_strerror(err));
+        exc_data = Py_BuildValue("(is)", err.code, uv_strerror(err));
         if (exc_data != NULL) {
             PyErr_SetObject(PyExc_UVError, exc_data);
             Py_DECREF(exc_data);
@@ -82,16 +87,17 @@ Util_func_uptime(PyObject *obj)
 static PyObject *
 Util_func_resident_set_memory(PyObject *obj)
 {
-    UNUSED_ARG(obj);
-
     size_t rss;
     uv_err_t err;
+    PyObject *exc_data;
+
+    UNUSED_ARG(obj);
 
     err = uv_resident_set_memory(&rss);
     if (err.code == UV_OK) {
         return PyInt_FromSsize_t(rss);
     } else {
-        PyObject *exc_data = Py_BuildValue("(is)", err.code, uv_strerror(err));
+        exc_data = Py_BuildValue("(is)", err.code, uv_strerror(err));
         if (exc_data != NULL) {
             PyErr_SetObject(PyExc_UVError, exc_data);
             Py_DECREF(exc_data);
@@ -104,14 +110,16 @@ Util_func_resident_set_memory(PyObject *obj)
 static PyObject *
 Util_func_interface_addresses(PyObject *obj)
 {
-    UNUSED_ARG(obj);
-
     int i;
     int count;
     char ip[INET6_ADDRSTRLEN];
     uv_interface_address_t* interfaces;
     uv_err_t err;
-    PyObject *result, *item;
+    PyObject *result;
+    PyObject *item;
+    PyObject *exc_data;
+
+    UNUSED_ARG(obj);
 
     err = uv_interface_addresses(&interfaces, &count);
     if (err.code == UV_OK) {
@@ -141,7 +149,7 @@ Util_func_interface_addresses(PyObject *obj)
         uv_free_interface_addresses(interfaces, count);
         return result;
     } else {
-        PyObject *exc_data = Py_BuildValue("(is)", err.code, uv_strerror(err));
+        exc_data = Py_BuildValue("(is)", err.code, uv_strerror(err));
         if (exc_data != NULL) {
             PyErr_SetObject(PyExc_UVError, exc_data);
             Py_DECREF(exc_data);
@@ -166,13 +174,16 @@ set_cpu_info_time_val(PyObject *dict, char *key, uint64_t v)
 static PyObject *
 Util_func_cpu_info(PyObject *obj)
 {
-    UNUSED_ARG(obj);
-
     int i;
     int count;
     uv_cpu_info_t* cpus;
     uv_err_t err;
-    PyObject *result, *item, *times;
+    PyObject *result;
+    PyObject *item;
+    PyObject *times;
+    PyObject *exc_data;
+
+    UNUSED_ARG(obj);
 
     err = uv_cpu_info(&cpus, &count);
     if (err.code == UV_OK) {
@@ -202,7 +213,7 @@ Util_func_cpu_info(PyObject *obj)
         uv_free_cpu_info(cpus, count);
         return result;
     } else {
-        PyObject *exc_data = Py_BuildValue("(is)", err.code, uv_strerror(err));
+        exc_data = Py_BuildValue("(is)", err.code, uv_strerror(err));
         if (exc_data != NULL) {
             PyErr_SetObject(PyExc_UVError, exc_data);
             Py_DECREF(exc_data);

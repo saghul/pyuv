@@ -6,16 +6,17 @@ static void
 on_pipe_connection(uv_stream_t* server, int status)
 {
     PyGILState_STATE gstate = PyGILState_Ensure();
+    Pipe *self;
+    IOStream *base;
+    PyObject *result, *py_errorno;
     ASSERT(server);
 
-    Pipe *self = (Pipe *)server->data;
+    self = (Pipe *)server->data;
     ASSERT(self);
     /* Object could go out of scope in the callback, increase refcount to avoid it */
     Py_INCREF(self);
 
-    IOStream *base = (IOStream *)self;
-
-    PyObject *result, *py_errorno;
+    base = (IOStream *)self;
 
     if (status != 0) {
         uv_err_t err = uv_last_error(UV_LOOP(base));
@@ -40,20 +41,22 @@ static void
 on_pipe_client_connection(uv_connect_t *req, int status)
 {
     PyGILState_STATE gstate = PyGILState_Ensure();
+    iostream_req_data_t* req_data;
+    Pipe *self;
+    PyObject *callback;
+    PyObject *result, *py_errorno;
+    IOStream *base;
     ASSERT(req);
 
-    iostream_req_data_t* req_data = (iostream_req_data_t *)req->data;
-
-    Pipe *self = (Pipe *)req_data->obj;
-    PyObject *callback = req_data->callback;
-
-    PyObject *result, *py_errorno;
+    req_data = (iostream_req_data_t *)req->data;
+    self = (Pipe *)req_data->obj;
+    callback = req_data->callback;
 
     ASSERT(self);
     /* Object could go out of scope in the callback, increase refcount to avoid it */
     Py_INCREF(self);
 
-    IOStream *base = (IOStream *)self;
+    base = (IOStream *)self;
 
     if (status != 0) {
         uv_err_t err = uv_last_error(UV_LOOP(base));
@@ -82,14 +85,15 @@ static void
 on_pipe_read2(uv_pipe_t* handle, int nread, uv_buf_t buf, uv_handle_type pending)
 {
     PyGILState_STATE gstate = PyGILState_Ensure();
+    IOStream *self;
+    PyObject *result, *data, *py_errorno, *py_pending;
+    uv_err_t err;
     ASSERT(handle);
 
-    IOStream *self = (IOStream *)handle->data;
+    self = (IOStream *)handle->data;
     ASSERT(self);
     /* Object could go out of scope in the callback, increase refcount to avoid it */
     Py_INCREF(self);
-
-    PyObject *result, *data, *py_errorno, *py_pending;
 
     py_pending = PyInt_FromLong((long)pending);
 
@@ -100,7 +104,7 @@ on_pipe_read2(uv_pipe_t* handle, int nread, uv_buf_t buf, uv_handle_type pending
     } else if (nread < 0) {
         data = Py_None;
         Py_INCREF(Py_None);
-        uv_err_t err = uv_last_error(UV_LOOP(self));
+        err = uv_last_error(UV_LOOP(self));
         py_errorno = PyInt_FromLong((long)err.code);
     }
 
@@ -424,7 +428,7 @@ Pipe_func_write2(Pipe *self, PyObject *args)
     wr->data = (void *)req_data;
 
     if (PyString_Check(data)) {
-        // We have a single string
+        /* We have a single string */
         bufs = (uv_buf_t *) PyMem_Malloc(sizeof(uv_buf_t));
         if (!bufs) {
             PyErr_NoMemory();
@@ -443,7 +447,7 @@ Pipe_func_write2(Pipe *self, PyObject *args)
         bufs[0] = tmpbuf;
         buf_count = 1;
     } else {
-        // We have a list
+        /* We have a list */
         buf_count = 0;
         n = PySequence_Length(data);
         bufs = (uv_buf_t *) PyMem_Malloc(sizeof(uv_buf_t) * n);
@@ -504,8 +508,6 @@ error:
 static int
 Pipe_tp_init(Pipe *self, PyObject *args, PyObject *kwargs)
 {
-    UNUSED_ARG(kwargs);
-
     int r = 0;
     Loop *loop;
     PyObject *tmp = NULL;
@@ -513,6 +515,8 @@ Pipe_tp_init(Pipe *self, PyObject *args, PyObject *kwargs)
     uv_pipe_t *uv_stream;
 
     IOStream *base = (IOStream *)self;
+
+    UNUSED_ARG(kwargs);
 
     if (base->uv_handle) {
         PyErr_SetString(PyExc_PipeError, "Object already initialized");

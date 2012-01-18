@@ -27,10 +27,10 @@ inscode(PyObject *module_dict, PyObject *other_dict, const char *name, int code)
 static PyObject *
 Errno_func_strerror(PyObject *obj, PyObject *args)
 {
-    UNUSED_ARG(obj);
-
     int errorno;
     uv_err_t err;
+
+    UNUSED_ARG(obj);
 
     if (!PyArg_ParseTuple(args, "i:strerror", &errorno)) {
         return NULL;

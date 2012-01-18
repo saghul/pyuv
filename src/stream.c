@@ -17,9 +17,9 @@ typedef struct {
 static uv_buf_t
 on_iostream_alloc(uv_stream_t* handle, size_t suggested_size)
 {
-    UNUSED_ARG(handle);
     PyGILState_STATE gstate = PyGILState_Ensure();
     uv_buf_t buf = uv_buf_init(PyMem_Malloc(suggested_size), suggested_size);
+    UNUSED_ARG(handle);
     PyGILState_Release(gstate);
     return buf;
 }
@@ -29,12 +29,12 @@ static void
 on_iostream_close(uv_handle_t *handle)
 {
     PyGILState_STATE gstate = PyGILState_Ensure();
+    IOStream *self;
+    PyObject *result;
     ASSERT(handle);
 
-    IOStream *self = (IOStream *)handle->data;
+    self = (IOStream *)handle->data;
     ASSERT(self);
-
-    PyObject *result;
 
     if (self->on_close_cb != Py_None) {
         result = PyObject_CallFunctionObjArgs(self->on_close_cb, self, NULL);
@@ -72,21 +72,23 @@ static void
 on_iostream_shutdown(uv_shutdown_t* req, int status)
 {
     PyGILState_STATE gstate = PyGILState_Ensure();
+    iostream_req_data_t* req_data;
+    uv_err_t err;
+    IOStream *self;
+    PyObject *callback;
+    PyObject *result, *py_errorno;
 
-    iostream_req_data_t* req_data = (iostream_req_data_t *)req->data;
-
-    IOStream *self = (IOStream *)req_data->obj;
-    PyObject *callback = req_data->callback;
+    req_data = (iostream_req_data_t *)req->data;
+    self = (IOStream *)req_data->obj;
+    callback = req_data->callback;
 
     ASSERT(self);
     /* Object could go out of scope in the callback, increase refcount to avoid it */
     Py_INCREF(self);
 
-    PyObject *result, *py_errorno;
-
     if (callback != Py_None) {
         if (status < 0) {
-            uv_err_t err = uv_last_error(UV_LOOP(self));
+            err = uv_last_error(UV_LOOP(self));
             py_errorno = PyInt_FromLong((long)err.code);
         } else {
             py_errorno = Py_None;
@@ -112,14 +114,15 @@ static void
 on_iostream_read(uv_stream_t* handle, int nread, uv_buf_t buf)
 {
     PyGILState_STATE gstate = PyGILState_Ensure();
+    IOStream *self;
+    PyObject *result, *data, *py_errorno;
+    uv_err_t err;
     ASSERT(handle);
 
-    IOStream *self = (IOStream *)handle->data;
+    self = (IOStream *)handle->data;
     ASSERT(self);
     /* Object could go out of scope in the callback, increase refcount to avoid it */
     Py_INCREF(self);
-
-    PyObject *result, *data, *py_errorno;
 
     if (nread >= 0) {
         data = PyString_FromStringAndSize(buf.base, nread);
@@ -128,7 +131,7 @@ on_iostream_read(uv_stream_t* handle, int nread, uv_buf_t buf)
     } else if (nread < 0) {
         data = Py_None;
         Py_INCREF(Py_None);
-        uv_err_t err = uv_last_error(UV_LOOP(self));
+        err = uv_last_error(UV_LOOP(self));
         py_errorno = PyInt_FromLong((long)err.code);
     }
 
@@ -148,26 +151,29 @@ on_iostream_read(uv_stream_t* handle, int nread, uv_buf_t buf)
 static void
 on_iostream_write(uv_write_t* req, int status)
 {
-    int i;
-
     PyGILState_STATE gstate = PyGILState_Ensure();
+    int i;
+    iostream_req_data_t* req_data;
+    iostream_write_data_t* write_data;
+    IOStream *self;
+    PyObject *callback;
+    PyObject *result, *py_errorno;
+    uv_err_t err;
+
     ASSERT(req);
 
-    iostream_req_data_t* req_data = (iostream_req_data_t *)req->data;
-    iostream_write_data_t* write_data = (iostream_write_data_t *)req_data->data;
-
-    IOStream *self = (IOStream *)req_data->obj;
-    PyObject *callback = req_data->callback;
+    req_data = (iostream_req_data_t *)req->data;
+    write_data = (iostream_write_data_t *)req_data->data;
+    self = (IOStream *)req_data->obj;
+    callback = req_data->callback;
 
     ASSERT(self);
     /* Object could go out of scope in the callback, increase refcount to avoid it */
     Py_INCREF(self);
 
-    PyObject *result, *py_errorno;
-
     if (callback != Py_None) {
         if (status < 0) {
-            uv_err_t err = uv_last_error(UV_LOOP(self));
+            err = uv_last_error(UV_LOOP(self));
             py_errorno = PyInt_FromLong((long)err.code);
         } else {
             py_errorno = Py_None;
@@ -319,12 +325,14 @@ IOStream_func_start_read(IOStream *self, PyObject *args)
 static PyObject *
 IOStream_func_stop_read(IOStream *self)
 {
+    int r;
+
     if (!self->uv_handle) {
         PyErr_SetString(PyExc_IOStreamError, "IOStream is closed");
         return NULL;
     }
 
-    int r = uv_read_stop(self->uv_handle);
+    r = uv_read_stop(self->uv_handle);
     if (r != 0) {
         raise_uv_exception(self->loop, PyExc_IOStreamError);
         return NULL;
@@ -395,7 +403,7 @@ IOStream_func_write(IOStream *self, PyObject *args)
     wr->data = (void *)req_data;
 
     if (PyString_Check(data)) {
-        // We have a single string
+        /* We have a single string */
         bufs = (uv_buf_t *) PyMem_Malloc(sizeof(uv_buf_t));
         if (!bufs) {
             PyErr_NoMemory();
@@ -414,7 +422,7 @@ IOStream_func_write(IOStream *self, PyObject *args)
         bufs[0] = tmpbuf;
         buf_count = 1;
     } else {
-        // We have a list
+        /* We have a list */
         buf_count = 0;
         n = PySequence_Length(data);
         bufs = (uv_buf_t *) PyMem_Malloc(sizeof(uv_buf_t) * n);

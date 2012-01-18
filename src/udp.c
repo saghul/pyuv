@@ -20,11 +20,12 @@ static void
 on_udp_close(uv_handle_t *handle)
 {
     PyGILState_STATE gstate = PyGILState_Ensure();
-    ASSERT(handle);
-    UDP *self = (UDP *)handle->data;
-    ASSERT(self);
-
+    UDP *self;
     PyObject *result;
+
+    ASSERT(handle);
+    self = (UDP *)handle->data;
+    ASSERT(self);
 
     if (self->on_close_cb != Py_None) {
         result = PyObject_CallFunctionObjArgs(self->on_close_cb, self, NULL);
@@ -58,10 +59,11 @@ on_udp_dealloc_close(uv_handle_t *handle)
 static uv_buf_t
 on_udp_alloc(uv_udp_t* handle, size_t suggested_size)
 {
-    UNUSED_ARG(handle);
     PyGILState_STATE gstate = PyGILState_Ensure();
+    uv_buf_t buf;
     ASSERT(suggested_size <= UDP_MAX_BUF_SIZE);
-    uv_buf_t buf = uv_buf_init(PyMem_Malloc(suggested_size), suggested_size);
+    buf = uv_buf_init(PyMem_Malloc(suggested_size), suggested_size);
+    UNUSED_ARG(handle);
     PyGILState_Release(gstate);
     return buf;
 }
@@ -71,18 +73,19 @@ static void
 on_udp_read(uv_udp_t* handle, int nread, uv_buf_t buf, struct sockaddr* addr, unsigned flags)
 {
     PyGILState_STATE gstate = PyGILState_Ensure();
-
     char ip[INET6_ADDRSTRLEN];
     struct sockaddr_in addr4;
     struct sockaddr_in6 addr6;
-
+    uv_err_t err;
+    UDP *self;
     PyObject *result, *address_tuple, *data, *py_errorno;
 
     ASSERT(handle);
     ASSERT(flags == 0);
 
-    UDP *self = (UDP *)handle->data;
+    self = (UDP *)handle->data;
     ASSERT(self);
+
     /* Object could go out of scope in the callback, increase refcount to avoid it */
     Py_INCREF(self);
 
@@ -105,7 +108,7 @@ on_udp_read(uv_udp_t* handle, int nread, uv_buf_t buf, struct sockaddr* addr, un
         Py_INCREF(Py_None);
         data = Py_None;
         Py_INCREF(Py_None);
-        uv_err_t err = uv_last_error(UV_LOOP(self));
+        err = uv_last_error(UV_LOOP(self));
         py_errorno = PyInt_FromLong((long)err.code);
     }
 
@@ -127,22 +130,25 @@ on_udp_read(uv_udp_t* handle, int nread, uv_buf_t buf, struct sockaddr* addr, un
 static void
 on_udp_send(uv_udp_send_t* req, int status)
 {
-    int i;
-
     PyGILState_STATE gstate = PyGILState_Ensure();
+    int i;
+    udp_req_data_t* req_data;
+    udp_send_data_t* send_data;
+    UDP *self;
+    PyObject *callback;
+    PyObject *result, *py_errorno;
+
     ASSERT(req);
 
-    udp_req_data_t* req_data = (udp_req_data_t *)req->data;
-    udp_send_data_t* send_data = (udp_send_data_t *)req_data->data;
+    req_data = (udp_req_data_t *)req->data;
+    send_data = (udp_send_data_t *)req_data->data;
 
-    UDP *self = (UDP *)req_data->obj;
-    PyObject *callback = req_data->callback;
+    self = (UDP *)req_data->obj;
+    callback = req_data->callback;
 
     ASSERT(self);
     /* Object could go out of scope in the callback, increase refcount to avoid it */
     Py_INCREF(self);
-
-    PyObject *result, *py_errorno;
 
     if (callback != Py_None) {
         if (status < 0) {
@@ -360,7 +366,7 @@ UDP_func_send(UDP *self, PyObject *args)
     wr->data = (void *)req_data;
 
     if (PyString_Check(data)) {
-        // We have a single string
+        /* We have a single string */
         bufs = (uv_buf_t *) PyMem_Malloc(sizeof(uv_buf_t));
         if (!bufs) {
             PyErr_NoMemory();
@@ -379,7 +385,7 @@ UDP_func_send(UDP *self, PyObject *args)
         bufs[0] = tmpbuf;
         buf_count = 1;
     } else {
-        // We have a list
+        /* We have a list */
         buf_count = 0;
         n = PySequence_Length(data);
         bufs = (uv_buf_t *) PyMem_Malloc(sizeof(uv_buf_t) * n);
@@ -532,12 +538,12 @@ UDP_func_getsockname(UDP *self)
 static int
 UDP_tp_init(UDP *self, PyObject *args, PyObject *kwargs)
 {
-    UNUSED_ARG(kwargs);
-
     int r = 0;
     Loop *loop;
     PyObject *tmp = NULL;
     uv_udp_t *uv_udp_handle = NULL;
+
+    UNUSED_ARG(kwargs);
 
     if (self->uv_handle) {
         PyErr_SetString(PyExc_UDPError, "Object already initialized");

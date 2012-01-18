@@ -133,11 +133,12 @@ set_counter_value(PyObject *dict, char *key, uint64_t value)
 static PyObject *
 Loop_counters_get(Loop *self, void *closure)
 {
-    UNUSED_ARG(closure);
-
-    // TODO: use a named tuple here
+    /* TODO: use a named tuple here */
     PyObject *counters;
-    uv_counters_t* uv_counters = &self->uv_loop->counters;
+    uv_counters_t* uv_counters;
+
+    UNUSED_ARG(closure);
+    uv_counters = &self->uv_loop->counters;
 
     counters = PyDict_New();
     if (!counters) {

@@ -41,9 +41,9 @@ TTY_func_reset_mode(PyObject *cls)
 static PyObject *
 TTY_func_isatty(PyObject *cls, PyObject *args)
 {
-    UNUSED_ARG(cls);
-
     int fd;
+
+    UNUSED_ARG(cls);
 
     if (!PyArg_ParseTuple(args, "i:isatty", &fd)) {
         return NULL;
@@ -83,8 +83,6 @@ TTY_func_get_winsize(TTY *self)
 static int
 TTY_tp_init(TTY *self, PyObject *args, PyObject *kwargs)
 {
-    UNUSED_ARG(kwargs);
-
     int fd;
     int r = 0;
     Loop *loop;
@@ -92,6 +90,8 @@ TTY_tp_init(TTY *self, PyObject *args, PyObject *kwargs)
     uv_tty_t *uv_stream;
 
     IOStream *base = (IOStream *)self;
+
+    UNUSED_ARG(kwargs);
 
     if (base->uv_handle) {
         PyErr_SetString(PyExc_IOStreamError, "Object already initialized");

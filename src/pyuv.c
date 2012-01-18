@@ -40,47 +40,54 @@ static PyModuleDef pyuv_module = {
 PyObject*
 init_pyuv(void)
 {
+    /* Modules */
+    PyObject *pyuv;
+    PyObject *errno_module;
+    PyObject *error_module;
+    PyObject *dns;
+    PyObject *fs;
+    PyObject *util;
+
     /* Initialize GIL */
     PyEval_InitThreads();
 
     /* Main module */
-    PyObject *pyuv;
 #ifdef PYUV_PYTHON3
     pyuv = PyModule_Create(&pyuv_module);
 #else
     pyuv = Py_InitModule("pyuv", NULL);
 #endif
+
     /* Errno module */
-    PyObject *errno_module = init_errno();
+    errno_module = init_errno();
     if (errno_module == NULL) {
         goto fail;
     }
     PyUVModule_AddObject(pyuv, "errno", errno_module);
 
     /* Error module */
-    PyObject *error = init_error();
-    if (error == NULL) {
+    error_module = init_error();
+    if (error_module == NULL) {
         goto fail;
     }
-    PyUVModule_AddObject(pyuv, "error", error);
+    PyUVModule_AddObject(pyuv, "error", error_module);
 
     /* DNS module */
-    PyObject *dns = init_dns();
+    dns = init_dns();
     if (dns == NULL) {
         goto fail;
     }
     PyUVModule_AddObject(pyuv, "dns", dns);
-    PyUVModule_AddType(dns, "DNSResolver", &DNSResolverType);
 
     /* FS module */
-    PyObject *fs = init_fs();
+    fs = init_fs();
     if (fs == NULL) {
         goto fail;
     }
     PyUVModule_AddObject(pyuv, "fs", fs);
 
     /* Util module */
-    PyObject *util = init_util();
+    util = init_util();
     if (util == NULL) {
         goto fail;
     }

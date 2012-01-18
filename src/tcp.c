@@ -6,16 +6,18 @@ static void
 on_tcp_connection(uv_stream_t* server, int status)
 {
     PyGILState_STATE gstate = PyGILState_Ensure();
-    ASSERT(server);
+    TCP *self;
+    IOStream *base;
+    PyObject *result, *py_errorno;
 
-    TCP *self = (TCP *)server->data;
+    ASSERT(server);
+    self = (TCP *)server->data;
+
     ASSERT(self);
     /* Object could go out of scope in the callback, increase refcount to avoid it */
     Py_INCREF(self);
 
-    IOStream *base = (IOStream *)self;
-
-    PyObject *result, *py_errorno;
+    base = (IOStream *)self;
 
     if (status != 0) {
         uv_err_t err = uv_last_error(UV_LOOP(base));
@@ -40,20 +42,23 @@ static void
 on_tcp_client_connection(uv_connect_t *req, int status)
 {
     PyGILState_STATE gstate = PyGILState_Ensure();
-    ASSERT(req);
-
-    iostream_req_data_t* req_data = (iostream_req_data_t *)req->data;
-
-    TCP *self = (TCP *)req_data->obj;
-    PyObject *callback = req_data->callback;
-
+    TCP *self;
+    PyObject *callback;
     PyObject *result, *py_errorno;
+    iostream_req_data_t* req_data;
+    IOStream *base;
+
+    ASSERT(req);
+    req_data = (iostream_req_data_t *)req->data;
+
+    self = (TCP *)req_data->obj;
+    callback = req_data->callback;
 
     ASSERT(self);
     /* Object could go out of scope in the callback, increase refcount to avoid it */
     Py_INCREF(self);
 
-    IOStream *base = (IOStream *)self;
+    base = (IOStream *)self;
 
     if (status != 0) {
         uv_err_t err = uv_last_error(UV_LOOP(base));
@@ -297,6 +302,7 @@ error:
 static PyObject *
 TCP_func_getsockname(TCP *self)
 {
+    int r;
     struct sockaddr sockname;
     struct sockaddr_in *addr4;
     struct sockaddr_in6 *addr6;
@@ -310,7 +316,7 @@ TCP_func_getsockname(TCP *self)
         return NULL;
     }
 
-    int r = uv_tcp_getsockname((uv_tcp_t *)base->uv_handle, &sockname, &namelen);
+    r = uv_tcp_getsockname((uv_tcp_t *)base->uv_handle, &sockname, &namelen);
     if (r != 0) {
         raise_uv_exception(base->loop, PyExc_TCPError);
         return NULL;
@@ -334,6 +340,7 @@ TCP_func_getsockname(TCP *self)
 static PyObject *
 TCP_func_getpeername(TCP *self)
 {
+    int r;
     struct sockaddr peername;
     struct sockaddr_in *addr4;
     struct sockaddr_in6 *addr6;
@@ -347,7 +354,7 @@ TCP_func_getpeername(TCP *self)
         return NULL;
     }
 
-    int r = uv_tcp_getpeername((uv_tcp_t *)base->uv_handle, &peername, &namelen);
+    r = uv_tcp_getpeername((uv_tcp_t *)base->uv_handle, &peername, &namelen);
     if (r != 0) {
         raise_uv_exception(base->loop, PyExc_TCPError);
         return NULL;
@@ -464,14 +471,14 @@ TCP_func_simultaneous_accepts(TCP *self, PyObject *args)
 static int
 TCP_tp_init(TCP *self, PyObject *args, PyObject *kwargs)
 {
-    UNUSED_ARG(kwargs);
-
     int r = 0;
     Loop *loop;
     PyObject *tmp = NULL;
     uv_tcp_t *uv_stream;
 
     IOStream *base = (IOStream *)self;
+
+    UNUSED_ARG(kwargs);
 
     if (base->uv_handle) {
         PyErr_SetString(PyExc_TCPError, "Object already initialized");

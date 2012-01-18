@@ -12,10 +12,11 @@ typedef struct {
 static PyObject *
 format_time(time_t sec, unsigned long nsec)
 {
-    // TODO: look at stat_float_times in Modules/posixmodule.c
+    /* TODO: look at stat_float_times in Modules/posixmodule.c */
+    PyObject *ival;
+
     UNUSED_ARG(nsec);
 
-    PyObject *ival;
 #if SIZEOF_TIME_T > SIZEOF_LONG
     ival = PyLong_FromLongLong((PY_LONG_LONG)sec);
 #else
@@ -31,14 +32,16 @@ format_time(time_t sec, unsigned long nsec)
 static void
 stat_cb(uv_fs_t* req) {
     PyGILState_STATE gstate = PyGILState_Ensure();
+    struct stat *st;
+    fs_req_data_t *req_data;
+    unsigned long ansec, mnsec, cnsec;
+    PyObject *result, *errorno, *stat_data, *path;
+
     ASSERT(req);
     ASSERT(req->fs_type == UV_FS_STAT || req->fs_type == UV_FS_LSTAT || req->fs_type == UV_FS_FSTAT);
 
-    struct stat *st = (struct stat *)(req->ptr);
-    fs_req_data_t *req_data = (fs_req_data_t*)(req->data);
-
-    unsigned long ansec, mnsec, cnsec;
-    PyObject *result, *errorno, *stat_data, *path;
+    st = (struct stat *)(req->ptr);
+    req_data = (fs_req_data_t*)(req->data);
 
     if (req->path != NULL) {
 #ifdef PYUV_PYTHON3
@@ -145,12 +148,13 @@ end:
 static void
 unlink_cb(uv_fs_t* req) {
     PyGILState_STATE gstate = PyGILState_Ensure();
+    fs_req_data_t *req_data;
+    PyObject *result, *errorno, *path;
+
     ASSERT(req);
     ASSERT(req->fs_type == UV_FS_UNLINK);
 
-    fs_req_data_t *req_data = (fs_req_data_t*)(req->data);
-
-    PyObject *result, *errorno, *path;
+    req_data = (fs_req_data_t*)(req->data);
 
     if (req->path != NULL) {
 #ifdef PYUV_PYTHON3
@@ -190,12 +194,13 @@ unlink_cb(uv_fs_t* req) {
 static void
 mkdir_cb(uv_fs_t* req) {
     PyGILState_STATE gstate = PyGILState_Ensure();
+    fs_req_data_t *req_data;
+    PyObject *result, *errorno, *path;
+
     ASSERT(req);
     ASSERT(req->fs_type == UV_FS_MKDIR);
 
-    fs_req_data_t *req_data = (fs_req_data_t*)(req->data);
-
-    PyObject *result, *errorno, *path;
+    req_data = (fs_req_data_t*)(req->data);
 
     if (req->path != NULL) {
 #ifdef PYUV_PYTHON3
@@ -235,12 +240,13 @@ mkdir_cb(uv_fs_t* req) {
 static void
 rmdir_cb(uv_fs_t* req) {
     PyGILState_STATE gstate = PyGILState_Ensure();
+    fs_req_data_t *req_data;
+    PyObject *result, *errorno, *path;
+
     ASSERT(req);
     ASSERT(req->fs_type == UV_FS_RMDIR);
 
-    fs_req_data_t *req_data = (fs_req_data_t*)(req->data);
-
-    PyObject *result, *errorno, *path;
+    req_data = (fs_req_data_t*)(req->data);
 
     if (req->path != NULL) {
 #ifdef PYUV_PYTHON3
@@ -280,12 +286,13 @@ rmdir_cb(uv_fs_t* req) {
 static void
 rename_cb(uv_fs_t* req) {
     PyGILState_STATE gstate = PyGILState_Ensure();
+    fs_req_data_t *req_data;
+    PyObject *result, *errorno, *path;
+
     ASSERT(req);
     ASSERT(req->fs_type == UV_FS_RENAME);
 
-    fs_req_data_t *req_data = (fs_req_data_t*)(req->data);
-
-    PyObject *result, *errorno, *path;
+    req_data = (fs_req_data_t*)(req->data);
 
     if (req->path != NULL) {
 #ifdef PYUV_PYTHON3
@@ -326,12 +333,13 @@ rename_cb(uv_fs_t* req) {
 static void
 chmod_cb(uv_fs_t* req) {
     PyGILState_STATE gstate = PyGILState_Ensure();
+    fs_req_data_t *req_data;
+    PyObject *result, *errorno, *path;
+
     ASSERT(req);
     ASSERT(req->fs_type == UV_FS_CHMOD || req->fs_type == UV_FS_FCHMOD);
 
-    fs_req_data_t *req_data = (fs_req_data_t*)(req->data);
-
-    PyObject *result, *errorno, *path;
+    req_data = (fs_req_data_t*)(req->data);
 
     if (req->path != NULL) {
 #ifdef PYUV_PYTHON3
@@ -371,12 +379,13 @@ chmod_cb(uv_fs_t* req) {
 static void
 link_cb(uv_fs_t* req) {
     PyGILState_STATE gstate = PyGILState_Ensure();
+    fs_req_data_t *req_data;
+    PyObject *result, *errorno, *path;
+
     ASSERT(req);
     ASSERT(req->fs_type == UV_FS_LINK);
 
-    fs_req_data_t *req_data = (fs_req_data_t*)(req->data);
-
-    PyObject *result, *errorno, *path;
+    req_data = (fs_req_data_t*)(req->data);
 
     if (req->path != NULL) {
 #ifdef PYUV_PYTHON3
@@ -416,12 +425,13 @@ link_cb(uv_fs_t* req) {
 static void
 symlink_cb(uv_fs_t* req) {
     PyGILState_STATE gstate = PyGILState_Ensure();
+    fs_req_data_t *req_data;
+    PyObject *result, *errorno, *path;
+
     ASSERT(req);
     ASSERT(req->fs_type == UV_FS_SYMLINK);
 
-    fs_req_data_t *req_data = (fs_req_data_t*)(req->data);
-
-    PyObject *result, *errorno, *path;
+    req_data = (fs_req_data_t*)(req->data);
 
     if (req->path != NULL) {
 #ifdef PYUV_PYTHON3
@@ -461,12 +471,13 @@ symlink_cb(uv_fs_t* req) {
 static void
 readlink_cb(uv_fs_t* req) {
     PyGILState_STATE gstate = PyGILState_Ensure();
+    fs_req_data_t *req_data;
+    PyObject *result, *errorno, *path;
+
     ASSERT(req);
     ASSERT(req->fs_type == UV_FS_READLINK);
 
-    fs_req_data_t *req_data = (fs_req_data_t*)(req->data);
-
-    PyObject *result, *errorno, *path;
+    req_data = (fs_req_data_t*)(req->data);
 
     if (req->result < 0) {
         errorno = PyInt_FromLong((long)req->errorno);
@@ -502,12 +513,13 @@ readlink_cb(uv_fs_t* req) {
 static void
 chown_cb(uv_fs_t* req) {
     PyGILState_STATE gstate = PyGILState_Ensure();
+    fs_req_data_t *req_data;
+    PyObject *result, *errorno, *path;
+
     ASSERT(req);
     ASSERT(req->fs_type == UV_FS_CHOWN || req->fs_type == UV_FS_FCHOWN);
 
-    fs_req_data_t *req_data = (fs_req_data_t*)(req->data);
-
-    PyObject *result, *errorno, *path;
+    req_data = (fs_req_data_t*)(req->data);
 
     if (req->path != NULL) {
 #ifdef PYUV_PYTHON3
@@ -547,13 +559,13 @@ chown_cb(uv_fs_t* req) {
 static void
 open_cb(uv_fs_t* req) {
     PyGILState_STATE gstate = PyGILState_Ensure();
+    fs_req_data_t *req_data;
+    PyObject *result, *fd, *errorno, *path;
+
     ASSERT(req);
     ASSERT(req->fs_type == UV_FS_OPEN);
 
-    fs_req_data_t *req_data = (fs_req_data_t*)(req->data);
-
-    PyObject *result, *fd, *errorno, *path;
-
+    req_data = (fs_req_data_t*)(req->data);
     fd = PyInt_FromLong((long)req->result);
 
     if (req->path != NULL) {
@@ -594,12 +606,13 @@ open_cb(uv_fs_t* req) {
 static void
 close_cb(uv_fs_t* req) {
     PyGILState_STATE gstate = PyGILState_Ensure();
+    fs_req_data_t *req_data;
+    PyObject *result, *errorno, *path;
+
     ASSERT(req);
     ASSERT(req->fs_type == UV_FS_CLOSE);
 
-    fs_req_data_t *req_data = (fs_req_data_t*)(req->data);
-
-    PyObject *result, *errorno, *path;
+    req_data = (fs_req_data_t*)(req->data);
 
     if (req->path != NULL) {
 #ifdef PYUV_PYTHON3
@@ -639,12 +652,13 @@ close_cb(uv_fs_t* req) {
 static void
 read_cb(uv_fs_t* req) {
     PyGILState_STATE gstate = PyGILState_Ensure();
+    fs_req_data_t *req_data;
+    PyObject *result, *errorno, *read_data, *path;
+
     ASSERT(req);
     ASSERT(req->fs_type == UV_FS_READ);
 
-    fs_req_data_t *req_data = (fs_req_data_t*)(req->data);
-
-    PyObject *result, *errorno, *read_data, *path;
+    req_data = (fs_req_data_t*)(req->data);
 
     if (req->path != NULL) {
 #ifdef PYUV_PYTHON3
@@ -692,13 +706,13 @@ read_cb(uv_fs_t* req) {
 static void
 write_cb(uv_fs_t* req) {
     PyGILState_STATE gstate = PyGILState_Ensure();
+    fs_req_data_t *req_data;
+    PyObject *result, *errorno, *bytes_written, *path;
+
     ASSERT(req);
     ASSERT(req->fs_type == UV_FS_WRITE);
 
-    fs_req_data_t *req_data = (fs_req_data_t*)(req->data);
-
-    PyObject *result, *errorno, *bytes_written, *path;
-
+    req_data = (fs_req_data_t*)(req->data);
     bytes_written = PyInt_FromLong((long)req->result);
 
     if (req->path != NULL) {
@@ -740,12 +754,13 @@ write_cb(uv_fs_t* req) {
 static void
 fsync_cb(uv_fs_t* req) {
     PyGILState_STATE gstate = PyGILState_Ensure();
+    fs_req_data_t *req_data;
+    PyObject *result, *errorno, *path;
+
     ASSERT(req);
     ASSERT(req->fs_type == UV_FS_FSYNC || req->fs_type == UV_FS_FDATASYNC);
 
-    fs_req_data_t *req_data = (fs_req_data_t*)(req->data);
-
-    PyObject *result, *errorno, *path;
+    req_data = (fs_req_data_t*)(req->data);
 
     if (req->path != NULL) {
 #ifdef PYUV_PYTHON3
@@ -785,12 +800,13 @@ fsync_cb(uv_fs_t* req) {
 static void
 ftruncate_cb(uv_fs_t* req) {
     PyGILState_STATE gstate = PyGILState_Ensure();
+    fs_req_data_t *req_data;
+    PyObject *result, *errorno, *path;
+
     ASSERT(req);
     ASSERT(req->fs_type == UV_FS_FTRUNCATE);
 
-    fs_req_data_t *req_data = (fs_req_data_t*)(req->data);
-
-    PyObject *result, *errorno, *path;
+    req_data = (fs_req_data_t*)(req->data);
 
     if (req->path != NULL) {
 #ifdef PYUV_PYTHON3
@@ -830,14 +846,15 @@ ftruncate_cb(uv_fs_t* req) {
 static void
 readdir_cb(uv_fs_t* req) {
     PyGILState_STATE gstate = PyGILState_Ensure();
+    int r;
+    char *ptr;
+    fs_req_data_t *req_data;
+    PyObject *result, *errorno, *files, *item, *path;
+
     ASSERT(req);
     ASSERT(req->fs_type == UV_FS_READDIR);
 
-    fs_req_data_t *req_data = (fs_req_data_t*)(req->data);
-
-    int r;
-    char *ptr;
-    PyObject *result, *errorno, *files, *item, *path;
+    req_data = (fs_req_data_t*)(req->data);
 
     if (req->path != NULL) {
 #ifdef PYUV_PYTHON3
@@ -901,13 +918,13 @@ readdir_cb(uv_fs_t* req) {
 static void
 sendfile_cb(uv_fs_t* req) {
     PyGILState_STATE gstate = PyGILState_Ensure();
+    fs_req_data_t *req_data;
+    PyObject *result, *errorno, *bytes_written, *path;
+
     ASSERT(req);
     ASSERT(req->fs_type == UV_FS_SENDFILE);
 
-    fs_req_data_t *req_data = (fs_req_data_t*)(req->data);
-
-    PyObject *result, *errorno, *bytes_written, *path;
-
+    req_data = (fs_req_data_t*)(req->data);
     bytes_written = PyInt_FromLong((long)req->result);
 
     if (req->path != NULL) {
@@ -948,12 +965,13 @@ sendfile_cb(uv_fs_t* req) {
 static void
 utime_cb(uv_fs_t* req) {
     PyGILState_STATE gstate = PyGILState_Ensure();
+    fs_req_data_t *req_data;
+    PyObject *result, *errorno, *path;
+
     ASSERT(req);
     ASSERT(req->fs_type == UV_FS_UTIME || req->fs_type == UV_FS_FUTIME);
 
-    fs_req_data_t *req_data = (fs_req_data_t*)(req->data);
-
-    PyObject *result, *errorno, *path;
+    req_data = (fs_req_data_t*)(req->data);
 
     if (req->path != NULL) {
 #ifdef PYUV_PYTHON3
@@ -1078,8 +1096,6 @@ FS_func_lstat(PyObject *obj, PyObject *args, PyObject *kwargs)
 static PyObject *
 FS_func_fstat(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
-    UNUSED_ARG(obj);
-
     int r;
     int fd;
     Loop *loop;
@@ -1089,6 +1105,8 @@ FS_func_fstat(PyObject *obj, PyObject *args, PyObject *kwargs)
     fs_req_data_t *req_data = NULL;
 
     static char *kwlist[] = {"loop", "fd", "callback", "data", NULL};
+
+    UNUSED_ARG(obj);
 
     if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!iO|O:fstat", kwlist, &LoopType, &loop, &fd, &callback, &data)) {
         return NULL;
@@ -1145,8 +1163,6 @@ error:
 static PyObject *
 FS_func_unlink(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
-    UNUSED_ARG(obj);
-
     int r;
     char *path;
     Loop *loop;
@@ -1156,6 +1172,8 @@ FS_func_unlink(PyObject *obj, PyObject *args, PyObject *kwargs)
     fs_req_data_t *req_data = NULL;
 
     static char *kwlist[] = {"loop", "path", "callback", "data", NULL};
+
+    UNUSED_ARG(obj);
 
     if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!sO|O:unlink", kwlist, &LoopType, &loop, &path, &callback, &data)) {
         return NULL;
@@ -1212,8 +1230,6 @@ error:
 static PyObject *
 FS_func_mkdir(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
-    UNUSED_ARG(obj);
-
     int r;
     int mode;
     char *path;
@@ -1224,6 +1240,8 @@ FS_func_mkdir(PyObject *obj, PyObject *args, PyObject *kwargs)
     fs_req_data_t *req_data = NULL;
 
     static char *kwlist[] = {"loop", "path", "mode", "callback", "data", NULL};
+
+    UNUSED_ARG(obj);
 
     if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!siO|O:mkdir", kwlist, &LoopType, &loop, &path, &mode, &callback, &data)) {
         return NULL;
@@ -1280,8 +1298,6 @@ error:
 static PyObject *
 FS_func_rmdir(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
-    UNUSED_ARG(obj);
-
     int r;
     char *path;
     Loop *loop;
@@ -1291,6 +1307,8 @@ FS_func_rmdir(PyObject *obj, PyObject *args, PyObject *kwargs)
     fs_req_data_t *req_data = NULL;
 
     static char *kwlist[] = {"loop", "path", "callback", "data", NULL};
+
+    UNUSED_ARG(obj);
 
     if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!sO|O:rmdir", kwlist, &LoopType, &loop, &path, &callback, &data)) {
         return NULL;
@@ -1347,8 +1365,6 @@ error:
 static PyObject *
 FS_func_rename(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
-    UNUSED_ARG(obj);
-
     int r;
     char *path;
     char *new_path;
@@ -1359,6 +1375,8 @@ FS_func_rename(PyObject *obj, PyObject *args, PyObject *kwargs)
     fs_req_data_t *req_data = NULL;
 
     static char *kwlist[] = {"loop", "path", "new_path", "callback", "data", NULL};
+
+    UNUSED_ARG(obj);
 
     if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!ssO|O:rename", kwlist, &LoopType, &loop, &path, &new_path, &callback, &data)) {
         return NULL;
@@ -1415,8 +1433,6 @@ error:
 static PyObject *
 FS_func_chmod(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
-    UNUSED_ARG(obj);
-
     int r;
     int mode;
     char *path;
@@ -1427,6 +1443,8 @@ FS_func_chmod(PyObject *obj, PyObject *args, PyObject *kwargs)
     fs_req_data_t *req_data = NULL;
 
     static char *kwlist[] = {"loop", "path", "mode", "callback", "data", NULL};
+
+    UNUSED_ARG(obj);
 
     if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!siO|O:chmod", kwlist, &LoopType, &loop, &path, &mode, &callback, &data)) {
         return NULL;
@@ -1483,8 +1501,6 @@ error:
 static PyObject *
 FS_func_fchmod(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
-    UNUSED_ARG(obj);
-
     int r;
     int mode;
     int fd;
@@ -1495,6 +1511,8 @@ FS_func_fchmod(PyObject *obj, PyObject *args, PyObject *kwargs)
     fs_req_data_t *req_data = NULL;
 
     static char *kwlist[] = {"loop", "fd", "mode", "callback", "data", NULL};
+
+    UNUSED_ARG(obj);
 
     if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!iiO|O:fchmod", kwlist, &LoopType, &loop, &fd, &mode, &callback, &data)) {
         return NULL;
@@ -1551,8 +1569,6 @@ error:
 static PyObject *
 FS_func_link(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
-    UNUSED_ARG(obj);
-
     int r;
     char *path;
     char *new_path;
@@ -1563,6 +1579,8 @@ FS_func_link(PyObject *obj, PyObject *args, PyObject *kwargs)
     fs_req_data_t *req_data = NULL;
 
     static char *kwlist[] = {"loop", "path", "new_path", "callback", "data", NULL};
+
+    UNUSED_ARG(obj);
 
     if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!ssO|O:link", kwlist, &LoopType, &loop, &path, &new_path, &callback, &data)) {
         return NULL;
@@ -1619,8 +1637,6 @@ error:
 static PyObject *
 FS_func_symlink(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
-    UNUSED_ARG(obj);
-
     int r;
     int flags;
     char *path;
@@ -1632,6 +1648,8 @@ FS_func_symlink(PyObject *obj, PyObject *args, PyObject *kwargs)
     fs_req_data_t *req_data = NULL;
 
     static char *kwlist[] = {"loop", "path", "new_path", "flags", "callback", "data", NULL};
+
+    UNUSED_ARG(obj);
 
     if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!ssiO|O:symlink", kwlist, &LoopType, &loop, &path, &new_path, &flags, &callback, &data)) {
         return NULL;
@@ -1688,8 +1706,6 @@ error:
 static PyObject *
 FS_func_readlink(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
-    UNUSED_ARG(obj);
-
     int r;
     char *path;
     Loop *loop;
@@ -1699,6 +1715,8 @@ FS_func_readlink(PyObject *obj, PyObject *args, PyObject *kwargs)
     fs_req_data_t *req_data = NULL;
 
     static char *kwlist[] = {"loop", "path", "callback", "data", NULL};
+
+    UNUSED_ARG(obj);
 
     if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!sO|O:readlink", kwlist, &LoopType, &loop, &path, &callback, &data)) {
         return NULL;
@@ -1755,8 +1773,6 @@ error:
 static PyObject *
 FS_func_chown(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
-    UNUSED_ARG(obj);
-
     int r;
     int uid;
     int gid;
@@ -1768,6 +1784,8 @@ FS_func_chown(PyObject *obj, PyObject *args, PyObject *kwargs)
     fs_req_data_t *req_data = NULL;
 
     static char *kwlist[] = {"loop", "path", "uid", "gid", "callback", "data", NULL};
+
+    UNUSED_ARG(obj);
 
     if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!siiO|O:chown", kwlist, &LoopType, &loop, &path, &uid, &gid, &callback, &data)) {
         return NULL;
@@ -1824,8 +1842,6 @@ error:
 static PyObject *
 FS_func_fchown(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
-    UNUSED_ARG(obj);
-
     int r;
     int fd;
     int uid;
@@ -1837,6 +1853,8 @@ FS_func_fchown(PyObject *obj, PyObject *args, PyObject *kwargs)
     fs_req_data_t *req_data = NULL;
 
     static char *kwlist[] = {"loop", "fd", "uid", "gid", "callback", "data", NULL};
+
+    UNUSED_ARG(obj);
 
     if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!iiiO|O:fchown", kwlist, &LoopType, &loop, &fd, &uid, &gid, &callback, &data)) {
         return NULL;
@@ -1893,8 +1911,6 @@ error:
 static PyObject *
 FS_func_open(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
-    UNUSED_ARG(obj);
-
     int r;
     int flags;
     int mode;
@@ -1906,6 +1922,8 @@ FS_func_open(PyObject *obj, PyObject *args, PyObject *kwargs)
     fs_req_data_t *req_data = NULL;
 
     static char *kwlist[] = {"loop", "path", "flags", "mode", "callback", "data", NULL};
+
+    UNUSED_ARG(obj);
 
     if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!siiO|O:open", kwlist, &LoopType, &loop, &path, &flags, &mode, &callback, &data)) {
         return NULL;
@@ -1962,8 +1980,6 @@ error:
 static PyObject *
 FS_func_close(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
-    UNUSED_ARG(obj);
-
     int r;
     int fd;
     Loop *loop;
@@ -1973,6 +1989,8 @@ FS_func_close(PyObject *obj, PyObject *args, PyObject *kwargs)
     fs_req_data_t *req_data = NULL;
 
     static char *kwlist[] = {"loop", "fd", "callback", "data", NULL};
+
+    UNUSED_ARG(obj);
 
     if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!iO|O:close", kwlist, &LoopType, &loop, &fd, &callback, &data)) {
         return NULL;
@@ -2029,8 +2047,6 @@ error:
 static PyObject *
 FS_func_read(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
-    UNUSED_ARG(obj);
-
     int r;
     int fd;
     int length;
@@ -2043,6 +2059,8 @@ FS_func_read(PyObject *obj, PyObject *args, PyObject *kwargs)
     fs_req_data_t *req_data = NULL;
 
     static char *kwlist[] = {"loop", "fd", "length", "offset", "callback", "data", NULL};
+
+    UNUSED_ARG(obj);
 
     if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!iiiO|O:read", kwlist, &LoopType, &loop, &fd, &length, &offset, &callback, &data)) {
         return NULL;
@@ -2110,8 +2128,6 @@ error:
 static PyObject *
 FS_func_write(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
-    UNUSED_ARG(obj);
-
     int r;
     int fd;
     int offset;
@@ -2125,6 +2141,8 @@ FS_func_write(PyObject *obj, PyObject *args, PyObject *kwargs)
     fs_req_data_t *req_data = NULL;
 
     static char *kwlist[] = {"loop", "fd", "write_data", "offset", "callback", "data", NULL};
+
+    UNUSED_ARG(obj);
 
     if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!is#iO|O:write", kwlist, &LoopType, &loop, &fd, &write_str, &write_len, &offset, &callback, &data)) {
         return NULL;
@@ -2192,8 +2210,6 @@ error:
 static PyObject *
 FS_func_fsync(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
-    UNUSED_ARG(obj);
-
     int r;
     int fd;
     Loop *loop;
@@ -2203,6 +2219,8 @@ FS_func_fsync(PyObject *obj, PyObject *args, PyObject *kwargs)
     fs_req_data_t *req_data = NULL;
 
     static char *kwlist[] = {"loop", "fd", "callback", "data", NULL};
+
+    UNUSED_ARG(obj);
 
     if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!iO|O:fsync", kwlist, &LoopType, &loop, &fd, &callback, &data)) {
         return NULL;
@@ -2259,8 +2277,6 @@ error:
 static PyObject *
 FS_func_fdatasync(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
-    UNUSED_ARG(obj);
-
     int r;
     int fd;
     Loop *loop;
@@ -2270,6 +2286,8 @@ FS_func_fdatasync(PyObject *obj, PyObject *args, PyObject *kwargs)
     fs_req_data_t *req_data = NULL;
 
     static char *kwlist[] = {"loop", "fd", "callback", "data", NULL};
+
+    UNUSED_ARG(obj);
 
     if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!iO|O:fdatasync", kwlist, &LoopType, &loop, &fd, &callback, &data)) {
         return NULL;
@@ -2326,8 +2344,6 @@ error:
 static PyObject *
 FS_func_ftruncate(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
-    UNUSED_ARG(obj);
-
     int r;
     int fd;
     int offset;
@@ -2338,6 +2354,8 @@ FS_func_ftruncate(PyObject *obj, PyObject *args, PyObject *kwargs)
     fs_req_data_t *req_data = NULL;
 
     static char *kwlist[] = {"loop", "fd", "offset", "callback", "data", NULL};
+
+    UNUSED_ARG(obj);
 
     if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!iiO|O:ftruncate", kwlist, &LoopType, &loop, &fd, &offset, &callback, &data)) {
         return NULL;
@@ -2391,12 +2409,10 @@ error:
 }
 
 
-// Aapparently 'flags' doesn't do much (nothing on Windows) because libuv uses ptr from eio, instead of ptr2
+/* Aapparently 'flags' doesn't do much (nothing on Windows) because libuv uses ptr from eio, instead of ptr2 */
 static PyObject *
 FS_func_readdir(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
-    UNUSED_ARG(obj);
-
     int r;
     int flags;
     char *path;
@@ -2407,6 +2423,8 @@ FS_func_readdir(PyObject *obj, PyObject *args, PyObject *kwargs)
     fs_req_data_t *req_data = NULL;
 
     static char *kwlist[] = {"loop", "path", "flags", "callback", "data", NULL};
+
+    UNUSED_ARG(obj);
 
     if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!siO|O:readdir", kwlist, &LoopType, &loop, &path, &flags, &callback, &data)) {
         return NULL;
@@ -2463,8 +2481,6 @@ error:
 static PyObject *
 FS_func_sendfile(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
-    UNUSED_ARG(obj);
-
     int r;
     int out_fd, in_fd, in_offset, length;
     Loop *loop;
@@ -2474,6 +2490,8 @@ FS_func_sendfile(PyObject *obj, PyObject *args, PyObject *kwargs)
     fs_req_data_t *req_data = NULL;
 
     static char *kwlist[] = {"loop", "out_fd", "in_fd", "in_offset", "length", "callback", "data", NULL};
+
+    UNUSED_ARG(obj);
 
     if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!iiiiO|O:sendfile", kwlist, &LoopType, &loop, &out_fd, &in_fd, &in_offset, &length, &callback, &data)) {
         return NULL;
@@ -2530,8 +2548,6 @@ error:
 static PyObject *
 FS_func_utime(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
-    UNUSED_ARG(obj);
-
     int r;
     double atime, mtime;
     char *path;
@@ -2542,6 +2558,8 @@ FS_func_utime(PyObject *obj, PyObject *args, PyObject *kwargs)
     fs_req_data_t *req_data = NULL;
 
     static char *kwlist[] = {"loop", "path", "atime", "mtime", "callback", "data", NULL};
+
+    UNUSED_ARG(obj);
 
     if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!sddO|O:utime", kwlist, &LoopType, &loop, &path, &atime, &mtime, &callback, &data)) {
         return NULL;
@@ -2598,8 +2616,6 @@ error:
 static PyObject *
 FS_func_futime(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
-    UNUSED_ARG(obj);
-
     int r;
     int fd;
     double atime, mtime;
@@ -2610,6 +2626,8 @@ FS_func_futime(PyObject *obj, PyObject *args, PyObject *kwargs)
     fs_req_data_t *req_data = NULL;
 
     static char *kwlist[] = {"loop", "fd", "atime", "mtime", "callback", "data", NULL};
+
+    UNUSED_ARG(obj);
 
     if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!iddO|O:futime", kwlist, &LoopType, &loop, &fd, &atime, &mtime, &callback, &data)) {
         return NULL;
@@ -2701,11 +2719,12 @@ static void
 on_fsevent_close(uv_handle_t *handle)
 {
     PyGILState_STATE gstate = PyGILState_Ensure();
-    ASSERT(handle);
-    FSEvent *self = (FSEvent *)handle->data;
-    ASSERT(self);
-
+    FSEvent *self;
     PyObject *result;
+
+    ASSERT(handle);
+    self = (FSEvent *)handle->data;
+    ASSERT(self);
 
     if (self->on_close_cb != Py_None) {
         result = PyObject_CallFunctionObjArgs(self->on_close_cb, self, NULL);
@@ -2740,15 +2759,16 @@ static void
 on_fsevent_callback(uv_fs_event_t *handle, const char *filename, int events, int status)
 {
     PyGILState_STATE gstate = PyGILState_Ensure();
+    FSEvent *self;
+    PyObject *result, *py_filename, *py_events, *errorno;
+
     ASSERT(handle);
     ASSERT(status == 0);
 
-    FSEvent *self = (FSEvent *)handle->data;
+    self = (FSEvent *)handle->data;
     ASSERT(self);
     /* Object could go out of scope in the callback, increase refcount to avoid it */
     Py_INCREF(self);
-
-    PyObject *result, *py_filename, *py_events, *errorno;
 
     if (filename) {
 #ifdef PYUV_PYTHON3
@@ -2868,10 +2888,10 @@ FSEvent_func_close(FSEvent *self, PyObject *args)
 static int
 FSEvent_tp_init(FSEvent *self, PyObject *args, PyObject *kwargs)
 {
-    UNUSED_ARG(kwargs);
-
     PyObject *tmp = NULL;
     Loop *loop;
+
+    UNUSED_ARG(kwargs);
 
     if (self->uv_handle) {
         PyErr_SetString(PyExc_FSEventError, "Object already initialized");

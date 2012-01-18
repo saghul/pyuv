@@ -15,14 +15,16 @@ static void
 on_process_exit(uv_process_t *process, int exit_status, int term_signal)
 {
     PyGILState_STATE gstate = PyGILState_Ensure();
+    Process *self;
+    PyObject *result;
+
     ASSERT(process);
-    Process *self = (Process *)process->data;
+    self = (Process *)process->data;
     ASSERT(self);
 
     /* Object could go out of scope in the callback, increase refcount to avoid it */
     Py_INCREF(self);
 
-    PyObject *result;
     if (self->on_exit_cb != Py_None) {
         result = PyObject_CallFunctionObjArgs(self->on_exit_cb, self, PyInt_FromLong(exit_status), PyInt_FromLong(term_signal), NULL);
         if (result == NULL) {
@@ -41,11 +43,12 @@ static void
 on_process_close(uv_handle_t *handle)
 {
     PyGILState_STATE gstate = PyGILState_Ensure();
-    ASSERT(handle);
-    Process *self = (Process *)handle->data;
-    ASSERT(self);
-
+    Process *self;
     PyObject *result;
+
+    ASSERT(handle);
+    self = (Process *)handle->data;
+    ASSERT(self);
 
     if (self->on_close_cb != Py_None) {
         result = PyObject_CallFunctionObjArgs(self->on_close_cb, self, NULL);
@@ -349,10 +352,12 @@ Process_pid_get(Process *self, void *closure)
 static int
 Process_tp_init(Process *self, PyObject *args, PyObject *kwargs)
 {
+    PyObject *tmp;
+    Loop *loop;
+
     UNUSED_ARG(kwargs);
 
-    PyObject *tmp = NULL;
-    Loop *loop;
+    tmp = NULL;
 
     if (self->uv_handle) {
         PyErr_SetString(PyExc_ProcessError, "Object already initialized");
