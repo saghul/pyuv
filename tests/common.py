@@ -1,7 +1,7 @@
 
 import os
 import sys
-
+sys.path.insert(0, '../')
 
 if sys.version_info < (2, 7) or (0x03000000 <= sys.hexversion < 0x03010000):
     # py26 or py30
@@ -20,11 +20,8 @@ platform = 'linux' if sys.platform.startswith('linux') else sys.platform
 
 # decorator for class
 def platform_skip(platform_list):
-    def _platform_skip(c):
-        is_skip = (platform in platform_list)
-        for m in c.__dict__:
-            if m.startswith("test_"):
-                setattr(c, m, unittest2.skipIf(is_skip, 
-                    "Test disabled in the current platform")(getattr(c, m)))
-        return c
-    return _platform_skip
+    def _noop(obj):
+        return obj
+    if platform in platform_list:
+        return unittest2.skip("Test disabled in the current platform")
+    return _noop
