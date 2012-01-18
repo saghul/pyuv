@@ -1,8 +1,8 @@
 
 import threading
 
-import pyuv
 from common import unittest2
+import pyuv
 
 
 class AsyncTest(unittest2.TestCase):
