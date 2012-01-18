@@ -3,8 +3,8 @@ import os
 import shutil
 import stat
 
-import common
 import pyuv
+from common import platform_skip, unittest2
 
 
 BAD_FILE = 'test_file_bad'
@@ -16,7 +16,7 @@ TEST_DIR2 = 'test-dir_2'
 BAD_DIR = 'test-dir-bad'
 
 
-class FSTestStat(common.UVTestCase):
+class FSTestStat(unittest2.TestCase):
 
     def setUp(self):
         self.loop = pyuv.Loop.default_loop()
@@ -42,7 +42,8 @@ class FSTestStat(common.UVTestCase):
         self.assertEqual(self.errorno, None)
 
 
-class FSTestLstat(common.UVTestCase):
+@platform_skip(["win32"])
+class FSTestLstat(unittest2.TestCase):
     __disabled__ = ['win32']
 
     def setUp(self):
@@ -70,8 +71,8 @@ class FSTestLstat(common.UVTestCase):
         self.loop.run()
         self.assertEqual(self.errorno, None)
 
-
-class FSTestFstat(common.UVTestCase):
+@platform_skip(["win32"])
+class FSTestFstat(unittest2.TestCase):
     __disabled__ = ['win32']
 
     def setUp(self):
@@ -93,7 +94,7 @@ class FSTestFstat(common.UVTestCase):
         self.assertEqual(self.errorno, None)
 
 
-class FSTestUnlink(common.UVTestCase):
+class FSTestUnlink(unittest2.TestCase):
 
     def setUp(self):
         self.loop = pyuv.Loop.default_loop()
@@ -125,7 +126,7 @@ class FSTestUnlink(common.UVTestCase):
         self.assertEqual(self.errorno, None)
 
 
-class FSTestMkdir(common.UVTestCase):
+class FSTestMkdir(unittest2.TestCase):
 
     def setUp(self):
         self.loop = pyuv.Loop.default_loop()
@@ -155,7 +156,7 @@ class FSTestMkdir(common.UVTestCase):
         self.assertTrue(os.path.isdir(TEST_DIR))
 
 
-class FSTestRmdir(common.UVTestCase):
+class FSTestRmdir(unittest2.TestCase):
 
     def setUp(self):
         self.loop = pyuv.Loop.default_loop()
@@ -184,7 +185,7 @@ class FSTestRmdir(common.UVTestCase):
         self.assertFalse(os.path.isdir(TEST_DIR))
 
 
-class FSTestRename(common.UVTestCase):
+class FSTestRename(unittest2.TestCase):
 
     def setUp(self):
         self.loop = pyuv.Loop.default_loop()
@@ -213,7 +214,7 @@ class FSTestRename(common.UVTestCase):
         self.assertTrue(os.path.exists(TEST_FILE2))
 
 
-class FSTestChmod(common.UVTestCase):
+class FSTestChmod(unittest2.TestCase):
 
     def setUp(self):
         self.loop = pyuv.Loop.default_loop()
@@ -235,7 +236,8 @@ class FSTestChmod(common.UVTestCase):
         self.assertTrue(bool(mode & stat.S_IRWXU) and bool(mode & stat.S_IRWXG) and bool(mode & stat.S_IRWXO))
 
 
-class FSTestFchmod(common.UVTestCase):
+@platform_skip(["win32"])
+class FSTestFchmod(unittest2.TestCase):
     __disabled__ = ['win32']
 
     def setUp(self):
@@ -259,7 +261,7 @@ class FSTestFchmod(common.UVTestCase):
         self.assertTrue(bool(mode & stat.S_IRWXU) and bool(mode & stat.S_IRWXG) and bool(mode & stat.S_IRWXO))
 
 
-class FSTestLink(common.UVTestCase):
+class FSTestLink(unittest2.TestCase):
 
     def setUp(self):
         self.loop = pyuv.Loop.default_loop()
@@ -281,7 +283,8 @@ class FSTestLink(common.UVTestCase):
         self.assertEqual(os.stat(TEST_FILE).st_ino, os.stat(TEST_LINK).st_ino)
 
 
-class FSTestSymlink(common.UVTestCase):
+@platform_skip(["win32"])
+class FSTestSymlink(unittest2.TestCase):
     __disabled__ = ['win32']
 
     def setUp(self):
@@ -307,7 +310,8 @@ class FSTestSymlink(common.UVTestCase):
         self.assertTrue(os.path.islink(TEST_LINK))
 
 
-class FSTestReadlink(common.UVTestCase):
+@platform_skip(["win32"])
+class FSTestReadlink(unittest2.TestCase):
     __disabled__ = ['win32']
 
     def setUp(self):
@@ -333,7 +337,7 @@ class FSTestReadlink(common.UVTestCase):
         self.assertEqual(self.link_path, TEST_FILE)
 
 
-class FSTestChown(common.UVTestCase):
+class FSTestChown(unittest2.TestCase):
 
     def setUp(self):
         self.loop = pyuv.Loop.default_loop()
@@ -353,7 +357,7 @@ class FSTestChown(common.UVTestCase):
         self.assertEqual(self.errorno, None)
 
 
-class FSTestFchown(common.UVTestCase):
+class FSTestFchown(unittest2.TestCase):
 
     def setUp(self):
         self.loop = pyuv.Loop.default_loop()
@@ -374,7 +378,7 @@ class FSTestFchown(common.UVTestCase):
         self.assertEqual(self.errorno, None)
 
 
-class FSTestOpen(common.UVTestCase):
+class FSTestOpen(unittest2.TestCase):
 
     def setUp(self):
         self.loop = pyuv.Loop.default_loop()
@@ -412,7 +416,8 @@ class FSTestOpen(common.UVTestCase):
         self.assertEqual(self.errorno, pyuv.errno.UV_ENOENT)
 
 
-class FSTestRead(common.UVTestCase):
+@platform_skip(["win32"])
+class FSTestRead(unittest2.TestCase):
     __disabled__ = ['win32']
 
     def setUp(self):
@@ -438,7 +443,8 @@ class FSTestRead(common.UVTestCase):
         self.assertEqual(self.data, 'test')
 
 
-class FSTestWrite(common.UVTestCase):
+@platform_skip(["win32"])
+class FSTestWrite(unittest2.TestCase):
     __disabled__ = ['win32']
 
     def setUp(self):
@@ -471,7 +477,9 @@ class FSTestWrite(common.UVTestCase):
         self.assertEqual(self.errorno, None)
         self.assertEqual(open(TEST_FILE, 'r').read(), "TES\x00T")
 
-class FSTestFsync(common.UVTestCase):
+
+@platform_skip(["win32"])
+class FSTestFsync(unittest2.TestCase):
     __disabled__ = ['win32']
 
     def setUp(self):
@@ -500,7 +508,8 @@ class FSTestFsync(common.UVTestCase):
         self.assertEqual(open(TEST_FILE, 'r').read(), "TEST")
 
 
-class FSTestFtruncate(common.UVTestCase):
+@platform_skip(["win32"])
+class FSTestFtruncate(unittest2.TestCase):
     __disabled__ = ['win32']
 
     def setUp(self):
@@ -531,7 +540,7 @@ class FSTestFtruncate(common.UVTestCase):
         self.assertEqual(open(TEST_FILE, 'r').read(), "")
 
 
-class FSTestReaddir(common.UVTestCase):
+class FSTestReaddir(unittest2.TestCase):
 
     def setUp(self):
         self.loop = pyuv.Loop.default_loop()
@@ -567,7 +576,8 @@ class FSTestReaddir(common.UVTestCase):
         self.assertTrue(TEST_DIR2 in self.files)
 
 
-class FSTestSendfile(common.UVTestCase):
+@platform_skip(["win32"])
+class FSTestSendfile(unittest2.TestCase):
     __disabled__ = ['win32']
 
     def setUp(self):
@@ -600,7 +610,8 @@ class FSTestSendfile(common.UVTestCase):
         self.assertEqual(open(TEST_FILE, 'r').read(), open(TEST_FILE2, 'r').read())
 
 
-class FSTestUtime(common.UVTestCase):
+@platform_skip(["win32"])
+class FSTestUtime(unittest2.TestCase):
     __disabled__ = ['win32']
 
     def setUp(self):
@@ -636,7 +647,8 @@ class FSTestUtime(common.UVTestCase):
         self.assertTrue(s.st_atime == atime and s.st_mtime == mtime)
 
 
-class FSEventTestBasic(common.UVTestCase):
+@platform_skip(["linux"])
+class FSEventTestBasic(unittest2.TestCase):
     __disabled__ = ["linux"]
 
     def setUp(self):
@@ -678,7 +690,7 @@ class FSEventTestBasic(common.UVTestCase):
         self.assertTrue(self.events & pyuv.fs.UV_RENAME)
 
 
-class FSEventTest(common.UVTestCase):
+class FSEventTest(unittest2.TestCase):
 
     def setUp(self):
         self.loop = pyuv.Loop.default_loop()
@@ -745,7 +757,5 @@ class FSEventTest(common.UVTestCase):
 
 
 if __name__ == '__main__':
-    import unittest
-    tests = unittest.TestSuite(common.suites)
-    unittest.TextTestRunner(verbosity=2).run(tests)
+    unittest2.main(verbosity=2)
 

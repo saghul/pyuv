@@ -1,9 +1,9 @@
 
-import common
+from common import unittest2
 import pyuv
 
 
-class TimerTest(common.UVTestCase):
+class TimerTest(unittest2.TestCase):
 
     def test_timer1(self):
         self.timer_cb_called = 0
@@ -61,7 +61,4 @@ class TimerTest(common.UVTestCase):
 
 
 if __name__ == '__main__':
-    import unittest
-    tests = unittest.TestSuite(common.suites)
-    unittest.TextTestRunner(verbosity=2).run(tests)
-
+    unittest2.main(verbosity=2)

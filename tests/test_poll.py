@@ -1,9 +1,9 @@
 
-import common
+from common import unittest2
 import pyuv
 
 
-class PollTest(common.UVTestCase):
+class PollTest(unittest2.TestCase):
 
     def test_poll1(self):
         self.cb_called = 0
@@ -19,7 +19,5 @@ class PollTest(common.UVTestCase):
 
 
 if __name__ == '__main__':
-    import unittest
-    tests = unittest.TestSuite(common.suites)
-    unittest.TextTestRunner(verbosity=2).run(tests)
+    unittest2.main(verbosity=2)
 

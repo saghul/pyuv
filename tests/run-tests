@@ -1,9 +1,0 @@
-#!/usr/bin/env python
-
-import common
-import unittest
-
-common.load_tests()
-alltests = unittest.TestSuite(common.suites)
-unittest.TextTestRunner(verbosity=2).run(alltests)
-

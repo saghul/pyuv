@@ -3,7 +3,7 @@ import sys
 
 import common
 import pyuv
-
+from common import unittest2, platform_skip
 
 if sys.platform == 'win32':
     TEST_PIPE = '\\\\.\\pipe\\test-pipe'
@@ -11,7 +11,7 @@ else:
     TEST_PIPE = 'test-pipe'
 BAD_PIPE = '/pipe/that/does/not/exist'
 
-class PipeErrorTest(common.UVTestCase):
+class PipeErrorTest(unittest2.TestCase):
 
     def on_client_connect_error(self, client_pipe, error):
         self.assertNotEqual(error, None)
@@ -24,7 +24,7 @@ class PipeErrorTest(common.UVTestCase):
         loop.run()
 
 
-class PipeTest(common.UVTestCase):
+class PipeTest(unittest2.TestCase):
 
     def setUp(self):
         self.loop = pyuv.Loop.default_loop()
@@ -66,7 +66,7 @@ class PipeTest(common.UVTestCase):
         self.loop.run()
 
 
-class PipeTestNull(common.UVTestCase):
+class PipeTestNull(unittest2.TestCase):
 
     def setUp(self):
         self.loop = pyuv.Loop.default_loop()
@@ -108,7 +108,8 @@ class PipeTestNull(common.UVTestCase):
         self.loop.run()
 
 
-class PipeTestList(common.UVTestCase):
+@platform_skip(["win32"])
+class PipeTestList(unittest2.TestCase):
     __disabled__ = ['win32']
 
     def setUp(self):
@@ -151,7 +152,8 @@ class PipeTestList(common.UVTestCase):
         self.loop.run()
 
 
-class PipeTestListNull(common.UVTestCase):
+@platform_skip(["win32"])
+class PipeTestListNull(unittest2.TestCase):
     __disabled__ = ['win32']
 
     def setUp(self):
@@ -194,7 +196,7 @@ class PipeTestListNull(common.UVTestCase):
         self.loop.run()
 
 
-class PipeShutdownTest(common.UVTestCase):
+class PipeShutdownTest(unittest2.TestCase):
 
     def setUp(self):
         self.loop = pyuv.Loop.default_loop()
@@ -247,7 +249,4 @@ class PipeShutdownTest(common.UVTestCase):
 
 
 if __name__ == '__main__':
-    import unittest
-    tests = unittest.TestSuite(common.suites)
-    unittest.TextTestRunner(verbosity=2).run(tests)
-
+    unittest2.main(verbosity=2)
