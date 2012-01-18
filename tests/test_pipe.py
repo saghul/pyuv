@@ -112,7 +112,6 @@ class PipeTestNull(unittest2.TestCase):
 
 @platform_skip(["win32"])
 class PipeTestList(unittest2.TestCase):
-    __disabled__ = ['win32']
 
     def setUp(self):
         self.loop = pyuv.Loop.default_loop()
@@ -156,7 +155,6 @@ class PipeTestList(unittest2.TestCase):
 
 @platform_skip(["win32"])
 class PipeTestListNull(unittest2.TestCase):
-    __disabled__ = ['win32']
 
     def setUp(self):
         self.loop = pyuv.Loop.default_loop()

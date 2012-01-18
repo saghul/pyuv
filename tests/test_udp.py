@@ -218,7 +218,6 @@ class UDPTestInvalidData(unittest2.TestCase):
 
 @platform_skip(["win32"])
 class UDPTestMulticast(unittest2.TestCase):
-    __disabled__ = ['win32']
 
     def setUp(self):
         self.loop = pyuv.Loop.default_loop()

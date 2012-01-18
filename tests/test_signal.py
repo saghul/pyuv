@@ -9,7 +9,6 @@ import pyuv
 
 @platform_skip(["win32"])
 class SignalTest(unittest2.TestCase):
-    __disabled__ = ['win32']
 
     def setUp(self):
         self.async_cb_called = 0

@@ -44,7 +44,6 @@ class FSTestStat(unittest2.TestCase):
 
 @platform_skip(["win32"])
 class FSTestLstat(unittest2.TestCase):
-    __disabled__ = ['win32']
 
     def setUp(self):
         self.loop = pyuv.Loop.default_loop()
@@ -73,7 +72,6 @@ class FSTestLstat(unittest2.TestCase):
 
 @platform_skip(["win32"])
 class FSTestFstat(unittest2.TestCase):
-    __disabled__ = ['win32']
 
     def setUp(self):
         self.loop = pyuv.Loop.default_loop()
@@ -238,7 +236,6 @@ class FSTestChmod(unittest2.TestCase):
 
 @platform_skip(["win32"])
 class FSTestFchmod(unittest2.TestCase):
-    __disabled__ = ['win32']
 
     def setUp(self):
         self.loop = pyuv.Loop.default_loop()
@@ -285,7 +282,6 @@ class FSTestLink(unittest2.TestCase):
 
 @platform_skip(["win32"])
 class FSTestSymlink(unittest2.TestCase):
-    __disabled__ = ['win32']
 
     def setUp(self):
         self.loop = pyuv.Loop.default_loop()
@@ -312,7 +308,6 @@ class FSTestSymlink(unittest2.TestCase):
 
 @platform_skip(["win32"])
 class FSTestReadlink(unittest2.TestCase):
-    __disabled__ = ['win32']
 
     def setUp(self):
         self.loop = pyuv.Loop.default_loop()
@@ -418,7 +413,6 @@ class FSTestOpen(unittest2.TestCase):
 
 @platform_skip(["win32"])
 class FSTestRead(unittest2.TestCase):
-    __disabled__ = ['win32']
 
     def setUp(self):
         self.loop = pyuv.Loop.default_loop()
@@ -445,7 +439,6 @@ class FSTestRead(unittest2.TestCase):
 
 @platform_skip(["win32"])
 class FSTestWrite(unittest2.TestCase):
-    __disabled__ = ['win32']
 
     def setUp(self):
         self.loop = pyuv.Loop.default_loop()
@@ -480,7 +473,6 @@ class FSTestWrite(unittest2.TestCase):
 
 @platform_skip(["win32"])
 class FSTestFsync(unittest2.TestCase):
-    __disabled__ = ['win32']
 
     def setUp(self):
         self.loop = pyuv.Loop.default_loop()
@@ -510,7 +502,6 @@ class FSTestFsync(unittest2.TestCase):
 
 @platform_skip(["win32"])
 class FSTestFtruncate(unittest2.TestCase):
-    __disabled__ = ['win32']
 
     def setUp(self):
         self.loop = pyuv.Loop.default_loop()
@@ -578,7 +569,6 @@ class FSTestReaddir(unittest2.TestCase):
 
 @platform_skip(["win32"])
 class FSTestSendfile(unittest2.TestCase):
-    __disabled__ = ['win32']
 
     def setUp(self):
         self.loop = pyuv.Loop.default_loop()
@@ -612,7 +602,6 @@ class FSTestSendfile(unittest2.TestCase):
 
 @platform_skip(["win32"])
 class FSTestUtime(unittest2.TestCase):
-    __disabled__ = ['win32']
 
     def setUp(self):
         self.loop = pyuv.Loop.default_loop()
@@ -649,7 +638,6 @@ class FSTestUtime(unittest2.TestCase):
 
 @platform_skip(["linux"])
 class FSEventTestBasic(unittest2.TestCase):
-    __disabled__ = ["linux"]
 
     def setUp(self):
         self.loop = pyuv.Loop.default_loop()

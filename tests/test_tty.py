@@ -7,7 +7,6 @@ import pyuv
 
 @platform_skip(["win32"])
 class TYTest(unittest2.TestCase):
-    __disabled__ = ['win32']
 
     def test_tty1(self):
         loop = pyuv.Loop.default_loop()
