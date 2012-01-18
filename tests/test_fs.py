@@ -6,6 +6,8 @@ import stat
 import common
 import pyuv
 
+from common import unittest2, is_linux, is_windows
+
 
 BAD_FILE = 'test_file_bad'
 TEST_FILE = 'test_file_1234'
@@ -42,6 +44,7 @@ class FSTestStat(common.UVTestCase):
         self.assertEqual(self.errorno, None)
 
 
+@unittest2.skipIf( is_windows, "Don't required Windows")
 class FSTestLstat(common.UVTestCase):
     __disabled__ = ['win32']
 
@@ -71,6 +74,7 @@ class FSTestLstat(common.UVTestCase):
         self.assertEqual(self.errorno, None)
 
 
+@unittest2.skipIf( is_windows, "Don't required Windows")
 class FSTestFstat(common.UVTestCase):
     __disabled__ = ['win32']
 
@@ -235,6 +239,7 @@ class FSTestChmod(common.UVTestCase):
         self.assertTrue(bool(mode & stat.S_IRWXU) and bool(mode & stat.S_IRWXG) and bool(mode & stat.S_IRWXO))
 
 
+@unittest2.skipIf( is_windows, "Don't required Windows")
 class FSTestFchmod(common.UVTestCase):
     __disabled__ = ['win32']
 
@@ -281,6 +286,7 @@ class FSTestLink(common.UVTestCase):
         self.assertEqual(os.stat(TEST_FILE).st_ino, os.stat(TEST_LINK).st_ino)
 
 
+@unittest2.skipIf( is_windows, "Don't required Windows")
 class FSTestSymlink(common.UVTestCase):
     __disabled__ = ['win32']
 
@@ -307,6 +313,7 @@ class FSTestSymlink(common.UVTestCase):
         self.assertTrue(os.path.islink(TEST_LINK))
 
 
+@unittest2.skipIf( is_windows, "Don't required Windows")
 class FSTestReadlink(common.UVTestCase):
     __disabled__ = ['win32']
 
@@ -412,6 +419,7 @@ class FSTestOpen(common.UVTestCase):
         self.assertEqual(self.errorno, pyuv.errno.UV_ENOENT)
 
 
+@unittest2.skipIf( is_windows, "Don't required Windows")
 class FSTestRead(common.UVTestCase):
     __disabled__ = ['win32']
 
@@ -438,6 +446,7 @@ class FSTestRead(common.UVTestCase):
         self.assertEqual(self.data, 'test')
 
 
+@unittest2.skipIf( is_windows, "Don't required Windows")
 class FSTestWrite(common.UVTestCase):
     __disabled__ = ['win32']
 
@@ -471,6 +480,8 @@ class FSTestWrite(common.UVTestCase):
         self.assertEqual(self.errorno, None)
         self.assertEqual(open(TEST_FILE, 'r').read(), "TES\x00T")
 
+
+@unittest2.skipIf( is_windows, "Don't required Windows")
 class FSTestFsync(common.UVTestCase):
     __disabled__ = ['win32']
 
@@ -500,6 +511,7 @@ class FSTestFsync(common.UVTestCase):
         self.assertEqual(open(TEST_FILE, 'r').read(), "TEST")
 
 
+@unittest2.skipIf( is_windows, "Don't required Windows")
 class FSTestFtruncate(common.UVTestCase):
     __disabled__ = ['win32']
 
@@ -567,6 +579,7 @@ class FSTestReaddir(common.UVTestCase):
         self.assertTrue(TEST_DIR2 in self.files)
 
 
+@unittest2.skipIf( is_windows, "Don't required Windows")
 class FSTestSendfile(common.UVTestCase):
     __disabled__ = ['win32']
 
@@ -600,6 +613,7 @@ class FSTestSendfile(common.UVTestCase):
         self.assertEqual(open(TEST_FILE, 'r').read(), open(TEST_FILE2, 'r').read())
 
 
+@unittest2.skipIf( is_windows, "Don't required Windows")
 class FSTestUtime(common.UVTestCase):
     __disabled__ = ['win32']
 
@@ -635,7 +649,7 @@ class FSTestUtime(common.UVTestCase):
         s = os.stat(TEST_FILE)
         self.assertTrue(s.st_atime == atime and s.st_mtime == mtime)
 
-
+@unittest2.skipIf( is_linux, "Don't required Linux")
 class FSEventTestBasic(common.UVTestCase):
     __disabled__ = ["linux"]
 

@@ -3,10 +3,16 @@ import sys
 
 import common
 import pyuv
-
+from common import unittest2
 
 TEST_PORT = 1234
 
+if sys.version_info > (3, 0):
+  EXECUTABLE = sys.executable.encode()
+else:
+  EXECUTABLE = sys.executable
+
+@unittest2.skipIf( common.is_windows, "Don't required Windows")
 class IPCTest(common.UVTestCase):
     __disabled__ = 'win32'
 
@@ -56,9 +62,9 @@ class IPCTest(common.UVTestCase):
         self.channel = pyuv.Pipe(self.loop, True)
         proc = pyuv.Process(self.loop)
         if sys.platform == 'win32':
-            proc.spawn(file="cmd.exe", args=[b"/c", b"proc_ipc.py", b"listen_before_write"], exit_callback=self.proc_exit_cb, stdin=self.channel)
+            proc.spawn(file="cmd.exe", args=[b"/c", EXECUTABLE+ b" proc_ipc.py", b"listen_before_write"], exit_callback=self.proc_exit_cb, stdin=self.channel)
         else:
-            proc.spawn(file="./proc_ipc.py", args=[b"listen_before_write"], exit_callback=self.proc_exit_cb, stdin=self.channel)
+            proc.spawn(file=sys.executable , args=[b"proc_ipc.py", b"listen_before_write"], exit_callback=self.proc_exit_cb, stdin=self.channel)
         self.channel.start_read2(self.on_channel_read)
         self.loop.run()
 
@@ -69,9 +75,9 @@ class IPCTest(common.UVTestCase):
         self.channel = pyuv.Pipe(self.loop, True)
         proc = pyuv.Process(self.loop)
         if sys.platform == 'win32':
-            proc.spawn(file="cmd.exe", args=[b"/c", b"proc_ipc.py", b"listen_after_write"], exit_callback=self.proc_exit_cb, stdin=self.channel)
+            proc.spawn(file="cmd.exe", args=[b"/c", EXECUTABLE+ b" proc_ipc.py", b"listen_after_write"], exit_callback=self.proc_exit_cb, stdin=self.channel)
         else:
-            proc.spawn(file="./proc_ipc.py", args=[b"listen_after_write"], exit_callback=self.proc_exit_cb, stdin=self.channel)
+            proc.spawn(file=sys.executable, args=[b"proc_ipc.py", b"listen_after_write"], exit_callback=self.proc_exit_cb, stdin=self.channel)
         self.channel.start_read2(self.on_channel_read)
         self.loop.run()
 

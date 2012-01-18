@@ -2,18 +2,27 @@
 import os
 import sys
 sys.path.insert(0, '../')
-import unittest
 
 
-loader = unittest.TestLoader()
-suites = []
-
-platform = 'linux' if sys.platform.startswith('linux') else sys.platform
+if sys.version_info < (2, 7) or (0x03000000 <= sys.hexversion < 0x03010000):
+    # py26 or py30
+    import unittest2
+else:
+    import unittest as unittest2
 
 if sys.version_info >= (3, 0):
     linesep = os.linesep.encode()
 else:
     linesep = os.linesep
+
+
+loader = unittest2.TestLoader()
+suites = []
+
+platform = 'linux' if sys.platform.startswith('linux') else sys.platform
+
+is_linux = True if sys.platform.startswith('linux') else False
+is_windows = True if sys.platform.startswith('win32') else False
 
 
 class TestCaseMeta(type):
@@ -24,7 +33,7 @@ class TestCaseMeta(type):
         if platform not in dic.get('__disabled__', []):
             suites.append(loader.loadTestsFromTestCase(cls))
 
-UVTestCase = TestCaseMeta('UVTestCase', (unittest.TestCase,), {})
+UVTestCase = TestCaseMeta('UVTestCase', (unittest2.TestCase,), {})
 
 
 def load_tests():

@@ -3,10 +3,11 @@ import os
 import signal
 import threading
 
+from common import unittest2
 import common
 import pyuv
 
-
+@unittest2.skipIf( common.is_windows, "Don't required Windows")
 class SignalTest(common.UVTestCase):
     __disabled__ = ['win32']
 
