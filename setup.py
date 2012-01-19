@@ -6,14 +6,15 @@ from setup_libuv import libuv_build_ext, libuv_sdist
 
 __version__ = "0.4.0dev"
 
-setup(name         = "pyuv",
-      version      = __version__,
-      author       = "Saúl Ibarra Corretgé",
-      author_email = "saghul@gmail.com",
-      url          = "http://github.com/saghul/pyuv",
-      description  = "Python interface for libuv",
-      platforms    = ["POSIX"],
-      classifiers  = [
+setup(name             = "pyuv",
+      version          = __version__,
+      author           = "Saúl Ibarra Corretgé",
+      author_email     = "saghul@gmail.com",
+      url              = "http://github.com/saghul/pyuv",
+      description      = "Python interface for libuv",
+      long_description = open("README").read(),
+      platforms        = ["POSIX", "Microsoft Windows"],
+      classifiers      = [
           "Development Status :: 4 - Beta",
           "Intended Audience :: Developers",
           "License :: OSI Approved :: MIT License",
