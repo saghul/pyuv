@@ -72,9 +72,10 @@ on_prepare_callback(uv_prepare_t *handle, int status)
 static PyObject *
 Prepare_func_start(Prepare *self, PyObject *args)
 {
-    int r = 0;
-    PyObject *tmp = NULL;
-    PyObject *callback;
+    int r;
+    PyObject *tmp, *callback;
+
+    tmp = NULL;
 
     if (!self->uv_handle) {
         PyErr_SetString(PyExc_PrepareError, "Prepare is closed");
@@ -168,10 +169,10 @@ Prepare_active_get(Prepare *self, void *closure)
 static int
 Prepare_tp_init(Prepare *self, PyObject *args, PyObject *kwargs)
 {
-    int r = 0;
+    int r;
+    uv_prepare_t *uv_prepare = NULL;
     Loop *loop;
     PyObject *tmp = NULL;
-    uv_prepare_t *uv_prepare = NULL;
 
     UNUSED_ARG(kwargs);
 

@@ -1013,11 +1013,11 @@ stat_func(PyObject *args, PyObject *kwargs, int type)
 {
     int r;
     char *path;
+    uv_fs_t *fs_req = NULL;
+    fs_req_data_t *req_data = NULL;
     Loop *loop;
     PyObject *callback;
     PyObject *data = Py_None;
-    uv_fs_t *fs_req = NULL;
-    fs_req_data_t *req_data = NULL;
 
     static char *kwlist[] = {"loop", "path", "callback", "data", NULL};
 
@@ -1096,13 +1096,12 @@ FS_func_lstat(PyObject *obj, PyObject *args, PyObject *kwargs)
 static PyObject *
 FS_func_fstat(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
-    int r;
-    int fd;
+    int r, fd;
+    uv_fs_t *fs_req = NULL;
+    fs_req_data_t *req_data = NULL;
     Loop *loop;
     PyObject *callback;
     PyObject *data = Py_None;
-    uv_fs_t *fs_req = NULL;
-    fs_req_data_t *req_data = NULL;
 
     static char *kwlist[] = {"loop", "fd", "callback", "data", NULL};
 
@@ -1165,11 +1164,11 @@ FS_func_unlink(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
     int r;
     char *path;
+    uv_fs_t *fs_req = NULL;
+    fs_req_data_t *req_data = NULL;
     Loop *loop;
     PyObject *callback;
     PyObject *data = Py_None;
-    uv_fs_t *fs_req = NULL;
-    fs_req_data_t *req_data = NULL;
 
     static char *kwlist[] = {"loop", "path", "callback", "data", NULL};
 
@@ -1230,14 +1229,13 @@ error:
 static PyObject *
 FS_func_mkdir(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
-    int r;
-    int mode;
+    int r, mode;
     char *path;
+    uv_fs_t *fs_req = NULL;
+    fs_req_data_t *req_data = NULL;
     Loop *loop;
     PyObject *callback;
     PyObject *data = Py_None;
-    uv_fs_t *fs_req = NULL;
-    fs_req_data_t *req_data = NULL;
 
     static char *kwlist[] = {"loop", "path", "mode", "callback", "data", NULL};
 
@@ -1300,11 +1298,11 @@ FS_func_rmdir(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
     int r;
     char *path;
+    uv_fs_t *fs_req = NULL;
+    fs_req_data_t *req_data = NULL;
     Loop *loop;
     PyObject *callback;
     PyObject *data = Py_None;
-    uv_fs_t *fs_req = NULL;
-    fs_req_data_t *req_data = NULL;
 
     static char *kwlist[] = {"loop", "path", "callback", "data", NULL};
 
@@ -1366,13 +1364,12 @@ static PyObject *
 FS_func_rename(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
     int r;
-    char *path;
-    char *new_path;
+    char *path, *new_path;
+    uv_fs_t *fs_req = NULL;
+    fs_req_data_t *req_data = NULL;
     Loop *loop;
     PyObject *callback;
     PyObject *data = Py_None;
-    uv_fs_t *fs_req = NULL;
-    fs_req_data_t *req_data = NULL;
 
     static char *kwlist[] = {"loop", "path", "new_path", "callback", "data", NULL};
 
@@ -1433,14 +1430,13 @@ error:
 static PyObject *
 FS_func_chmod(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
-    int r;
-    int mode;
+    int r, mode;
     char *path;
+    uv_fs_t *fs_req = NULL;
+    fs_req_data_t *req_data = NULL;
     Loop *loop;
     PyObject *callback;
     PyObject *data = Py_None;
-    uv_fs_t *fs_req = NULL;
-    fs_req_data_t *req_data = NULL;
 
     static char *kwlist[] = {"loop", "path", "mode", "callback", "data", NULL};
 
@@ -1501,14 +1497,12 @@ error:
 static PyObject *
 FS_func_fchmod(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
-    int r;
-    int mode;
-    int fd;
+    int r, mode, fd;
+    uv_fs_t *fs_req = NULL;
+    fs_req_data_t *req_data = NULL;
     Loop *loop;
     PyObject *callback;
     PyObject *data = Py_None;
-    uv_fs_t *fs_req = NULL;
-    fs_req_data_t *req_data = NULL;
 
     static char *kwlist[] = {"loop", "fd", "mode", "callback", "data", NULL};
 
@@ -1570,13 +1564,12 @@ static PyObject *
 FS_func_link(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
     int r;
-    char *path;
-    char *new_path;
+    char *path, *new_path;
+    uv_fs_t *fs_req = NULL;
+    fs_req_data_t *req_data = NULL;
     Loop *loop;
     PyObject *callback;
     PyObject *data = Py_None;
-    uv_fs_t *fs_req = NULL;
-    fs_req_data_t *req_data = NULL;
 
     static char *kwlist[] = {"loop", "path", "new_path", "callback", "data", NULL};
 
@@ -1637,15 +1630,13 @@ error:
 static PyObject *
 FS_func_symlink(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
-    int r;
-    int flags;
-    char *path;
-    char *new_path;
+    int r, flags;
+    char *path, *new_path;
+    uv_fs_t *fs_req = NULL;
+    fs_req_data_t *req_data = NULL;
     Loop *loop;
     PyObject *callback;
     PyObject *data = Py_None;
-    uv_fs_t *fs_req = NULL;
-    fs_req_data_t *req_data = NULL;
 
     static char *kwlist[] = {"loop", "path", "new_path", "flags", "callback", "data", NULL};
 
@@ -1708,11 +1699,11 @@ FS_func_readlink(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
     int r;
     char *path;
+    uv_fs_t *fs_req = NULL;
+    fs_req_data_t *req_data = NULL;
     Loop *loop;
     PyObject *callback;
     PyObject *data = Py_None;
-    uv_fs_t *fs_req = NULL;
-    fs_req_data_t *req_data = NULL;
 
     static char *kwlist[] = {"loop", "path", "callback", "data", NULL};
 
@@ -1773,15 +1764,13 @@ error:
 static PyObject *
 FS_func_chown(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
-    int r;
-    int uid;
-    int gid;
+    int r, uid, gid;
     char *path;
+    uv_fs_t *fs_req = NULL;
+    fs_req_data_t *req_data = NULL;
     Loop *loop;
     PyObject *callback;
     PyObject *data = Py_None;
-    uv_fs_t *fs_req = NULL;
-    fs_req_data_t *req_data = NULL;
 
     static char *kwlist[] = {"loop", "path", "uid", "gid", "callback", "data", NULL};
 
@@ -1842,15 +1831,12 @@ error:
 static PyObject *
 FS_func_fchown(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
-    int r;
-    int fd;
-    int uid;
-    int gid;
+    int r, fd, uid, gid;
+    uv_fs_t *fs_req = NULL;
+    fs_req_data_t *req_data = NULL;
     Loop *loop;
     PyObject *callback;
     PyObject *data = Py_None;
-    uv_fs_t *fs_req = NULL;
-    fs_req_data_t *req_data = NULL;
 
     static char *kwlist[] = {"loop", "fd", "uid", "gid", "callback", "data", NULL};
 
@@ -1911,15 +1897,13 @@ error:
 static PyObject *
 FS_func_open(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
-    int r;
-    int flags;
-    int mode;
+    int r, flags, mode;
     char *path;
+    uv_fs_t *fs_req = NULL;
+    fs_req_data_t *req_data = NULL;
     Loop *loop;
     PyObject *callback;
     PyObject *data = Py_None;
-    uv_fs_t *fs_req = NULL;
-    fs_req_data_t *req_data = NULL;
 
     static char *kwlist[] = {"loop", "path", "flags", "mode", "callback", "data", NULL};
 
@@ -1980,13 +1964,12 @@ error:
 static PyObject *
 FS_func_close(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
-    int r;
-    int fd;
+    int r, fd;
+    uv_fs_t *fs_req = NULL;
+    fs_req_data_t *req_data = NULL;
     Loop *loop;
     PyObject *callback;
     PyObject *data = Py_None;
-    uv_fs_t *fs_req = NULL;
-    fs_req_data_t *req_data = NULL;
 
     static char *kwlist[] = {"loop", "fd", "callback", "data", NULL};
 
@@ -2047,16 +2030,13 @@ error:
 static PyObject *
 FS_func_read(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
-    int r;
-    int fd;
-    int length;
-    int offset;
+    int r, fd, length, offset;
     char *buf_data = NULL;
+    uv_fs_t *fs_req = NULL;
+    fs_req_data_t *req_data = NULL;
     Loop *loop;
     PyObject *callback;
     PyObject *data = Py_None;
-    uv_fs_t *fs_req = NULL;
-    fs_req_data_t *req_data = NULL;
 
     static char *kwlist[] = {"loop", "fd", "length", "offset", "callback", "data", NULL};
 
@@ -2128,19 +2108,17 @@ error:
 static PyObject *
 FS_func_write(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
-    int r;
-    int fd;
-    int offset;
-    char *write_str = NULL;
-    int write_len;
-    char *buf_data = NULL;
+    int r, fd, offset, write_len;
+    char *write_str, *buf_data;
+    uv_fs_t *fs_req = NULL;
+    fs_req_data_t *req_data = NULL;
     Loop *loop;
     PyObject *callback;
     PyObject *data = Py_None;
-    uv_fs_t *fs_req = NULL;
-    fs_req_data_t *req_data = NULL;
 
     static char *kwlist[] = {"loop", "fd", "write_data", "offset", "callback", "data", NULL};
+
+    write_str = buf_data = NULL;
 
     UNUSED_ARG(obj);
 
@@ -2210,13 +2188,12 @@ error:
 static PyObject *
 FS_func_fsync(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
-    int r;
-    int fd;
+    int r, fd;
+    uv_fs_t *fs_req = NULL;
+    fs_req_data_t *req_data = NULL;
     Loop *loop;
     PyObject *callback;
     PyObject *data = Py_None;
-    uv_fs_t *fs_req = NULL;
-    fs_req_data_t *req_data = NULL;
 
     static char *kwlist[] = {"loop", "fd", "callback", "data", NULL};
 
@@ -2277,13 +2254,12 @@ error:
 static PyObject *
 FS_func_fdatasync(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
-    int r;
-    int fd;
+    int r, fd;
+    uv_fs_t *fs_req = NULL;
+    fs_req_data_t *req_data = NULL;
     Loop *loop;
     PyObject *callback;
     PyObject *data = Py_None;
-    uv_fs_t *fs_req = NULL;
-    fs_req_data_t *req_data = NULL;
 
     static char *kwlist[] = {"loop", "fd", "callback", "data", NULL};
 
@@ -2344,14 +2320,12 @@ error:
 static PyObject *
 FS_func_ftruncate(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
-    int r;
-    int fd;
-    int offset;
+    int r, fd, offset;
+    uv_fs_t *fs_req = NULL;
+    fs_req_data_t *req_data = NULL;
     Loop *loop;
     PyObject *callback;
     PyObject *data = Py_None;
-    uv_fs_t *fs_req = NULL;
-    fs_req_data_t *req_data = NULL;
 
     static char *kwlist[] = {"loop", "fd", "offset", "callback", "data", NULL};
 
@@ -2413,14 +2387,13 @@ error:
 static PyObject *
 FS_func_readdir(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
-    int r;
-    int flags;
+    int r, flags;
     char *path;
+    uv_fs_t *fs_req = NULL;
+    fs_req_data_t *req_data = NULL;
     Loop *loop;
     PyObject *callback;
     PyObject *data = Py_None;
-    uv_fs_t *fs_req = NULL;
-    fs_req_data_t *req_data = NULL;
 
     static char *kwlist[] = {"loop", "path", "flags", "callback", "data", NULL};
 
@@ -2481,13 +2454,12 @@ error:
 static PyObject *
 FS_func_sendfile(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
-    int r;
-    int out_fd, in_fd, in_offset, length;
+    int r, out_fd, in_fd, in_offset, length;
+    uv_fs_t *fs_req = NULL;
+    fs_req_data_t *req_data = NULL;
     Loop *loop;
     PyObject *callback;
     PyObject *data = Py_None;
-    uv_fs_t *fs_req = NULL;
-    fs_req_data_t *req_data = NULL;
 
     static char *kwlist[] = {"loop", "out_fd", "in_fd", "in_offset", "length", "callback", "data", NULL};
 
@@ -2551,11 +2523,11 @@ FS_func_utime(PyObject *obj, PyObject *args, PyObject *kwargs)
     int r;
     double atime, mtime;
     char *path;
+    uv_fs_t *fs_req = NULL;
+    fs_req_data_t *req_data = NULL;
     Loop *loop;
     PyObject *callback;
     PyObject *data = Py_None;
-    uv_fs_t *fs_req = NULL;
-    fs_req_data_t *req_data = NULL;
 
     static char *kwlist[] = {"loop", "path", "atime", "mtime", "callback", "data", NULL};
 
@@ -2616,14 +2588,13 @@ error:
 static PyObject *
 FS_func_futime(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
-    int r;
-    int fd;
+    int r, fd;
     double atime, mtime;
+    uv_fs_t *fs_req = NULL;
+    fs_req_data_t *req_data = NULL;
     Loop *loop;
     PyObject *callback;
     PyObject *data = Py_None;
-    uv_fs_t *fs_req = NULL;
-    fs_req_data_t *req_data = NULL;
 
     static char *kwlist[] = {"loop", "fd", "atime", "mtime", "callback", "data", NULL};
 
@@ -2805,14 +2776,14 @@ on_fsevent_callback(uv_fs_event_t *handle, const char *filename, int events, int
 static PyObject *
 FSEvent_func_start(FSEvent *self, PyObject *args, PyObject *kwargs)
 {
-    int r = 0;
-    int flags;
+    int r, flags;
     char *path;
-    PyObject *tmp = NULL;
-    PyObject *callback;
     uv_fs_event_t *fs_event = NULL;
+    PyObject *tmp, *callback;
 
     static char *kwlist[] = {"path", "callback", "flags", NULL};
+
+    tmp = NULL;
 
     if (self->uv_handle) {
         PyErr_SetString(PyExc_FSEventError, "FSEvent was already started");
@@ -2888,8 +2859,8 @@ FSEvent_func_close(FSEvent *self, PyObject *args)
 static int
 FSEvent_tp_init(FSEvent *self, PyObject *args, PyObject *kwargs)
 {
-    PyObject *tmp = NULL;
     Loop *loop;
+    PyObject *tmp = NULL;
 
     UNUSED_ARG(kwargs);
 

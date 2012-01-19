@@ -72,13 +72,13 @@ on_timer_callback(uv_timer_t *timer, int status)
 static PyObject *
 Timer_func_start(Timer *self, PyObject *args, PyObject *kwargs)
 {
-    int r = 0;
-    double timeout;
-    double repeat;
-    PyObject *tmp = NULL;
-    PyObject *callback;
+    int r;
+    double timeout, repeat;
+    PyObject *tmp, *callback;
 
     static char *kwlist[] = {"callback", "timeout", "repeat", NULL};
+
+    tmp = NULL;
 
     if (!self->uv_handle) {
         PyErr_SetString(PyExc_TimerError, "Timer is closed");
@@ -251,10 +251,10 @@ Timer_repeat_set(Timer *self, PyObject *value, void *closure)
 static int
 Timer_tp_init(Timer *self, PyObject *args, PyObject *kwargs)
 {
-    int r = 0;
+    int r;
+    uv_timer_t *uv_timer = NULL;
     Loop *loop;
     PyObject *tmp = NULL;
-    uv_timer_t *uv_timer = NULL;
 
     UNUSED_ARG(kwargs);
 

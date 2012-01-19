@@ -5,8 +5,7 @@ static PyObject* PyExc_TTYError;
 static PyObject *
 TTY_func_set_mode(TTY *self, PyObject *args)
 {
-    int r = 0;
-    int mode;
+    int r, mode;
 
     IOStream *base = (IOStream *)self;
 
@@ -60,8 +59,7 @@ TTY_func_isatty(PyObject *cls, PyObject *args)
 static PyObject *
 TTY_func_get_winsize(TTY *self)
 {
-    int r = 0;
-    int width, height;
+    int r, width, height;
 
     IOStream *base = (IOStream *)self;
 
@@ -83,11 +81,10 @@ TTY_func_get_winsize(TTY *self)
 static int
 TTY_tp_init(TTY *self, PyObject *args, PyObject *kwargs)
 {
-    int fd;
-    int r = 0;
+    int fd, r;
+    uv_tty_t *uv_stream;
     Loop *loop;
     PyObject *tmp = NULL;
-    uv_tty_t *uv_stream;
 
     IOStream *base = (IOStream *)self;
 

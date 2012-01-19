@@ -155,10 +155,10 @@ Signal_active_get(Signal *self, void *closure)
 static int
 Signal_tp_init(Signal *self, PyObject *args, PyObject *kwargs)
 {
-    int r = 0;
+    int r;
+    uv_prepare_t *uv_prepare = NULL;
     Loop *loop;
     PyObject *tmp = NULL;
-    uv_prepare_t *uv_prepare = NULL;
 
     UNUSED_ARG(kwargs);
 

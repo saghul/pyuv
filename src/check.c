@@ -72,9 +72,10 @@ on_check_callback(uv_check_t *handle, int status)
 static PyObject *
 Check_func_start(Check *self, PyObject *args)
 {
-    int r = 0;
-    PyObject *tmp = NULL;
-    PyObject *callback;
+    int r;
+    PyObject *tmp, *callback;
+
+    tmp = NULL;
 
     if (!self->uv_handle) {
         PyErr_SetString(PyExc_CheckError, "Check is closed");
@@ -168,7 +169,7 @@ Check_active_get(Check *self, void *closure)
 static int
 Check_tp_init(Check *self, PyObject *args, PyObject *kwargs)
 {
-    int r = 0;
+    int r;
     Loop *loop;
     PyObject *tmp = NULL;
     uv_check_t *uv_check = NULL;

@@ -16,15 +16,7 @@ host_cb(void *arg, int status, int timeouts, struct hostent *hostent)
     char **ptr;
     ares_cb_data_t *data;
     DNSResolver *self;
-    PyObject *callback;
-    PyObject *dns_name;
-    PyObject *dns_status;
-    PyObject *dns_timeouts;
-    PyObject *dns_aliases;
-    PyObject *dns_result;
-    PyObject *tmp;
-    PyObject *result;
-
+    PyObject *callback, *dns_name, *dns_status, *dns_timeouts, *dns_aliases, *dns_result, *tmp, *result;
 
     ASSERT(arg);
 
@@ -103,12 +95,7 @@ nameinfo_cb(void *arg, int status, int timeouts, char *node, char *service)
     PyGILState_STATE gstate = PyGILState_Ensure();
     ares_cb_data_t *data;
     DNSResolver *self;
-    PyObject *callback;
-    PyObject *dns_status;
-    PyObject *dns_timeouts;
-    PyObject *dns_node;
-    PyObject *dns_service;
-    PyObject *result;
+    PyObject *callback, *dns_status, *dns_timeouts, *dns_node, *dns_service, *result;
 
     ASSERT(arg);
 
@@ -201,12 +188,7 @@ getaddrinfo_cb(uv_getaddrinfo_t* handle, int status, struct addrinfo* res)
     struct addrinfo *ptr;
     ares_cb_data_t *data;
     DNSResolver *self;
-    PyObject *callback;
-    PyObject *addr;
-    PyObject *item;
-    PyObject *dns_status;
-    PyObject *dns_result;
-    PyObject *result;
+    PyObject *callback, *addr, *item, *dns_status, *dns_result, *result;
 
     ASSERT(handle);
 
@@ -270,10 +252,10 @@ getaddrinfo_end:
 static PyObject *
 DNSResolver_func_gethostbyname(DNSResolver *self, PyObject *args, PyObject *kwargs)
 {
-    PyObject *callback;
     char *name;
     int family = AF_INET;
     ares_cb_data_t *cb_data;
+    PyObject *callback;
 
     static char *kwlist[] = {"callback", "name", "family", NULL};
 
@@ -304,14 +286,13 @@ DNSResolver_func_gethostbyname(DNSResolver *self, PyObject *args, PyObject *kwar
 static PyObject *
 DNSResolver_func_gethostbyaddr(DNSResolver *self, PyObject *args, PyObject *kwargs)
 {
-    PyObject *callback;
     char *name;
-    ares_cb_data_t *cb_data;
+    int family, length;
+    void *address;
     struct in_addr addr4;
     struct in6_addr addr6;
-    int family;
-    int length;
-    void *address;
+    ares_cb_data_t *cb_data;
+    PyObject *callback;
 
     static char *kwlist[] = {"callback", "name", NULL};
 
@@ -355,19 +336,19 @@ DNSResolver_func_gethostbyaddr(DNSResolver *self, PyObject *args, PyObject *kwar
 static PyObject *
 DNSResolver_func_getnameinfo(DNSResolver *self, PyObject *args, PyObject *kwargs)
 {
-    PyObject *callback;
-    ares_cb_data_t *cb_data;
+    char *name;
+    int port, flags, length;
     struct in_addr addr4;
     struct in6_addr addr6;
     struct sockaddr *sa;
     struct sockaddr_in sa4;
     struct sockaddr_in6 sa6;
-    char *name;
-    int port = 0;
-    int flags = 0;
-    int length;
+    ares_cb_data_t *cb_data;
+    PyObject *callback;
 
     static char *kwlist[] = {"callback", "name", "port", "flags", NULL};
+
+    port = flags = 0;
 
     if (!PyArg_ParseTupleAndKeywords(args, kwargs, "Os|ii:getnameinfo", kwlist, &callback, &name, &port, &flags)) {
         return NULL;
@@ -413,10 +394,9 @@ DNSResolver_func_getnameinfo(DNSResolver *self, PyObject *args, PyObject *kwargs
 static PyObject *
 DNSResolver_func_getaddrinfo(DNSResolver *self, PyObject *args, PyObject *kwargs)
 {
-    int r;
     char *name;
     char port_str[6];
-    int port, family, socktype, protocol, flags;
+    int port, family, socktype, protocol, flags, r;
     struct addrinfo hints;
     ares_cb_data_t *cb_data = NULL;
     uv_getaddrinfo_t* handle = NULL;
@@ -488,15 +468,13 @@ error:
 static int
 set_dns_servers(DNSResolver *self, PyObject *value)
 {
-    struct ares_addr_node *servers;
     char *server;
-    int i;
-    int r;
-    int length;
-    int ret = 0;
-
+    int i, r, length, ret;
+    struct ares_addr_node *servers;
     PyObject *server_list = value;
     PyObject *item;
+
+    ret = 0;
 
     if (!PyList_Check(server_list)) {
         PyErr_SetString(PyExc_TypeError, "servers argument must be a list");
@@ -558,9 +536,7 @@ DNSResolver_servers_get(DNSResolver *self, void *closure)
 {
     int r;
     char ip[INET6_ADDRSTRLEN];
-    struct ares_addr_node *server;
-    struct ares_addr_node *servers;
-
+    struct ares_addr_node *server, *servers;
     PyObject *server_list;
     PyObject *tmp;
 
@@ -611,8 +587,7 @@ DNSResolver_servers_set(DNSResolver *self, PyObject *value, void *closure)
 static int
 DNSResolver_tp_init(DNSResolver *self, PyObject *args, PyObject *kwargs)
 {
-    int r;
-    int optmask;
+    int r, optmask;
     struct ares_options options;
     Loop *loop;
     PyObject *servers = NULL;

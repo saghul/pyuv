@@ -42,11 +42,10 @@ static void
 on_tcp_client_connection(uv_connect_t *req, int status)
 {
     PyGILState_STATE gstate = PyGILState_Ensure();
-    TCP *self;
-    PyObject *callback;
-    PyObject *result, *py_errorno;
     iostream_req_data_t* req_data;
+    TCP *self;
     IOStream *base;
+    PyObject *callback, *result, *py_errorno;
 
     ASSERT(req);
     req_data = (iostream_req_data_t *)req->data;
@@ -86,10 +85,8 @@ on_tcp_client_connection(uv_connect_t *req, int status)
 static PyObject *
 TCP_func_bind(TCP *self, PyObject *args)
 {
-    int r = 0;
+    int r, bind_port, address_type;
     char *bind_ip;
-    int bind_port;
-    int address_type;
     struct in_addr addr4;
     struct in6_addr addr6;
 
@@ -136,12 +133,13 @@ TCP_func_bind(TCP *self, PyObject *args)
 static PyObject *
 TCP_func_listen(TCP *self, PyObject *args)
 {
-    int r;
-    int backlog = 128;
-    PyObject *callback;
-    PyObject *tmp = NULL;
+    int r, backlog;
+    PyObject *callback, *tmp;
 
     IOStream *base = (IOStream *)self;
+
+    backlog = 128;
+    tmp = NULL;
 
     if (!base->uv_handle) {
         PyErr_SetString(PyExc_TCPError, "already closed");
@@ -180,7 +178,7 @@ TCP_func_listen(TCP *self, PyObject *args)
 static PyObject *
 TCP_func_accept(TCP *self, PyObject *args)
 {
-    int r = 0;
+    int r;
     PyObject *client;
 
     IOStream *base = (IOStream *)self;
@@ -212,16 +210,13 @@ TCP_func_accept(TCP *self, PyObject *args)
 static PyObject *
 TCP_func_connect(TCP *self, PyObject *args)
 {
-    int r;
+    int r, connect_port, address_type;
     char *connect_ip;
-    int connect_port;
-    int address_type;
     struct in_addr addr4;
     struct in6_addr addr6;
     uv_connect_t *connect_req = NULL;
     iostream_req_data_t *req_data = NULL;
-    PyObject *connect_address;
-    PyObject *callback;
+    PyObject *connect_address, *callback;
 
     IOStream *base = (IOStream *)self;
 
@@ -302,14 +297,15 @@ error:
 static PyObject *
 TCP_func_getsockname(TCP *self)
 {
-    int r;
+    int r, namelen;
+    char ip[INET6_ADDRSTRLEN];
     struct sockaddr sockname;
     struct sockaddr_in *addr4;
     struct sockaddr_in6 *addr6;
-    char ip[INET6_ADDRSTRLEN];
-    int namelen = sizeof(sockname);
 
     IOStream *base = (IOStream *)self;
+
+    namelen = sizeof(sockname);
 
     if (!base->uv_handle) {
         PyErr_SetString(PyExc_TCPError, "closed");
@@ -340,14 +336,15 @@ TCP_func_getsockname(TCP *self)
 static PyObject *
 TCP_func_getpeername(TCP *self)
 {
-    int r;
+    int r, namelen;
+    char ip[INET6_ADDRSTRLEN];
     struct sockaddr peername;
     struct sockaddr_in *addr4;
     struct sockaddr_in6 *addr6;
-    char ip[INET6_ADDRSTRLEN];
-    int namelen = sizeof(peername);
 
     IOStream *base = (IOStream *)self;
+
+    namelen = sizeof(peername);
 
     if (!base->uv_handle) {
         PyErr_SetString(PyExc_TCPError, "closed");
@@ -380,7 +377,7 @@ TCP_func_getpeername(TCP *self)
 static PyObject *
 TCP_func_nodelay(TCP *self, PyObject *args)
 {
-    int r = 0;
+    int r;
     PyObject *enable;
 
     IOStream *base = (IOStream *)self;
@@ -407,7 +404,7 @@ TCP_func_nodelay(TCP *self, PyObject *args)
 static PyObject *
 TCP_func_keepalive(TCP *self, PyObject *args)
 {
-    int r = 0;
+    int r;
     unsigned int delay;
     PyObject *enable;
 
@@ -444,7 +441,7 @@ TCP_func_simultaneous_accepts(TCP *self, PyObject *args)
     * accepting connections (which is why it is enabled by default).
     */
 
-    int r = 0;
+    int r;
     PyObject *enable;
 
     IOStream *base = (IOStream *)self;
@@ -471,10 +468,10 @@ TCP_func_simultaneous_accepts(TCP *self, PyObject *args)
 static int
 TCP_tp_init(TCP *self, PyObject *args, PyObject *kwargs)
 {
-    int r = 0;
+    int r;
+    uv_tcp_t *uv_stream;
     Loop *loop;
     PyObject *tmp = NULL;
-    uv_tcp_t *uv_stream;
 
     IOStream *base = (IOStream *)self;
 

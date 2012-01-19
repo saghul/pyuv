@@ -72,9 +72,10 @@ on_idle_callback(uv_idle_t *handle, int status)
 static PyObject *
 Idle_func_start(Idle *self, PyObject *args)
 {
-    int r = 0;
-    PyObject *tmp = NULL;
-    PyObject *callback;
+    int r;
+    PyObject *tmp, *callback;
+
+    tmp = NULL;
 
     if (!self->uv_handle) {
         PyErr_SetString(PyExc_IdleError, "Idle is closed");
@@ -168,10 +169,10 @@ Idle_active_get(Idle *self, void *closure)
 static int
 Idle_tp_init(Idle *self, PyObject *args, PyObject *kwargs)
 {
-    int r = 0;
+    int r;
+    uv_idle_t *uv_idle = NULL;
     Loop *loop;
     PyObject *tmp = NULL;
-    uv_idle_t *uv_idle = NULL;
 
     UNUSED_ARG(kwargs);
 

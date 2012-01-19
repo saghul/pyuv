@@ -82,32 +82,20 @@ on_process_dealloc_close(uv_handle_t *handle)
 static PyObject *
 Process_func_spawn(Process *self, PyObject *args, PyObject *kwargs)
 {
-    int r = 0;
-    char *cwd = NULL;
-    char *cwd2;
-    char *file;
-    char *file2;
-    char *arg_str;
-    char *tmp_str;
-    char *key_str;
-    char *value_str;
-    char **ptr = NULL;
-    char **process_args = NULL;
-    char **process_env = NULL;
+    int r;
+    char *cwd, *cwd2, *file, *file2, *arg_str, *tmp_str, *key_str, *value_str;
+    char **ptr, **process_args, **process_env;
     Py_ssize_t i, n, pos;
-    PyObject *key, *value;
-    PyObject *item;
-    PyObject *tmp = NULL;
-    PyObject *callback;
-    PyObject *arguments = NULL;
-    PyObject *env = NULL;
-    PyObject *stdin_pipe = Py_None;
-    PyObject *stdout_pipe = Py_None;
-    PyObject *stderr_pipe = Py_None;
+    PyObject *key, *value, *item, *tmp, *callback, *arguments, *env, *stdin_pipe, *stdout_pipe, *stderr_pipe;
     uv_process_t *uv_process;
     uv_process_options_t options;
 
     static char *kwlist[] = {"file", "exit_callback", "args", "env", "cwd", "stdin", "stdout", "stderr", NULL};
+
+    cwd = NULL;
+    ptr = process_args = process_env = NULL;
+    tmp = arguments = env = NULL;
+    stdin_pipe = stdout_pipe = stderr_pipe = Py_None;
 
     if (self->uv_handle) {
         PyErr_SetString(PyExc_ProcessError, "Process already spawned");
@@ -283,8 +271,7 @@ error:
 static PyObject *
 Process_func_kill(Process *self, PyObject *args)
 {
-    int signum;
-    int r = 0;
+    int signum, r;
 
     if (!self->uv_handle) {
         PyErr_SetString(PyExc_ProcessError, "Process wasn't spawned yet");
@@ -352,12 +339,10 @@ Process_pid_get(Process *self, void *closure)
 static int
 Process_tp_init(Process *self, PyObject *args, PyObject *kwargs)
 {
-    PyObject *tmp;
+    PyObject *tmp = NULL;
     Loop *loop;
 
     UNUSED_ARG(kwargs);
-
-    tmp = NULL;
 
     if (self->uv_handle) {
         PyErr_SetString(PyExc_ProcessError, "Object already initialized");

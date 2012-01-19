@@ -43,9 +43,8 @@ on_pipe_client_connection(uv_connect_t *req, int status)
     PyGILState_STATE gstate = PyGILState_Ensure();
     iostream_req_data_t* req_data;
     Pipe *self;
-    PyObject *callback;
-    PyObject *result, *py_errorno;
     IOStream *base;
+    PyObject *callback, *result, *py_errorno;
     ASSERT(req);
 
     req_data = (iostream_req_data_t *)req->data;
@@ -85,9 +84,9 @@ static void
 on_pipe_read2(uv_pipe_t* handle, int nread, uv_buf_t buf, uv_handle_type pending)
 {
     PyGILState_STATE gstate = PyGILState_Ensure();
+    uv_err_t err;
     IOStream *self;
     PyObject *result, *data, *py_errorno, *py_pending;
-    uv_err_t err;
     ASSERT(handle);
 
     self = (IOStream *)handle->data;
@@ -124,7 +123,7 @@ on_pipe_read2(uv_pipe_t* handle, int nread, uv_buf_t buf, uv_handle_type pending
 static PyObject *
 Pipe_func_bind(Pipe *self, PyObject *args)
 {
-    int r = 0;
+    int r;
     char *name;
 
     IOStream *base = (IOStream *)self;
@@ -151,12 +150,13 @@ Pipe_func_bind(Pipe *self, PyObject *args)
 static PyObject *
 Pipe_func_listen(Pipe *self, PyObject *args)
 {
-    int r;
-    int backlog = 128;
-    PyObject *callback;
-    PyObject *tmp = NULL;
+    int r, backlog;
+    PyObject *callback, *tmp;
 
     IOStream *base = (IOStream *)self;
+
+    backlog = 128;
+    tmp = NULL;
 
     if (!base->uv_handle) {
         PyErr_SetString(PyExc_PipeError, "already closed");
@@ -195,7 +195,7 @@ Pipe_func_listen(Pipe *self, PyObject *args)
 static PyObject *
 Pipe_func_accept(TCP *self, PyObject *args)
 {
-    int r = 0;
+    int r;
     PyObject *client;
 
     IOStream *base = (IOStream *)self;
@@ -329,11 +329,12 @@ Pipe_func_pending_instances(Pipe *self, PyObject *args)
 static PyObject *
 Pipe_func_start_read2(Pipe *self, PyObject *args)
 {
-    int r = 0;
-    PyObject *tmp = NULL;
-    PyObject *callback;
+    int r;
+    PyObject *tmp, *callback;
 
     IOStream *base = (IOStream *)self;
+
+    tmp = NULL;
 
     if (!base->uv_handle) {
         PyErr_SetString(PyExc_PipeError, "Pipe is closed");
@@ -367,15 +368,11 @@ Pipe_func_start_read2(Pipe *self, PyObject *args)
 static PyObject *
 Pipe_func_write2(Pipe *self, PyObject *args)
 {
-    int i, n;
-    int r = 0;
-    int buf_count = 0;
+    int i, n, r, buf_count;
     char *data_str;
     char *tmp;
     Py_ssize_t data_len;
-    PyObject *item;
-    PyObject *data;
-    PyObject *callback = Py_None;
+    PyObject *item, *data, *callback;
     TCP *send_handle;
     uv_buf_t tmpbuf;
     uv_buf_t *bufs = NULL;
@@ -384,6 +381,9 @@ Pipe_func_write2(Pipe *self, PyObject *args)
     iostream_write_data_t *write_data = NULL;
 
     IOStream *base = (IOStream *)self;
+
+    buf_count = 0;
+    callback = Py_None;
 
     if (!base->uv_handle) {
         PyErr_SetString(PyExc_PipeError, "Pipe is closed");
@@ -508,11 +508,11 @@ error:
 static int
 Pipe_tp_init(Pipe *self, PyObject *args, PyObject *kwargs)
 {
-    int r = 0;
+    int r;
+    uv_pipe_t *uv_stream;
     Loop *loop;
     PyObject *tmp = NULL;
     PyObject *ipc = Py_False;
-    uv_pipe_t *uv_stream;
 
     IOStream *base = (IOStream *)self;
 

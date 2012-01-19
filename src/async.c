@@ -72,9 +72,10 @@ on_async_callback(uv_async_t *async, int status)
 static PyObject *
 Async_func_send(Async *self, PyObject *args)
 {
-    int r = 0;
-    PyObject *tmp = NULL;
-    PyObject *callback;
+    int r;
+    PyObject *tmp, *callback;
+
+    tmp = NULL;
 
     if (!self->uv_handle) {
         PyErr_SetString(PyExc_AsyncError, "async is closed");
@@ -140,10 +141,10 @@ Async_func_close(Async *self, PyObject *args)
 static int
 Async_tp_init(Async *self, PyObject *args, PyObject *kwargs)
 {
-    int r = 0;
+    int r;
+    uv_async_t *uv_async = NULL;
     Loop *loop;
     PyObject *tmp = NULL;
-    uv_async_t *uv_async = NULL;
 
     UNUSED_ARG(kwargs);
 

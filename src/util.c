@@ -110,14 +110,11 @@ Util_func_resident_set_memory(PyObject *obj)
 static PyObject *
 Util_func_interface_addresses(PyObject *obj)
 {
-    int i;
-    int count;
+    int i, count;
     char ip[INET6_ADDRSTRLEN];
     uv_interface_address_t* interfaces;
     uv_err_t err;
-    PyObject *result;
-    PyObject *item;
-    PyObject *exc_data;
+    PyObject *result, *item, *exc_data;
 
     UNUSED_ARG(obj);
 
@@ -174,14 +171,10 @@ set_cpu_info_time_val(PyObject *dict, char *key, uint64_t v)
 static PyObject *
 Util_func_cpu_info(PyObject *obj)
 {
-    int i;
-    int count;
+    int i, count;
     uv_cpu_info_t* cpus;
     uv_err_t err;
-    PyObject *result;
-    PyObject *item;
-    PyObject *times;
-    PyObject *exc_data;
+    PyObject *result, *item, *times, *exc_data;
 
     UNUSED_ARG(obj);
 

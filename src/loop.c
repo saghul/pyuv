@@ -134,8 +134,8 @@ static PyObject *
 Loop_counters_get(Loop *self, void *closure)
 {
     /* TODO: use a named tuple here */
-    PyObject *counters;
     uv_counters_t* uv_counters;
+    PyObject *counters;
 
     UNUSED_ARG(closure);
     uv_counters = &self->uv_loop->counters;

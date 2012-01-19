@@ -135,8 +135,7 @@ on_udp_send(uv_udp_send_t* req, int status)
     udp_req_data_t* req_data;
     udp_send_data_t* send_data;
     UDP *self;
-    PyObject *callback;
-    PyObject *result, *py_errorno;
+    PyObject *callback, *result, *py_errorno;
 
     ASSERT(req);
 
@@ -181,10 +180,8 @@ on_udp_send(uv_udp_send_t* req, int status)
 static PyObject *
 UDP_func_bind(UDP *self, PyObject *args)
 {
-    int r = 0;
+    int r, bind_port, address_type;
     char *bind_ip;
-    int bind_port;
-    int address_type;
     struct in_addr addr4;
     struct in6_addr addr6;
 
@@ -229,9 +226,10 @@ UDP_func_bind(UDP *self, PyObject *args)
 static PyObject *
 UDP_func_start_recv(UDP *self, PyObject *args)
 {
-    int r = 0;
-    PyObject *tmp = NULL;
-    PyObject *callback;
+    int r;
+    PyObject *tmp, *callback;
+
+    tmp = NULL;
 
     if (!self->uv_handle) {
         PyErr_SetString(PyExc_UDPError, "closed");
@@ -265,7 +263,7 @@ UDP_func_start_recv(UDP *self, PyObject *args)
 static PyObject *
 UDP_func_stop_recv(UDP *self)
 {
-    int r = 0;
+    int r;
 
     if (!self->uv_handle) {
         PyErr_SetString(PyExc_UDPError, "closed");
@@ -284,15 +282,8 @@ UDP_func_stop_recv(UDP *self)
 static PyObject *
 UDP_func_send(UDP *self, PyObject *args)
 {
-    int i, n;
-    int r = 0;
-    int buf_count = 0;
-    char *data_str;
-    char *tmp;
-    Py_ssize_t data_len;
-    char *dest_ip;
-    int dest_port;
-    int address_type;
+    int i, n, r, buf_count, dest_port, address_type;
+    char *data_str, *tmp, *dest_ip;
     struct in_addr addr4;
     struct in6_addr addr6;
     uv_buf_t tmpbuf;
@@ -300,10 +291,11 @@ UDP_func_send(UDP *self, PyObject *args)
     uv_udp_send_t *wr = NULL;
     udp_req_data_t *req_data = NULL;
     udp_send_data_t *send_data = NULL;
-    PyObject *item;
-    PyObject *data;
-    PyObject *address_tuple;
-    PyObject *callback = Py_None;
+    Py_ssize_t data_len;
+    PyObject *item, *data, *address_tuple, *callback;
+
+    buf_count = 0;
+    callback = Py_None;
 
     if (!self->uv_handle) {
         PyErr_SetString(PyExc_UDPError, "closed");
@@ -443,10 +435,10 @@ error:
 static PyObject *
 UDP_func_set_membership(UDP *self, PyObject *args)
 {
-    int r = 0;
-    char *multicast_address;
-    char *interface_address = NULL;
-    int membership;
+    int r, membership;
+    char *multicast_address, *interface_address;
+
+    interface_address = NULL;
 
     if (!self->uv_handle) {
         PyErr_SetString(PyExc_UDPError, "closed");
@@ -502,12 +494,13 @@ UDP_func_close(UDP *self, PyObject *args)
 static PyObject *
 UDP_func_getsockname(UDP *self)
 {
-    int r = 0;
+    int r, namelen;
+    char ip[INET6_ADDRSTRLEN];
     struct sockaddr sockname;
     struct sockaddr_in *addr4;
     struct sockaddr_in6 *addr6;
-    char ip[INET6_ADDRSTRLEN];
-    int namelen = sizeof(sockname);
+
+    namelen = sizeof(sockname);
 
     if (!self->uv_handle) {
         PyErr_SetString(PyExc_UDPError, "closed");
@@ -538,10 +531,10 @@ UDP_func_getsockname(UDP *self)
 static int
 UDP_tp_init(UDP *self, PyObject *args, PyObject *kwargs)
 {
-    int r = 0;
+    int r;
+    uv_udp_t *uv_udp_handle = NULL;
     Loop *loop;
     PyObject *tmp = NULL;
-    uv_udp_t *uv_udp_handle = NULL;
 
     UNUSED_ARG(kwargs);
 

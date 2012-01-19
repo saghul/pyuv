@@ -75,8 +75,7 @@ on_iostream_shutdown(uv_shutdown_t* req, int status)
     iostream_req_data_t* req_data;
     uv_err_t err;
     IOStream *self;
-    PyObject *callback;
-    PyObject *result, *py_errorno;
+    PyObject *callback, *result, *py_errorno;
 
     req_data = (iostream_req_data_t *)req->data;
     self = (IOStream *)req_data->obj;
@@ -114,9 +113,9 @@ static void
 on_iostream_read(uv_stream_t* handle, int nread, uv_buf_t buf)
 {
     PyGILState_STATE gstate = PyGILState_Ensure();
+    uv_err_t err;
     IOStream *self;
     PyObject *result, *data, *py_errorno;
-    uv_err_t err;
     ASSERT(handle);
 
     self = (IOStream *)handle->data;
@@ -156,8 +155,7 @@ on_iostream_write(uv_write_t* req, int status)
     iostream_req_data_t* req_data;
     iostream_write_data_t* write_data;
     IOStream *self;
-    PyObject *callback;
-    PyObject *result, *py_errorno;
+    PyObject *callback, *result, *py_errorno;
     uv_err_t err;
 
     ASSERT(req);
@@ -235,10 +233,10 @@ IOStream_func_close(IOStream *self, PyObject *args)
 static PyObject *
 IOStream_func_shutdown(IOStream *self, PyObject *args)
 {
-    int r = 0;
-    PyObject *callback = Py_None;
+    int r;
     uv_shutdown_t *req = NULL;
     iostream_req_data_t *req_data = NULL;
+    PyObject *callback = Py_None;
 
     if (!self->uv_handle) {
         PyErr_SetString(PyExc_IOStreamError, "IOStream is already closed");
@@ -289,9 +287,10 @@ error:
 static PyObject *
 IOStream_func_start_read(IOStream *self, PyObject *args)
 {
-    int r = 0;
-    PyObject *tmp = NULL;
-    PyObject *callback;
+    int r;
+    PyObject *tmp, *callback;
+
+    tmp = NULL;
 
     if (!self->uv_handle) {
         PyErr_SetString(PyExc_IOStreamError, "IOStream is closed");
@@ -345,20 +344,18 @@ IOStream_func_stop_read(IOStream *self)
 static PyObject *
 IOStream_func_write(IOStream *self, PyObject *args)
 {
-    int i, n;
-    int r = 0;
-    int buf_count = 0;
-    char *data_str;
-    char *tmp;
+    int i, n, r, buf_count;
+    char *data_str, *tmp;
     Py_ssize_t data_len;
-    PyObject *item;
-    PyObject *data;
-    PyObject *callback = Py_None;
+    PyObject *item, *data, *callback;
     uv_buf_t tmpbuf;
     uv_buf_t *bufs = NULL;
     uv_write_t *wr = NULL;
     iostream_req_data_t *req_data = NULL;
     iostream_write_data_t *write_data = NULL;
+
+    buf_count = 0;
+    callback = Py_None;
 
     if (!self->uv_handle) {
         PyErr_SetString(PyExc_IOStreamError, "IOStream is closed");

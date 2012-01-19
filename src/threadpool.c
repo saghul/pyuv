@@ -14,9 +14,7 @@ work_cb(uv_work_t *req)
 {
     PyGILState_STATE gstate = PyGILState_Ensure();
     tpool_req_data_t *data;
-    PyObject *args;
-    PyObject *kw;
-    PyObject *result;
+    PyObject *args, *kw, *result;
 
     ASSERT(req);
 
@@ -58,16 +56,12 @@ after_work_cb(uv_work_t *req)
 static PyObject *
 ThreadPool_func_run(PyObject *cls, PyObject *args)
 {
-    int r = 0;
-    uv_work_t *work_req;
-    tpool_req_data_t *req_data;
+    int r;
+    uv_work_t *work_req = NULL;
+    tpool_req_data_t *req_data = NULL;
     Loop *loop;
-    PyObject *func;
-    PyObject *func_args;
-    PyObject *func_kwargs;
+    PyObject *func, *func_args, *func_kwargs;
 
-    work_req = NULL;
-    req_data = NULL;
     func = func_args = func_kwargs = NULL;
 
     UNUSED_ARG(cls);
