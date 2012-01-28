@@ -4,48 +4,24 @@ static PyObject* PyExc_UVError;
 static PyObject *
 Util_func_hrtime(PyObject *obj)
 {
-    PyObject *val;
-
     UNUSED_ARG(obj);
-
-#if SIZEOF_TIME_T > SIZEOF_LONG
-    val = PyLong_FromLongLong((PY_LONG_LONG)uv_hrtime());
-#else
-    val = PyInt_FromLong((long)uv_hrtime());
-#endif
-    return val;
+    return PyLong_FromUnsignedLongLong((unsigned PY_LONG_LONG)uv_hrtime());
 }
 
 
 static PyObject *
 Util_func_get_free_memory(PyObject *obj)
 {
-    PyObject *val;
-
     UNUSED_ARG(obj);
-
-#if SIZEOF_TIME_T > SIZEOF_LONG
-    val = PyLong_FromLongLong((PY_LONG_LONG)uv_get_free_memory());
-#else
-    val = PyInt_FromLong((long)uv_get_free_memory());
-#endif
-    return val;
+    return PyLong_FromUnsignedLongLong((unsigned PY_LONG_LONG)uv_get_free_memory());
 }
 
 
 static PyObject *
 Util_func_get_total_memory(PyObject *obj)
 {
-    PyObject *val;
-
     UNUSED_ARG(obj);
-
-#if SIZEOF_TIME_T > SIZEOF_LONG
-    val = PyLong_FromLongLong((PY_LONG_LONG)uv_get_total_memory());
-#else
-    val = PyInt_FromLong((long)uv_get_total_memory());
-#endif
-    return val;
+    return PyLong_FromUnsignedLongLong((unsigned PY_LONG_LONG)uv_get_total_memory());
 }
 
 
@@ -156,18 +132,6 @@ Util_func_interface_addresses(PyObject *obj)
 }
 
 
-static void
-set_cpu_info_time_val(PyObject *dict, char *key, uint64_t v)
-{
-    PyObject *val;
-#if SIZEOF_TIME_T > SIZEOF_LONG
-    val = PyLong_FromLongLong((PY_LONG_LONG)v);
-#else
-    val = PyInt_FromLong((long)v);
-#endif
-    PyDict_SetItemString(dict, key, val);
-}
-
 static PyObject *
 Util_func_cpu_info(PyObject *obj)
 {
@@ -197,11 +161,11 @@ Util_func_cpu_info(PyObject *obj)
             if (PyList_Append(result, item))
                 continue;
             Py_DECREF(item);
-            set_cpu_info_time_val(times, "sys", cpus[i].cpu_times.sys);
-            set_cpu_info_time_val(times, "user", cpus[i].cpu_times.user);
-            set_cpu_info_time_val(times, "idle", cpus[i].cpu_times.idle);
-            set_cpu_info_time_val(times, "irq", cpus[i].cpu_times.irq);
-            set_cpu_info_time_val(times, "nice", cpus[i].cpu_times.nice);
+            PyDict_SetItemString(times, "sys", PyLong_FromUnsignedLongLong((unsigned PY_LONG_LONG)cpus[i].cpu_times.sys));
+            PyDict_SetItemString(times, "user", PyLong_FromUnsignedLongLong((unsigned PY_LONG_LONG)cpus[i].cpu_times.user));
+            PyDict_SetItemString(times, "idle", PyLong_FromUnsignedLongLong((unsigned PY_LONG_LONG)cpus[i].cpu_times.idle));
+            PyDict_SetItemString(times, "irq", PyLong_FromUnsignedLongLong((unsigned PY_LONG_LONG)cpus[i].cpu_times.irq));
+            PyDict_SetItemString(times, "nice", PyLong_FromUnsignedLongLong((unsigned PY_LONG_LONG)cpus[i].cpu_times.nice));
         }
         uv_free_cpu_info(cpus, count);
         return result;
