@@ -1,3 +1,14 @@
+Version 0.5.0
+=============
+ - Added support for asynchronous DNS queries of tyes: A, AAAA, CNAME,
+   TXT, NS, MX, SRV
+ - Added synchronous API for filesystem (fs module) operations
+ - Added set_multicast_ttl, set_broadcast, set_multicast_loop and set_ttl
+   functions to UDP handle
+ - Removed data attribute from fs module functions
+ - Raised libuv revision to 3de0411
+
+
 Version 0.4.0
 =============
  - Added support for Python 3.X
