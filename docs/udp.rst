@@ -72,6 +72,30 @@
 
         Join or leave a multicast group.
 
+    .. py:method:: set_multicast_ttl(ttl)
+
+        :param int ttl: TTL value to be set.
+
+        Set the multicast Time To Live (TTL).
+
+    .. py:method:: set_multicast_loop(enable)
+
+        :param boolean enable: On /off.
+
+        Set IP multicast loop flag. Makes multicast packets loop back to local sockets.
+
+    .. py:method:: set_broadcast(enable)
+
+        :param boolean enable: On /off.
+
+        Set broadcast on or off.
+
+    .. py:method:: set_ttl(ttl)
+
+        :param int ttl: TTL value to be set.
+
+        Set the Time To Live (TTL).
+
     .. py:attribute:: loop
 
         *Read only*

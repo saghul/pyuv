@@ -81,6 +81,83 @@
         Callback signature: ``callback(resolver, status, result)``
 
 
+    .. py:method:: query_a(name, callback)
+
+        :param string name: Name to query.
+
+        :param callable callback: Callback to be called with the result of the query.
+        
+        DNS type A query.
+
+        Callback signature: ``callback(resolver, status, result)``
+
+
+    .. py:method:: query_aaaa(name, callback)
+
+        :param string name: Name to query.
+
+        :param callable callback: Callback to be called with the result of the query.
+        
+        DNS type AAAA query.
+
+        Callback signature: ``callback(resolver, status, result)``
+
+
+    .. py:method:: query_cname(name, callback)
+
+        :param string name: Name to query.
+
+        :param callable callback: Callback to be called with the result of the query.
+        
+        DNS type CNAME query.
+
+        Callback signature: ``callback(resolver, status, result)``
+
+
+    .. py:method:: query_mx(name, callback)
+
+        :param string name: Name to query.
+
+        :param callable callback: Callback to be called with the result of the query.
+        
+        DNS type MX query.
+
+        Callback signature: ``callback(resolver, status, result)``
+
+
+    .. py:method:: query_ns(name, callback)
+
+        :param string name: Name to query.
+
+        :param callable callback: Callback to be called with the result of the query.
+        
+        DNS type NS query.
+
+        Callback signature: ``callback(resolver, status, result)``
+
+
+    .. py:method:: query_txt(name, callback)
+
+        :param string name: Name to query.
+
+        :param callable callback: Callback to be called with the result of the query.
+        
+        DNS type TXT query.
+
+        Callback signature: ``callback(resolver, status, result)``
+
+
+    .. py:method:: query_srv(name, callback)
+
+        :param string name: Name to query.
+
+        :param callable callback: Callback to be called with the result of the query.
+        
+        DNS type SRV query.
+
+        Callback signature: ``callback(resolver, status, result)``
+
+
     .. py:attribute:: loop
 
         *Read only*
