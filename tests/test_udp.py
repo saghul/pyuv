@@ -43,6 +43,7 @@ class UDPTest(unittest2.TestCase):
         self.server = pyuv.UDP(self.loop)
         self.server.bind(("0.0.0.0", TEST_PORT))
         self.server.set_broadcast(True) # for coverage
+        self.server.set_ttl(10) # for coverage
         self.server.start_recv(self.on_server_recv)
         self.client = pyuv.UDP(self.loop)
         self.client.bind(("0.0.0.0", TEST_PORT2))
@@ -249,6 +250,18 @@ class UDPTestMulticast(unittest2.TestCase):
         self.server.send(b"PING", (MULTICAST_ADDRESS, TEST_PORT), self.on_server_send)
         self.loop.run()
         self.assertEqual(self.on_close_called, 2)
+        self.assertEquals(self.received_data, b"PING")
+
+    def test_udp_multicast_loop(self):
+        self.on_close_called = 0
+        self.client = pyuv.UDP(self.loop)
+        self.client.bind((MULTICAST_ADDRESS, TEST_PORT))
+        self.client.set_membership(MULTICAST_ADDRESS, pyuv.UV_JOIN_GROUP)
+        self.client.set_multicast_loop(True)
+        self.client.start_recv(self.on_client_recv)
+        self.client.send(b"PING", (MULTICAST_ADDRESS, TEST_PORT))
+        self.loop.run()
+        self.assertEqual(self.on_close_called, 1)
         self.assertEquals(self.received_data, b"PING")
 
 

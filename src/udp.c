@@ -582,6 +582,60 @@ UDP_func_set_broadcast(UDP *self, PyObject *args)
 }
 
 
+static PyObject *
+UDP_func_set_multicast_loop(UDP *self, PyObject *args)
+{
+    int r;
+    PyObject *enable;
+
+    if (!self->uv_handle) {
+        PyErr_SetString(PyExc_UDPError, "already closed");
+        return NULL;
+    }
+
+    if (!PyArg_ParseTuple(args, "O!:set_multicast_loop", &PyBool_Type, &enable)) {
+        return NULL;
+    }
+
+    r = uv_udp_set_multicast_loop(self->uv_handle, (enable == Py_True) ? 1 : 0);
+    if (r != 0) {
+        raise_uv_exception(self->loop, PyExc_UDPError);
+        return NULL;
+    }
+
+    Py_RETURN_NONE;
+}
+
+
+static PyObject *
+UDP_func_set_ttl(UDP *self, PyObject *args)
+{
+    int r, ttl;
+
+    if (!self->uv_handle) {
+        PyErr_SetString(PyExc_UDPError, "closed");
+        return NULL;
+    }
+
+    if (!PyArg_ParseTuple(args, "i:set_multicast_ttl", &ttl)) {
+        return NULL;
+    }
+
+    if (ttl < 0 || ttl > 255) {
+        PyErr_SetString(PyExc_ValueError, "ttl must be between 0 and 255");
+        return NULL;
+    }
+
+    r = uv_udp_set_ttl(self->uv_handle, ttl);
+    if (r != 0) {
+        raise_uv_exception(self->loop, PyExc_UDPError);
+        return NULL;
+    }
+
+    Py_RETURN_NONE;
+}
+
+
 static int
 UDP_tp_init(UDP *self, PyObject *args, PyObject *kwargs)
 {
@@ -679,7 +733,9 @@ UDP_tp_methods[] = {
     { "getsockname", (PyCFunction)UDP_func_getsockname, METH_NOARGS, "Get local socket information." },
     { "set_membership", (PyCFunction)UDP_func_set_membership, METH_VARARGS, "Set membership for multicast address." },
     { "set_multicast_ttl", (PyCFunction)UDP_func_set_multicast_ttl, METH_VARARGS, "Set the multicast TTL." },
+    { "set_multicast_loop", (PyCFunction)UDP_func_set_multicast_loop, METH_VARARGS, "Set IP multicast loop flag. Makes multicast packets loop back to local sockets." },
     { "set_broadcast", (PyCFunction)UDP_func_set_broadcast, METH_VARARGS, "Set broadcast on or off." },
+    { "set_ttl", (PyCFunction)UDP_func_set_ttl, METH_VARARGS, "Set the Time To Live." },
     { NULL }
 };
 
