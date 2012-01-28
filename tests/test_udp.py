@@ -43,7 +43,11 @@ class UDPTest(unittest2.TestCase):
         self.server = pyuv.UDP(self.loop)
         self.server.bind(("0.0.0.0", TEST_PORT))
         self.server.set_broadcast(True) # for coverage
-        self.server.set_ttl(10) # for coverage
+        try:
+            self.server.set_ttl(10) # for coverage
+        except pyuv.error.UDPError:
+            # This function is not implemented on Windows
+            pass
         self.server.start_recv(self.on_server_recv)
         self.client = pyuv.UDP(self.loop)
         self.client.bind(("0.0.0.0", TEST_PORT2))
