@@ -14,15 +14,18 @@ pyuv's features:
 
  * Non-blocking TCP sockets
  * Non-blocking named pipes
- * UDP support
+ * UDP support (including multicast)
  * Timers
  * Child process spawning
- * Asynchronous DNS (gethostbyname, getaddrbyname, getnameinfo, getaddrinfo)
+ * Asynchronous DNS resolver
  * Asynchronous file system APIs
  * High resolution time
+ * System memory information
+ * System CPUs information
+ * Network interfaces information
  * Thread pool scheduling
  * ANSI escape code controlled TTY
- * File system events (initify style)
+ * File system events (inotify style)
  * IPC and TCP socket sharing between processes
 
 
