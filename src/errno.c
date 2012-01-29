@@ -41,8 +41,24 @@ Errno_func_strerror(PyObject *obj, PyObject *args)
 }
 
 
+static PyObject *
+Errno_func_ares_strerror(PyObject *obj, PyObject *args)
+{
+    int errorno;
+
+    UNUSED_ARG(obj);
+
+    if (!PyArg_ParseTuple(args, "i:ares_strerror", &errorno)) {
+        return NULL;
+    }
+
+    return PyString_FromString(ares_strerror(errorno));
+}
+
+
 static PyMethodDef
 Errno_methods[] = {
+    { "ares_strerror", (PyCFunction)Errno_func_ares_strerror, METH_VARARGS, "Get string representation of a c-ares error code." },
     { "strerror", (PyCFunction)Errno_func_strerror, METH_VARARGS, "Get string representation of an error code." },
     { NULL }
 };
