@@ -262,7 +262,7 @@ query_a_cb(void *arg, int status,int timeouts, unsigned char *answer_buf, int an
     struct hostent *hostent;
     ares_cb_data_t *data;
     DNSResolver *self;
-    PyObject *dns_result, *dns_status, *tmp, *result, *callback;
+    PyObject *dns_result, *errorno, *tmp, *result, *callback;
 
     ASSERT(arg);
 
@@ -274,31 +274,46 @@ query_a_cb(void *arg, int status,int timeouts, unsigned char *answer_buf, int an
     /* Object could go out of scope in the callback, increase refcount to avoid it */
     Py_INCREF(self);
 
-    dns_status = PyInt_FromLong((long)status);
-    dns_result = PyList_New(0);
-
     if (status != ARES_SUCCESS) {
-        dns_status = PyInt_FromLong((long)status);
-    } else {
-        parse_status = ares_parse_a_reply(answer_buf, answer_len, &hostent, NULL, NULL);
-        if (parse_status != ARES_SUCCESS) {
-            dns_status = PyInt_FromLong((long)parse_status);
-        } else {
-            dns_status = PyInt_FromLong((long)status);
-            for (ptr = hostent->h_addr_list; *ptr != NULL; ptr++) {
-                uv_inet_ntop(hostent->h_addrtype, *ptr, ip, sizeof(ip));
-                tmp = PyString_FromString(ip);
-                if (tmp == NULL) {
-                    break;
-                }
-                PyList_Append(dns_result, tmp);
-                Py_DECREF(tmp);
-            }
-            ares_free_hostent(hostent);
-        }
+        errorno = PyInt_FromLong((long)status);
+        dns_result = Py_None;
+        Py_INCREF(Py_None);
+        goto callback;
     }
 
-    result = PyObject_CallFunctionObjArgs(callback, self, dns_status, dns_result, NULL);
+    parse_status = ares_parse_a_reply(answer_buf, answer_len, &hostent, NULL, NULL);
+    if (parse_status != ARES_SUCCESS) {
+        errorno = PyInt_FromLong((long)parse_status);
+        dns_result = Py_None;
+        Py_INCREF(Py_None);
+        goto callback;
+    }
+
+    dns_result = PyList_New(0);
+    if (!dns_result) {
+        PyErr_NoMemory();
+        PyErr_WriteUnraisable(Py_None);
+        errorno = PyInt_FromLong((long)UV_ENOMEM);
+        dns_result = Py_None;
+        Py_INCREF(Py_None);
+        goto callback;
+    }
+
+    for (ptr = hostent->h_addr_list; *ptr != NULL; ptr++) {
+        uv_inet_ntop(hostent->h_addrtype, *ptr, ip, sizeof(ip));
+        tmp = PyString_FromString(ip);
+        if (tmp == NULL) {
+            break;
+        }
+        PyList_Append(dns_result, tmp);
+        Py_DECREF(tmp);
+    }
+    ares_free_hostent(hostent);
+    errorno = Py_None;
+    Py_INCREF(Py_None);
+
+callback:
+    result = PyObject_CallFunctionObjArgs(callback, self, dns_result, errorno, NULL);
     if (result == NULL) {
         PyErr_WriteUnraisable(callback);
     }
@@ -322,7 +337,7 @@ query_aaaa_cb(void *arg, int status,int timeouts, unsigned char *answer_buf, int
     struct hostent *hostent;
     ares_cb_data_t *data;
     DNSResolver *self;
-    PyObject *dns_result, *dns_status, *tmp, *result, *callback;
+    PyObject *dns_result, *errorno, *tmp, *result, *callback;
 
     ASSERT(arg);
 
@@ -334,31 +349,46 @@ query_aaaa_cb(void *arg, int status,int timeouts, unsigned char *answer_buf, int
     /* Object could go out of scope in the callback, increase refcount to avoid it */
     Py_INCREF(self);
 
-    dns_status = PyInt_FromLong((long)status);
-    dns_result = PyList_New(0);
-
     if (status != ARES_SUCCESS) {
-        dns_status = PyInt_FromLong((long)status);
-    } else {
-        parse_status = ares_parse_aaaa_reply(answer_buf, answer_len, &hostent, NULL, NULL);
-        if (parse_status != ARES_SUCCESS) {
-            dns_status = PyInt_FromLong((long)parse_status);
-        } else {
-            dns_status = PyInt_FromLong((long)status);
-            for (ptr = hostent->h_addr_list; *ptr != NULL; ptr++) {
-                uv_inet_ntop(hostent->h_addrtype, *ptr, ip, sizeof(ip));
-                tmp = PyString_FromString(ip);
-                if (tmp == NULL) {
-                    break;
-                }
-                PyList_Append(dns_result, tmp);
-                Py_DECREF(tmp);
-            }
-            ares_free_hostent(hostent);
-        }
+        errorno = PyInt_FromLong((long)status);
+        dns_result = Py_None;
+        Py_INCREF(Py_None);
+        goto callback;
     }
 
-    result = PyObject_CallFunctionObjArgs(callback, self, dns_status, dns_result, NULL);
+    parse_status = ares_parse_aaaa_reply(answer_buf, answer_len, &hostent, NULL, NULL);
+    if (parse_status != ARES_SUCCESS) {
+        errorno = PyInt_FromLong((long)parse_status);
+        dns_result = Py_None;
+        Py_INCREF(Py_None);
+        goto callback;
+    }
+
+    dns_result = PyList_New(0);
+    if (!dns_result) {
+        PyErr_NoMemory();
+        PyErr_WriteUnraisable(Py_None);
+        errorno = PyInt_FromLong((long)UV_ENOMEM);
+        dns_result = Py_None;
+        Py_INCREF(Py_None);
+        goto callback;
+    }
+
+    for (ptr = hostent->h_addr_list; *ptr != NULL; ptr++) {
+        uv_inet_ntop(hostent->h_addrtype, *ptr, ip, sizeof(ip));
+        tmp = PyString_FromString(ip);
+        if (tmp == NULL) {
+            break;
+        }
+        PyList_Append(dns_result, tmp);
+        Py_DECREF(tmp);
+    }
+    ares_free_hostent(hostent);
+    errorno = Py_None;
+    Py_INCREF(Py_None);
+
+callback:
+    result = PyObject_CallFunctionObjArgs(callback, self, dns_result, errorno, NULL);
     if (result == NULL) {
         PyErr_WriteUnraisable(callback);
     }
@@ -380,7 +410,7 @@ query_cname_cb(void *arg, int status,int timeouts, unsigned char *answer_buf, in
     struct hostent *hostent;
     ares_cb_data_t *data;
     DNSResolver *self;
-    PyObject *dns_result, *dns_status, *tmp, *result, *callback;
+    PyObject *dns_result, *errorno, *tmp, *result, *callback;
 
     ASSERT(arg);
 
@@ -392,25 +422,40 @@ query_cname_cb(void *arg, int status,int timeouts, unsigned char *answer_buf, in
     /* Object could go out of scope in the callback, increase refcount to avoid it */
     Py_INCREF(self);
 
-    dns_status = PyInt_FromLong((long)status);
-    dns_result = PyList_New(0);
-
     if (status != ARES_SUCCESS) {
-        dns_status = PyInt_FromLong((long)status);
-    } else {
-        parse_status = ares_parse_a_reply(answer_buf, answer_len, &hostent, NULL, NULL);
-        if (parse_status != ARES_SUCCESS) {
-            dns_status = PyInt_FromLong((long)parse_status);
-        } else {
-            dns_status = PyInt_FromLong((long)status);
-            tmp = PyString_FromString(hostent->h_name);
-            PyList_Append(dns_result, tmp);
-            Py_DECREF(tmp);
-            ares_free_hostent(hostent);
-        }
+        errorno = PyInt_FromLong((long)status);
+        dns_result = Py_None;
+        Py_INCREF(Py_None);
+        goto callback;
     }
 
-    result = PyObject_CallFunctionObjArgs(callback, self, dns_status, dns_result, NULL);
+    parse_status = ares_parse_a_reply(answer_buf, answer_len, &hostent, NULL, NULL);
+    if (parse_status != ARES_SUCCESS) {
+        errorno = PyInt_FromLong((long)parse_status);
+        dns_result = Py_None;
+        Py_INCREF(Py_None);
+        goto callback;
+    }
+
+    dns_result = PyList_New(1);
+    if (!dns_result) {
+        PyErr_NoMemory();
+        PyErr_WriteUnraisable(Py_None);
+        errorno = PyInt_FromLong((long)UV_ENOMEM);
+        dns_result = Py_None;
+        Py_INCREF(Py_None);
+        goto callback;
+    }
+
+    tmp = PyString_FromString(hostent->h_name);
+    PyList_Append(dns_result, tmp);
+    Py_DECREF(tmp);
+    ares_free_hostent(hostent);
+    errorno = Py_None;
+    Py_INCREF(Py_None);
+
+callback:
+    result = PyObject_CallFunctionObjArgs(callback, self, dns_result, errorno, NULL);
     if (result == NULL) {
         PyErr_WriteUnraisable(callback);
     }
@@ -432,7 +477,7 @@ query_mx_cb(void *arg, int status,int timeouts, unsigned char *answer_buf, int a
     struct ares_mx_reply *mx_reply, *mx_ptr;
     ares_cb_data_t *data;
     DNSResolver *self;
-    PyObject *dns_result, *dns_status, *tmp, *result, *callback;
+    PyObject *dns_result, *errorno, *tmp, *result, *callback;
 
     ASSERT(arg);
 
@@ -444,32 +489,47 @@ query_mx_cb(void *arg, int status,int timeouts, unsigned char *answer_buf, int a
     /* Object could go out of scope in the callback, increase refcount to avoid it */
     Py_INCREF(self);
 
-    dns_status = PyInt_FromLong((long)status);
-    dns_result = PyList_New(0);
-
     if (status != ARES_SUCCESS) {
-        dns_status = PyInt_FromLong((long)status);
-    } else {
-        parse_status = ares_parse_mx_reply(answer_buf, answer_len, &mx_reply);
-        if (parse_status != ARES_SUCCESS) {
-            dns_status = PyInt_FromLong((long)parse_status);
-        } else {
-            dns_status = PyInt_FromLong((long)status);
-            for (mx_ptr = mx_reply; mx_ptr != NULL; mx_ptr = mx_ptr->next) {
-                tmp = PyTuple_New(2);
-                if (tmp == NULL) {
-                    break;
-                }
-                PyTuple_SET_ITEM(tmp, 0, PyString_FromString(mx_ptr->host));
-                PyTuple_SET_ITEM(tmp, 1, PyInt_FromLong((long)mx_ptr->priority));
-                PyList_Append(dns_result, tmp);
-                Py_DECREF(tmp);
-            }
-            ares_free_data(mx_reply);
-        }
+        errorno = PyInt_FromLong((long)status);
+        dns_result = Py_None;
+        Py_INCREF(Py_None);
+        goto callback;
     }
 
-    result = PyObject_CallFunctionObjArgs(callback, self, dns_status, dns_result, NULL);
+    parse_status = ares_parse_mx_reply(answer_buf, answer_len, &mx_reply);
+    if (parse_status != ARES_SUCCESS) {
+        errorno = PyInt_FromLong((long)parse_status);
+        dns_result = Py_None;
+        Py_INCREF(Py_None);
+        goto callback;
+    }
+
+    dns_result = PyList_New(0);
+    if (!dns_result) {
+        PyErr_NoMemory();
+        PyErr_WriteUnraisable(Py_None);
+        errorno = PyInt_FromLong((long)UV_ENOMEM);
+        dns_result = Py_None;
+        Py_INCREF(Py_None);
+        goto callback;
+    }
+
+    for (mx_ptr = mx_reply; mx_ptr != NULL; mx_ptr = mx_ptr->next) {
+        tmp = PyTuple_New(2);
+        if (tmp == NULL) {
+            break;
+        }
+        PyTuple_SET_ITEM(tmp, 0, PyString_FromString(mx_ptr->host));
+        PyTuple_SET_ITEM(tmp, 1, PyInt_FromLong((long)mx_ptr->priority));
+        PyList_Append(dns_result, tmp);
+        Py_DECREF(tmp);
+    }
+    ares_free_data(mx_reply);
+    errorno = Py_None;
+    Py_INCREF(Py_None);
+
+callback:
+    result = PyObject_CallFunctionObjArgs(callback, self, dns_result, errorno, NULL);
     if (result == NULL) {
         PyErr_WriteUnraisable(callback);
     }
@@ -492,7 +552,7 @@ query_ns_cb(void *arg, int status,int timeouts, unsigned char *answer_buf, int a
     struct hostent *hostent;
     ares_cb_data_t *data;
     DNSResolver *self;
-    PyObject *dns_result, *dns_status, *tmp, *result, *callback;
+    PyObject *dns_result, *errorno, *tmp, *result, *callback;
 
     ASSERT(arg);
 
@@ -504,30 +564,45 @@ query_ns_cb(void *arg, int status,int timeouts, unsigned char *answer_buf, int a
     /* Object could go out of scope in the callback, increase refcount to avoid it */
     Py_INCREF(self);
 
-    dns_status = PyInt_FromLong((long)status);
-    dns_result = PyList_New(0);
-
     if (status != ARES_SUCCESS) {
-        dns_status = PyInt_FromLong((long)status);
-    } else {
-        parse_status = ares_parse_ns_reply(answer_buf, answer_len, &hostent);
-        if (parse_status != ARES_SUCCESS) {
-            dns_status = PyInt_FromLong((long)parse_status);
-        } else {
-            dns_status = PyInt_FromLong((long)status);
-            for (ptr = hostent->h_aliases; *ptr != NULL; ptr++) {
-                tmp = PyString_FromString(*ptr);
-                if (tmp == NULL) {
-                    break;
-                }
-                PyList_Append(dns_result, tmp);
-                Py_DECREF(tmp);
-            }
-            ares_free_hostent(hostent);
-        }
+        errorno = PyInt_FromLong((long)status);
+        dns_result = Py_None;
+        Py_INCREF(Py_None);
+        goto callback;
     }
 
-    result = PyObject_CallFunctionObjArgs(callback, self, dns_status, dns_result, NULL);
+    parse_status = ares_parse_ns_reply(answer_buf, answer_len, &hostent);
+    if (parse_status != ARES_SUCCESS) {
+        errorno = PyInt_FromLong((long)parse_status);
+        dns_result = Py_None;
+        Py_INCREF(Py_None);
+        goto callback;
+    }
+
+    dns_result = PyList_New(0);
+    if (!dns_result) {
+        PyErr_NoMemory();
+        PyErr_WriteUnraisable(Py_None);
+        errorno = PyInt_FromLong((long)UV_ENOMEM);
+        dns_result = Py_None;
+        Py_INCREF(Py_None);
+        goto callback;
+    }
+
+    for (ptr = hostent->h_aliases; *ptr != NULL; ptr++) {
+        tmp = PyString_FromString(*ptr);
+        if (tmp == NULL) {
+            break;
+        }
+        PyList_Append(dns_result, tmp);
+        Py_DECREF(tmp);
+    }
+    ares_free_hostent(hostent);
+    errorno = Py_None;
+    Py_INCREF(Py_None);
+
+callback:
+    result = PyObject_CallFunctionObjArgs(callback, self, dns_result, errorno, NULL);
     if (result == NULL) {
         PyErr_WriteUnraisable(callback);
     }
@@ -549,7 +624,7 @@ query_txt_cb(void *arg, int status,int timeouts, unsigned char *answer_buf, int 
     struct ares_txt_reply *txt_reply, *txt_ptr;
     ares_cb_data_t *data;
     DNSResolver *self;
-    PyObject *dns_result, *dns_status, *tmp, *result, *callback;
+    PyObject *dns_result, *errorno, *tmp, *result, *callback;
 
     ASSERT(arg);
 
@@ -561,30 +636,45 @@ query_txt_cb(void *arg, int status,int timeouts, unsigned char *answer_buf, int 
     /* Object could go out of scope in the callback, increase refcount to avoid it */
     Py_INCREF(self);
 
-    dns_status = PyInt_FromLong((long)status);
-    dns_result = PyList_New(0);
-
     if (status != ARES_SUCCESS) {
-        dns_status = PyInt_FromLong((long)status);
-    } else {
-        parse_status = ares_parse_txt_reply(answer_buf, answer_len, &txt_reply);
-        if (parse_status != ARES_SUCCESS) {
-            dns_status = PyInt_FromLong((long)parse_status);
-        } else {
-            dns_status = PyInt_FromLong((long)status);
-            for (txt_ptr = txt_reply; txt_ptr != NULL; txt_ptr = txt_ptr->next) {
-                tmp = PyString_FromString((const char *)txt_ptr->txt);
-                if (tmp == NULL) {
-                    break;
-                }
-                PyList_Append(dns_result, tmp);
-                Py_DECREF(tmp);
-            }
-            ares_free_data(txt_reply);
-        }
+        errorno = PyInt_FromLong((long)status);
+        dns_result = Py_None;
+        Py_INCREF(Py_None);
+        goto callback;
     }
 
-    result = PyObject_CallFunctionObjArgs(callback, self, dns_status, dns_result, NULL);
+    parse_status = ares_parse_txt_reply(answer_buf, answer_len, &txt_reply);
+    if (parse_status != ARES_SUCCESS) {
+        errorno = PyInt_FromLong((long)parse_status);
+        dns_result = Py_None;
+        Py_INCREF(Py_None);
+        goto callback;
+    }
+
+    dns_result = PyList_New(0);
+    if (!dns_result) {
+        PyErr_NoMemory();
+        PyErr_WriteUnraisable(Py_None);
+        errorno = PyInt_FromLong((long)UV_ENOMEM);
+        dns_result = Py_None;
+        Py_INCREF(Py_None);
+        goto callback;
+    }
+
+    for (txt_ptr = txt_reply; txt_ptr != NULL; txt_ptr = txt_ptr->next) {
+        tmp = PyString_FromString((const char *)txt_ptr->txt);
+        if (tmp == NULL) {
+            break;
+        }
+        PyList_Append(dns_result, tmp);
+        Py_DECREF(tmp);
+    }
+    ares_free_data(txt_reply);
+    errorno = Py_None;
+    Py_INCREF(Py_None);
+
+callback:
+    result = PyObject_CallFunctionObjArgs(callback, self, dns_result, errorno, NULL);
     if (result == NULL) {
         PyErr_WriteUnraisable(callback);
     }
@@ -606,7 +696,7 @@ query_srv_cb(void *arg, int status,int timeouts, unsigned char *answer_buf, int 
     struct ares_srv_reply *srv_reply, *srv_ptr;
     ares_cb_data_t *data;
     DNSResolver *self;
-    PyObject *dns_result, *dns_status, *tmp, *result, *callback;
+    PyObject *dns_result, *errorno, *tmp, *result, *callback;
 
     ASSERT(arg);
 
@@ -618,34 +708,49 @@ query_srv_cb(void *arg, int status,int timeouts, unsigned char *answer_buf, int 
     /* Object could go out of scope in the callback, increase refcount to avoid it */
     Py_INCREF(self);
 
-    dns_status = PyInt_FromLong((long)status);
-    dns_result = PyList_New(0);
-
     if (status != ARES_SUCCESS) {
-        dns_status = PyInt_FromLong((long)status);
-    } else {
-        parse_status = ares_parse_srv_reply(answer_buf, answer_len, &srv_reply);
-        if (parse_status != ARES_SUCCESS) {
-            dns_status = PyInt_FromLong((long)parse_status);
-        } else {
-            dns_status = PyInt_FromLong((long)status);
-            for (srv_ptr = srv_reply; srv_ptr != NULL; srv_ptr = srv_ptr->next) {
-                tmp = PyTuple_New(4);
-                if (tmp == NULL) {
-                    break;
-                }
-                PyTuple_SET_ITEM(tmp, 0, PyString_FromString(srv_ptr->host));
-                PyTuple_SET_ITEM(tmp, 1, PyInt_FromLong((long)srv_ptr->port));
-                PyTuple_SET_ITEM(tmp, 2, PyInt_FromLong((long)srv_ptr->priority));
-                PyTuple_SET_ITEM(tmp, 3, PyInt_FromLong((long)srv_ptr->weight));
-                PyList_Append(dns_result, tmp);
-                Py_DECREF(tmp);
-            }
-            ares_free_data(srv_reply);
-        }
+        errorno = PyInt_FromLong((long)status);
+        dns_result = Py_None;
+        Py_INCREF(Py_None);
+        goto callback;
     }
 
-    result = PyObject_CallFunctionObjArgs(callback, self, dns_status, dns_result, NULL);
+    parse_status = ares_parse_srv_reply(answer_buf, answer_len, &srv_reply);
+    if (parse_status != ARES_SUCCESS) {
+        errorno = PyInt_FromLong((long)parse_status);
+        dns_result = Py_None;
+        Py_INCREF(Py_None);
+        goto callback;
+    }
+
+    dns_result = PyList_New(0);
+    if (!dns_result) {
+        PyErr_NoMemory();
+        PyErr_WriteUnraisable(Py_None);
+        errorno = PyInt_FromLong((long)UV_ENOMEM);
+        dns_result = Py_None;
+        Py_INCREF(Py_None);
+        goto callback;
+    }
+
+    for (srv_ptr = srv_reply; srv_ptr != NULL; srv_ptr = srv_ptr->next) {
+        tmp = PyTuple_New(4);
+        if (tmp == NULL) {
+            break;
+        }
+        PyTuple_SET_ITEM(tmp, 0, PyString_FromString(srv_ptr->host));
+        PyTuple_SET_ITEM(tmp, 1, PyInt_FromLong((long)srv_ptr->port));
+        PyTuple_SET_ITEM(tmp, 2, PyInt_FromLong((long)srv_ptr->priority));
+        PyTuple_SET_ITEM(tmp, 3, PyInt_FromLong((long)srv_ptr->weight));
+        PyList_Append(dns_result, tmp);
+        Py_DECREF(tmp);
+    }
+    ares_free_data(srv_reply);
+    errorno = Py_None;
+    Py_INCREF(Py_None);
+
+callback:
+    result = PyObject_CallFunctionObjArgs(callback, self, dns_result, errorno, NULL);
     if (result == NULL) {
         PyErr_WriteUnraisable(callback);
     }
