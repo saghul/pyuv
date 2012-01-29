@@ -7,8 +7,8 @@ import pyuv
 
 class DNSTest(unittest2.TestCase):
 
-    def getaddrinfo_cb(self, resolver, status, result):
-        self.assertEqual(status, 0)
+    def getaddrinfo_cb(self, resolver, result, errorno):
+        self.assertEqual(errorno, None)
 
     def test_getaddrinfo(self):
         loop = pyuv.Loop.default_loop()
@@ -16,31 +16,32 @@ class DNSTest(unittest2.TestCase):
         resolver.getaddrinfo(self.getaddrinfo_cb, 'localhost', 80, socket.AF_INET)
         loop.run()
 
-    def gethostbyaddr_cb(self, resolver, status, timeouts, name, aliases, result):
-        self.assertEqual(status, 0)
+    def gethostbyaddr_cb(self, resolver, result, errorno):
+        self.assertEqual(errorno, None)
 
     def test_gethostbyaddr(self):
         loop = pyuv.Loop.default_loop()
         resolver = pyuv.dns.DNSResolver(loop)
-        resolver.gethostbyaddr(self.gethostbyaddr_cb, '127.0.0.1')
+        resolver.gethostbyaddr('127.0.0.1', self.gethostbyaddr_cb)
         loop.run()
 
-    def gethostbyname_cb(self, resolver, status, timeouts, name, aliases, result):
-        self.assertEqual(status, 0)
+    def gethostbyname_cb(self, resolver, result, errorno):
+        self.assertEqual(errorno, None)
 
     def test_gethostbyname(self):
         loop = pyuv.Loop.default_loop()
         resolver = pyuv.dns.DNSResolver(loop)
-        resolver.gethostbyname(self.gethostbyname_cb, 'localhost', socket.AF_INET)
+        resolver.gethostbyname('localhost', self.gethostbyname_cb)
         loop.run()
 
-    def getnameinfo_cb(self, resolver, status, timeouts, node, service):
-        self.assertEqual(status, 0)
+    def getnameinfo_cb(self, resolver, result, errorno):
+        self.assertEqual(errorno, None)
+        self.assertEqual(result, ('localhost', 'http'))
 
     def test_getnameinfo(self):
         loop = pyuv.Loop.default_loop()
         resolver = pyuv.dns.DNSResolver(loop)
-        resolver.getnameinfo(self.getnameinfo_cb, '127.0.0.1', 0, pyuv.dns.ARES_NI_LOOKUPHOST)
+        resolver.getnameinfo(('127.0.0.1', 80), pyuv.dns.ARES_NI_LOOKUPHOST|pyuv.dns.ARES_NI_LOOKUPSERVICE, self.getnameinfo_cb)
         loop.run()
 
     def query_a_cb(self, resolver, result, errorno):
