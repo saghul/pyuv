@@ -293,7 +293,7 @@ query_a_cb(void *arg, int status,int timeouts, unsigned char *answer_buf, int an
     if (!dns_result) {
         PyErr_NoMemory();
         PyErr_WriteUnraisable(Py_None);
-        errorno = PyInt_FromLong((long)UV_ENOMEM);
+        errorno = PyInt_FromLong((long)ARES_ENOMEM);
         dns_result = Py_None;
         Py_INCREF(Py_None);
         goto callback;
@@ -368,7 +368,7 @@ query_aaaa_cb(void *arg, int status,int timeouts, unsigned char *answer_buf, int
     if (!dns_result) {
         PyErr_NoMemory();
         PyErr_WriteUnraisable(Py_None);
-        errorno = PyInt_FromLong((long)UV_ENOMEM);
+        errorno = PyInt_FromLong((long)ARES_ENOMEM);
         dns_result = Py_None;
         Py_INCREF(Py_None);
         goto callback;
@@ -441,7 +441,7 @@ query_cname_cb(void *arg, int status,int timeouts, unsigned char *answer_buf, in
     if (!dns_result) {
         PyErr_NoMemory();
         PyErr_WriteUnraisable(Py_None);
-        errorno = PyInt_FromLong((long)UV_ENOMEM);
+        errorno = PyInt_FromLong((long)ARES_ENOMEM);
         dns_result = Py_None;
         Py_INCREF(Py_None);
         goto callback;
@@ -508,7 +508,7 @@ query_mx_cb(void *arg, int status,int timeouts, unsigned char *answer_buf, int a
     if (!dns_result) {
         PyErr_NoMemory();
         PyErr_WriteUnraisable(Py_None);
-        errorno = PyInt_FromLong((long)UV_ENOMEM);
+        errorno = PyInt_FromLong((long)ARES_ENOMEM);
         dns_result = Py_None;
         Py_INCREF(Py_None);
         goto callback;
@@ -583,7 +583,7 @@ query_ns_cb(void *arg, int status,int timeouts, unsigned char *answer_buf, int a
     if (!dns_result) {
         PyErr_NoMemory();
         PyErr_WriteUnraisable(Py_None);
-        errorno = PyInt_FromLong((long)UV_ENOMEM);
+        errorno = PyInt_FromLong((long)ARES_ENOMEM);
         dns_result = Py_None;
         Py_INCREF(Py_None);
         goto callback;
@@ -655,7 +655,7 @@ query_txt_cb(void *arg, int status,int timeouts, unsigned char *answer_buf, int 
     if (!dns_result) {
         PyErr_NoMemory();
         PyErr_WriteUnraisable(Py_None);
-        errorno = PyInt_FromLong((long)UV_ENOMEM);
+        errorno = PyInt_FromLong((long)ARES_ENOMEM);
         dns_result = Py_None;
         Py_INCREF(Py_None);
         goto callback;
@@ -727,7 +727,7 @@ query_srv_cb(void *arg, int status,int timeouts, unsigned char *answer_buf, int 
     if (!dns_result) {
         PyErr_NoMemory();
         PyErr_WriteUnraisable(Py_None);
-        errorno = PyInt_FromLong((long)UV_ENOMEM);
+        errorno = PyInt_FromLong((long)ARES_ENOMEM);
         dns_result = Py_None;
         Py_INCREF(Py_None);
         goto callback;
