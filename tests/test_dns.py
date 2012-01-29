@@ -13,7 +13,7 @@ class DNSTest(unittest2.TestCase):
     def test_getaddrinfo(self):
         loop = pyuv.Loop.default_loop()
         resolver = pyuv.dns.DNSResolver(loop)
-        resolver.getaddrinfo(self.getaddrinfo_cb, 'localhost', 80, socket.AF_INET)
+        resolver.getaddrinfo('localhost', self.getaddrinfo_cb, 80, socket.AF_INET)
         loop.run()
 
     def gethostbyaddr_cb(self, resolver, result, errorno):

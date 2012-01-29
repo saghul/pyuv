@@ -939,7 +939,7 @@ DNSResolver_func_getaddrinfo(DNSResolver *self, PyObject *args, PyObject *kwargs
     port = socktype = protocol = flags = 0;
     family = AF_UNSPEC;
 
-    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "Os|iiiii:getaddrinfo", kwlist, &callback, &name, &port, &family, &socktype, &protocol, &flags)) {
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "sO|iiiii:getaddrinfo", kwlist, &name, &callback, &port, &family, &socktype, &protocol, &flags)) {
         return NULL;
     }
 
