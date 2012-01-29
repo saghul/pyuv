@@ -216,7 +216,7 @@ TCP_func_connect(TCP *self, PyObject *args)
     struct in6_addr addr6;
     uv_connect_t *connect_req = NULL;
     iostream_req_data_t *req_data = NULL;
-    PyObject *connect_address, *callback;
+    PyObject *callback;
 
     IOStream *base = (IOStream *)self;
 
@@ -225,11 +225,7 @@ TCP_func_connect(TCP *self, PyObject *args)
         return NULL;
     }
 
-    if (!PyArg_ParseTuple(args, "OO:connect", &connect_address, &callback)) {
-        return NULL;
-    }
-
-    if (!PyArg_ParseTuple(connect_address, "si", &connect_ip, &connect_port)) {
+    if (!PyArg_ParseTuple(args, "(si)O:connect", &connect_ip, &connect_port, &callback)) {
         return NULL;
     }
 
