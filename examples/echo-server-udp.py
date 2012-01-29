@@ -16,7 +16,7 @@ def on_read(handle, ip_port, data, error):
     data = data.strip()
     if data:
         ip, port = ip_port
-        handle.send(data+LINESEP, (ip, port))
+        handle.send((ip, port), data+LINESEP)
 
 def async_exit(async):
     async.close()
