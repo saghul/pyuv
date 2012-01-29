@@ -25,7 +25,7 @@ class UDPTest(unittest2.TestCase):
         ip, port = ip_port
         data = data.strip()
         self.assertEquals(data, b"PING")
-        self.server.send(b"PONG"+common.linesep, (ip, port))
+        self.server.send((ip, port), b"PONG"+common.linesep)
 
     def on_client_recv(self, handle, ip_port, data, error):
         ip, port = ip_port
@@ -35,7 +35,7 @@ class UDPTest(unittest2.TestCase):
         self.server.close(self.on_close)
 
     def timer_cb(self, timer):
-        self.client.send(b"PING"+common.linesep, ("127.0.0.1", TEST_PORT))
+        self.client.send(("127.0.0.1", TEST_PORT), b"PING"+common.linesep)
         timer.close(self.on_close)
 
     def test_udp_pingpong(self):
@@ -72,7 +72,7 @@ class UDPTestNull(unittest2.TestCase):
         ip, port = ip_port
         data = data.strip()
         self.assertEquals(data, b"PIN\x00G")
-        self.server.send(b"PONG"+common.linesep, (ip, port))
+        self.server.send((ip, port), b"PONG"+common.linesep)
 
     def on_client_recv(self, handle, ip_port, data, error):
         ip, port = ip_port
@@ -82,7 +82,7 @@ class UDPTestNull(unittest2.TestCase):
         self.server.close(self.on_close)
 
     def timer_cb(self, timer):
-        self.client.send(b"PIN\x00G"+common.linesep, ("127.0.0.1", TEST_PORT))
+        self.client.send(("127.0.0.1", TEST_PORT), b"PIN\x00G"+common.linesep)
         timer.close(self.on_close)
 
     def test_udp_pingpong_null(self):
@@ -113,7 +113,7 @@ class UDPTestList(unittest2.TestCase):
         ip, port = ip_port
         data = data.strip()
         self.assertEquals(data, b"PING")
-        self.server.send([b"PONG", common.linesep], (ip, port))
+        self.server.send((ip, port), [b"PONG", common.linesep])
 
     def on_client_recv(self, handle, ip_port, data, error):
         ip, port = ip_port
@@ -123,7 +123,7 @@ class UDPTestList(unittest2.TestCase):
         self.server.close(self.on_close)
 
     def timer_cb(self, timer):
-        self.client.send([b"PING", common.linesep], ("127.0.0.1", TEST_PORT))
+        self.client.send(("127.0.0.1", TEST_PORT), [b"PING", common.linesep])
         timer.close(self.on_close)
 
     def test_udp_pingpong_list(self):
@@ -154,7 +154,7 @@ class UDPTestListNull(unittest2.TestCase):
         ip, port = ip_port
         data = data.strip()
         self.assertEquals(data, b"PIN\x00G")
-        self.server.send([b"PONG", common.linesep], (ip, port))
+        self.server.send((ip, port), [b"PONG", common.linesep])
 
     def on_client_recv(self, handle, ip_port, data, error):
         ip, port = ip_port
@@ -164,7 +164,7 @@ class UDPTestListNull(unittest2.TestCase):
         self.server.close(self.on_close)
 
     def timer_cb(self, timer):
-        self.client.send([b"PIN\x00G", common.linesep], ("127.0.0.1", TEST_PORT))
+        self.client.send(("127.0.0.1", TEST_PORT), [b"PIN\x00G", common.linesep])
         timer.close(self.on_close)
 
     def test_udp_pingpong_list_null(self):
@@ -202,8 +202,8 @@ class UDPTestInvalidData(unittest2.TestCase):
             data = 'Unicode'
         else:
             data = unicode('Unicode')
-        self.assertRaises(TypeError, self.client.send, data+os.linesep, ("127.0.0.1", TEST_PORT))
-        self.assertRaises(TypeError, self.client.send, 1, ("127.0.0.1", TEST_PORT))
+        self.assertRaises(TypeError, self.client.send, ("127.0.0.1", TEST_PORT), data+os.linesep)
+        self.assertRaises(TypeError, self.client.send, ("127.0.0.1", TEST_PORT), 1)
 
         self.client.close(self.on_close)
         self.server.close(self.on_close)
@@ -251,7 +251,7 @@ class UDPTestMulticast(unittest2.TestCase):
         self.client.set_membership(MULTICAST_ADDRESS, pyuv.UV_JOIN_GROUP)
         self.client.set_multicast_ttl(10)
         self.client.start_recv(self.on_client_recv)
-        self.server.send(b"PING", (MULTICAST_ADDRESS, TEST_PORT), self.on_server_send)
+        self.server.send((MULTICAST_ADDRESS, TEST_PORT), b"PING", self.on_server_send)
         self.loop.run()
         self.assertEqual(self.on_close_called, 2)
         self.assertEquals(self.received_data, b"PING")
@@ -263,7 +263,7 @@ class UDPTestMulticast(unittest2.TestCase):
         self.client.set_membership(MULTICAST_ADDRESS, pyuv.UV_JOIN_GROUP)
         self.client.set_multicast_loop(True)
         self.client.start_recv(self.on_client_recv)
-        self.client.send(b"PING", (MULTICAST_ADDRESS, TEST_PORT))
+        self.client.send((MULTICAST_ADDRESS, TEST_PORT), b"PING")
         self.loop.run()
         self.assertEqual(self.on_close_called, 1)
         self.assertEquals(self.received_data, b"PING")

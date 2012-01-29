@@ -292,7 +292,7 @@ UDP_func_send(UDP *self, PyObject *args)
     udp_req_data_t *req_data = NULL;
     udp_send_data_t *send_data = NULL;
     Py_ssize_t data_len;
-    PyObject *item, *data, *address_tuple, *callback;
+    PyObject *item, *data, *callback;
 
     buf_count = 0;
     callback = Py_None;
@@ -302,7 +302,7 @@ UDP_func_send(UDP *self, PyObject *args)
         return NULL;
     }
 
-    if (!PyArg_ParseTuple(args, "OO|O:send", &data, &address_tuple, &callback)) {
+    if (!PyArg_ParseTuple(args, "(si)O|O:send", &dest_ip, &dest_port, &data, &callback)) {
         return NULL;
     }
 
@@ -313,10 +313,6 @@ UDP_func_send(UDP *self, PyObject *args)
 
     if (callback != Py_None && !PyCallable_Check(callback)) {
         PyErr_SetString(PyExc_TypeError, "a callable or None is required");
-        return NULL;
-    }
-
-    if (!PyArg_ParseTuple(address_tuple, "si", &dest_ip, &dest_port)) {
         return NULL;
     }
 
