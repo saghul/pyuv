@@ -256,6 +256,7 @@ class UDPTestMulticast(unittest2.TestCase):
         self.assertEqual(self.on_close_called, 2)
         self.assertEquals(self.received_data, b"PING")
 
+    @platform_skip(["darwin"])
     def test_udp_multicast_loop(self):
         self.on_close_called = 0
         self.client = pyuv.UDP(self.loop)
