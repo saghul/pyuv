@@ -147,6 +147,7 @@ init_errno(void)
     inscode(module_dict, errorcode_dict, "UV_EEXIST", UV_EEXIST);
     inscode(module_dict, errorcode_dict, "UV_ESRCH", UV_ESRCH);
     inscode(module_dict, errorcode_dict, "UV_ENAMETOOLONG", UV_ENAMETOOLONG);
+    inscode(module_dict, errorcode_dict, "UV_EPERM", UV_EPERM);
 
     inscode(module_dict, ares_errorcode_dict, "ARES_SUCCESS", ARES_SUCCESS);
     inscode(module_dict, ares_errorcode_dict, "ARES_ENODATA", ARES_ENODATA);
