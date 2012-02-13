@@ -148,6 +148,8 @@ init_errno(void)
     inscode(module_dict, errorcode_dict, "UV_ESRCH", UV_ESRCH);
     inscode(module_dict, errorcode_dict, "UV_ENAMETOOLONG", UV_ENAMETOOLONG);
     inscode(module_dict, errorcode_dict, "UV_EPERM", UV_EPERM);
+    inscode(module_dict, errorcode_dict, "UV_ELOOP", UV_ELOOP);
+    inscode(module_dict, errorcode_dict, "UV_EXDEV", UV_EXDEV);
 
     inscode(module_dict, ares_errorcode_dict, "ARES_SUCCESS", ARES_SUCCESS);
     inscode(module_dict, ares_errorcode_dict, "ARES_ENODATA", ARES_ENODATA);
