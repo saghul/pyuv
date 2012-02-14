@@ -180,6 +180,74 @@ Util_func_cpu_info(PyObject *obj)
 }
 
 
+extern void Py_GetArgcArgv(int *argc, char ***argv);
+
+static Bool setup_args_called = False;
+
+static void
+setup_args(void)
+{
+    int argc;
+    char **argv;
+
+    Py_GetArgcArgv(&argc, &argv);
+    uv_setup_args(argc, argv);
+    setup_args_called = True;
+}
+
+
+static PyObject *
+Util_func_set_process_title(PyObject *self, PyObject *args)
+{
+    char *title;
+    uv_err_t err;
+
+    if (!PyArg_ParseTuple(args, "s:set_process_title", &title)) {
+        return NULL;
+    }
+
+    if (!setup_args_called) {
+        setup_args();
+    }
+
+    err = uv_set_process_title(title);
+    if (err.code == UV_OK) {
+        Py_RETURN_NONE;
+    } else {
+        PyObject *exc_data = Py_BuildValue("(is)", err.code, uv_strerror(err));
+        if (exc_data != NULL) {
+            PyErr_SetObject(PyExc_UVError, exc_data);
+            Py_DECREF(exc_data);
+        }
+        return NULL;
+    }
+}
+
+
+static PyObject *
+Util_func_get_process_title(PyObject *self)
+{
+    char buffer[512];
+    uv_err_t err;
+
+    if (!setup_args_called) {
+        setup_args();
+    }
+
+    err = uv_get_process_title(buffer, sizeof(buffer));
+    if (err.code == UV_OK) {
+        return PyString_FromString(buffer);
+    } else {
+        PyObject *exc_data = Py_BuildValue("(is)", err.code, uv_strerror(err));
+        if (exc_data != NULL) {
+            PyErr_SetObject(PyExc_UVError, exc_data);
+            Py_DECREF(exc_data);
+        }
+        return NULL;
+    }
+}
+
+
 static PyMethodDef
 Util_methods[] = {
     { "hrtime", (PyCFunction)Util_func_hrtime, METH_NOARGS, "High resolution time." },
@@ -190,6 +258,8 @@ Util_methods[] = {
     { "resident_set_memory", (PyCFunction)Util_func_resident_set_memory, METH_NOARGS, "Gets resident memory size for the current process." },
     { "interface_addresses", (PyCFunction)Util_func_interface_addresses, METH_NOARGS, "Gets network interface addresses." },
     { "cpu_info", (PyCFunction)Util_func_cpu_info, METH_NOARGS, "Gets system CPU information." },
+    { "set_process_title", (PyCFunction)Util_func_set_process_title, METH_VARARGS, "Sets current process title." },
+    { "get_process_title", (PyCFunction)Util_func_get_process_title, METH_NOARGS, "Gets current process title." },
     { NULL }
 };
 

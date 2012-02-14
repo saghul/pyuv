@@ -1,5 +1,5 @@
 
-from common import unittest2
+from common import platform_skip, unittest2
 import pyuv
 
 
@@ -36,6 +36,13 @@ class UtilTest(unittest2.TestCase):
     def test_cpu_info(self):
         r = pyuv.util.cpu_info()
         self.assertTrue(r)
+
+    @platform_skip(['darwin'])
+    def test_process_title(self):
+        title = 'my process'
+        pyuv.util.set_process_title(title)
+        r = pyuv.util.get_process_title()
+        self.assertEqual(r, title)
 
 
 if __name__ == '__main__':
