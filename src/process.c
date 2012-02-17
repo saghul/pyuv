@@ -158,14 +158,19 @@ Process_func_spawn(Process *self, PyObject *args, PyObject *kwargs)
         process_args[0] = file2;
         for (i = 0;i < n; i++) {
             item = PySequence_GetItem(arguments, i);
-            if (!item || !PyString_Check(item))
+            if (!item || !PyString_Check(item)) {
+                Py_XDECREF(item);
                 continue;
+            }
             arg_str = PyString_AsString(item);
             tmp_str = (char *) PyMem_Malloc(strlen(arg_str) + 1);
-            if (!tmp_str)
+            if (!tmp_str) {
+                Py_DECREF(item);
                 continue;
+            }
             strcpy(tmp_str, arg_str);
             process_args[i+1] = tmp_str;
+            Py_DECREF(item);
         }
         process_args[i+1] = NULL;
     } else {

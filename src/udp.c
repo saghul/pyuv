@@ -383,17 +383,22 @@ UDP_func_send(UDP *self, PyObject *args)
         }
         for (i = 0;i < n; i++) {
             item = PySequence_GetItem(data, i);
-            if (!item || !PyString_Check(item))
+            if (!item || !PyString_Check(item)) {
+                Py_XDECREF(item);
                 continue;
+            }
             data_len = PyString_Size(item);
             data_str = PyString_AsString(item);
             tmp = (char *) PyMem_Malloc(data_len + 1);
-            if (!tmp)
+            if (!tmp) {
+                Py_DECREF(item);
                 continue;
+            }
             memcpy(tmp, data_str, data_len + 1);
             tmpbuf = uv_buf_init(tmp, data_len);
             bufs[i] = tmpbuf;
             buf_count++;
+            Py_DECREF(item);
         }
 
     }
