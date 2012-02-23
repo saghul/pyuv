@@ -790,6 +790,84 @@ callback:
 }
 
 
+static void
+query_naptr_cb(void *arg, int status,int timeouts, unsigned char *answer_buf, int answer_len)
+{
+    PyGILState_STATE gstate = PyGILState_Ensure();
+    int parse_status;
+    struct ares_naptr_reply *naptr_reply, *naptr_ptr;
+    ares_cb_data_t *data;
+    DNSResolver *self;
+    PyObject *dns_result, *errorno, *tmp, *result, *callback;
+
+    ASSERT(arg);
+
+    data = (ares_cb_data_t*)arg;
+    self = data->resolver;
+    callback = data->cb;
+
+    ASSERT(self);
+    /* Object could go out of scope in the callback, increase refcount to avoid it */
+    Py_INCREF(self);
+
+    if (status != ARES_SUCCESS) {
+        errorno = PyInt_FromLong((long)status);
+        dns_result = Py_None;
+        Py_INCREF(Py_None);
+        goto callback;
+    }
+
+    parse_status = ares_parse_naptr_reply(answer_buf, answer_len, &naptr_reply);
+    if (parse_status != ARES_SUCCESS) {
+        errorno = PyInt_FromLong((long)parse_status);
+        dns_result = Py_None;
+        Py_INCREF(Py_None);
+        goto callback;
+    }
+
+    dns_result = PyList_New(0);
+    if (!dns_result) {
+        PyErr_NoMemory();
+        PyErr_WriteUnraisable(Py_None);
+        errorno = PyInt_FromLong((long)ARES_ENOMEM);
+        dns_result = Py_None;
+        Py_INCREF(Py_None);
+        goto callback;
+    }
+
+    for (naptr_ptr = naptr_reply; naptr_ptr != NULL; naptr_ptr = naptr_ptr->next) {
+        tmp = PyTuple_New(6);
+        if (tmp == NULL) {
+            break;
+        }
+        PyTuple_SET_ITEM(tmp, 0, PyInt_FromLong((long)naptr_ptr->order));
+        PyTuple_SET_ITEM(tmp, 1, PyInt_FromLong((long)naptr_ptr->preference));
+        PyTuple_SET_ITEM(tmp, 2, PyString_FromString(naptr_ptr->flags));
+        PyTuple_SET_ITEM(tmp, 3, PyString_FromString(naptr_ptr->service));
+        PyTuple_SET_ITEM(tmp, 4, PyString_FromString(naptr_ptr->regexp));
+        PyTuple_SET_ITEM(tmp, 5, PyString_FromString(naptr_ptr->replacement));
+        PyList_Append(dns_result, tmp);
+        Py_DECREF(tmp);
+    }
+    ares_free_data(naptr_reply);
+    errorno = Py_None;
+    Py_INCREF(Py_None);
+
+callback:
+    result = PyObject_CallFunctionObjArgs(callback, self, dns_result, errorno, NULL);
+    if (result == NULL) {
+        PyErr_WriteUnraisable(callback);
+    }
+    Py_XDECREF(result);
+
+    Py_DECREF(callback);
+    PyMem_Free(data);
+
+    Py_DECREF(self);
+    PyGILState_Release(gstate);
+}
+
+
 static PyObject *
 DNSResolver_func_gethostbyname(DNSResolver *self, PyObject *args, PyObject *kwargs)
 {
@@ -1214,6 +1292,37 @@ DNSResolver_func_query_srv(DNSResolver *self, PyObject *args)
 }
 
 
+static PyObject *
+DNSResolver_func_query_naptr(DNSResolver *self, PyObject *args)
+{
+    char *name;
+    ares_cb_data_t *cb_data;
+    PyObject *callback;
+
+    if (!PyArg_ParseTuple(args, "sO:query_naptr", &name, &callback)) {
+        return NULL;
+    }
+
+    if (!PyCallable_Check(callback)) {
+        PyErr_SetString(PyExc_TypeError, "a callable is required");
+        return NULL;
+    }
+
+    cb_data = (ares_cb_data_t*) PyMem_Malloc(sizeof *cb_data);
+    if (!cb_data) {
+        return PyErr_NoMemory();
+    }
+
+    Py_INCREF(callback);
+    cb_data->resolver = self;
+    cb_data->cb = callback;
+
+    ares_query(self->channel, name, C_IN, T_NAPTR, &query_naptr_cb, (void *)cb_data);
+
+    Py_RETURN_NONE;
+}
+
+
 static int
 set_dns_servers(DNSResolver *self, PyObject *value)
 {
@@ -1433,6 +1542,7 @@ DNSResolver_tp_methods[] = {
     { "query_ns", (PyCFunction)DNSResolver_func_query_ns, METH_VARARGS, "Run a DNS query of type NS" },
     { "query_txt", (PyCFunction)DNSResolver_func_query_txt, METH_VARARGS, "Run a DNS query of type TXT" },
     { "query_srv", (PyCFunction)DNSResolver_func_query_srv, METH_VARARGS, "Run a DNS query of type SRV" },
+    { "query_naptr", (PyCFunction)DNSResolver_func_query_naptr, METH_VARARGS, "Run a DNS query of type NAPTR" },
     { NULL }
 };
 

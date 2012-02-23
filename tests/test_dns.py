@@ -124,6 +124,17 @@ class DNSTest(unittest2.TestCase):
         resolver.query_srv('_xmpp-server._tcp.google.com', self.query_srv_cb)
         loop.run()
 
+    def query_naptr_cb(self, resolver, result, errorno):
+        print result
+        self.assertEqual(errorno, None)
+        self.assertTrue(result)
+
+    def test_query_naptr(self):
+        loop = pyuv.Loop.default_loop()
+        resolver = pyuv.dns.DNSResolver(loop)
+        resolver.query_naptr('sip2sip.info', self.query_naptr_cb)
+        loop.run()
+
 
 if __name__ == '__main__':
     unittest2.main(verbosity=2)
