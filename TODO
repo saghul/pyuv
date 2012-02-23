@@ -3,5 +3,3 @@
 - Use PyStructSequence (similar to a named tuple) on stat and perhaps
   somewhere else as well
 
-- Add NAPTR resolution function when libuv updates c-ares
-
