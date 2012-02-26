@@ -842,9 +842,9 @@ query_naptr_cb(void *arg, int status,int timeouts, unsigned char *answer_buf, in
         }
         PyTuple_SET_ITEM(tmp, 0, PyInt_FromLong((long)naptr_ptr->order));
         PyTuple_SET_ITEM(tmp, 1, PyInt_FromLong((long)naptr_ptr->preference));
-        PyTuple_SET_ITEM(tmp, 2, PyString_FromString(naptr_ptr->flags));
-        PyTuple_SET_ITEM(tmp, 3, PyString_FromString(naptr_ptr->service));
-        PyTuple_SET_ITEM(tmp, 4, PyString_FromString(naptr_ptr->regexp));
+        PyTuple_SET_ITEM(tmp, 2, PyString_FromString((char *)naptr_ptr->flags));
+        PyTuple_SET_ITEM(tmp, 3, PyString_FromString((char *)naptr_ptr->service));
+        PyTuple_SET_ITEM(tmp, 4, PyString_FromString((char *)naptr_ptr->regexp));
         PyTuple_SET_ITEM(tmp, 5, PyString_FromString(naptr_ptr->replacement));
         PyList_Append(dns_result, tmp);
         Py_DECREF(tmp);
