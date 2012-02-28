@@ -195,6 +195,7 @@ static PyTypeObject DNSResolverType;
 /* ThreadPool */
 typedef struct {
     PyObject_HEAD
+    Loop *loop;
 } ThreadPool;
 
 static PyTypeObject ThreadPoolType;

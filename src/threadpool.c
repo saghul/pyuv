@@ -2,10 +2,11 @@
 static PyObject* PyExc_ThreadPoolError;
 
 typedef struct {
-    Loop *loop;
     PyObject *func;
     PyObject *args;
     PyObject *kwargs;
+    PyObject *result;
+    PyObject *after_work_func;
 } tpool_req_data_t;
 
 
@@ -19,14 +20,16 @@ work_cb(uv_work_t *req)
     ASSERT(req);
 
     data = (tpool_req_data_t*)(req->data);
-    args = (data->args)?data->args:PyTuple_New(0);
+    args = (data->args) ? data->args : PyTuple_New(0);
     kw = data->kwargs;
 
     result = PyObject_Call(data->func, args, kw);
     if (result == NULL) {
         PyErr_WriteUnraisable(data->func);
+        result = Py_None;
+        Py_INCREF(Py_None);
     }
-    Py_XDECREF(result);
+    data->result = result;
 
     PyGILState_Release(gstate);
 }
@@ -37,15 +40,25 @@ after_work_cb(uv_work_t *req)
 {
     PyGILState_STATE gstate = PyGILState_Ensure();
     tpool_req_data_t *data;
+    PyObject *result;
 
     ASSERT(req);
 
     data = (tpool_req_data_t*)req->data;
 
-    Py_DECREF(data->loop);
+    if (data->after_work_func) {
+        result = PyObject_CallFunctionObjArgs(data->after_work_func, data->result, NULL);
+        if (result == NULL) {
+            PyErr_WriteUnraisable(data->after_work_func);
+        }
+        Py_XDECREF(result);
+    }
+
     Py_DECREF(data->func);
     Py_XDECREF(data->args);
     Py_XDECREF(data->kwargs);
+    Py_XDECREF(data->after_work_func);
+    Py_DECREF(data->result);
 
     PyMem_Free(req->data);
     PyMem_Free(req);
@@ -54,24 +67,30 @@ after_work_cb(uv_work_t *req)
 
 
 static PyObject *
-ThreadPool_func_run(PyObject *cls, PyObject *args)
+ThreadPool_func_queue_work(ThreadPool *self, PyObject *args, PyObject *kwargs)
 {
     int r;
     uv_work_t *work_req = NULL;
     tpool_req_data_t *req_data = NULL;
-    Loop *loop;
-    PyObject *func, *func_args, *func_kwargs;
+    PyObject *func, *func_args, *func_kwargs, *after_work_func;
 
-    func = func_args = func_kwargs = NULL;
+    static char *kwlist[] = {"func", "after_work_func", "func_args", "func_kwargs", NULL};
 
-    UNUSED_ARG(cls);
+    work_req = NULL;
+    req_data = NULL;
+    func = func_args = func_kwargs = after_work_func = NULL;
 
-    if (!PyArg_ParseTuple(args, "O!O|OO:run", &LoopType, &loop, &func, &func_args, &func_kwargs)) {
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O|OOO:queue_work", kwlist, &func, &after_work_func, &func_args, &func_kwargs)) {
         return NULL;
     }
 
     if (!PyCallable_Check(func)) {
         PyErr_SetString(PyExc_TypeError, "a callable is required");
+        return NULL;
+    }
+
+    if (after_work_func != NULL && !PyCallable_Check(after_work_func)) {
+        PyErr_SetString(PyExc_TypeError, "after_work_func must be a callable");
         return NULL;
     }
 
@@ -90,27 +109,28 @@ ThreadPool_func_run(PyObject *cls, PyObject *args)
         PyErr_NoMemory();
         goto error;
     }
-   
+
     req_data = PyMem_Malloc(sizeof(tpool_req_data_t));
     if (!req_data) {
         PyErr_NoMemory();
         goto error;
     }
-   
-    Py_INCREF(loop);
+
     Py_INCREF(func);
+    Py_XINCREF(after_work_func);
     Py_XINCREF(func_args);
     Py_XINCREF(func_kwargs);
 
-    req_data->loop = loop;
     req_data->func = func;
+    req_data->after_work_func = after_work_func;
     req_data->args = func_args;
     req_data->kwargs = func_kwargs;
+    req_data->result = NULL;
 
     work_req->data = (void *)req_data;
-    r = uv_queue_work(loop->uv_loop, work_req, work_cb, after_work_cb);
+    r = uv_queue_work(UV_LOOP(self), work_req, work_cb, after_work_cb);
     if (r != 0) {
-        raise_uv_exception(loop, PyExc_ThreadPoolError);
+        raise_uv_exception(self->loop, PyExc_ThreadPoolError);
         goto error;
     }
 
@@ -123,7 +143,6 @@ error:
     if (req_data) {
         PyMem_Free(req_data);
     }
-    Py_DECREF(loop);
     Py_DECREF(func);
     Py_XDECREF(func_args);
     Py_XDECREF(func_kwargs);
@@ -131,22 +150,70 @@ error:
 }
 
 
+static int
+ThreadPool_tp_init(ThreadPool *self, PyObject *args, PyObject *kwargs)
+{
+    Loop *loop;
+    PyObject *tmp = NULL;
+
+    if (!PyArg_ParseTuple(args, "O!:__init__", &LoopType, &loop)) {
+        return -1;
+    }
+
+    tmp = (PyObject *)self->loop;
+    Py_INCREF(loop);
+    self->loop = loop;
+    Py_XDECREF(tmp);
+
+    return 0;
+}
+
+
 static PyObject *
 ThreadPool_tp_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
 {
-    UNUSED_ARG(type);
-    UNUSED_ARG(args);
-    UNUSED_ARG(kwargs);
+    ThreadPool *self = (ThreadPool *)PyType_GenericNew(type, args, kwargs);
+    if (!self) {
+        return NULL;
+    }
+    return (PyObject *)self;
+}
 
-    PyErr_SetString(PyExc_RuntimeError, "ThreadPool instances cannot be created");
-    return NULL;
+
+static int
+ThreadPool_tp_traverse(ThreadPool *self, visitproc visit, void *arg)
+{
+    Py_VISIT(self->loop);
+    return 0;
+}
+
+
+static int
+ThreadPool_tp_clear(ThreadPool *self)
+{
+    Py_CLEAR(self->loop);
+    return 0;
+}
+
+
+static void
+ThreadPool_tp_dealloc(ThreadPool *self)
+{
+    ThreadPool_tp_clear(self);
+    Py_TYPE(self)->tp_free((PyObject *)self);
 }
 
 
 static PyMethodDef
 ThreadPool_tp_methods[] = {
-    { "run", (PyCFunction)ThreadPool_func_run, METH_CLASS|METH_VARARGS, "Run the given function in the thread pool." },
+    { "queue_work", (PyCFunction)ThreadPool_func_queue_work, METH_VARARGS|METH_KEYWORDS, "Queue the given function to be run in the thread pool." },
     { NULL }
+};
+
+
+static PyMemberDef ThreadPool_tp_members[] = {
+    {"loop", T_OBJECT_EX, offsetof(ThreadPool, loop), READONLY, "Loop where this ThreadPool is running on."},
+    {NULL}
 };
 
 
@@ -155,7 +222,7 @@ static PyTypeObject ThreadPoolType = {
     "pyuv.ThreadPool",                                              /*tp_name*/
     sizeof(ThreadPool),                                             /*tp_basicsize*/
     0,                                                              /*tp_itemsize*/
-    0,                                                              /*tp_dealloc*/
+    (destructor)ThreadPool_tp_dealloc,                              /*tp_dealloc*/
     0,                                                              /*tp_print*/
     0,                                                              /*tp_getattr*/
     0,                                                              /*tp_setattr*/
@@ -170,23 +237,23 @@ static PyTypeObject ThreadPoolType = {
     0,                                                              /*tp_getattro*/
     0,                                                              /*tp_setattro*/
     0,                                                              /*tp_as_buffer*/
-    Py_TPFLAGS_DEFAULT,                                             /*tp_flags*/
+    Py_TPFLAGS_DEFAULT | Py_TPFLAGS_HAVE_GC,                        /*tp_flags*/
     0,                                                              /*tp_doc*/
-    0,                                                              /*tp_traverse*/
-    0,                                                              /*tp_clear*/
+    (traverseproc)ThreadPool_tp_traverse,                           /*tp_traverse*/
+    (inquiry)ThreadPool_tp_clear,                                   /*tp_clear*/
     0,                                                              /*tp_richcompare*/
     0,                                                              /*tp_weaklistoffset*/
     0,                                                              /*tp_iter*/
     0,                                                              /*tp_iternext*/
     ThreadPool_tp_methods,                                          /*tp_methods*/
-    0,                                                              /*tp_members*/
+    ThreadPool_tp_members,                                          /*tp_members*/
     0,                                                              /*tp_getsets*/
     0,                                                              /*tp_base*/
     0,                                                              /*tp_dict*/
     0,                                                              /*tp_descr_get*/
     0,                                                              /*tp_descr_set*/
     0,                                                              /*tp_dictoffset*/
-    0,                                                              /*tp_init*/
+    (initproc)ThreadPool_tp_init,                                   /*tp_init*/
     0,                                                              /*tp_alloc*/
     ThreadPool_tp_new,                                              /*tp_new*/
 };

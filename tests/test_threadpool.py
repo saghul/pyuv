@@ -10,34 +10,39 @@ class ThreadPoolTest(unittest2.TestCase):
 
     def setUp(self):
         self.pool_cb_called = 0
+        self.pool_after_work_cb_called = 0
         self.loop = pyuv.Loop.default_loop()
+        self.pool = pyuv.ThreadPool(self.loop)
 
     def run_in_pool(self, *args, **kw):
         self.pool_cb_called += 1
         time.sleep(0.1)
 
+    def after_work_cb(self, result):
+        self.pool_after_work_cb_called += 1
+
     def test_threadpool1(self):
-        pyuv.ThreadPool.run(self.loop, self.run_in_pool)
-        pyuv.ThreadPool.run(self.loop, self.run_in_pool, (1, 2, 3))
-        pyuv.ThreadPool.run(self.loop, self.run_in_pool, (), {'test': 1})
+        self.pool.queue_work(self.run_in_pool, self.after_work_cb)
+        self.pool.queue_work(self.run_in_pool, self.after_work_cb, (1, 2, 3), {})
+        self.pool.queue_work(self.run_in_pool, self.after_work_cb, (), {'test': 1})
         self.loop.run()
         self.assertEqual(self.pool_cb_called, 3)
+        self.assertEqual(self.pool_after_work_cb_called, 3)
 
 
 class ThreadPoolMultiLoopTest(unittest2.TestCase):
 
     def setUp(self):
         self.pool_cb_called = 0
-        self.lock = threading.Lock()
 
     def run_in_pool(self):
-        with self.lock:
-            self.pool_cb_called += 1
-            time.sleep(0.1)
+        self.pool_cb_called += 1
+        time.sleep(0.1)
 
     def run_loop(self):
         loop = pyuv.Loop()
-        pyuv.ThreadPool.run(loop, self.run_in_pool)
+        pool = pyuv.ThreadPool(loop)
+        pool.queue_work(self.run_in_pool)
         loop.run()
 
     def test_threadpool_multiple_loops(self):
