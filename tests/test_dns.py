@@ -125,7 +125,6 @@ class DNSTest(unittest2.TestCase):
         loop.run()
 
     def query_naptr_cb(self, resolver, result, errorno):
-        print result
         self.assertEqual(errorno, None)
         self.assertTrue(result)
 
