@@ -463,7 +463,7 @@ query_cname_cb(void *arg, int status,int timeouts, unsigned char *answer_buf, in
         goto callback;
     }
 
-    dns_result = PyList_New(1);
+    dns_result = PyList_New(0);
     if (!dns_result) {
         PyErr_NoMemory();
         PyErr_WriteUnraisable(Py_None);
