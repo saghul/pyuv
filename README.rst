@@ -1,3 +1,5 @@
+
+===============================
 pyuv: Python interface to libuv
 ===============================
 
@@ -30,13 +32,13 @@ pyuv's features:
 
 
 Documentation
--------------
+=============
 
 http://readthedocs.org/docs/pyuv/
 
 
 Building
---------
+========
 
 Linux:
     ./build_inplace
@@ -53,31 +55,25 @@ Microsoft Windows:
 
 
 Author
-------
+======
 
 Saúl Ibarra Corretgé <saghul@gmail.com>
 
 
 License
--------
+=======
 
 Unless stated otherwise on-file pyuv uses the MIT license, check LICENSE file.
 
 
-Roadmap
--------
-
-Check TODO file.
-
-
-Python version
---------------
+Python versions
+===============
 
 Python >= 2.6 is supported. Yes, that includes Python 3 :-)
 
 
 Contributing
-------------
+============
 
 If you'd like to contribute, fork the project, make a patch and send a pull
 request. Have a look at the surrounding code and please, make yours look
