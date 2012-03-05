@@ -1,4 +1,3 @@
-
 static PyObject* PyExc_IOStreamError;
 
 
@@ -452,7 +451,7 @@ IOStream_func_write(IOStream *self, PyObject *args)
         }
 
     }
-
+    Py_DECREF(data);
     write_data->bufs = bufs;
     write_data->buf_count = buf_count;
     req_data->data = (void *)write_data;
