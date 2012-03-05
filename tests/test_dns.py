@@ -134,6 +134,16 @@ class DNSTest(unittest2.TestCase):
         resolver.query_naptr('sip2sip.info', self.query_naptr_cb)
         loop.run()
 
+    def cancelled_cb(self, resolver, result, errorno):
+        self.assertEqual(errorno, pyuv.errno.ARES_ECANCELLED)
+
+    def test_query_cancelled(self):
+        loop = pyuv.Loop.default_loop()
+        resolver = pyuv.dns.DNSResolver(loop)
+        resolver.query_ns('google.com', self.cancelled_cb)
+        resolver.cancel()
+        loop.run()
+
 
 if __name__ == '__main__':
     unittest2.main(verbosity=2)

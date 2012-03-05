@@ -1345,6 +1345,14 @@ DNSResolver_func_query_naptr(DNSResolver *self, PyObject *args)
 }
 
 
+static PyObject *
+DNSResolver_func_cancel(DNSResolver *self)
+{
+    ares_cancel(self->channel);
+    Py_RETURN_NONE;
+}
+
+
 static int
 set_dns_servers(DNSResolver *self, PyObject *value)
 {
@@ -1553,6 +1561,7 @@ DNSResolver_tp_dealloc(DNSResolver *self)
 
 static PyMethodDef
 DNSResolver_tp_methods[] = {
+    { "cancel", (PyCFunction)DNSResolver_func_cancel, METH_NOARGS, "Cancel all pending queries on this resolver" },
     { "gethostbyname", (PyCFunction)DNSResolver_func_gethostbyname, METH_VARARGS|METH_KEYWORDS, "Gethostbyname" },
     { "gethostbyaddr", (PyCFunction)DNSResolver_func_gethostbyaddr, METH_VARARGS|METH_KEYWORDS, "Gethostbyaddr" },
     { "getnameinfo", (PyCFunction)DNSResolver_func_getnameinfo, METH_VARARGS|METH_KEYWORDS, "Getnameinfo" },
