@@ -118,6 +118,9 @@ on_udp_read(uv_udp_t* handle, int nread, uv_buf_t buf, struct sockaddr* addr, un
             PyErr_WriteUnraisable(self->on_read_cb);
         }
         Py_XDECREF(result);
+        Py_DECREF(address_tuple);
+        Py_DECREF(data);
+        Py_DECREF(py_errorno);
     }
 
     PyMem_Free(buf.base);
@@ -162,6 +165,7 @@ on_udp_send(uv_udp_send_t* req, int status)
             PyErr_WriteUnraisable(callback);
         }
         Py_XDECREF(result);
+        Py_DECREF(py_errorno);
     }
 
     for (i = 0; i < send_data->buf_count; i++) {

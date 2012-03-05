@@ -16,7 +16,7 @@ on_process_exit(uv_process_t *process, int exit_status, int term_signal)
 {
     PyGILState_STATE gstate = PyGILState_Ensure();
     Process *self;
-    PyObject *result;
+    PyObject *result, *py_exit_status, *py_term_signal;
 
     ASSERT(process);
     self = (Process *)process->data;
@@ -25,12 +25,17 @@ on_process_exit(uv_process_t *process, int exit_status, int term_signal)
     /* Object could go out of scope in the callback, increase refcount to avoid it */
     Py_INCREF(self);
 
+    py_exit_status = PyInt_FromLong(exit_status);
+    py_term_signal = PyInt_FromLong(term_signal);
+
     if (self->on_exit_cb != Py_None) {
-        result = PyObject_CallFunctionObjArgs(self->on_exit_cb, self, PyInt_FromLong(exit_status), PyInt_FromLong(term_signal), NULL);
+        result = PyObject_CallFunctionObjArgs(self->on_exit_cb, self, py_exit_status, py_term_signal, NULL);
         if (result == NULL) {
             PyErr_WriteUnraisable(self->on_exit_cb);
         }
         Py_XDECREF(result);
+        Py_DECREF(py_exit_status);
+        Py_DECREF(py_term_signal);
     }
 
     Py_DECREF(self);

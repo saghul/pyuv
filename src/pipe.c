@@ -31,6 +31,7 @@ on_pipe_connection(uv_stream_t* server, int status)
         PyErr_WriteUnraisable(self->on_new_connection_cb);
     }
     Py_XDECREF(result);
+    Py_DECREF(py_errorno);
 
     Py_DECREF(self);
     PyGILState_Release(gstate);
@@ -70,6 +71,7 @@ on_pipe_client_connection(uv_connect_t *req, int status)
         PyErr_WriteUnraisable(callback);
     }
     Py_XDECREF(result);
+    Py_DECREF(py_errorno);
 
     Py_DECREF(callback);
     PyMem_Free(req_data);
@@ -112,6 +114,9 @@ on_pipe_read2(uv_pipe_t* handle, int nread, uv_buf_t buf, uv_handle_type pending
         PyErr_WriteUnraisable(self->on_read_cb);
     }
     Py_XDECREF(result);
+    Py_DECREF(data);
+    Py_DECREF(py_pending);
+    Py_DECREF(py_errorno);
 
     PyMem_Free(buf.base);
 

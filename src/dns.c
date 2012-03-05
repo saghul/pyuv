@@ -94,6 +94,8 @@ callback:
         PyErr_WriteUnraisable(callback);
     }
     Py_XDECREF(result);
+    Py_DECREF(dns_result);
+    Py_DECREF(errorno);
 
     Py_DECREF(callback);
     PyMem_Free(data);
@@ -157,6 +159,8 @@ callback:
         PyErr_WriteUnraisable(callback);
     }
     Py_XDECREF(result);
+    Py_DECREF(dns_result);
+    Py_DECREF(errorno);
 
     Py_DECREF(callback);
     PyMem_Free(data);
@@ -267,6 +271,8 @@ callback:
         PyErr_WriteUnraisable(callback);
     }
     Py_XDECREF(result);
+    Py_DECREF(dns_result);
+    Py_DECREF(errorno);
 
     Py_DECREF(callback);
     uv_freeaddrinfo(res);
@@ -344,6 +350,8 @@ callback:
         PyErr_WriteUnraisable(callback);
     }
     Py_XDECREF(result);
+    Py_DECREF(dns_result);
+    Py_DECREF(errorno);
 
     Py_DECREF(callback);
     PyMem_Free(data);
@@ -419,6 +427,8 @@ callback:
         PyErr_WriteUnraisable(callback);
     }
     Py_XDECREF(result);
+    Py_DECREF(dns_result);
+    Py_DECREF(errorno);
 
     Py_DECREF(callback);
     PyMem_Free(data);
@@ -486,6 +496,8 @@ callback:
         PyErr_WriteUnraisable(callback);
     }
     Py_XDECREF(result);
+    Py_DECREF(dns_result);
+    Py_DECREF(errorno);
 
     Py_DECREF(callback);
     PyMem_Free(data);
@@ -560,6 +572,8 @@ callback:
         PyErr_WriteUnraisable(callback);
     }
     Py_XDECREF(result);
+    Py_DECREF(dns_result);
+    Py_DECREF(errorno);
 
     Py_DECREF(callback);
     PyMem_Free(data);
@@ -633,6 +647,8 @@ callback:
         PyErr_WriteUnraisable(callback);
     }
     Py_XDECREF(result);
+    Py_DECREF(dns_result);
+    Py_DECREF(errorno);
 
     Py_DECREF(callback);
     PyMem_Free(data);
@@ -705,6 +721,8 @@ callback:
         PyErr_WriteUnraisable(callback);
     }
     Py_XDECREF(result);
+    Py_DECREF(dns_result);
+    Py_DECREF(errorno);
 
     Py_DECREF(callback);
     PyMem_Free(data);
@@ -781,6 +799,8 @@ callback:
         PyErr_WriteUnraisable(callback);
     }
     Py_XDECREF(result);
+    Py_DECREF(dns_result);
+    Py_DECREF(errorno);
 
     Py_DECREF(callback);
     PyMem_Free(data);
@@ -859,6 +879,8 @@ callback:
         PyErr_WriteUnraisable(callback);
     }
     Py_XDECREF(result);
+    Py_DECREF(dns_result);
+    Py_DECREF(errorno);
 
     Py_DECREF(callback);
     PyMem_Free(data);

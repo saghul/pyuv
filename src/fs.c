@@ -143,6 +143,9 @@ stat_cb(uv_fs_t* req) {
             PyErr_WriteUnraisable(req_data->callback);
         }
         Py_XDECREF(result);
+        Py_DECREF(stat_data);
+        Py_DECREF(path);
+        Py_DECREF(errorno);
     }
 
     uv_fs_req_cleanup(req);
@@ -189,6 +192,8 @@ unlink_cb(uv_fs_t* req) {
         PyErr_WriteUnraisable(req_data->callback);
     }
     Py_XDECREF(result);
+    Py_DECREF(path);
+    Py_DECREF(errorno);
 
     uv_fs_req_cleanup(req);
     Py_DECREF(req_data->loop);
@@ -234,6 +239,8 @@ mkdir_cb(uv_fs_t* req) {
         PyErr_WriteUnraisable(req_data->callback);
     }
     Py_XDECREF(result);
+    Py_DECREF(path);
+    Py_DECREF(errorno);
 
     uv_fs_req_cleanup(req);
     Py_DECREF(req_data->loop);
@@ -279,6 +286,8 @@ rmdir_cb(uv_fs_t* req) {
         PyErr_WriteUnraisable(req_data->callback);
     }
     Py_XDECREF(result);
+    Py_DECREF(path);
+    Py_DECREF(errorno);
 
     uv_fs_req_cleanup(req);
     Py_DECREF(req_data->loop);
@@ -324,6 +333,8 @@ rename_cb(uv_fs_t* req) {
         PyErr_WriteUnraisable(req_data->callback);
     }
     Py_XDECREF(result);
+    Py_DECREF(path);
+    Py_DECREF(errorno);
 
     uv_fs_req_cleanup(req);
     Py_DECREF(req_data->loop);
@@ -369,6 +380,8 @@ chmod_cb(uv_fs_t* req) {
         PyErr_WriteUnraisable(req_data->callback);
     }
     Py_XDECREF(result);
+    Py_DECREF(path);
+    Py_DECREF(errorno);
 
     uv_fs_req_cleanup(req);
     Py_DECREF(req_data->loop);
@@ -414,6 +427,8 @@ link_cb(uv_fs_t* req) {
         PyErr_WriteUnraisable(req_data->callback);
     }
     Py_XDECREF(result);
+    Py_DECREF(path);
+    Py_DECREF(errorno);
 
     uv_fs_req_cleanup(req);
     Py_DECREF(req_data->loop);
@@ -459,6 +474,8 @@ symlink_cb(uv_fs_t* req) {
         PyErr_WriteUnraisable(req_data->callback);
     }
     Py_XDECREF(result);
+    Py_DECREF(path);
+    Py_DECREF(errorno);
 
     uv_fs_req_cleanup(req);
     Py_DECREF(req_data->loop);
@@ -506,6 +523,8 @@ readlink_cb(uv_fs_t* req) {
         PyErr_WriteUnraisable(req_data->callback);
     }
     Py_XDECREF(result);
+    Py_DECREF(path);
+    Py_DECREF(errorno);
 
     uv_fs_req_cleanup(req);
     Py_DECREF(req_data->loop);
@@ -551,6 +570,8 @@ chown_cb(uv_fs_t* req) {
         PyErr_WriteUnraisable(req_data->callback);
     }
     Py_XDECREF(result);
+    Py_DECREF(path);
+    Py_DECREF(errorno);
 
     uv_fs_req_cleanup(req);
     Py_DECREF(req_data->loop);
@@ -605,6 +626,9 @@ open_cb(uv_fs_t* req) {
         PyErr_WriteUnraisable(req_data->callback);
     }
     Py_XDECREF(result);
+    Py_DECREF(fd);
+    Py_DECREF(path);
+    Py_DECREF(errorno);
 
     uv_fs_req_cleanup(req);
     Py_DECREF(req_data->loop);
@@ -649,6 +673,8 @@ close_cb(uv_fs_t* req) {
         PyErr_WriteUnraisable(req_data->callback);
     }
     Py_XDECREF(result);
+    Py_DECREF(path);
+    Py_DECREF(errorno);
 
     uv_fs_req_cleanup(req);
     Py_DECREF(req_data->loop);
@@ -711,6 +737,9 @@ read_cb(uv_fs_t* req) {
         PyErr_WriteUnraisable(req_data->callback);
     }
     Py_XDECREF(result);
+    Py_DECREF(read_data);
+    Py_DECREF(path);
+    Py_DECREF(errorno);
 
     uv_fs_req_cleanup(req);
     Py_DECREF(req_data->loop);
@@ -767,6 +796,9 @@ write_cb(uv_fs_t* req) {
         PyErr_WriteUnraisable(req_data->callback);
     }
     Py_XDECREF(result);
+    Py_DECREF(bytes_written);
+    Py_DECREF(path);
+    Py_DECREF(errorno);
 
     uv_fs_req_cleanup(req);
     Py_DECREF(req_data->loop);
@@ -813,6 +845,8 @@ fsync_cb(uv_fs_t* req) {
         PyErr_WriteUnraisable(req_data->callback);
     }
     Py_XDECREF(result);
+    Py_DECREF(path);
+    Py_DECREF(errorno);
 
     uv_fs_req_cleanup(req);
     Py_DECREF(req_data->loop);
@@ -858,6 +892,8 @@ ftruncate_cb(uv_fs_t* req) {
         PyErr_WriteUnraisable(req_data->callback);
     }
     Py_XDECREF(result);
+    Py_DECREF(path);
+    Py_DECREF(errorno);
 
     uv_fs_req_cleanup(req);
     Py_DECREF(req_data->loop);
@@ -936,6 +972,9 @@ readdir_cb(uv_fs_t* req) {
         PyErr_WriteUnraisable(req_data->callback);
     }
     Py_XDECREF(result);
+    Py_DECREF(files);
+    Py_DECREF(path);
+    Py_DECREF(errorno);
 
     uv_fs_req_cleanup(req);
     Py_DECREF(req_data->loop);
@@ -989,6 +1028,9 @@ sendfile_cb(uv_fs_t* req) {
         PyErr_WriteUnraisable(req_data->callback);
     }
     Py_XDECREF(result);
+    Py_DECREF(bytes_written);
+    Py_DECREF(path);
+    Py_DECREF(errorno);
 
     uv_fs_req_cleanup(req);
     Py_DECREF(req_data->loop);
@@ -1034,6 +1076,8 @@ utime_cb(uv_fs_t* req) {
         PyErr_WriteUnraisable(req_data->callback);
     }
     Py_XDECREF(result);
+    Py_DECREF(path);
+    Py_DECREF(errorno);
 
     uv_fs_req_cleanup(req);
     Py_DECREF(req_data->loop);
@@ -2821,6 +2865,9 @@ on_fsevent_callback(uv_fs_event_t *handle, const char *filename, int events, int
 	PyErr_WriteUnraisable(self->on_fsevent_cb);
     }
     Py_XDECREF(result);
+    Py_DECREF(py_events);
+    Py_DECREF(py_filename);
+    Py_DECREF(errorno);
 
     Py_DECREF(self);
     PyGILState_Release(gstate);

@@ -32,6 +32,7 @@ on_tcp_connection(uv_stream_t* server, int status)
         PyErr_WriteUnraisable(self->on_new_connection_cb);
     }
     Py_XDECREF(result);
+    Py_DECREF(py_errorno);
 
     Py_DECREF(self);
     PyGILState_Release(gstate);
@@ -72,6 +73,7 @@ on_tcp_client_connection(uv_connect_t *req, int status)
         PyErr_WriteUnraisable(callback);
     }
     Py_XDECREF(result);
+    Py_DECREF(py_errorno);
 
     Py_DECREF(callback);
     PyMem_Free(req_data);

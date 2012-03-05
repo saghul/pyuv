@@ -98,6 +98,7 @@ on_iostream_shutdown(uv_shutdown_t* req, int status)
             PyErr_WriteUnraisable(callback);
         }
         Py_XDECREF(result);
+        Py_DECREF(py_errorno);
     }
 
     Py_DECREF(callback);
@@ -139,6 +140,8 @@ on_iostream_read(uv_stream_t* handle, int nread, uv_buf_t buf)
         PyErr_WriteUnraisable(self->on_read_cb);
     }
     Py_XDECREF(result);
+    Py_DECREF(data);
+    Py_DECREF(py_errorno);
 
     PyMem_Free(buf.base);
 
@@ -182,6 +185,7 @@ on_iostream_write(uv_write_t* req, int status)
             PyErr_WriteUnraisable(callback);
         }
         Py_XDECREF(result);
+        Py_DECREF(py_errorno);
     }
 
     for (i = 0; i < write_data->buf_count; i++) {
