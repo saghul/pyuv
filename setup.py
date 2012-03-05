@@ -12,7 +12,7 @@ setup(name             = "pyuv",
       author_email     = "saghul@gmail.com",
       url              = "http://github.com/saghul/pyuv",
       description      = "Python interface for libuv",
-      long_description = open("README").read(),
+      long_description = open("README.rst").read(),
       platforms        = ["POSIX", "Microsoft Windows"],
       classifiers      = [
           "Development Status :: 4 - Beta",
