@@ -35,7 +35,11 @@
 
         Callback signature: ``callback(udp_handle)``.
 
-    .. py:method:: send(data, [callback])
+    .. py:method:: send((ip, port), data, [callback])
+
+        :param string ip: IP address where data will be sent.
+
+        :param int port: Port number where data will be sent.
 
         :param object data: Data to be sent over the ``UDP`` connection. It can be either
             a string or any iterable containing strings.
