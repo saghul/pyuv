@@ -1,4 +1,0 @@
-48c48
-<                 'RuntimeLibrary': 0, # static release
----
->                 'RuntimeLibrary': 2, # static release
