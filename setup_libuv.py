@@ -1,4 +1,3 @@
-
 import errno
 import os
 import shutil
@@ -123,7 +122,7 @@ class libuv_build_ext(build_ext):
         else:
             if self.libuv_clean_compile:
                 if sys.platform=='win32':
-                    os.system('rd /s /q' + os.path.join(self.libuv_dir, 'Release')
+                    os.system('rd /s /q' + os.path.join(self.libuv_dir, 'Release'))
                 else:
                     exec_process(['make', 'clean'], cwd=self.libuv_dir)
                     
