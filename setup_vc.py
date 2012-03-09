@@ -1,5 +1,4 @@
 # coding=utf8
-
 import os
 import shutil
 import subprocess
@@ -27,7 +26,7 @@ if len(sys.argv)>1 and sys.argv[1] == "clean":
 
 setup(name         = "pyuv",
       version      = __version__,
-      author       = "Sa®≤l Ibarra Corretg®¶",
+      author       = "Sa√∫l Ibarra Corretg√©",
       author_email = "saghul@gmail.com",
       url          = "http://github.com/saghul/pyuv",
       description  = "Python interface for libuv",
@@ -42,7 +41,7 @@ setup(name         = "pyuv",
       ext_modules  = [Extension('pyuv', 
                                 sources = ['src/pyuv.c'], 
                                 define_macros=[('MODULE_VERSION', __version__), ('LIBUV_REVISION', 6)],
-                                extra_compile_args = ["/DMT", "/DWINDOWS=1","/DMODULE_VERSION="+__version__,"/DLIBUV_REVISION=6","/TP"],
+                                extra_compile_args = ["/DMD", "/DWINDOWS=1","/DMODULE_VERSION="+__version__,"/DLIBUV_REVISION=6","/TP"],
                                 extra_link_args = ["/MANIFEST"],
                                 libraries = ["uv","ws2_32","kernel32","user32","advapi32","Psapi","Iphlpapi"],
                                 library_dirs = [libfolder],
