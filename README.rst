@@ -1,4 +1,3 @@
-
 ===============================
 pyuv: Python interface to libuv
 ===============================
@@ -51,7 +50,7 @@ Mac OSX:
 
 Microsoft Windows:
     1. for MinGW: (MinGW and MSYS need to be installed)  ./build_inplace
-	2. for Visual Studio: python setup.py buld install
+    2. for Visual Studio: python setup.py buld install
 
 Author
 ======
