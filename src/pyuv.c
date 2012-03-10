@@ -139,7 +139,7 @@ init_pyuv(void)
     PyModule_AddStringConstant(pyuv, "LIBUV_VERSION", __MSTR(LIBUV_VERSION));
 
 	/* pyuv c compiler */
-	PyModule_AddStringConstant(pyuv, "cc", __MSTR(COMPILER));
+	PyModule_AddStringConstant(pyuv, "cc", COMPILER);
 
     return pyuv;
 
