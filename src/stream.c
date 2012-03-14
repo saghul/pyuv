@@ -348,10 +348,11 @@ IOStream_func_stop_read(IOStream *self)
 static PyObject *
 IOStream_func_write(IOStream *self, PyObject *args)
 {
-    int i, n, r, buf_count;
+    int i, r, buf_count;
     char *data_str, *tmp;
+    Py_buffer pbuf;
     Py_ssize_t data_len;
-    PyObject *item, *data, *callback;
+    PyObject *callback;
     uv_buf_t tmpbuf;
     uv_buf_t *bufs = NULL;
     uv_write_t *wr = NULL;
@@ -366,12 +367,7 @@ IOStream_func_write(IOStream *self, PyObject *args)
         return NULL;
     }
 
-    if (!PyArg_ParseTuple(args, "O|O:write", &data, &callback)) {
-        return NULL;
-    }
-
-    if (!PySequence_Check(data) || PyUnicode_Check(data)) {
-        PyErr_SetString(PyExc_TypeError, "only strings and iterables are supported");
+    if (!PyArg_ParseTuple(args, "s*|O:write", &pbuf, &callback)) {
         return NULL;
     }
 
@@ -403,55 +399,225 @@ IOStream_func_write(IOStream *self, PyObject *args)
     req_data->callback = callback;
     wr->data = (void *)req_data;
 
-    if (PyString_Check(data)) {
-        /* We have a single string */
-        bufs = (uv_buf_t *) PyMem_Malloc(sizeof(uv_buf_t));
-        if (!bufs) {
-            PyErr_NoMemory();
-            goto error;
+    bufs = (uv_buf_t *) PyMem_Malloc(sizeof(uv_buf_t));
+    if (!bufs) {
+        PyErr_NoMemory();
+        goto error;
+    }
+
+    data_str = pbuf.buf;
+    data_len = pbuf.len;
+    tmp = (char *) PyMem_Malloc(data_len);
+    if (!tmp) {
+        PyErr_NoMemory();
+        goto error;
+    }
+    memcpy(tmp, data_str, data_len);
+    tmpbuf = uv_buf_init(tmp, data_len);
+    bufs[0] = tmpbuf;
+    buf_count = 1;
+
+    write_data->bufs = bufs;
+    write_data->buf_count = buf_count;
+    req_data->data = (void *)write_data;
+
+    r = uv_write(wr, self->uv_handle, bufs, buf_count, on_iostream_write);
+    if (r != 0) {
+        raise_uv_exception(self->loop, PyExc_IOStreamError);
+        goto error;
+    }
+
+    Py_RETURN_NONE;
+
+error:
+    if (bufs) {
+        for (i = 0; i < buf_count; i++) {
+            PyMem_Free(bufs[i].base);
         }
-        data_len = PyString_Size(data);
-        data_str = PyString_AsString(data);
-        tmp = (char *) PyMem_Malloc(data_len+1);
-        if (!tmp) {
-            PyMem_Free(bufs);
-            PyErr_NoMemory();
-            goto error;
-        }
-        memcpy(tmp, data_str, data_len+1);
-        tmpbuf = uv_buf_init(tmp, data_len);
-        bufs[0] = tmpbuf;
-        buf_count = 1;
-    } else {
-        /* We have a list */
-        buf_count = 0;
-        n = PySequence_Length(data);
-        bufs = (uv_buf_t *) PyMem_Malloc(sizeof(uv_buf_t) * n);
-        if (!bufs) {
-            PyErr_NoMemory();
-            goto error;
-        }
-        for (i = 0;i < n; i++) {
-            item = PySequence_GetItem(data, i);
-            if (!item || !PyString_Check(item)) {
-                Py_XDECREF(item);
-                continue;
+        PyMem_Free(bufs);
+    }
+    if (write_data) {
+        PyMem_Free(write_data);
+    }
+    if (req_data) {
+        Py_DECREF(callback);
+        PyMem_Free(req_data);
+    }
+    if (wr) {
+        PyMem_Free(wr);
+    }
+    return NULL;
+}
+
+
+static Py_ssize_t
+iter_guess_size(PyObject *o, Py_ssize_t defaultvalue)
+{
+    PyObject *ro;
+    Py_ssize_t rv;
+
+    /* try o.__length_hint__() */
+    ro = PyObject_CallMethod(o, "__length_hint__", NULL);
+    if (ro == NULL) {
+        /* whatever the error is, clear it and return the default */
+        PyErr_Clear();
+        return defaultvalue;
+    }
+    rv = PyLong_Check(ro) ? PyLong_AsSsize_t(ro) : defaultvalue;
+    Py_DECREF(ro);
+    return rv;
+}
+
+static PyObject *
+IOStream_func_writelines(IOStream *self, PyObject *args)
+{
+    int i, r, buf_count;
+    char *data_str, *tmp;
+    const char *default_encoding;
+    Py_buffer pbuf;
+    Py_ssize_t data_len, n;
+    PyObject *callback, *seq, *iter, *item, *encoded;
+    uv_buf_t tmpbuf;
+    uv_buf_t *bufs, *new_bufs;
+    uv_write_t *wr = NULL;
+    iostream_req_data_t *req_data = NULL;
+    iostream_write_data_t *write_data = NULL;
+
+    buf_count = 0;
+    bufs = new_bufs = NULL;
+    callback = Py_None;
+    default_encoding = PyUnicode_GetDefaultEncoding();
+
+    if (!self->uv_handle) {
+        PyErr_SetString(PyExc_IOStreamError, "IOStream is closed");
+        return NULL;
+    }
+
+    if (!PyArg_ParseTuple(args, "O|O:writelines", &seq, &callback)) {
+        return NULL;
+    }
+
+    if (callback != Py_None && !PyCallable_Check(callback)) {
+        PyErr_SetString(PyExc_TypeError, "a callable or None is required");
+        return NULL;
+    }
+
+    wr = (uv_write_t *)PyMem_Malloc(sizeof(uv_write_t));
+    if (!wr) {
+        PyErr_NoMemory();
+        goto error;
+    }
+
+    req_data = (iostream_req_data_t*) PyMem_Malloc(sizeof(iostream_req_data_t));
+    if (!req_data) {
+        PyErr_NoMemory();
+        goto error;
+    }
+
+    write_data = (iostream_write_data_t *) PyMem_Malloc(sizeof(iostream_write_data_t));
+    if (!write_data) {
+        PyErr_NoMemory();
+        goto error;
+    }
+
+    req_data->obj = (PyObject *)self;
+    Py_INCREF(callback);
+    req_data->callback = callback;
+    wr->data = (void *)req_data;
+
+    iter = PyObject_GetIter(seq);
+    if (iter == NULL) {
+        goto error;
+    }
+
+    n = iter_guess_size(iter, 8);   /* if we can't get the size hint, preallocate 8 slots */
+    bufs = (uv_buf_t *) PyMem_Malloc(sizeof(uv_buf_t) * n);
+    if (!bufs) {
+        Py_DECREF(iter);
+        PyErr_NoMemory();
+        goto error;
+    }
+
+    i = 0;
+    while (1) {
+        item = PyIter_Next(iter);
+        if (item == NULL) {
+            if (PyErr_Occurred()) {
+                Py_DECREF(iter);
+                goto error;
+            } else {
+                /* StopIteration */
+                break;
             }
-            data_len = PyString_Size(item);
-            data_str = PyString_AsString(item);
-            tmp = (char *) PyMem_Malloc(data_len + 1);
-            if (!tmp) {
-                Py_DECREF(item);
-                continue;
-            }
-            memcpy(tmp, data_str, data_len+1);
-            tmpbuf = uv_buf_init(tmp, data_len);
-            bufs[i] = tmpbuf;
-            buf_count++;
-            Py_DECREF(item);
         }
 
+        if (PyUnicode_Check(item)) {
+            encoded = PyUnicode_AsEncodedString(item, default_encoding, "strict");
+            if (encoded == NULL) {
+                Py_DECREF(item);
+                Py_DECREF(iter);
+                goto error;
+            }
+            data_str = PyString_AS_STRING(encoded);
+            data_len = PyString_GET_SIZE(encoded);
+            tmp = (char *) PyMem_Malloc(data_len);
+            if (!tmp) {
+                Py_DECREF(item);
+                Py_DECREF(iter);
+                PyErr_NoMemory();
+                goto error;
+            }
+            memcpy(tmp, data_str, data_len);
+            tmpbuf = uv_buf_init(tmp, data_len);
+        } else {
+            if (PyObject_GetBuffer(item, &pbuf, PyBUF_CONTIG_RO) < 0) {
+                Py_DECREF(item);
+                Py_DECREF(iter);
+                goto error;
+            }
+            data_str = pbuf.buf;
+            data_len = pbuf.len;
+            tmp = (char *) PyMem_Malloc(data_len);
+            if (!tmp) {
+                Py_DECREF(item);
+                Py_DECREF(iter);
+                PyErr_NoMemory();
+                goto error;
+            }
+            memcpy(tmp, data_str, data_len);
+            tmpbuf = uv_buf_init(tmp, data_len);
+            PyBuffer_Release(&pbuf);
+        }
+
+        /* Check if we allocated enough space */
+        if (buf_count+1 < n) {
+            /* we have enough size */
+        } else {
+            /* preallocate 8 more slots */
+            n += 8;
+            new_bufs = (uv_buf_t *) PyMem_Realloc(bufs, sizeof(uv_buf_t) * n);
+            if (!new_bufs) {
+                Py_DECREF(item);
+                Py_DECREF(iter);
+                PyErr_NoMemory();
+                goto error;
+            }
+            bufs = new_bufs;
+        }
+        bufs[i] = tmpbuf;
+        i++;
+        buf_count++;
+        Py_DECREF(item);
     }
+    Py_DECREF(iter);
+
+    /* we may have over allocated space, shrink it to the minimum required */
+    new_bufs = (uv_buf_t *) PyMem_Realloc(bufs, sizeof(uv_buf_t) * buf_count);
+    if (!new_bufs) {
+        PyErr_NoMemory();
+        goto error;
+    }
+    bufs = new_bufs;
 
     write_data->bufs = bufs;
     write_data->buf_count = buf_count;
@@ -536,7 +702,8 @@ static PyMethodDef
 IOStream_tp_methods[] = {
     { "shutdown", (PyCFunction)IOStream_func_shutdown, METH_VARARGS, "Shutdown the write side of this IOStream." },
     { "close", (PyCFunction)IOStream_func_close, METH_VARARGS, "Close this IOStream connection." },
-    { "write", (PyCFunction)IOStream_func_write, METH_VARARGS, "Write data-" },
+    { "write", (PyCFunction)IOStream_func_write, METH_VARARGS, "Write data on the stream." },
+    { "writelines", (PyCFunction)IOStream_func_writelines, METH_VARARGS, "Write a sequence of data on the stream." },
     { "start_read", (PyCFunction)IOStream_func_start_read, METH_VARARGS, "Start read data from the connected endpoint." },
     { "stop_read", (PyCFunction)IOStream_func_stop_read, METH_NOARGS, "Stop read data from the connected endpoint." },
     { NULL }

@@ -124,7 +124,7 @@ class PipeTestList(unittest2.TestCase):
         server.accept(client)
         self.client_connections.append(client)
         client.start_read(self.on_client_connection_read)
-        client.write([b"PING", common.linesep])
+        client.writelines([b"PING", common.linesep])
 
     def on_client_connection_read(self, client, data, error):
         if data is None:
@@ -139,8 +139,7 @@ class PipeTestList(unittest2.TestCase):
 
     def on_client_read(self, client, data, error):
         self.assertNotEqual(data, None)
-        data = data.strip()
-        self.assertEquals(data, b"PING")
+        self.assertEquals(data, b"PING"+common.linesep)
         client.close()
 
     def test_pipe_list(self):
@@ -167,7 +166,7 @@ class PipeTestListNull(unittest2.TestCase):
         server.accept(client)
         self.client_connections.append(client)
         client.start_read(self.on_client_connection_read)
-        client.write([b"PING", b"\x00", common.linesep])
+        client.writelines([b"PING", b"\x00", common.linesep])
 
     def on_client_connection_read(self, client, data, error):
         if data is None:
@@ -182,8 +181,7 @@ class PipeTestListNull(unittest2.TestCase):
 
     def on_client_read(self, client, data, error):
         self.assertNotEqual(data, None)
-        data = data.strip()
-        self.assertEquals(data, b"PING\x00")
+        self.assertEquals(data, b"PING\x00"+common.linesep)
         client.close()
 
     def test_pipe_list_null(self):
