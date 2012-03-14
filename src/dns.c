@@ -56,7 +56,7 @@ host_cb(void *arg, int status, int timeouts, struct hostent *hostent)
 
     for (ptr = hostent->h_aliases; *ptr != NULL; ptr++) {
         if (*ptr != hostent->h_name && strcmp(*ptr, hostent->h_name)) {
-            tmp = PyString_FromString(*ptr);
+            tmp = PYUVString_FromString(*ptr);
             if (tmp == NULL) {
                 break;
             }
@@ -67,10 +67,10 @@ host_cb(void *arg, int status, int timeouts, struct hostent *hostent)
     for (ptr = hostent->h_addr_list; *ptr != NULL; ptr++) {
         if (hostent->h_addrtype == AF_INET) {
             uv_inet_ntop(AF_INET, *ptr, ip, INET_ADDRSTRLEN);
-            tmp = PyString_FromString(ip);
+            tmp = PYUVString_FromString(ip);
         } else if (hostent->h_addrtype == AF_INET6) {
             uv_inet_ntop(AF_INET6, *ptr, ip, INET6_ADDRSTRLEN);
-            tmp = PyString_FromString(ip);
+            tmp = PYUVString_FromString(ip);
         } else {
             continue;
         }
@@ -80,7 +80,7 @@ host_cb(void *arg, int status, int timeouts, struct hostent *hostent)
         PyList_Append(dns_addrlist, tmp);
         Py_DECREF(tmp);
     }
-    dns_name = PyString_FromString(hostent->h_name);
+    dns_name = PYUVString_FromString(hostent->h_name);
 
     PyTuple_SET_ITEM(dns_result, 0, dns_name);
     PyTuple_SET_ITEM(dns_result, 1, dns_aliases);
@@ -140,9 +140,9 @@ nameinfo_cb(void *arg, int status, int timeouts, char *node, char *service)
         goto callback;
     }
 
-    dns_node = PyString_FromString(node);
+    dns_node = PYUVString_FromString(node);
     if (service) {
-        dns_service = PyString_FromString(service);
+        dns_service = PYUVString_FromString(service);
     } else {
         dns_service = Py_None;
         Py_INCREF(Py_None);
@@ -333,7 +333,7 @@ query_a_cb(void *arg, int status,int timeouts, unsigned char *answer_buf, int an
 
     for (ptr = hostent->h_addr_list; *ptr != NULL; ptr++) {
         uv_inet_ntop(hostent->h_addrtype, *ptr, ip, sizeof(ip));
-        tmp = PyString_FromString(ip);
+        tmp = PYUVString_FromString(ip);
         if (tmp == NULL) {
             break;
         }
@@ -410,7 +410,7 @@ query_aaaa_cb(void *arg, int status,int timeouts, unsigned char *answer_buf, int
 
     for (ptr = hostent->h_addr_list; *ptr != NULL; ptr++) {
         uv_inet_ntop(hostent->h_addrtype, *ptr, ip, sizeof(ip));
-        tmp = PyString_FromString(ip);
+        tmp = PYUVString_FromString(ip);
         if (tmp == NULL) {
             break;
         }
@@ -483,7 +483,7 @@ query_cname_cb(void *arg, int status,int timeouts, unsigned char *answer_buf, in
         goto callback;
     }
 
-    tmp = PyString_FromString(hostent->h_name);
+    tmp = PYUVString_FromString(hostent->h_name);
     PyList_Append(dns_result, tmp);
     Py_DECREF(tmp);
     ares_free_hostent(hostent);
@@ -557,7 +557,7 @@ query_mx_cb(void *arg, int status,int timeouts, unsigned char *answer_buf, int a
         if (tmp == NULL) {
             break;
         }
-        PyTuple_SET_ITEM(tmp, 0, PyString_FromString(mx_ptr->host));
+        PyTuple_SET_ITEM(tmp, 0, PYUVString_FromString(mx_ptr->host));
         PyTuple_SET_ITEM(tmp, 1, PyInt_FromLong((long)mx_ptr->priority));
         PyList_Append(dns_result, tmp);
         Py_DECREF(tmp);
@@ -630,7 +630,7 @@ query_ns_cb(void *arg, int status,int timeouts, unsigned char *answer_buf, int a
     }
 
     for (ptr = hostent->h_aliases; *ptr != NULL; ptr++) {
-        tmp = PyString_FromString(*ptr);
+        tmp = PYUVString_FromString(*ptr);
         if (tmp == NULL) {
             break;
         }
@@ -704,7 +704,7 @@ query_txt_cb(void *arg, int status,int timeouts, unsigned char *answer_buf, int 
     }
 
     for (txt_ptr = txt_reply; txt_ptr != NULL; txt_ptr = txt_ptr->next) {
-        tmp = PyString_FromString((const char *)txt_ptr->txt);
+        tmp = PYUVString_FromString((const char *)txt_ptr->txt);
         if (tmp == NULL) {
             break;
         }
@@ -782,7 +782,7 @@ query_srv_cb(void *arg, int status,int timeouts, unsigned char *answer_buf, int 
         if (tmp == NULL) {
             break;
         }
-        PyTuple_SET_ITEM(tmp, 0, PyString_FromString(srv_ptr->host));
+        PyTuple_SET_ITEM(tmp, 0, PYUVString_FromString(srv_ptr->host));
         PyTuple_SET_ITEM(tmp, 1, PyInt_FromLong((long)srv_ptr->port));
         PyTuple_SET_ITEM(tmp, 2, PyInt_FromLong((long)srv_ptr->priority));
         PyTuple_SET_ITEM(tmp, 3, PyInt_FromLong((long)srv_ptr->weight));
@@ -862,10 +862,10 @@ query_naptr_cb(void *arg, int status,int timeouts, unsigned char *answer_buf, in
         }
         PyTuple_SET_ITEM(tmp, 0, PyInt_FromLong((long)naptr_ptr->order));
         PyTuple_SET_ITEM(tmp, 1, PyInt_FromLong((long)naptr_ptr->preference));
-        PyTuple_SET_ITEM(tmp, 2, PyString_FromString((char *)naptr_ptr->flags));
-        PyTuple_SET_ITEM(tmp, 3, PyString_FromString((char *)naptr_ptr->service));
-        PyTuple_SET_ITEM(tmp, 4, PyString_FromString((char *)naptr_ptr->regexp));
-        PyTuple_SET_ITEM(tmp, 5, PyString_FromString(naptr_ptr->replacement));
+        PyTuple_SET_ITEM(tmp, 2, PYUVString_FromString((char *)naptr_ptr->flags));
+        PyTuple_SET_ITEM(tmp, 3, PYUVString_FromString((char *)naptr_ptr->service));
+        PyTuple_SET_ITEM(tmp, 4, PYUVString_FromString((char *)naptr_ptr->regexp));
+        PyTuple_SET_ITEM(tmp, 5, PYUVString_FromString(naptr_ptr->replacement));
         PyList_Append(dns_result, tmp);
         Py_DECREF(tmp);
     }
@@ -1445,10 +1445,10 @@ DNSResolver_servers_get(DNSResolver *self, void *closure)
     for (server = servers; server != NULL; server = server->next) {
         if (server->family == AF_INET) {
             uv_inet_ntop(AF_INET, &(server->addr.addr4), ip, INET_ADDRSTRLEN);
-            tmp = PyString_FromString(ip);
+            tmp = PYUVString_FromString(ip);
         } else {
             uv_inet_ntop(AF_INET6, &(server->addr.addr6), ip, INET6_ADDRSTRLEN);
-            tmp = PyString_FromString(ip);
+            tmp = PYUVString_FromString(ip);
         }
         if (tmp == NULL) {
             break;
