@@ -399,6 +399,7 @@ Pipe_func_write2(Pipe *self, PyObject *args)
     }
 
     if (callback != Py_None && !PyCallable_Check(callback)) {
+        PyBuffer_Release(&pbuf);
         PyErr_SetString(PyExc_TypeError, "a callable or None is required");
         return NULL;
     }
@@ -454,9 +455,12 @@ Pipe_func_write2(Pipe *self, PyObject *args)
         goto error;
     }
 
+    PyBuffer_Release(&pbuf);
+
     Py_RETURN_NONE;
 
 error:
+    PyBuffer_Release(&pbuf);
     if (bufs) {
         for (i = 0; i < buf_count; i++) {
             PyMem_Free(bufs[i].base);

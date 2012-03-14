@@ -372,6 +372,7 @@ IOStream_func_write(IOStream *self, PyObject *args)
     }
 
     if (callback != Py_None && !PyCallable_Check(callback)) {
+        PyBuffer_Release(&pbuf);
         PyErr_SetString(PyExc_TypeError, "a callable or None is required");
         return NULL;
     }
@@ -427,9 +428,12 @@ IOStream_func_write(IOStream *self, PyObject *args)
         goto error;
     }
 
+    PyBuffer_Release(&pbuf);
+
     Py_RETURN_NONE;
 
 error:
+    PyBuffer_Release(&pbuf);
     if (bufs) {
         for (i = 0; i < buf_count; i++) {
             PyMem_Free(bufs[i].base);
@@ -581,6 +585,7 @@ IOStream_func_writelines(IOStream *self, PyObject *args)
             if (!tmp) {
                 Py_DECREF(item);
                 Py_DECREF(iter);
+                PyBuffer_Release(&pbuf);
                 PyErr_NoMemory();
                 goto error;
             }
