@@ -1,4 +1,4 @@
-include AUTHORS README LICENSE TODO ChangeLog
+include AUTHORS README.rst LICENSE TODO ChangeLog
 include build_inplace *.py tox.ini
 recursive-include docs *
 recursive-include examples *
