@@ -14,21 +14,21 @@ providing a consistent API on top of them.
 
 pyuv's features:
 
- * Non-blocking TCP sockets
- * Non-blocking named pipes
- * UDP support (including multicast)
- * Timers
- * Child process spawning
- * Asynchronous DNS resolver
- * Asynchronous file system APIs
- * High resolution time
- * System memory information
- * System CPUs information
- * Network interfaces information
- * Thread pool scheduling
- * ANSI escape code controlled TTY
- * File system events (inotify style)
- * IPC and TCP socket sharing between processes
+- Non-blocking TCP sockets
+- Non-blocking named pipes
+- UDP support (including multicast)
+- Timers
+- Child process spawning
+- Asynchronous DNS resolver
+- Asynchronous file system APIs
+- High resolution time
+- System memory information
+- System CPUs information
+- Network interfaces information
+- Thread pool scheduling
+- ANSI escape code controlled TTY
+- File system events (inotify style)
+- IPC and TCP socket sharing between processes
 
 
 Documentation
@@ -41,15 +41,24 @@ Building
 ========
 
 Linux:
+
+::
+
     ./build_inplace
 
 Mac OSX:
+
+::
+
     (XCode needs to be installed)
     export CC="gcc -isysroot /Developer/SDKs/MacOSX10.6.sdk"
     export ARCHFLAGS="-arch x86_64"
     ./build_inplace
 
 Microsoft Windows:
+
+::
+
     (MinGW and MSYS need to be installed)
     ./build_inplace
 
