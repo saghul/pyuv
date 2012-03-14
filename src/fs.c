@@ -2197,11 +2197,13 @@ end:
 static PyObject *
 FS_func_write(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
-    int r, fd, offset, write_len;
+    int r, fd, offset;
     char *write_str, *buf_data;
     uv_fs_t *fs_req = NULL;
     fs_req_data_t *req_data = NULL;
     Loop *loop;
+    Py_ssize_t write_len;
+    Py_buffer pbuf;
     PyObject *callback, *py_path, *py_errorno, *written_bytes, *ret;
 
     static char *kwlist[] = {"loop", "fd", "write_data", "offset", "callback", NULL};
@@ -2210,11 +2212,12 @@ FS_func_write(PyObject *obj, PyObject *args, PyObject *kwargs)
     write_str = buf_data = NULL;
     callback = NULL;
 
-    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!is#i|O:write", kwlist, &LoopType, &loop, &fd, &write_str, &write_len, &offset, &callback)) {
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!is*i|O:write", kwlist, &LoopType, &loop, &fd, &pbuf, &offset, &callback)) {
         return NULL;
     }
 
     if (callback != NULL && !PyCallable_Check(callback)) {
+        PyBuffer_Release(&pbuf);
         PyErr_SetString(PyExc_TypeError, "a callable is required");
         return NULL;
     }
@@ -2233,13 +2236,15 @@ FS_func_write(PyObject *obj, PyObject *args, PyObject *kwargs)
         goto end;
     }
 
-    buf_data = (char *)PyMem_Malloc(write_len+1);
+    write_str = pbuf.buf;
+    write_len = pbuf.len;
+    buf_data = (char *)PyMem_Malloc(write_len);
     if (!buf_data) {
         PyErr_NoMemory();
         ret = NULL;
         goto end;
     }
-    memcpy(buf_data, write_str, write_len+1);
+    memcpy(buf_data, write_str, write_len);
 
     Py_INCREF(loop);
     Py_XINCREF(callback);
@@ -2258,6 +2263,7 @@ FS_func_write(PyObject *obj, PyObject *args, PyObject *kwargs)
 
     if (callback != NULL) {
         /* No need to cleanup, it will be done in the callback */
+        PyBuffer_Release(&pbuf);
         Py_RETURN_NONE;
     } else {
         process_write(fs_req, &py_path, &written_bytes, &py_errorno);
@@ -2267,6 +2273,7 @@ FS_func_write(PyObject *obj, PyObject *args, PyObject *kwargs)
     }
 
 end:
+    PyBuffer_Release(&pbuf);
     if (fs_req) {
         PyMem_Free(fs_req);
     }
