@@ -394,7 +394,12 @@ Pipe_func_write2(Pipe *self, PyObject *args)
         return NULL;
     }
 
-    if (!PyArg_ParseTuple(args, "s*O!|O:write2", &pbuf, &TCPType, &send_handle, &callback)) {
+    if (!PyArg_ParseTuple(args, "s*O|O:write2", &pbuf, &send_handle, &callback)) {
+        return NULL;
+    }
+
+    if (!PyObject_TypeCheck(send_handle, &TCPType) && !PyObject_TypeCheck(send_handle, &PipeType)) {
+        PyErr_SetString(PyExc_TypeError, "Only TCP and Pipe objects are supported for write2");
         return NULL;
     }
 
