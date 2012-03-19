@@ -151,6 +151,7 @@ init_errno(void)
     inscode(module_dict, errorcode_dict, "UV_ELOOP", UV_ELOOP);
     inscode(module_dict, errorcode_dict, "UV_EXDEV", UV_EXDEV);
     inscode(module_dict, errorcode_dict, "UV_ENOTEMPTY", UV_ENOTEMPTY);
+    inscode(module_dict, errorcode_dict, "UV_ENOSPC", UV_ENOSPC);
 
     inscode(module_dict, ares_errorcode_dict, "ARES_SUCCESS", ARES_SUCCESS);
     inscode(module_dict, ares_errorcode_dict, "ARES_ENODATA", ARES_ENODATA);

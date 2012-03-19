@@ -1,3 +1,22 @@
+Version 0.6.0
+=============
+ - Added get/set process_title functions
+ - Added NAPTR query support to DNSResolver
+ - Added cancel method to DNSResolver
+ - Added ares_strerror function to errno module. It returns a string
+   representation of a c-ares error code
+ - Refactored write function to accept any object conforming to the
+   Python buffer interface
+ - Refactored ThreadPool
+ - Refactored DNS functions to return values like the Pyhton standard
+   library
+ - Reordered arguments in several functions of the DNS module 
+ - Fixed several reference leaks
+ - Fixed crash when doing CNAME queries
+ - Map several new error codes (ENOTEMPTY, EPERM, ELOOP, EXDEV)
+ - Raised libuv revision to db413f3
+ - Updated documentation
+
 Version 0.5.0
 =============
  - Added support for asynchronous DNS queries of tyes: A, AAAA, CNAME,
