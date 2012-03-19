@@ -11,6 +11,11 @@ if sys.version_info > (3, 0):
 else:
     EXECUTABLE = sys.executable
 
+if sys.platform == 'win32':
+    TEST_PIPE = '\\\\.\\pipe\\test-pipe'
+else:
+    TEST_PIPE = 'test-pipe'
+
 
 @platform_skip(["win32"])
 class IPCTest(unittest2.TestCase):
@@ -77,6 +82,39 @@ class IPCTest(unittest2.TestCase):
             proc.spawn(file="cmd.exe", args=[b"/c", EXECUTABLE+ b" proc_ipc.py", b"listen_after_write"], exit_callback=self.proc_exit_cb, stdin=self.channel)
         else:
             proc.spawn(file=sys.executable, args=[b"proc_ipc.py", b"listen_after_write"], exit_callback=self.proc_exit_cb, stdin=self.channel)
+        self.channel.start_read2(self.on_channel_read)
+        self.loop.run()
+
+
+@platform_skip(["win32"])
+class IPCSendRecvTest(unittest2.TestCase):
+
+    def setUp(self):
+        self.loop = pyuv.Loop.default_loop()
+
+    def proc_exit_cb(self, proc, exit_status, term_signal):
+        proc.close()
+
+    def on_channel_read(self, handle, data, pending, error):
+        self.assertEqual(pending, pyuv.UV_NAMED_PIPE)
+        self.recv_pipe = pyuv.Pipe(self.loop)
+        self.channel.accept(self.recv_pipe)
+        self.channel.close()
+        self.send_pipe.close()
+        self.recv_pipe.close()
+
+    def test_ipc_send_recv(self):
+        # Handle that will be sent to the process and back
+        self.send_pipe = pyuv.Pipe(self.loop, True)
+        self.send_pipe.bind(TEST_PIPE)
+
+        self.channel = pyuv.Pipe(self.loop, True)
+        proc = pyuv.Process(self.loop)
+        if sys.platform == 'win32':
+            proc.spawn(file="cmd.exe", args=[b"/c", EXECUTABLE+ b" proc_ipc_echo.py"], exit_callback=self.proc_exit_cb, stdin=self.channel)
+        else:
+            proc.spawn(file=sys.executable, args=[b"proc_ipc_echo.py"], exit_callback=self.proc_exit_cb, stdin=self.channel)
+        self.channel.write2(b".", self.send_pipe)
         self.channel.start_read2(self.on_channel_read)
         self.loop.run()
 
