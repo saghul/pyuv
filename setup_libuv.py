@@ -51,7 +51,7 @@ class libuv_build_ext(build_ext):
     libuv_repo     = 'https://github.com/joyent/libuv.git'
     libuv_branch   = 'master'
     libuv_revision = '379ca42'
-    libuv_patches  = ['patches/c-ares_naptr_support.patch']
+    libuv_patches  = ['patches/c-ares_naptr_support.patch','patches/common.gypi.patch','patches/uv.gyp.patch']
 
     user_options = build_ext.user_options
     user_options.extend([
@@ -83,12 +83,16 @@ class libuv_build_ext(build_ext):
         elif sys.platform == 'darwin':
             self.extensions[0].extra_link_args = ['-framework', 'CoreServices']
         elif sys.platform == 'win32':
+            self.library_dirs.append(os.path.join(self.libuv_dir, 'Release', 'lib'))
             self.libraries.append('iphlpapi')
             self.libraries.append('psapi')
             self.libraries.append('ws2_32')
+            self.libraries.append('advapi32')
 
     def get_libuv(self):
         #self.debug_mode =  bool(self.debug) or hasattr(sys, 'gettotalrefcount')
+        self.cc = self.compiler.compiler_type
+        
         def download_libuv():
             log.info('Downloading libuv...')
             makedirs(self.libuv_dir)
@@ -102,9 +106,14 @@ class libuv_build_ext(build_ext):
             cflags = '-fPIC'
             env = os.environ.copy()
             env['CFLAGS'] = ' '.join(x for x in (cflags, env.get('CFLAGS', None)) if x)
-            log.info('Building libuv...')
-            exec_process(['make', 'uv.a'], cwd=self.libuv_dir, env=env)
-            shutil.move(os.path.join(self.libuv_dir, 'uv.a'), os.path.join(self.libuv_dir, 'libuv.a'))
+            if sys.platform=='win32' and self.cc=='msvc':
+                log.info('build libuv on win32...')
+                os.system(self.libuv_dir + r"\vcbuild.bat release")
+                #exec_process(['cmd.exe','/C','vcbuild.bat release'], cwd=self.libuv_dir, env=env)
+            else:
+                log.info('Building libuv...')
+                exec_process(['make', 'uv.a'], cwd=self.libuv_dir, env=env)
+                shutil.move(os.path.join(self.libuv_dir, 'uv.a'), os.path.join(self.libuv_dir, 'libuv.a'))
         if self.libuv_force_fetch:
             rmtree('deps')
         if not os.path.exists(self.libuv_dir):
@@ -113,13 +122,23 @@ class libuv_build_ext(build_ext):
             build_libuv()
         else:
             if self.libuv_clean_compile:
-                exec_process(['make', 'clean'], cwd=self.libuv_dir)
-            if not os.path.exists(os.path.join(self.libuv_dir, 'libuv.a')):
-                log.info('libuv needs to be compiled.')
-                build_libuv()
+                if sys.platform=="win32" and self.cc=="msvc":
+                    os.system('rd /s /q' + os.path.join(self.libuv_dir, 'Release'))
+                else:
+                    exec_process(['make', 'clean'], cwd=self.libuv_dir)
+                    
+            if sys.platform=="win32" and self.cc=="msvc":
+                if not os.path.exists(os.path.join(self.libuv_dir, 'Release', 'lib', 'uv.lib')):
+                    log.info('libuv needs to be compiled.')
+                    build_libuv()
+                else:
+                    log.info('No need to build libuv.')  
             else:
-                log.info('No need to build libuv.')
-
+                if not os.path.exists(os.path.join(self.libuv_dir, 'libuv.a')):
+                    log.info('libuv needs to be compiled.')
+                    build_libuv()
+                else:
+                    log.info('No need to build libuv.')
 
 class libuv_sdist(sdist):
     libuv_dir      = os.path.join('deps', 'libuv')
@@ -129,6 +148,7 @@ class libuv_sdist(sdist):
     libuv_patches  = libuv_build_ext.libuv_patches
 
     def initialize_options(self):
+        log.info('libuv_sdist.initialize_options')
         sdist.initialize_options(self)
         rmtree('deps')
         makedirs(self.libuv_dir)

@@ -1,4 +1,3 @@
-
 ===============================
 pyuv: Python interface to libuv
 ===============================
@@ -59,8 +58,8 @@ Microsoft Windows:
 
 ::
 
-    (MinGW and MSYS need to be installed)
-    ./build_inplace
+    1. for MinGW: (MinGW and MSYS need to be installed)  ./build_inplace
+    2. for Visual Studio: python setup.py buld install
 
 
 Running the test suite
