@@ -373,12 +373,11 @@ Pipe_func_start_read2(Pipe *self, PyObject *args)
 static PyObject *
 Pipe_func_write2(Pipe *self, PyObject *args)
 {
-    int i, n, r, buf_count;
-    char *data_str;
-    char *tmp;
+    int i, r, buf_count;
+    char *data_str, *tmp;
+    Py_buffer pbuf;
     Py_ssize_t data_len;
-    PyObject *item, *data, *callback;
-    TCP *send_handle;
+    PyObject *callback, *send_handle;
     uv_buf_t tmpbuf;
     uv_buf_t *bufs = NULL;
     uv_write_t *wr = NULL;
@@ -395,16 +394,17 @@ Pipe_func_write2(Pipe *self, PyObject *args)
         return NULL;
     }
 
-    if (!PyArg_ParseTuple(args, "OO!|O:write2", &data, &TCPType, &send_handle, &callback)) {
+    if (!PyArg_ParseTuple(args, "s*O|O:write2", &pbuf, &send_handle, &callback)) {
         return NULL;
     }
 
-    if (!PySequence_Check(data) || PyUnicode_Check(data)) {
-        PyErr_SetString(PyExc_TypeError, "only strings and iterables are supported");
+    if (!PyObject_TypeCheck(send_handle, &TCPType) && !PyObject_TypeCheck(send_handle, &PipeType)) {
+        PyErr_SetString(PyExc_TypeError, "Only TCP and Pipe objects are supported for write2");
         return NULL;
     }
 
     if (callback != Py_None && !PyCallable_Check(callback)) {
+        PyBuffer_Release(&pbuf);
         PyErr_SetString(PyExc_TypeError, "a callable or None is required");
         return NULL;
     }
@@ -432,55 +432,23 @@ Pipe_func_write2(Pipe *self, PyObject *args)
     req_data->callback = callback;
     wr->data = (void *)req_data;
 
-    if (PyString_Check(data)) {
-        /* We have a single string */
-        bufs = (uv_buf_t *) PyMem_Malloc(sizeof(uv_buf_t));
-        if (!bufs) {
-            PyErr_NoMemory();
-            goto error;
-        }
-        data_len = PyString_Size(data);
-        data_str = PyString_AsString(data);
-        tmp = (char *) PyMem_Malloc(data_len + 1);
-        if (!tmp) {
-            PyMem_Free(bufs);
-            PyErr_NoMemory();
-            goto error;
-        }
-        memcpy(tmp, data_str, data_len + 1);
-        tmpbuf = uv_buf_init(tmp, data_len);
-        bufs[0] = tmpbuf;
-        buf_count = 1;
-    } else {
-        /* We have a list */
-        buf_count = 0;
-        n = PySequence_Length(data);
-        bufs = (uv_buf_t *) PyMem_Malloc(sizeof(uv_buf_t) * n);
-        if (!bufs) {
-            PyErr_NoMemory();
-            goto error;
-        }
-        for (i = 0;i < n; i++) {
-            item = PySequence_GetItem(data, i);
-            if (!item || !PyString_Check(item)) {
-                Py_XDECREF(item);
-                continue;
-            }
-            data_len = PyString_Size(item);
-            data_str = PyString_AsString(item);
-            tmp = (char *) PyMem_Malloc(data_len + 1);
-            if (!tmp) {
-                Py_DECREF(item);
-                continue;
-            }
-            strcpy(tmp, data_str);
-            tmpbuf = uv_buf_init(tmp, data_len);
-            bufs[i] = tmpbuf;
-            buf_count++;
-            Py_DECREF(item);
-        }
-
+    bufs = (uv_buf_t *) PyMem_Malloc(sizeof(uv_buf_t));
+    if (!bufs) {
+        PyErr_NoMemory();
+        goto error;
     }
+
+    data_str = pbuf.buf;
+    data_len = pbuf.len;
+    tmp = (char *) PyMem_Malloc(data_len);
+    if (!tmp) {
+        PyErr_NoMemory();
+        goto error;
+    }
+    memcpy(tmp, data_str, data_len);
+    tmpbuf = uv_buf_init(tmp, data_len);
+    bufs[0] = tmpbuf;
+    buf_count = 1;
 
     write_data->bufs = bufs;
     write_data->buf_count = buf_count;
@@ -492,9 +460,12 @@ Pipe_func_write2(Pipe *self, PyObject *args)
         goto error;
     }
 
+    PyBuffer_Release(&pbuf);
+
     Py_RETURN_NONE;
 
 error:
+    PyBuffer_Release(&pbuf);
     if (bufs) {
         for (i = 0; i < buf_count; i++) {
             PyMem_Free(bufs[i].base);

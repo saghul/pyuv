@@ -15,6 +15,15 @@
     #define PyString_FromStringAndSize PyBytes_FromStringAndSize
     #define PyString_Check PyBytes_Check
     #define PyString_Size PyBytes_Size
+    #define PyString_AS_STRING PyBytes_AS_STRING
+    #define PyString_GET_SIZE PyBytes_GET_SIZE
+    /* helpers, to avoid too many ifdefs */
+    #define PYUVString_FromString PyUnicode_FromString
+    #define PYUVString_FromStringAndSize PyUnicode_FromStringAndSize
+#else
+    /* helpers, to avoid too many ifdefs */
+    #define PYUVString_FromString PyString_FromString
+    #define PYUVString_FromStringAndSize PyString_FromStringAndSize
 #endif
 
 /* libuv */
