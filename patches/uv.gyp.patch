@@ -1,0 +1,10 @@
+--- uv.gyp	Tue Mar  6 22:33:54 2012
++++ uv.gyp	Fri Mar  9 00:11:13 2012
+@@ -78,6 +78,7 @@
+         'src/ares/ares_parse_mx_reply.c',
+         'src/ares/ares_parse_ns_reply.c',
+         'src/ares/ares_parse_ptr_reply.c',
++		'src/ares/ares_parse_naptr_reply.c',
+         'src/ares/ares_parse_srv_reply.c',
+         'src/ares/ares_parse_txt_reply.c',
+         'src/ares/ares_platform.h',

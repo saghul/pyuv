@@ -1,0 +1,11 @@
+--- common.gypi	Thu Mar  8 23:41:06 2012
++++ common.gypi	Fri Mar  9 00:11:45 2012
+@@ -45,7 +45,7 @@
+           'VCCLCompilerTool': {
+             'target_conditions': [
+               ['library=="static_library"', {
+-                'RuntimeLibrary': 0, # static release
++                'RuntimeLibrary': 2, # static release
+               }, {
+                 'RuntimeLibrary': 2, # debug release
+               }],

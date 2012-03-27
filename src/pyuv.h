@@ -1,4 +1,3 @@
-
 #ifndef PYUV_H
 #define PYUV_H
 
@@ -16,6 +15,15 @@
     #define PyString_FromStringAndSize PyBytes_FromStringAndSize
     #define PyString_Check PyBytes_Check
     #define PyString_Size PyBytes_Size
+    #define PyString_AS_STRING PyBytes_AS_STRING
+    #define PyString_GET_SIZE PyBytes_GET_SIZE
+    /* helpers, to avoid too many ifdefs */
+    #define PYUVString_FromString PyUnicode_FromString
+    #define PYUVString_FromStringAndSize PyUnicode_FromStringAndSize
+#else
+    /* helpers, to avoid too many ifdefs */
+    #define PYUVString_FromString PyString_FromString
+    #define PYUVString_FromStringAndSize PyString_FromStringAndSize
 #endif
 
 /* libuv */
@@ -36,6 +44,25 @@ typedef int Bool;
 
 #define UNUSED_ARG(arg)  (void)arg
 
+
+#define UV_LOOP(x) x->loop->uv_loop
+
+#if defined(__MINGW32__) || defined(_MSC_VER)
+    #define PYUV_WINDOWS
+#endif
+
+#if defined(_MSC_VER)
+#define ASSERT(x)                                                           \
+    do {                                                                    \
+        if (!(x)) {                                                         \
+            fprintf (stderr, "%s:%u: %s: Assertion `" #x "' failed.\n",     \
+                     __FILE__, __LINE__, __FUNCTION__);                     \
+            abort();                                                        \
+        }                                                                   \
+    } while(0)                                                              \
+
+
+#else
 #define ASSERT(x)                                                           \
     do {                                                                    \
         if (!(x)) {                                                         \
@@ -45,12 +72,7 @@ typedef int Bool;
         }                                                                   \
     } while(0)                                                              \
 
-#define UV_LOOP(x) x->loop->uv_loop
-
-#if defined(__MINGW32__) || defined(_MSC_VER)
-    #define PYUV_WINDOWS
 #endif
-
 
 /* Python types definitions */
 
