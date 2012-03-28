@@ -1007,11 +1007,7 @@ class FSEventTest(unittest2.TestCase):
             pass
 
     def on_fsevent_cb(self, handle, filename, events, errorno):
-        try:
-            handle.close()
-        except pyuv.error.FSEventError:
-            # This shouldn't happen, need to verify with libuv
-            return
+        handle.close()
         self.filename = filename
         self.events = events
         self.errorno = errorno
