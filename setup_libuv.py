@@ -67,8 +67,7 @@ class libuv_build_ext(build_ext):
         self.libuv_force_fetch = 0
 
     def build_extensions(self):
-        if self.libuv_force_fetch or self.libuv_clean_compile:
-            self.force = 1
+        self.force = self.libuv_force_fetch or self.libuv_clean_compile
         self.get_libuv()
         build_ext.build_extensions(self)
 
