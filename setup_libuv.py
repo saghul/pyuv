@@ -67,6 +67,9 @@ class libuv_build_ext(build_ext):
         self.libuv_force_fetch = 0
 
     def build_extensions(self):
+        if self.compiler.compiler_type == 'mingw32':
+            # Dirty hack to avoid linking with more than one C runtime when using MinGW
+            self.compiler.dll_libraries = [lib for lib in self.compiler.dll_libraries if not lib.startswith('msvcr')]
         self.force = self.libuv_force_fetch or self.libuv_clean_compile
         self.get_libuv()
         build_ext.build_extensions(self)
