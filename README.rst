@@ -60,7 +60,7 @@ Microsoft Windows:
 ::
 
     (MinGW and MSYS need to be installed)
-    ./build_inplace
+    ./build_inplace --compiler=mingw32
 
 
 Running the test suite
