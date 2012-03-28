@@ -942,7 +942,7 @@ class FSTestUtime(unittest2.TestCase):
         self.assertEqual(s.st_mtime, mtime)
 
 
-@platform_skip(["linux", "darwin"])
+@platform_skip(["linux"])
 class FSEventTestBasic(unittest2.TestCase):
 
     def setUp(self):
@@ -984,7 +984,6 @@ class FSEventTestBasic(unittest2.TestCase):
         self.assertTrue(self.events & pyuv.fs.UV_RENAME)
 
 
-@platform_skip(["darwin"])
 class FSEventTest(unittest2.TestCase):
 
     def setUp(self):
