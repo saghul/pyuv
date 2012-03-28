@@ -2,5 +2,5 @@
 
 rm -f core.*
 rm -rf build
-python setup.py build_ext --inplace --force
+python setup.py build_ext --inplace --force $@
 
