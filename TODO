@@ -3,3 +3,10 @@
 - Use PyStructSequence (similar to a named tuple) on stat and perhaps
   somewhere else as well
 
+- Find out why some tests fail on Windows
+    - Multicast
+    - IPC, sharing a TCP handle
+    - Some fs operations using fileno()
+
+- Support compiling with Visual Studio
+
