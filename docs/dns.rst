@@ -16,7 +16,7 @@
 
     The ``DNSResolver`` provides asynchronous DNS operations.
 
-    .. py:method:: gethostbyname(callback, name, [family])
+    .. py:method:: gethostbyname(name, callback)
 
         :param callable callback: Callback to be called with the result of the query.
         
@@ -24,14 +24,14 @@
 
         Retrieves host information corresponding to a host name from a host database.
 
-        Callback signature: ``callback(resolver, status, timeouts, name, aliases, result)``
+        Callback signature: ``callback(resolver, result, errorno)``
 
         .. note::
             ``gethostbyname`` is an obsolete function, new applications should use :py:meth:`getnameinfo`
             or :py:meth:`getaddrinfo` instead.
 
 
-    .. py:method:: gethostbyaddr(callback, name)
+    .. py:method:: gethostbyaddr(name, callback)
 
         :param callable callback: Callback to be called with the result of the query.
         
@@ -39,14 +39,14 @@
 
         Retrieves the host information corresponding to a network address.
 
-        Callback signature: ``callback(resolver, status, timeouts, name, aliases, result)``
+        Callback signature: ``callback(resolver, result, errorno)``
 
         .. note::
             ``gethostbyaddr`` is an obsolete function, new applications should use :py:meth:`getnameinfo`
             or :py:meth:`getaddrinfo` instead.
 
 
-    .. py:method:: getnameinfo(callback, name, [port, flags])
+    .. py:method:: getnameinfo(name, port, flags, callback)
 
         :param callable callback: Callback to be called with the result of the query.
         
@@ -59,10 +59,10 @@
         Provides protocol-independent name resolution from an address to a host name and
         from a port number to the service name.
 
-        Callback signature: ``callback(resolver, status, timeouts, host, service)``
+        Callback signature: ``callback(resolver, result, errorno)``
 
 
-    .. py:method:: getaddrinfo(callback, name, port, [family, socktype, protocol, flags])
+    .. py:method:: getaddrinfo(name, callback, [port, family, socktype, protocol, flags])
 
         :param callable callback: Callback to be called with the result of the query.
         
@@ -78,7 +78,7 @@
 
         Provides protocol-independent translation from a host name to an address.
 
-        Callback signature: ``callback(resolver, status, result)``
+        Callback signature: ``callback(resolver, result, errorno)``
 
 
     .. py:method:: query_a(name, callback)
@@ -89,7 +89,7 @@
         
         DNS type A query.
 
-        Callback signature: ``callback(resolver, status, result)``
+        Callback signature: ``callback(resolver, result, errorno)``
 
 
     .. py:method:: query_aaaa(name, callback)
@@ -100,7 +100,7 @@
         
         DNS type AAAA query.
 
-        Callback signature: ``callback(resolver, status, result)``
+        Callback signature: ``callback(resolver, result, errorno)``
 
 
     .. py:method:: query_cname(name, callback)
@@ -111,7 +111,7 @@
         
         DNS type CNAME query.
 
-        Callback signature: ``callback(resolver, status, result)``
+        Callback signature: ``callback(resolver, result, errorno)``
 
 
     .. py:method:: query_mx(name, callback)
@@ -122,7 +122,7 @@
         
         DNS type MX query.
 
-        Callback signature: ``callback(resolver, status, result)``
+        Callback signature: ``callback(resolver, result, errorno)``
 
 
     .. py:method:: query_ns(name, callback)
@@ -133,7 +133,7 @@
         
         DNS type NS query.
 
-        Callback signature: ``callback(resolver, status, result)``
+        Callback signature: ``callback(resolver, result, errorno)``
 
 
     .. py:method:: query_txt(name, callback)
@@ -144,7 +144,7 @@
         
         DNS type TXT query.
 
-        Callback signature: ``callback(resolver, status, result)``
+        Callback signature: ``callback(resolver, result, errorno)``
 
 
     .. py:method:: query_srv(name, callback)
@@ -155,7 +155,23 @@
         
         DNS type SRV query.
 
-        Callback signature: ``callback(resolver, status, result)``
+        Callback signature: ``callback(resolver, result, errorno)``
+
+
+    .. py:method:: query_naptr(name, callback)
+
+        :param string name: Name to query.
+
+        :param callable callback: Callback to be called with the result of the query.
+
+        DNS type NAPTR query.
+
+        Callback signature: ``callback(resolver, result, errorno)``
+
+
+    .. py:method:: cancel()
+
+        Cancel any pending query on this resolver. All callbacks will be called with ARES_ECANCELLED errorno.
 
 
     .. py:attribute:: loop

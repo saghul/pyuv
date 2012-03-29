@@ -85,8 +85,20 @@
 
     .. py:method:: write(data, [callback])
 
-        :param object data: Data to be written on the ``TCP`` connection. It can be either
-            a string or any iterable containing strings.
+        :param object data: Data to be written on the ``TCP`` connection. It can be any Python object conforming
+            to the buffer interface.
+
+        :param callable callback: Callback to be called after the write operation
+            has been performed.
+
+        Write data on the ``TCP`` connection.
+
+        Callback signature: ``callback(tcp_handle, error)``.
+
+    .. py:method:: writelines(seq, [callback])
+
+        :param object seq: Data to be written on the ``TCP`` connection. It can be any iterable object and the same
+            logic is applied for the contained elements as in the ``write`` method.
 
         :param callable callback: Callback to be called after the write operation
             has been performed.

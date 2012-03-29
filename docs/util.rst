@@ -42,4 +42,14 @@
 
     Get CPUs information.
 
+.. py:function:: pyuv.util.set_process_title(title)
+
+    :param string title: Desired process title.
+
+    Set current process title.
+
+.. py:function:: pyuv.util.get_process_title()
+
+    Get current process title.
+
 

@@ -74,22 +74,34 @@
 
     .. py:method:: write(data, [callback])
 
-        :param object data: Data to be written on the ``Pipe`` connection. It can be either
-            a string or any iterable containing strings.
+        :param object data: Data to be written on the ``Pipe`` connection. It can be any Python object conforming
+            to the buffer interface.
 
         :param callable callback: Callback to be called after the write operation
             has been performed.
 
         Write data on the ``Pipe`` connection.
 
-        Callback signature: ``callback(pipe_handle, error)``.
+        Callback signature: ``callback(tcp_handle, error)``.
+
+    .. py:method:: writelines(seq, [callback])
+
+        :param object seq: Data to be written on the ``Pipe`` connection. It can be any iterable object and the same
+            logic is applied for the contained elements as in the ``write`` method.
+
+        :param callable callback: Callback to be called after the write operation
+            has been performed.
+
+        Write data on the ``Pipe`` connection.
+
+        Callback signature: ``callback(tcp_handle, error)``.
 
     .. py:method:: write2(data, handle, [callback])
 
         :param object data: Data to be written on the ``Pipe`` connection. It can be either
             a string or any iterable containing strings.
 
-        :param object handle: Handle to send over the ``Pipe``. Currently only ``TCP`` handles
+        :param object handle: Handle to send over the ``Pipe``. Currently only ``TCP`` and ``Pipe`` handles
             are supported.
 
         :param callable callback: Callback to be called after the write operation

@@ -35,14 +35,27 @@
 
     .. py:method:: write(data, [callback])
 
-        :param string data: Data to be written on the ``TTY`` handle.
+        :param object data: Data to be written on the ``TTY`` connection. It can be any Python object conforming
+            to the buffer interface.
 
         :param callable callback: Callback to be called after the write operation
             has been performed.
 
-        Write data on the ``TTY`` handle.
+        Write data on the ``TTY`` connection.
 
-        Callback signature: ``callback(tty_handle, status)``.
+        Callback signature: ``callback(tcp_handle, error)``.
+
+    .. py:method:: writelines(seq, [callback])
+
+        :param object seq: Data to be written on the ``TTY`` connection. It can be any iterable object and the same
+            logic is applied for the contained elements as in the ``write`` method.
+
+        :param callable callback: Callback to be called after the write operation
+            has been performed.
+
+        Write data on the ``TTY`` connection.
+
+        Callback signature: ``callback(tcp_handle, error)``.
 
     .. py:method:: start_read(callback)
 
