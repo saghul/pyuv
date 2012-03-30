@@ -658,6 +658,30 @@ error:
 
 
 static PyObject *
+IOStream_readable_get(IOStream *self, void *closure)
+{
+    UNUSED_ARG(closure);
+    if (!self->uv_handle) {
+        Py_RETURN_FALSE;
+    } else {
+        return PyBool_FromLong((long)uv_is_readable(self->uv_handle));
+    }
+}
+
+
+static PyObject *
+IOStream_writable_get(IOStream *self, void *closure)
+{
+    UNUSED_ARG(closure);
+    if (!self->uv_handle) {
+        Py_RETURN_FALSE;
+    } else {
+        return PyBool_FromLong((long)uv_is_writable(self->uv_handle));
+    }
+}
+
+
+static PyObject *
 IOStream_tp_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
 {
     IOStream *self = (IOStream *)PyType_GenericNew(type, args, kwargs);
@@ -722,6 +746,13 @@ static PyMemberDef IOStream_tp_members[] = {
 };
 
 
+static PyGetSetDef IOStream_tp_getsets[] = {
+    {"readable", (getter)IOStream_readable_get, 0, "Indicates if stream is readable.", NULL},
+    {"writable", (getter)IOStream_writable_get, 0, "Indicates if stream is writable.", NULL},
+    {NULL}
+};
+
+
 static PyTypeObject IOStreamType = {
     PyVarObject_HEAD_INIT(NULL, 0)
     "pyuv.IOStream",                                               /*tp_name*/
@@ -752,7 +783,7 @@ static PyTypeObject IOStreamType = {
     0,                                                             /*tp_iternext*/
     IOStream_tp_methods,                                           /*tp_methods*/
     IOStream_tp_members,                                           /*tp_members*/
-    0,                                                             /*tp_getsets*/
+    IOStream_tp_getsets,                                           /*tp_getsets*/
     0,                                                             /*tp_base*/
     0,                                                             /*tp_dict*/
     0,                                                             /*tp_descr_get*/

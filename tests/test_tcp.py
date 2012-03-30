@@ -26,6 +26,14 @@ class TCPErrorTest(unittest2.TestCase):
         client.connect(("127.0.0.1", TEST_PORT), self.on_client_connect_error)
         loop.run()
 
+    def test_client2(self):
+        loop = pyuv.Loop.default_loop()
+        client = pyuv.TCP(loop)
+        self.assertFalse(client.readable)
+        self.assertFalse(client.writable)
+        client.close()
+        loop.run()
+
 
 class TCPTest(unittest2.TestCase):
 
@@ -53,6 +61,8 @@ class TCPTest(unittest2.TestCase):
     def on_client_connection(self, client, error):
         self.assertEqual(error, None)
         client.start_read(self.on_client_read)
+        self.assertTrue(client.readable)
+        self.assertTrue(client.writable)
 
     def on_client_read(self, client, data, error):
         self.assertNotEqual(data, None)
