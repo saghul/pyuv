@@ -198,7 +198,7 @@ Pipe_func_listen(Pipe *self, PyObject *args)
 
 
 static PyObject *
-Pipe_func_accept(TCP *self, PyObject *args)
+Pipe_func_accept(Pipe *self, PyObject *args)
 {
     int r;
     PyObject *client;
