@@ -98,61 +98,11 @@ init_errno(void)
         return NULL;
     }
 
-    inscode(module_dict, errorcode_dict, "UV_UNKNOWN", UV_UNKNOWN);
-    inscode(module_dict, errorcode_dict, "UV_OK", UV_OK);
-    inscode(module_dict, errorcode_dict, "UV_EOF", UV_EOF);
-    inscode(module_dict, errorcode_dict, "UV_EADDRINFO", UV_EADDRINFO);
-    inscode(module_dict, errorcode_dict, "UV_EACCES", UV_EACCES);
-    inscode(module_dict, errorcode_dict, "UV_EAGAIN", UV_EAGAIN);
-    inscode(module_dict, errorcode_dict, "UV_EADDRINUSE", UV_EADDRINUSE);
-    inscode(module_dict, errorcode_dict, "UV_EADDRNOTAVAIL", UV_EADDRNOTAVAIL);
-    inscode(module_dict, errorcode_dict, "UV_EAFNOSUPPORT", UV_EAFNOSUPPORT);
-    inscode(module_dict, errorcode_dict, "UV_EALREADY", UV_EALREADY);
-    inscode(module_dict, errorcode_dict, "UV_EBADF", UV_EBADF);
-    inscode(module_dict, errorcode_dict, "UV_EBUSY", UV_EBUSY);
-    inscode(module_dict, errorcode_dict, "UV_ECONNABORTED", UV_ECONNABORTED);
-    inscode(module_dict, errorcode_dict, "UV_ECONNREFUSED", UV_ECONNREFUSED);
-    inscode(module_dict, errorcode_dict, "UV_ECONNRESET", UV_ECONNRESET);
-    inscode(module_dict, errorcode_dict, "UV_EDESTADDRREQ", UV_EDESTADDRREQ);
-    inscode(module_dict, errorcode_dict, "UV_EFAULT", UV_EFAULT);
-    inscode(module_dict, errorcode_dict, "UV_EHOSTUNREACH", UV_EHOSTUNREACH);
-    inscode(module_dict, errorcode_dict, "UV_EINTR", UV_EINTR);
-    inscode(module_dict, errorcode_dict, "UV_EINVAL", UV_EINVAL);
-    inscode(module_dict, errorcode_dict, "UV_EISCONN", UV_EISCONN);
-    inscode(module_dict, errorcode_dict, "UV_EMFILE", UV_EMFILE);
-    inscode(module_dict, errorcode_dict, "UV_EMSGSIZE", UV_EMSGSIZE);
-    inscode(module_dict, errorcode_dict, "UV_ENETDOWN", UV_ENETDOWN);
-    inscode(module_dict, errorcode_dict, "UV_ENETUNREACH", UV_ENETUNREACH);
-    inscode(module_dict, errorcode_dict, "UV_ENFILE", UV_ENFILE);
-    inscode(module_dict, errorcode_dict, "UV_ENOBUFS", UV_ENOBUFS);
-    inscode(module_dict, errorcode_dict, "UV_ENOMEM", UV_ENOMEM);
-    inscode(module_dict, errorcode_dict, "UV_ENOTDIR", UV_ENOTDIR);
-    inscode(module_dict, errorcode_dict, "UV_EISDIR", UV_EISDIR);
-    inscode(module_dict, errorcode_dict, "UV_ENONET", UV_ENONET);
-    inscode(module_dict, errorcode_dict, "UV_ENOTCONN", UV_ENOTCONN);
-    inscode(module_dict, errorcode_dict, "UV_ENOTSOCK", UV_ENOTSOCK);
-    inscode(module_dict, errorcode_dict, "UV_ENOTSUP", UV_ENOTSUP);
-    inscode(module_dict, errorcode_dict, "UV_ENOENT", UV_ENOENT);
-    inscode(module_dict, errorcode_dict, "UV_ENOSYS", UV_ENOSYS);
-    inscode(module_dict, errorcode_dict, "UV_EPIPE", UV_EPIPE);
-    inscode(module_dict, errorcode_dict, "UV_EPROTO", UV_EPROTO);
-    inscode(module_dict, errorcode_dict, "UV_EPROTONOSUPPORT", UV_EPROTONOSUPPORT);
-    inscode(module_dict, errorcode_dict, "UV_EPROTOTYPE", UV_EPROTOTYPE);
-    inscode(module_dict, errorcode_dict, "UV_ETIMEDOUT", UV_ETIMEDOUT);
-    inscode(module_dict, errorcode_dict, "UV_ECHARSET", UV_ECHARSET);
-    inscode(module_dict, errorcode_dict, "UV_EAIFAMNOSUPPORT", UV_EAIFAMNOSUPPORT);
-    inscode(module_dict, errorcode_dict, "UV_EAISERVICE", UV_EAISERVICE);
-    inscode(module_dict, errorcode_dict, "UV_EAISOCKTYPE", UV_EAISOCKTYPE);
-    inscode(module_dict, errorcode_dict, "UV_ESHUTDOWN", UV_ESHUTDOWN);
-    inscode(module_dict, errorcode_dict, "UV_EEXIST", UV_EEXIST);
-    inscode(module_dict, errorcode_dict, "UV_ESRCH", UV_ESRCH);
-    inscode(module_dict, errorcode_dict, "UV_ENAMETOOLONG", UV_ENAMETOOLONG);
-    inscode(module_dict, errorcode_dict, "UV_EPERM", UV_EPERM);
-    inscode(module_dict, errorcode_dict, "UV_ELOOP", UV_ELOOP);
-    inscode(module_dict, errorcode_dict, "UV_EXDEV", UV_EXDEV);
-    inscode(module_dict, errorcode_dict, "UV_ENOTEMPTY", UV_ENOTEMPTY);
-    inscode(module_dict, errorcode_dict, "UV_ENOSPC", UV_ENOSPC);
+#define XX(val, name, s) inscode(module_dict, errorcode_dict, __MSTR(UV_##name), UV_##name);
+    UV_ERRNO_MAP(XX)
+#undef XX
 
+    /* TODO: also use some preprocessor trickery for c-ares errnos */
     inscode(module_dict, ares_errorcode_dict, "ARES_SUCCESS", ARES_SUCCESS);
     inscode(module_dict, ares_errorcode_dict, "ARES_ENODATA", ARES_ENODATA);
     inscode(module_dict, ares_errorcode_dict, "ARES_EFORMERR", ARES_EFORMERR);
