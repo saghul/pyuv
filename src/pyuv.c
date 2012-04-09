@@ -116,21 +116,12 @@ init_pyuv(void)
     PyModule_AddIntMacro(pyuv, UV_JOIN_GROUP);
     PyModule_AddIntMacro(pyuv, UV_LEAVE_GROUP);
 
+    /* Handle types */
     PyModule_AddIntMacro(pyuv, UV_UNKNOWN_HANDLE);
-    PyModule_AddIntMacro(pyuv, UV_TCP);
-    PyModule_AddIntMacro(pyuv, UV_UDP);
-    PyModule_AddIntMacro(pyuv, UV_NAMED_PIPE);
-    PyModule_AddIntMacro(pyuv, UV_TTY);
     PyModule_AddIntMacro(pyuv, UV_FILE);
-    PyModule_AddIntMacro(pyuv, UV_TIMER);
-    PyModule_AddIntMacro(pyuv, UV_PREPARE);
-    PyModule_AddIntMacro(pyuv, UV_CHECK);
-    PyModule_AddIntMacro(pyuv, UV_IDLE);
-    PyModule_AddIntMacro(pyuv, UV_ASYNC);
-    PyModule_AddIntMacro(pyuv, UV_ARES_TASK);
-    PyModule_AddIntMacro(pyuv, UV_ARES_EVENT);
-    PyModule_AddIntMacro(pyuv, UV_PROCESS);
-    PyModule_AddIntMacro(pyuv, UV_FS_EVENT);
+#define XX(uc, lc) PyModule_AddIntMacro(pyuv, UV_##uc);
+    UV_HANDLE_TYPE_MAP(XX)
+#undef XX
 
     /* Module version (the MODULE_VERSION macro is defined by setup.py) */
     PyModule_AddStringConstant(pyuv, "__version__", __MSTR(MODULE_VERSION));
