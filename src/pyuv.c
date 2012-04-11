@@ -114,6 +114,18 @@ init_pyuv(void)
     /* PyStructSequence types */
     if (LoopCountersResultType.tp_name == 0)
         PyStructSequence_InitType(&LoopCountersResultType, &loop_counters_result_desc);
+    if (DNSHostResultType.tp_name == 0)
+        PyStructSequence_InitType(&DNSHostResultType, &dns_host_result_desc);
+    if (DNSNameinfoResultType.tp_name == 0)
+        PyStructSequence_InitType(&DNSNameinfoResultType, &dns_nameinfo_result_desc);
+    if (DNSAddrinfoResultType.tp_name == 0)
+        PyStructSequence_InitType(&DNSAddrinfoResultType, &dns_addrinfo_result_desc);
+    if (DNSQueryMXResultType.tp_name == 0)
+        PyStructSequence_InitType(&DNSQueryMXResultType, &dns_query_mx_result_desc);
+    if (DNSQuerySRVResultType.tp_name == 0)
+        PyStructSequence_InitType(&DNSQuerySRVResultType, &dns_query_srv_result_desc);
+    if (DNSQueryNAPTRResultType.tp_name == 0)
+        PyStructSequence_InitType(&DNSQueryNAPTRResultType, &dns_query_naptr_result_desc);
 
     /* Constants */
     PyModule_AddIntMacro(pyuv, UV_JOIN_GROUP);

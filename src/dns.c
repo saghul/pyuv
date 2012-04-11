@@ -2,6 +2,107 @@
 #include "nameser.h"
 
 
+static PyTypeObject DNSHostResultType = {0, 0, 0, 0, 0, 0};
+
+static PyStructSequence_Field dns_host_result_fields[] = {
+    {"name", ""},
+    {"aliases", ""},
+    {"addresses", ""},
+    {NULL}
+};
+
+static PyStructSequence_Desc dns_host_result_desc = {
+    "dns_host_result",
+    NULL,
+    dns_host_result_fields,
+    3
+};
+
+static PyTypeObject DNSNameinfoResultType = {0, 0, 0, 0, 0, 0};
+
+static PyStructSequence_Field dns_nameinfo_result_fields[] = {
+    {"node", ""},
+    {"service", ""},
+    {NULL}
+};
+
+static PyStructSequence_Desc dns_nameinfo_result_desc = {
+    "dns_nameinfo_result",
+    NULL,
+    dns_nameinfo_result_fields,
+    2
+};
+
+static PyTypeObject DNSAddrinfoResultType = {0, 0, 0, 0, 0, 0};
+
+static PyStructSequence_Field dns_addrinfo_result_fields[] = {
+    {"family", ""},
+    {"socktype", ""},
+    {"proto", ""},
+    {"canonname", ""},
+    {"sockaddr", ""},
+    {NULL}
+};
+
+static PyStructSequence_Desc dns_addrinfo_result_desc = {
+    "dns_addrinfo_result",
+    NULL,
+    dns_addrinfo_result_fields,
+    5
+};
+
+static PyTypeObject DNSQueryMXResultType = {0, 0, 0, 0, 0, 0};
+
+static PyStructSequence_Field dns_query_mx_result_fields[] = {
+    {"host", ""},
+    {"priority", ""},
+    {NULL}
+};
+
+static PyStructSequence_Desc dns_query_mx_result_desc = {
+    "dns_query_mx_result",
+    NULL,
+    dns_query_mx_result_fields,
+    2
+};
+
+static PyTypeObject DNSQuerySRVResultType = {0, 0, 0, 0, 0, 0};
+
+static PyStructSequence_Field dns_query_srv_result_fields[] = {
+    {"host", ""},
+    {"port", ""},
+    {"priority", ""},
+    {"weight", ""},
+    {NULL}
+};
+
+static PyStructSequence_Desc dns_query_srv_result_desc = {
+    "dns_query_srv_result",
+    NULL,
+    dns_query_srv_result_fields,
+    4
+};
+
+static PyTypeObject DNSQueryNAPTRResultType = {0, 0, 0, 0, 0, 0};
+
+static PyStructSequence_Field dns_query_naptr_result_fields[] = {
+    {"order", ""},
+    {"preference", ""},
+    {"flags", ""},
+    {"service", ""},
+    {"regex", ""},
+    {"replacement", ""},
+    {NULL}
+};
+
+static PyStructSequence_Desc dns_query_naptr_result_desc = {
+    "dns_query_naptr_result",
+    NULL,
+    dns_query_naptr_result_fields,
+    6
+};
+
+
 static PyObject* PyExc_DNSError;
 
 
@@ -40,7 +141,7 @@ host_cb(void *arg, int status, int timeouts, struct hostent *hostent)
 
     dns_aliases = PyList_New(0);
     dns_addrlist = PyList_New(0);
-    dns_result = PyTuple_New(3);
+    dns_result = PyStructSequence_New(&DNSHostResultType);
 
     if (!(dns_aliases && dns_addrlist && dns_result)) {
         PyErr_NoMemory();
@@ -82,9 +183,9 @@ host_cb(void *arg, int status, int timeouts, struct hostent *hostent)
     }
     dns_name = PYUVString_FromString(hostent->h_name);
 
-    PyTuple_SET_ITEM(dns_result, 0, dns_name);
-    PyTuple_SET_ITEM(dns_result, 1, dns_aliases);
-    PyTuple_SET_ITEM(dns_result, 2, dns_addrlist);
+    PyStructSequence_SET_ITEM(dns_result, 0, dns_name);
+    PyStructSequence_SET_ITEM(dns_result, 1, dns_aliases);
+    PyStructSequence_SET_ITEM(dns_result, 2, dns_addrlist);
     errorno = Py_None;
     Py_INCREF(Py_None);
 
@@ -130,7 +231,7 @@ nameinfo_cb(void *arg, int status, int timeouts, char *node, char *service)
         goto callback;
     }
 
-    dns_result = PyTuple_New(2);
+    dns_result = PyStructSequence_New(&DNSNameinfoResultType);
     if (!dns_result) {
         PyErr_NoMemory();
         PyErr_WriteUnraisable(Py_None);
@@ -148,8 +249,8 @@ nameinfo_cb(void *arg, int status, int timeouts, char *node, char *service)
         Py_INCREF(Py_None);
     }
 
-    PyTuple_SET_ITEM(dns_result, 0, dns_node);
-    PyTuple_SET_ITEM(dns_result, 1, dns_service);
+    PyStructSequence_SET_ITEM(dns_result, 0, dns_node);
+    PyStructSequence_SET_ITEM(dns_result, 1, dns_service);
     errorno = Py_None;
     Py_INCREF(Py_None);
 
@@ -251,13 +352,17 @@ getaddrinfo_cb(uv_getaddrinfo_t* handle, int status, struct addrinfo* res)
             break;
         }
 
-        item = Py_BuildValue("iiisO", ptr->ai_family, ptr->ai_socktype, ptr->ai_protocol, ptr->ai_canonname ? ptr->ai_canonname : "", addr);
-        Py_DECREF(addr);
+        item = PyStructSequence_New(&DNSAddrinfoResultType);
         if (!item) {
             PyErr_NoMemory();
             PyErr_WriteUnraisable(callback);
             break;
         }
+        PyStructSequence_SET_ITEM(item, 0, PyInt_FromLong((long)ptr->ai_family));
+        PyStructSequence_SET_ITEM(item, 1, PyInt_FromLong((long)ptr->ai_socktype));
+        PyStructSequence_SET_ITEM(item, 2, PyInt_FromLong((long)ptr->ai_protocol));
+        PyStructSequence_SET_ITEM(item, 3, PYUVString_FromString(ptr->ai_canonname ? ptr->ai_canonname : ""));
+        PyStructSequence_SET_ITEM(item, 4, addr);
 
         PyList_Append(dns_result, item);
         Py_DECREF(item);
@@ -553,12 +658,12 @@ query_mx_cb(void *arg, int status,int timeouts, unsigned char *answer_buf, int a
     }
 
     for (mx_ptr = mx_reply; mx_ptr != NULL; mx_ptr = mx_ptr->next) {
-        tmp = PyTuple_New(2);
+        tmp = PyStructSequence_New(&DNSQueryMXResultType);
         if (tmp == NULL) {
             break;
         }
-        PyTuple_SET_ITEM(tmp, 0, PYUVString_FromString(mx_ptr->host));
-        PyTuple_SET_ITEM(tmp, 1, PyInt_FromLong((long)mx_ptr->priority));
+        PyStructSequence_SET_ITEM(tmp, 0, PYUVString_FromString(mx_ptr->host));
+        PyStructSequence_SET_ITEM(tmp, 1, PyInt_FromLong((long)mx_ptr->priority));
         PyList_Append(dns_result, tmp);
         Py_DECREF(tmp);
     }
@@ -778,14 +883,14 @@ query_srv_cb(void *arg, int status,int timeouts, unsigned char *answer_buf, int 
     }
 
     for (srv_ptr = srv_reply; srv_ptr != NULL; srv_ptr = srv_ptr->next) {
-        tmp = PyTuple_New(4);
+        tmp = PyStructSequence_New(&DNSQuerySRVResultType);
         if (tmp == NULL) {
             break;
         }
-        PyTuple_SET_ITEM(tmp, 0, PYUVString_FromString(srv_ptr->host));
-        PyTuple_SET_ITEM(tmp, 1, PyInt_FromLong((long)srv_ptr->port));
-        PyTuple_SET_ITEM(tmp, 2, PyInt_FromLong((long)srv_ptr->priority));
-        PyTuple_SET_ITEM(tmp, 3, PyInt_FromLong((long)srv_ptr->weight));
+        PyStructSequence_SET_ITEM(tmp, 0, PYUVString_FromString(srv_ptr->host));
+        PyStructSequence_SET_ITEM(tmp, 1, PyInt_FromLong((long)srv_ptr->port));
+        PyStructSequence_SET_ITEM(tmp, 2, PyInt_FromLong((long)srv_ptr->priority));
+        PyStructSequence_SET_ITEM(tmp, 3, PyInt_FromLong((long)srv_ptr->weight));
         PyList_Append(dns_result, tmp);
         Py_DECREF(tmp);
     }
@@ -856,16 +961,16 @@ query_naptr_cb(void *arg, int status,int timeouts, unsigned char *answer_buf, in
     }
 
     for (naptr_ptr = naptr_reply; naptr_ptr != NULL; naptr_ptr = naptr_ptr->next) {
-        tmp = PyTuple_New(6);
+        tmp = PyStructSequence_New(&DNSQueryNAPTRResultType);
         if (tmp == NULL) {
             break;
         }
-        PyTuple_SET_ITEM(tmp, 0, PyInt_FromLong((long)naptr_ptr->order));
-        PyTuple_SET_ITEM(tmp, 1, PyInt_FromLong((long)naptr_ptr->preference));
-        PyTuple_SET_ITEM(tmp, 2, PYUVString_FromString((char *)naptr_ptr->flags));
-        PyTuple_SET_ITEM(tmp, 3, PYUVString_FromString((char *)naptr_ptr->service));
-        PyTuple_SET_ITEM(tmp, 4, PYUVString_FromString((char *)naptr_ptr->regexp));
-        PyTuple_SET_ITEM(tmp, 5, PYUVString_FromString(naptr_ptr->replacement));
+        PyStructSequence_SET_ITEM(tmp, 0, PyInt_FromLong((long)naptr_ptr->order));
+        PyStructSequence_SET_ITEM(tmp, 1, PyInt_FromLong((long)naptr_ptr->preference));
+        PyStructSequence_SET_ITEM(tmp, 2, PYUVString_FromString((char *)naptr_ptr->flags));
+        PyStructSequence_SET_ITEM(tmp, 3, PYUVString_FromString((char *)naptr_ptr->service));
+        PyStructSequence_SET_ITEM(tmp, 4, PYUVString_FromString((char *)naptr_ptr->regexp));
+        PyStructSequence_SET_ITEM(tmp, 5, PYUVString_FromString(naptr_ptr->replacement));
         PyList_Append(dns_result, tmp);
         Py_DECREF(tmp);
     }
