@@ -111,6 +111,10 @@ init_pyuv(void)
     PyUVModule_AddType(pyuv, "ThreadPool", &ThreadPoolType);
     PyUVModule_AddType(pyuv, "Process", &ProcessType);
 
+    /* PyStructSequence types */
+    if (LoopCountersResultType.tp_name == 0)
+        PyStructSequence_InitType(&LoopCountersResultType, &loop_counters_result_desc);
+
     /* Constants */
     PyModule_AddIntMacro(pyuv, UV_JOIN_GROUP);
     PyModule_AddIntMacro(pyuv, UV_LEAVE_GROUP);

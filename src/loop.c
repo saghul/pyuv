@@ -2,6 +2,35 @@
 static Loop *default_loop = NULL;
 
 
+static PyTypeObject LoopCountersResultType = {0, 0, 0, 0, 0, 0};
+
+static PyStructSequence_Field loop_counters_result_fields[] = {
+    {"eio_init", ""},
+    {"req_init", ""},
+    {"handle_init", ""},
+    {"stream_init", ""},
+    {"tcp_init", ""},
+    {"udp_init", ""},
+    {"pipe_init", ""},
+    {"tty_init", ""},
+    {"prepare_init", ""},
+    {"check_init", ""},
+    {"idle_init", ""},
+    {"async_init", ""},
+    {"timer_init", ""},
+    {"process_init", ""},
+    {"fs_event_init", ""},
+    {NULL}
+};
+
+static PyStructSequence_Desc loop_counters_result_desc = {
+    "loop_counters_result",
+    NULL,
+    loop_counters_result_fields,
+    15
+};
+
+
 static void
 _loop_cleanup(void)
 {
@@ -118,8 +147,8 @@ Loop_default_get(Loop *self, void *closure)
 }
 
 
-static void
-set_counter_value(PyObject *dict, char *key, uint64_t value)
+static PyObject *
+get_counter_value(uint64_t value)
 {
     PyObject *val;
 #if SIZEOF_TIME_T > SIZEOF_LONG
@@ -127,44 +156,42 @@ set_counter_value(PyObject *dict, char *key, uint64_t value)
 #else
     val = PyInt_FromLong((long)value);
 #endif
-    PyDict_SetItemString(dict, key, val);
+    return val;
 }
 
 static PyObject *
 Loop_counters_get(Loop *self, void *closure)
 {
-    /* TODO: use a named tuple here */
+    int pos;
     uv_counters_t* uv_counters;
     PyObject *counters;
 
     UNUSED_ARG(closure);
     uv_counters = &self->uv_loop->counters;
 
-    counters = PyDict_New();
+    counters =  PyStructSequence_New(&LoopCountersResultType);
     if (!counters) {
         PyErr_NoMemory();
         return NULL;
     }
 
-#define set_counter(name) set_counter_value(counters, #name, uv_counters->name);
+    pos = 0;
 
-    set_counter(eio_init)
-    set_counter(req_init)
-    set_counter(handle_init)
-    set_counter(stream_init)
-    set_counter(tcp_init)
-    set_counter(udp_init)
-    set_counter(pipe_init)
-    set_counter(tty_init)
-    set_counter(prepare_init)
-    set_counter(check_init)
-    set_counter(idle_init)
-    set_counter(async_init)
-    set_counter(timer_init)
-    set_counter(process_init)
-    set_counter(fs_event_init)
-
-#undef set_counter
+    PyStructSequence_SET_ITEM(counters, pos++, get_counter_value(uv_counters->eio_init));
+    PyStructSequence_SET_ITEM(counters, pos++, get_counter_value(uv_counters->req_init));
+    PyStructSequence_SET_ITEM(counters, pos++, get_counter_value(uv_counters->handle_init));
+    PyStructSequence_SET_ITEM(counters, pos++, get_counter_value(uv_counters->stream_init));
+    PyStructSequence_SET_ITEM(counters, pos++, get_counter_value(uv_counters->tcp_init));
+    PyStructSequence_SET_ITEM(counters, pos++, get_counter_value(uv_counters->udp_init));
+    PyStructSequence_SET_ITEM(counters, pos++, get_counter_value(uv_counters->pipe_init));
+    PyStructSequence_SET_ITEM(counters, pos++, get_counter_value(uv_counters->tty_init));
+    PyStructSequence_SET_ITEM(counters, pos++, get_counter_value(uv_counters->prepare_init));
+    PyStructSequence_SET_ITEM(counters, pos++, get_counter_value(uv_counters->check_init));
+    PyStructSequence_SET_ITEM(counters, pos++, get_counter_value(uv_counters->idle_init));
+    PyStructSequence_SET_ITEM(counters, pos++, get_counter_value(uv_counters->async_init));
+    PyStructSequence_SET_ITEM(counters, pos++, get_counter_value(uv_counters->timer_init));
+    PyStructSequence_SET_ITEM(counters, pos++, get_counter_value(uv_counters->process_init));
+    PyStructSequence_SET_ITEM(counters, pos++, get_counter_value(uv_counters->fs_event_init));
 
     return counters;
 

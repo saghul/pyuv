@@ -5,6 +5,7 @@
 /* python */
 #include "Python.h"
 #include "structmember.h"
+#include "structseq.h"
 
 /* Python3 */
 #if PY_MAJOR_VERSION >= 3
