@@ -1,7 +1,6 @@
 
 #include "pyuv.h"
 
-#include "errno.c"
 #include "helper.c"
 
 #include "loop.c"
@@ -21,7 +20,7 @@
 #include "threadpool.c"
 #include "process.c"
 #include "util.c"
-
+#include "errno.c"
 #include "error.c"
 
 #define LIBUV_VERSION UV_VERSION_MAJOR.UV_VERSION_MINOR-LIBUV_REVISION
