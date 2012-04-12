@@ -126,6 +126,8 @@ init_pyuv(void)
         PyStructSequence_InitType(&DNSQuerySRVResultType, &dns_query_srv_result_desc);
     if (DNSQueryNAPTRResultType.tp_name == 0)
         PyStructSequence_InitType(&DNSQueryNAPTRResultType, &dns_query_naptr_result_desc);
+    if (StatResultType.tp_name == 0)
+        PyStructSequence_InitType(&StatResultType, &stat_result_desc);
 
     /* Constants */
     PyModule_AddIntMacro(pyuv, UV_JOIN_GROUP);
