@@ -2,7 +2,7 @@
 import threading
 import time
 
-from common import unittest2
+from common import platform_skip, unittest2
 import pyuv
 
 
@@ -52,6 +52,34 @@ class ThreadPoolMultiLoopTest(unittest2.TestCase):
         [t.start() for t in (t1, t2, t3)]
         [t.join() for t in (t1, t2, t3)]
         self.assertEqual(self.pool_cb_called, 3)
+
+
+@platform_skip(["win32"])
+class ThreadPoolThreadCount(unittest2.TestCase):
+
+    def setUp(self):
+        self.loop = pyuv.Loop.default_loop()
+        self.pool = pyuv.ThreadPool(self.loop)
+
+    def run_in_pool(self):
+        time.sleep(0.1)
+
+    def test_threadpool_thread_count(self):
+        nthreads = self.pool.get_nthreads()
+        self.pool.set_min_parallel_threads(10)
+        self.pool.set_max_parallel_threads(10)
+        self.pool.queue_work(self.run_in_pool)
+        self.pool.queue_work(self.run_in_pool)
+        self.pool.queue_work(self.run_in_pool)
+        self.pool.queue_work(self.run_in_pool)
+        self.pool.queue_work(self.run_in_pool)
+        self.pool.queue_work(self.run_in_pool)
+        self.pool.queue_work(self.run_in_pool)
+        self.pool.queue_work(self.run_in_pool)
+        self.pool.queue_work(self.run_in_pool)
+        self.loop.run()
+        after_nthreads = self.pool.get_nthreads()
+        self.assertTrue(after_nthreads > nthreads)
 
 
 if __name__ == '__main__':
