@@ -37,7 +37,6 @@ class ThreadPoolMultiLoopTest(unittest2.TestCase):
 
     def run_in_pool(self):
         self.pool_cb_called += 1
-        time.sleep(0.1)
 
     def run_loop(self):
         loop = pyuv.Loop()
