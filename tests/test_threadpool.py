@@ -30,6 +30,16 @@ class ThreadPoolTest(unittest2.TestCase):
         self.assertEqual(self.pool_cb_called, 3)
         self.assertEqual(self.pool_after_work_cb_called, 3)
 
+    def raise_in_pool(self, *args, **kw):
+        1/0
+
+    def after_work_cb2(self, status, result):
+        self.assertEqual(status, -1)
+
+    def test_threadpool2(self):
+        self.pool.queue_work(self.raise_in_pool, self.after_work_cb2)
+        self.loop.run()
+
 
 class ThreadPoolMultiLoopTest(unittest2.TestCase):
 
