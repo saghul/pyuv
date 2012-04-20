@@ -6,6 +6,7 @@ typedef struct {
     PyObject *args;
     PyObject *kwargs;
     PyObject *result;
+    int status;
     PyObject *after_work_func;
 } tpool_req_data_t;
 
@@ -28,6 +29,9 @@ work_cb(uv_work_t *req)
         PyErr_WriteUnraisable(data->func);
         result = Py_None;
         Py_INCREF(Py_None);
+        data->status = -1;
+    } else {
+        data->status = 0;
     }
     data->result = result;
 
@@ -47,7 +51,7 @@ after_work_cb(uv_work_t *req)
     data = (tpool_req_data_t*)req->data;
 
     if (data->after_work_func) {
-        result = PyObject_CallFunctionObjArgs(data->after_work_func, data->result, NULL);
+        result = PyObject_CallFunctionObjArgs(data->after_work_func, PyInt_FromLong((long)data->status), data->result, NULL);
         if (result == NULL) {
             PyErr_WriteUnraisable(data->after_work_func);
         }

@@ -18,7 +18,8 @@ class ThreadPoolTest(unittest2.TestCase):
         self.pool_cb_called += 1
         time.sleep(0.1)
 
-    def after_work_cb(self, result):
+    def after_work_cb(self, status, result):
+        self.assertEqual(status, 0)
         self.pool_after_work_cb_called += 1
 
     def test_threadpool1(self):
