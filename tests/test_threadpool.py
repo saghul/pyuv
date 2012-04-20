@@ -34,9 +34,12 @@ class ThreadPoolMultiLoopTest(unittest2.TestCase):
 
     def setUp(self):
         self.pool_cb_called = 0
+        self.lock = threading.Lock()
 
     def run_in_pool(self):
-        self.pool_cb_called += 1
+        with self.lock:
+            self.pool_cb_called += 1
+            time.sleep(0.2)
 
     def run_loop(self):
         loop = pyuv.Loop()
@@ -49,7 +52,7 @@ class ThreadPoolMultiLoopTest(unittest2.TestCase):
         t2 = threading.Thread(target=self.run_loop)
         t3 = threading.Thread(target=self.run_loop)
         [t.start() for t in (t1, t2, t3)]
-        [t.join() for t in (t1, t2, t3)]
+        [t.join(5) for t in (t1, t2, t3)]
         self.assertEqual(self.pool_cb_called, 3)
 
 
