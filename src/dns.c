@@ -1203,13 +1203,14 @@ error:
 
 
 static PyObject *
-DNSResolver_func_query_a(DNSResolver *self, PyObject *args)
+DNSResolver_func_query(DNSResolver *self, PyObject *args)
 {
     char *name;
+    int query_type;
     ares_cb_data_t *cb_data;
     PyObject *callback;
 
-    if (!PyArg_ParseTuple(args, "sO:query_a", &name, &callback)) {
+    if (!PyArg_ParseTuple(args, "isO:query_a", &query_type, &name, &callback)) {
         return NULL;
     }
 
@@ -1227,224 +1228,63 @@ DNSResolver_func_query_a(DNSResolver *self, PyObject *args)
     cb_data->resolver = self;
     cb_data->cb = callback;
 
-    ares_query(self->channel, name, C_IN, T_A, &query_a_cb, (void *)cb_data);
+    switch (query_type) {
+        case T_A:
+        {
+            ares_query(self->channel, name, C_IN, T_A, &query_a_cb, (void *)cb_data);
+            break;
+        }
 
-    Py_RETURN_NONE;
-}
+        case T_AAAA:
+        {
+            ares_query(self->channel, name, C_IN, T_AAAA, &query_aaaa_cb, (void *)cb_data);
+            break;
+        }
 
+        case T_CNAME:
+        {
+            ares_query(self->channel, name, C_IN, T_CNAME, &query_cname_cb, (void *)cb_data);
+            break;
+        }
 
-static PyObject *
-DNSResolver_func_query_aaaa(DNSResolver *self, PyObject *args)
-{
-    char *name;
-    ares_cb_data_t *cb_data;
-    PyObject *callback;
+        case T_MX:
+        {
+            ares_query(self->channel, name, C_IN, T_MX, &query_mx_cb, (void *)cb_data);
+            break;
+        }
 
-    if (!PyArg_ParseTuple(args, "sO:query_aaaa", &name, &callback)) {
-        return NULL;
+        case T_NAPTR:
+        {
+            ares_query(self->channel, name, C_IN, T_NAPTR, &query_naptr_cb, (void *)cb_data);
+            break;
+        }
+
+        case T_NS:
+        {
+            ares_query(self->channel, name, C_IN, T_NS, &query_ns_cb, (void *)cb_data);
+            break;
+        }
+
+        case T_SRV:
+        {
+            ares_query(self->channel, name, C_IN, T_SRV, &query_srv_cb, (void *)cb_data);
+            break;
+        }
+
+        case T_TXT:
+        {
+            ares_query(self->channel, name, C_IN, T_TXT, &query_txt_cb, (void *)cb_data);
+            break;
+        }
+
+        default:
+        {
+            Py_DECREF(callback);
+            PyMem_Free(cb_data);
+            PyErr_SetString(PyExc_DNSError, "invalid query type specified");
+            return NULL;
+        }
     }
-
-    if (!PyCallable_Check(callback)) {
-        PyErr_SetString(PyExc_TypeError, "a callable is required");
-        return NULL;
-    }
-
-    cb_data = (ares_cb_data_t*) PyMem_Malloc(sizeof *cb_data);
-    if (!cb_data) {
-        return PyErr_NoMemory();
-    }
-
-    Py_INCREF(callback);
-    cb_data->resolver = self;
-    cb_data->cb = callback;
-
-    ares_query(self->channel, name, C_IN, T_AAAA, &query_aaaa_cb, (void *)cb_data);
-
-    Py_RETURN_NONE;
-}
-
-
-static PyObject *
-DNSResolver_func_query_cname(DNSResolver *self, PyObject *args)
-{
-    char *name;
-    ares_cb_data_t *cb_data;
-    PyObject *callback;
-
-    if (!PyArg_ParseTuple(args, "sO:query_cname", &name, &callback)) {
-        return NULL;
-    }
-
-    if (!PyCallable_Check(callback)) {
-        PyErr_SetString(PyExc_TypeError, "a callable is required");
-        return NULL;
-    }
-
-    cb_data = (ares_cb_data_t*) PyMem_Malloc(sizeof *cb_data);
-    if (!cb_data) {
-        return PyErr_NoMemory();
-    }
-
-    Py_INCREF(callback);
-    cb_data->resolver = self;
-    cb_data->cb = callback;
-
-    ares_query(self->channel, name, C_IN, T_CNAME, &query_cname_cb, (void *)cb_data);
-
-    Py_RETURN_NONE;
-}
-
-
-static PyObject *
-DNSResolver_func_query_mx(DNSResolver *self, PyObject *args)
-{
-    char *name;
-    ares_cb_data_t *cb_data;
-    PyObject *callback;
-
-    if (!PyArg_ParseTuple(args, "sO:query_mx", &name, &callback)) {
-        return NULL;
-    }
-
-    if (!PyCallable_Check(callback)) {
-        PyErr_SetString(PyExc_TypeError, "a callable is required");
-        return NULL;
-    }
-
-    cb_data = (ares_cb_data_t*) PyMem_Malloc(sizeof *cb_data);
-    if (!cb_data) {
-        return PyErr_NoMemory();
-    }
-
-    Py_INCREF(callback);
-    cb_data->resolver = self;
-    cb_data->cb = callback;
-
-    ares_query(self->channel, name, C_IN, T_MX, &query_mx_cb, (void *)cb_data);
-
-    Py_RETURN_NONE;
-}
-
-
-static PyObject *
-DNSResolver_func_query_ns(DNSResolver *self, PyObject *args)
-{
-    char *name;
-    ares_cb_data_t *cb_data;
-    PyObject *callback;
-
-    if (!PyArg_ParseTuple(args, "sO:query_ns", &name, &callback)) {
-        return NULL;
-    }
-
-    if (!PyCallable_Check(callback)) {
-        PyErr_SetString(PyExc_TypeError, "a callable is required");
-        return NULL;
-    }
-
-    cb_data = (ares_cb_data_t*) PyMem_Malloc(sizeof *cb_data);
-    if (!cb_data) {
-        return PyErr_NoMemory();
-    }
-
-    Py_INCREF(callback);
-    cb_data->resolver = self;
-    cb_data->cb = callback;
-
-    ares_query(self->channel, name, C_IN, T_NS, &query_ns_cb, (void *)cb_data);
-
-    Py_RETURN_NONE;
-}
-
-
-static PyObject *
-DNSResolver_func_query_txt(DNSResolver *self, PyObject *args)
-{
-    char *name;
-    ares_cb_data_t *cb_data;
-    PyObject *callback;
-
-    if (!PyArg_ParseTuple(args, "sO:query_txt", &name, &callback)) {
-        return NULL;
-    }
-
-    if (!PyCallable_Check(callback)) {
-        PyErr_SetString(PyExc_TypeError, "a callable is required");
-        return NULL;
-    }
-
-    cb_data = (ares_cb_data_t*) PyMem_Malloc(sizeof *cb_data);
-    if (!cb_data) {
-        return PyErr_NoMemory();
-    }
-
-    Py_INCREF(callback);
-    cb_data->resolver = self;
-    cb_data->cb = callback;
-
-    ares_query(self->channel, name, C_IN, T_TXT, &query_txt_cb, (void *)cb_data);
-
-    Py_RETURN_NONE;
-}
-
-
-static PyObject *
-DNSResolver_func_query_srv(DNSResolver *self, PyObject *args)
-{
-    char *name;
-    ares_cb_data_t *cb_data;
-    PyObject *callback;
-
-    if (!PyArg_ParseTuple(args, "sO:query_srv", &name, &callback)) {
-        return NULL;
-    }
-
-    if (!PyCallable_Check(callback)) {
-        PyErr_SetString(PyExc_TypeError, "a callable is required");
-        return NULL;
-    }
-
-    cb_data = (ares_cb_data_t*) PyMem_Malloc(sizeof *cb_data);
-    if (!cb_data) {
-        return PyErr_NoMemory();
-    }
-
-    Py_INCREF(callback);
-    cb_data->resolver = self;
-    cb_data->cb = callback;
-
-    ares_query(self->channel, name, C_IN, T_SRV, &query_srv_cb, (void *)cb_data);
-
-    Py_RETURN_NONE;
-}
-
-
-static PyObject *
-DNSResolver_func_query_naptr(DNSResolver *self, PyObject *args)
-{
-    char *name;
-    ares_cb_data_t *cb_data;
-    PyObject *callback;
-
-    if (!PyArg_ParseTuple(args, "sO:query_naptr", &name, &callback)) {
-        return NULL;
-    }
-
-    if (!PyCallable_Check(callback)) {
-        PyErr_SetString(PyExc_TypeError, "a callable is required");
-        return NULL;
-    }
-
-    cb_data = (ares_cb_data_t*) PyMem_Malloc(sizeof *cb_data);
-    if (!cb_data) {
-        return PyErr_NoMemory();
-    }
-
-    Py_INCREF(callback);
-    cb_data->resolver = self;
-    cb_data->cb = callback;
-
-    ares_query(self->channel, name, C_IN, T_NAPTR, &query_naptr_cb, (void *)cb_data);
 
     Py_RETURN_NONE;
 }
@@ -1671,14 +1511,7 @@ DNSResolver_tp_methods[] = {
     { "gethostbyaddr", (PyCFunction)DNSResolver_func_gethostbyaddr, METH_VARARGS|METH_KEYWORDS, "Gethostbyaddr" },
     { "getnameinfo", (PyCFunction)DNSResolver_func_getnameinfo, METH_VARARGS|METH_KEYWORDS, "Getnameinfo" },
     { "getaddrinfo", (PyCFunction)DNSResolver_func_getaddrinfo, METH_VARARGS|METH_KEYWORDS, "Getaddrinfo" },
-    { "query_a", (PyCFunction)DNSResolver_func_query_a, METH_VARARGS, "Run a DNS query of type A" },
-    { "query_aaaa", (PyCFunction)DNSResolver_func_query_aaaa, METH_VARARGS, "Run a DNS query of type AAAA" },
-    { "query_cname", (PyCFunction)DNSResolver_func_query_cname, METH_VARARGS, "Run a DNS query of type CNAME" },
-    { "query_mx", (PyCFunction)DNSResolver_func_query_mx, METH_VARARGS, "Run a DNS query of type MX" },
-    { "query_ns", (PyCFunction)DNSResolver_func_query_ns, METH_VARARGS, "Run a DNS query of type NS" },
-    { "query_txt", (PyCFunction)DNSResolver_func_query_txt, METH_VARARGS, "Run a DNS query of type TXT" },
-    { "query_srv", (PyCFunction)DNSResolver_func_query_srv, METH_VARARGS, "Run a DNS query of type SRV" },
-    { "query_naptr", (PyCFunction)DNSResolver_func_query_naptr, METH_VARARGS, "Run a DNS query of type NAPTR" },
+    { "query", (PyCFunction)DNSResolver_func_query, METH_VARARGS, "Run a DNS query of the specified type" },
     { NULL }
 };
 
@@ -1776,6 +1609,33 @@ init_dns(void)
     PyModule_AddIntMacro(module, ARES_NI_IDN);
     PyModule_AddIntMacro(module, ARES_NI_IDN_ALLOW_UNASSIGNED);
     PyModule_AddIntMacro(module, ARES_NI_IDN_USE_STD3_ASCII_RULES);
+
+#define QUERY_TYPE_A        T_A
+#define QUERY_TYPE_AAAA     T_AAAA
+#define QUERY_TYPE_CNAME    T_CNAME
+#define QUERY_TYPE_MX       T_MX
+#define QUERY_TYPE_NAPTR    T_NAPTR
+#define QUERY_TYPE_NS       T_NS
+#define QUERY_TYPE_SRV      T_SRV
+#define QUERY_TYPE_TXT      T_TXT
+
+    PyModule_AddIntMacro(module, QUERY_TYPE_A);
+    PyModule_AddIntMacro(module, QUERY_TYPE_AAAA);
+    PyModule_AddIntMacro(module, QUERY_TYPE_CNAME);
+    PyModule_AddIntMacro(module, QUERY_TYPE_MX);
+    PyModule_AddIntMacro(module, QUERY_TYPE_NAPTR);
+    PyModule_AddIntMacro(module, QUERY_TYPE_NS);
+    PyModule_AddIntMacro(module, QUERY_TYPE_SRV);
+    PyModule_AddIntMacro(module, QUERY_TYPE_TXT);
+
+#undef QUERY_TYPE_A
+#undef QUERY_TYPE_AAAA
+#undef QUERY_TYPE_CNAME
+#undef QUERY_TYPE_MX
+#undef QUERY_TYPE_NAPTR
+#undef QUERY_TYPE_NS
+#undef QUERY_TYPE_SRV
+#undef QUERY_TYPE_TXT
 
     PyUVModule_AddType(module, "DNSResolver", &DNSResolverType);
 

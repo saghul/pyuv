@@ -51,7 +51,7 @@ class DNSTest(unittest2.TestCase):
     def test_query_a(self):
         loop = pyuv.Loop.default_loop()
         resolver = pyuv.dns.DNSResolver(loop)
-        resolver.query_a('google.com', self.query_a_cb)
+        resolver.query(pyuv.dns.QUERY_TYPE_A, 'google.com', self.query_a_cb)
         loop.run()
 
     def query_a_bad_cb(self, resolver, result, errorno):
@@ -61,7 +61,7 @@ class DNSTest(unittest2.TestCase):
     def test_query_a_bad(self):
         loop = pyuv.Loop.default_loop()
         resolver = pyuv.dns.DNSResolver(loop)
-        resolver.query_a('hgf8g2od29hdohid.com', self.query_a_bad_cb)
+        resolver.query(pyuv.dns.QUERY_TYPE_A, 'hgf8g2od29hdohid.com', self.query_a_bad_cb)
         loop.run()
 
     def query_aaaa_cb(self, resolver, result, errorno):
@@ -71,7 +71,7 @@ class DNSTest(unittest2.TestCase):
     def test_query_aaaa(self):
         loop = pyuv.Loop.default_loop()
         resolver = pyuv.dns.DNSResolver(loop)
-        resolver.query_aaaa('ipv6.google.com', self.query_aaaa_cb)
+        resolver.query(pyuv.dns.QUERY_TYPE_AAAA, 'ipv6.google.com', self.query_aaaa_cb)
         loop.run()
 
     def query_cname_cb(self, resolver, result, errorno):
@@ -81,7 +81,7 @@ class DNSTest(unittest2.TestCase):
     def test_query_cname(self):
         loop = pyuv.Loop.default_loop()
         resolver = pyuv.dns.DNSResolver(loop)
-        resolver.query_cname('www.google.com', self.query_cname_cb)
+        resolver.query(pyuv.dns.QUERY_TYPE_CNAME, 'www.google.com', self.query_cname_cb)
         loop.run()
 
     def query_mx_cb(self, resolver, result, errorno):
@@ -91,7 +91,7 @@ class DNSTest(unittest2.TestCase):
     def test_query_mx(self):
         loop = pyuv.Loop.default_loop()
         resolver = pyuv.dns.DNSResolver(loop)
-        resolver.query_mx('google.com', self.query_mx_cb)
+        resolver.query(pyuv.dns.QUERY_TYPE_MX, 'google.com', self.query_mx_cb)
         loop.run()
 
     def query_ns_cb(self, resolver, result, errorno):
@@ -101,7 +101,7 @@ class DNSTest(unittest2.TestCase):
     def test_query_ns(self):
         loop = pyuv.Loop.default_loop()
         resolver = pyuv.dns.DNSResolver(loop)
-        resolver.query_ns('google.com', self.query_ns_cb)
+        resolver.query(pyuv.dns.QUERY_TYPE_NS, 'google.com', self.query_ns_cb)
         loop.run()
 
     def query_txt_cb(self, resolver, result, errorno):
@@ -111,7 +111,7 @@ class DNSTest(unittest2.TestCase):
     def test_query_txt(self):
         loop = pyuv.Loop.default_loop()
         resolver = pyuv.dns.DNSResolver(loop)
-        resolver.query_txt('google.com', self.query_txt_cb)
+        resolver.query(pyuv.dns.QUERY_TYPE_TXT, 'google.com', self.query_txt_cb)
         loop.run()
 
     def query_srv_cb(self, resolver, result, errorno):
@@ -121,7 +121,7 @@ class DNSTest(unittest2.TestCase):
     def test_query_srv(self):
         loop = pyuv.Loop.default_loop()
         resolver = pyuv.dns.DNSResolver(loop)
-        resolver.query_srv('_xmpp-server._tcp.google.com', self.query_srv_cb)
+        resolver.query(pyuv.dns.QUERY_TYPE_SRV, '_xmpp-server._tcp.google.com', self.query_srv_cb)
         loop.run()
 
     def query_naptr_cb(self, resolver, result, errorno):
@@ -131,7 +131,7 @@ class DNSTest(unittest2.TestCase):
     def test_query_naptr(self):
         loop = pyuv.Loop.default_loop()
         resolver = pyuv.dns.DNSResolver(loop)
-        resolver.query_naptr('sip2sip.info', self.query_naptr_cb)
+        resolver.query(pyuv.dns.QUERY_TYPE_NAPTR, 'sip2sip.info', self.query_naptr_cb)
         loop.run()
 
     def cancelled_cb(self, resolver, result, errorno):
@@ -140,8 +140,16 @@ class DNSTest(unittest2.TestCase):
     def test_query_cancelled(self):
         loop = pyuv.Loop.default_loop()
         resolver = pyuv.dns.DNSResolver(loop)
-        resolver.query_ns('google.com', self.cancelled_cb)
+        resolver.query(pyuv.dns.QUERY_TYPE_NS, 'google.com', self.cancelled_cb)
         resolver.cancel()
+        loop.run()
+
+    def test_query_bad_type(self):
+        def f(*args):
+            pass
+        loop = pyuv.Loop.default_loop()
+        resolver = pyuv.dns.DNSResolver(loop)
+        self.assertRaises(pyuv.error.DNSError, resolver.query, 667, 'google.com', f)
         loop.run()
 
 
