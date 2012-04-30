@@ -1,7 +1,7 @@
 
 import sys
 
-from common import unittest2
+from common import platform_skip, unittest2
 import common
 import pyuv
 
@@ -126,10 +126,8 @@ class ProcessTest(unittest2.TestCase):
         self.assertEqual(self.close_cb_called, 2)
         self.assertEqual(self.received_output, b"TEST")
 
+    @platform_skip(["win32"])
     def test_process_stdin(self):
-        if sys.platform == 'win32':
-            # TODO: fix
-            return
         self.exit_cb_called = 0
         self.close_cb_called = 0
         self.received_output = None
