@@ -1,6 +1,9 @@
 
 import os
-import pwd
+try:
+    import pwd
+except ImportError:
+    pwd = None
 import sys
 
 from common import platform_skip, unittest2
