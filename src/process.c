@@ -87,7 +87,8 @@ on_process_dealloc_close(uv_handle_t *handle)
 static PyObject *
 Process_func_spawn(Process *self, PyObject *args, PyObject *kwargs)
 {
-    int r;
+    int r, flags;
+    unsigned int uid, gid;
     char *cwd, *cwd2, *file, *file2, *arg_str, *tmp_str, *key_str, *value_str;
     char **ptr, **process_args, **process_env;
     Py_ssize_t i, n, pos;
@@ -95,19 +96,20 @@ Process_func_spawn(Process *self, PyObject *args, PyObject *kwargs)
     uv_process_t *uv_process;
     uv_process_options_t options;
 
-    static char *kwlist[] = {"file", "exit_callback", "args", "env", "cwd", "stdin", "stdout", "stderr", NULL};
+    static char *kwlist[] = {"file", "exit_callback", "args", "env", "cwd", "uid", "gid", "flags", "stdin", "stdout", "stderr", NULL};
 
     cwd = NULL;
     ptr = process_args = process_env = NULL;
     tmp = arguments = env = NULL;
     stdin_pipe = stdout_pipe = stderr_pipe = Py_None;
+    flags = uid = gid = 0;
 
     if (self->uv_handle) {
         PyErr_SetString(PyExc_ProcessError, "Process already spawned");
         return NULL;
     }
 
-    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "s|OOO!sO!O!O!:__init__", kwlist, &file, &callback, &arguments, &PyDict_Type, &env, &cwd, &PipeType, &stdin_pipe, &PipeType, &stdout_pipe, &PipeType, &stderr_pipe)) {
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "s|OOO!sIIiO!O!O!:__init__", kwlist, &file, &callback, &arguments, &PyDict_Type, &env, &cwd, &uid, &gid, &flags, &PipeType, &stdin_pipe, &PipeType, &stdout_pipe, &PipeType, &stderr_pipe)) {
         return NULL;
     }
 
@@ -143,6 +145,9 @@ Process_func_spawn(Process *self, PyObject *args, PyObject *kwargs)
 
     memset(&options, 0, sizeof(uv_process_options_t));
 
+    options.uid = uid;
+    options.gid = gid;
+    options.flags = flags;
     options.exit_cb = on_process_exit;
 
     file2 = (char *) PyMem_Malloc(strlen(file) + 1);

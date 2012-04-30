@@ -1,4 +1,6 @@
 
+import os
+import pwd
 import sys
 
 from common import platform_skip, unittest2
@@ -192,6 +194,49 @@ class ProcessTest(unittest2.TestCase):
         else:
             self.assertEqual(self.exit_status, 0)
         self.assertEqual(self.term_signal, 15)
+
+    @platform_skip(["win32"])
+    def test_process_uid_gid(self):
+        self.exit_cb_called = 0
+        self.close_cb_called = 0
+        def proc_close_cb(proc):
+            self.close_cb_called +=1
+        def proc_exit_cb(proc, exit_status, term_signal):
+            self.assertEqual(exit_status, 0)
+            self.exit_cb_called += 1
+            proc.close(proc_close_cb)
+        if os.getuid() != 0:
+            self.skipTest("test disabled if running as non-root")
+            return
+        p_info = pwd.getpwnam("nobody")
+        loop = pyuv.Loop.default_loop()
+        proc = pyuv.Process(loop)
+        proc.spawn(file="./proc_basic.py", exit_callback=proc_exit_cb, uid=p_info.pw_uid, gid=p_info.pw_gid, flags=pyuv.UV_PROCESS_SETUID|pyuv.UV_PROCESS_SETGID)
+        pid = proc.pid
+        loop.run()
+        self.assertEqual(self.exit_cb_called, 1)
+        self.assertEqual(self.close_cb_called, 1)
+        self.assertNotEqual(pid, None)
+
+    @platform_skip(["win32"])
+    def test_process_uid_fail(self):
+        self.exit_cb_called = 0
+        self.close_cb_called = 0
+        def proc_close_cb(proc):
+            self.close_cb_called +=1
+        def proc_exit_cb(proc, exit_status, term_signal):
+            self.assertNotEqual(exit_status, 0)
+            self.exit_cb_called += 1
+            proc.close(proc_close_cb)
+        if os.getuid() != 0:
+            self.skipTest("test disabled if running as non-root")
+            return
+        loop = pyuv.Loop.default_loop()
+        proc = pyuv.Process(loop)
+        proc.spawn(file="./proc_basic.py", exit_callback=proc_exit_cb, uid=-42424242, flags=pyuv.UV_PROCESS_SETUID)
+        loop.run()
+        self.assertEqual(self.exit_cb_called, 1)
+        self.assertEqual(self.close_cb_called, 1)
 
 
 if __name__ == '__main__':

@@ -132,6 +132,9 @@ init_pyuv(void)
     /* Constants */
     PyModule_AddIntMacro(pyuv, UV_JOIN_GROUP);
     PyModule_AddIntMacro(pyuv, UV_LEAVE_GROUP);
+    PyModule_AddIntMacro(pyuv, UV_PROCESS_SETUID);
+    PyModule_AddIntMacro(pyuv, UV_PROCESS_SETGID);
+    PyModule_AddIntMacro(pyuv, UV_PROCESS_WINDOWS_VERBATIM_ARGUMENTS);
 
     /* Handle types */
     PyModule_AddIntMacro(pyuv, UV_UNKNOWN_HANDLE);
