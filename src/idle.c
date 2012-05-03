@@ -218,6 +218,7 @@ Idle_tp_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
         return NULL;
     }
     self->uv_handle = NULL;
+    self->weakreflist = NULL;
     return (PyObject *)self;
 }
 
@@ -250,6 +251,9 @@ Idle_tp_dealloc(Idle *self)
     if (self->uv_handle) {
         uv_close((uv_handle_t *)self->uv_handle, on_idle_dealloc_close);
         self->uv_handle = NULL;
+    }
+    if (self->weakreflist != NULL) {
+        PyObject_ClearWeakRefs((PyObject *)self);
     }
     Idle_tp_clear(self);
     Py_TYPE(self)->tp_free((PyObject *)self);
@@ -303,7 +307,7 @@ static PyTypeObject IdleType = {
     (traverseproc)Idle_tp_traverse,                                 /*tp_traverse*/
     (inquiry)Idle_tp_clear,                                         /*tp_clear*/
     0,                                                              /*tp_richcompare*/
-    0,                                                              /*tp_weaklistoffset*/
+    offsetof(Idle, weakreflist),                                    /*tp_weaklistoffset*/
     0,                                                              /*tp_iter*/
     0,                                                              /*tp_iternext*/
     Idle_tp_methods,                                                /*tp_methods*/

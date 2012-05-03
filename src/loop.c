@@ -54,6 +54,7 @@ new_loop(PyTypeObject *type, PyObject *args, PyObject *kwargs, int is_default)
             }
             default_loop->uv_loop = uv_default_loop();
             default_loop->is_default = 1;
+            default_loop->weakreflist = NULL;
             Py_AtExit(_loop_cleanup);
         }
         Py_INCREF(default_loop);
@@ -65,6 +66,7 @@ new_loop(PyTypeObject *type, PyObject *args, PyObject *kwargs, int is_default)
         }
         self->uv_loop = uv_loop_new();
         self->is_default = 0;
+        self->weakreflist = NULL;
         return (PyObject *)self;
     }
 }
@@ -227,6 +229,9 @@ Loop_tp_dealloc(Loop *self)
     if (self->uv_loop) {
         uv_loop_delete(self->uv_loop);
     }
+    if (self->weakreflist != NULL) {
+        PyObject_ClearWeakRefs((PyObject *)self);
+    }
     Loop_tp_clear(self);
     Py_TYPE(self)->tp_free((PyObject *)self);
 }
@@ -283,7 +288,7 @@ static PyTypeObject LoopType = {
     (traverseproc)Loop_tp_traverse,                                 /*tp_traverse*/
     (inquiry)Loop_tp_clear,                                         /*tp_clear*/
     0,                                                              /*tp_richcompare*/
-    0,                                                              /*tp_weaklistoffset*/
+    offsetof(Loop, weakreflist),                                    /*tp_weaklistoffset*/
     0,                                                              /*tp_iter*/
     0,                                                              /*tp_iternext*/
     Loop_tp_methods,                                                /*tp_methods*/

@@ -67,6 +67,7 @@ typedef int Bool;
 /* Loop */
 typedef struct {
     PyObject_HEAD
+    PyObject *weakreflist;
     PyObject *data;
     uv_loop_t *uv_loop;
     int is_default;
@@ -77,6 +78,7 @@ static PyTypeObject LoopType;
 /* Async */
 typedef struct {
     PyObject_HEAD
+    PyObject *weakreflist;
     Loop *loop;
     PyObject *on_close_cb;
     PyObject *callback;
@@ -89,6 +91,7 @@ static PyTypeObject AsyncType;
 /* Timer */
 typedef struct {
     PyObject_HEAD
+    PyObject *weakreflist;
     Loop *loop;
     PyObject *on_close_cb;
     PyObject *callback;
@@ -101,6 +104,7 @@ static PyTypeObject TimerType;
 /* Prepare */
 typedef struct {
     PyObject_HEAD
+    PyObject *weakreflist;
     Loop *loop;
     PyObject *on_close_cb;
     PyObject *callback;
@@ -113,6 +117,7 @@ static PyTypeObject PrepareType;
 /* Idle */
 typedef struct {
     PyObject_HEAD
+    PyObject *weakreflist;
     Loop *loop;
     PyObject *on_close_cb;
     PyObject *callback;
@@ -125,6 +130,7 @@ static PyTypeObject IdleType;
 /* Check */
 typedef struct {
     PyObject_HEAD
+    PyObject *weakreflist;
     Loop *loop;
     PyObject *on_close_cb;
     PyObject *callback;
@@ -137,6 +143,7 @@ static PyTypeObject CheckType;
 /* Signal */
 typedef struct {
     PyObject_HEAD
+    PyObject *weakreflist;
     Loop *loop;
     PyObject *on_close_cb;
     PyObject *data;
@@ -148,6 +155,7 @@ static PyTypeObject SignalType;
 /* IOStream */
 typedef struct {
     PyObject_HEAD
+    PyObject *weakreflist;
     Loop *loop;
     PyObject *on_read_cb;
     PyObject *on_close_cb;
@@ -183,6 +191,7 @@ static PyTypeObject TTYType;
 /* UDP */
 typedef struct {
     PyObject_HEAD
+    PyObject *weakreflist;
     Loop *loop;
     PyObject *on_read_cb;
     PyObject *on_close_cb;
@@ -213,6 +222,7 @@ static PyTypeObject ThreadPoolType;
 /* Process */
 typedef struct {
     PyObject_HEAD
+    PyObject *weakreflist;
     Loop *loop;
     PyObject *on_close_cb;
     PyObject *on_exit_cb;
@@ -228,6 +238,7 @@ static PyTypeObject ProcessType;
 /* FSEvent */
 typedef struct {
     PyObject_HEAD
+    PyObject *weakreflist;
     Loop *loop;
     PyObject *on_fsevent_cb;
     PyObject *on_close_cb;
