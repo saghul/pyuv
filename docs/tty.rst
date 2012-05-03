@@ -93,4 +93,16 @@
 
         Any Python object attached to this handle.
 
+    .. py:attribute:: readable
+
+        *Read only*
+
+        Indicates if this handle is readable.
+
+    .. py:attribute:: writable
+
+        *Read only*
+
+        Indicates if this handle is writable.
+
 

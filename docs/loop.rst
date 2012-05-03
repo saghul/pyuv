@@ -25,9 +25,9 @@
         Run the event loop. This method will block until there is no active
         handle running on the loop.
 
-    .. py:method:: poll
+    .. py:method:: run_once
         
-        Poll the event loop for events without blocking.
+        Run a single loop iteration.
 
     .. py:method:: ref
     .. py:method:: unref
@@ -61,6 +61,6 @@
 
         *Read only*
 
-        Dictionary containing the loop counters. Loop counters maintain a count on the
+        Named tuple containing the loop counters. Loop counters maintain a count on the
         number of different handles, requests, etc that were ever run by the loop.
 

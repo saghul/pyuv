@@ -81,98 +81,22 @@
         Callback signature: ``callback(resolver, result, errorno)``
 
 
-    .. py:method:: query_a(name, callback)
+    .. py:method:: query(query_type, name, callback)
+
+        :param int query_type: Type of query to perform.
 
         :param string name: Name to query.
 
         :param callable callback: Callback to be called with the result of the query.
         
-        DNS type A query.
+        Do a DNS query of the specified type. Available types: ``QUERY_TYPE_A``, ``QUERY_TYPE_AAAA``, ``QUERY_TYPE_CNAME``,
+        ``QUERY_TYPE_MX``, ``QUERY_TYPE_NAPTR``, ``QUERY_TYPE_NS``, ``QUERY_TYPE_SRV``, ``QUERY_TYPE_TXT``.
 
         Callback signature: ``callback(resolver, result, errorno)``
-
-
-    .. py:method:: query_aaaa(name, callback)
-
-        :param string name: Name to query.
-
-        :param callable callback: Callback to be called with the result of the query.
-        
-        DNS type AAAA query.
-
-        Callback signature: ``callback(resolver, result, errorno)``
-
-
-    .. py:method:: query_cname(name, callback)
-
-        :param string name: Name to query.
-
-        :param callable callback: Callback to be called with the result of the query.
-        
-        DNS type CNAME query.
-
-        Callback signature: ``callback(resolver, result, errorno)``
-
-
-    .. py:method:: query_mx(name, callback)
-
-        :param string name: Name to query.
-
-        :param callable callback: Callback to be called with the result of the query.
-        
-        DNS type MX query.
-
-        Callback signature: ``callback(resolver, result, errorno)``
-
-
-    .. py:method:: query_ns(name, callback)
-
-        :param string name: Name to query.
-
-        :param callable callback: Callback to be called with the result of the query.
-        
-        DNS type NS query.
-
-        Callback signature: ``callback(resolver, result, errorno)``
-
-
-    .. py:method:: query_txt(name, callback)
-
-        :param string name: Name to query.
-
-        :param callable callback: Callback to be called with the result of the query.
-        
-        DNS type TXT query.
-
-        Callback signature: ``callback(resolver, result, errorno)``
-
-
-    .. py:method:: query_srv(name, callback)
-
-        :param string name: Name to query.
-
-        :param callable callback: Callback to be called with the result of the query.
-        
-        DNS type SRV query.
-
-        Callback signature: ``callback(resolver, result, errorno)``
-
-
-    .. py:method:: query_naptr(name, callback)
-
-        :param string name: Name to query.
-
-        :param callable callback: Callback to be called with the result of the query.
-
-        DNS type NAPTR query.
-
-        Callback signature: ``callback(resolver, result, errorno)``
-
 
     .. py:method:: cancel()
 
         Cancel any pending query on this resolver. All callbacks will be called with ARES_ECANCELLED errorno.
-
 
     .. py:attribute:: loop
 
