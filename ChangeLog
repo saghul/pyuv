@@ -1,3 +1,15 @@
+Version 0.6.1
+=============
+ - Added ability to set uid and gid on Process.spawn
+ - Added status parameter to ThreadPool after_work callback
+ - Added ability to control the number of threads in the ThreadPool (unix
+   only)
+ - Added 'readable' and 'writable' read-only properties to stream objects
+ - Return named tuples for Loop.counters, fs.stat and DNS functions
+ - Refactored DNS query functions, it's a single function now
+ - Raised libuv revision to 6367da2
+ - Updated documentation
+
 Version 0.6.0
 =============
  - Added get/set process_title functions
