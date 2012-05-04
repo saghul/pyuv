@@ -3,9 +3,9 @@ from common import unittest2
 import pyuv
 
 
-class PollTest(unittest2.TestCase):
+class RunOnceTest(unittest2.TestCase):
 
-    def test_poll1(self):
+    def test_run_once(self):
         self.cb_called = 0
         def prepare_cb(handle):
             handle.close()
