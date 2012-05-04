@@ -15,6 +15,7 @@
 #include "tcp.c"
 #include "tty.c"
 #include "udp.c"
+#include "poll.c"
 #include "dns.c"
 #include "fs.c"
 #include "threadpool.c"
@@ -108,6 +109,7 @@ init_pyuv(void)
     PyUVModule_AddType(pyuv, "Pipe", &PipeType);
     PyUVModule_AddType(pyuv, "TTY", &TTYType);
     PyUVModule_AddType(pyuv, "UDP", &UDPType);
+    PyUVModule_AddType(pyuv, "Poll", &PollType);
     PyUVModule_AddType(pyuv, "ThreadPool", &ThreadPoolType);
     PyUVModule_AddType(pyuv, "Process", &ProcessType);
 
@@ -135,10 +137,13 @@ init_pyuv(void)
     PyModule_AddIntMacro(pyuv, UV_PROCESS_SETUID);
     PyModule_AddIntMacro(pyuv, UV_PROCESS_SETGID);
     PyModule_AddIntMacro(pyuv, UV_PROCESS_WINDOWS_VERBATIM_ARGUMENTS);
+    PyModule_AddIntMacro(pyuv, UV_READABLE);
+    PyModule_AddIntMacro(pyuv, UV_WRITABLE);
 
     /* Handle types */
     PyModule_AddIntMacro(pyuv, UV_UNKNOWN_HANDLE);
     PyModule_AddIntMacro(pyuv, UV_FILE);
+    PyModule_AddIntMacro(pyuv, UV_POLL);
 #define XX(uc, lc) PyModule_AddIntMacro(pyuv, UV_##uc);
     UV_HANDLE_TYPE_MAP(XX)
 #undef XX

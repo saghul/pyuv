@@ -201,6 +201,20 @@ typedef struct {
 
 static PyTypeObject UDPType;
 
+/* Poll */
+typedef struct {
+    PyObject_HEAD
+    PyObject *weakreflist;
+    Loop *loop;
+    PyObject *callback;
+    PyObject *on_close_cb;
+    PyObject *data;
+    uv_poll_t *uv_handle;
+    int fd;
+} Poll;
+
+static PyTypeObject PollType;
+
 /* DNSResolver */
 typedef struct {
     PyObject_HEAD
