@@ -1,8 +1,6 @@
 
 #include "pyuv.h"
 
-#include "helper.c"
-
 #include "loop.c"
 #include "async.c"
 #include "timer.c"
