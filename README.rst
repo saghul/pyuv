@@ -29,6 +29,7 @@ pyuv's features:
 - ANSI escape code controlled TTY
 - File system events (inotify style)
 - IPC and TCP socket sharing between processes
+- Arbitrary file descriptor polling
 
 
 Documentation
