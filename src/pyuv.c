@@ -34,6 +34,7 @@ static PyModuleDef pyuv_module = {
 };
 #endif
 
+/* borrowed from pyev */
 #ifdef PYUV_WINDOWS
 static int pyuv_import_socket(void)
 {
