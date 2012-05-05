@@ -1,5 +1,5 @@
 
-static PyTypeObject StatResultType = {0, 0, 0, 0, 0, 0};
+static PyTypeObject StatResultType;
 
 static PyStructSequence_Field stat_result_fields[] = {
     {"st_mode",        "protection bits"},

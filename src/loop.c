@@ -2,7 +2,7 @@
 static Loop *default_loop = NULL;
 
 
-static PyTypeObject LoopCountersResultType = {0, 0, 0, 0, 0, 0};
+static PyTypeObject LoopCountersResultType;
 
 static PyStructSequence_Field loop_counters_result_fields[] = {
     {"eio_init", ""},

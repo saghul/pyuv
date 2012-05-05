@@ -2,7 +2,7 @@
 #include "nameser.h"
 
 
-static PyTypeObject DNSHostResultType = {0, 0, 0, 0, 0, 0};
+static PyTypeObject DNSHostResultType;
 
 static PyStructSequence_Field dns_host_result_fields[] = {
     {"name", ""},
@@ -18,7 +18,7 @@ static PyStructSequence_Desc dns_host_result_desc = {
     3
 };
 
-static PyTypeObject DNSNameinfoResultType = {0, 0, 0, 0, 0, 0};
+static PyTypeObject DNSNameinfoResultType;
 
 static PyStructSequence_Field dns_nameinfo_result_fields[] = {
     {"node", ""},
@@ -33,7 +33,7 @@ static PyStructSequence_Desc dns_nameinfo_result_desc = {
     2
 };
 
-static PyTypeObject DNSAddrinfoResultType = {0, 0, 0, 0, 0, 0};
+static PyTypeObject DNSAddrinfoResultType;
 
 static PyStructSequence_Field dns_addrinfo_result_fields[] = {
     {"family", ""},
@@ -51,7 +51,7 @@ static PyStructSequence_Desc dns_addrinfo_result_desc = {
     5
 };
 
-static PyTypeObject DNSQueryMXResultType = {0, 0, 0, 0, 0, 0};
+static PyTypeObject DNSQueryMXResultType;
 
 static PyStructSequence_Field dns_query_mx_result_fields[] = {
     {"host", ""},
@@ -66,7 +66,7 @@ static PyStructSequence_Desc dns_query_mx_result_desc = {
     2
 };
 
-static PyTypeObject DNSQuerySRVResultType = {0, 0, 0, 0, 0, 0};
+static PyTypeObject DNSQuerySRVResultType;
 
 static PyStructSequence_Field dns_query_srv_result_fields[] = {
     {"host", ""},
@@ -83,7 +83,7 @@ static PyStructSequence_Desc dns_query_srv_result_desc = {
     4
 };
 
-static PyTypeObject DNSQueryNAPTRResultType = {0, 0, 0, 0, 0, 0};
+static PyTypeObject DNSQueryNAPTRResultType;
 
 static PyStructSequence_Field dns_query_naptr_result_fields[] = {
     {"order", ""},
