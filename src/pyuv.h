@@ -325,6 +325,19 @@ raise_uv_exception(Loop *loop, PyObject *exc_type)
     }
 }
 
+/* borrowed from pyev */
+#ifdef PYUV_WINDOWS
+/* avoid including socketmodule.h (not available anyway) */
+typedef struct {
+    PyTypeObject *Sock_Type;
+    PyObject *error;
+#if PY_MAJOR_VERSION >= 3 && PY_MINOR_VERSION >= 2
+    PyObject *timeout_error;
+#endif
+} PySocketModule_APIObject;
+
+static PySocketModule_APIObject PySocketModule;
+#endif
 
 #endif
 

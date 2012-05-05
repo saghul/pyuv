@@ -34,6 +34,37 @@ static PyModuleDef pyuv_module = {
 };
 #endif
 
+#ifdef PYUV_WINDOWS
+static int pyuv_import_socket(void)
+{
+    void *api;
+
+#if PY_MAJOR_VERSION == 2 && PY_MINOR_VERSION < 7
+    PyObject *_socket, *_socket_CAPI;
+    _socket = PyImport_ImportModule("_socket");
+    if (!_socket) {
+        return -1;
+    }
+    _socket_CAPI = PyObject_GetAttrString(_socket, "CAPI");
+    if (!_socket_CAPI) {
+        Py_DECREF(_socket);
+        return -1;
+    }
+    api = PyCObject_AsVoidPtr(_socket_CAPI);
+    Py_DECREF(_socket_CAPI);
+    Py_DECREF(_socket);
+#else
+    api = PyCapsule_Import("_socket.CAPI", 0);
+#endif
+    if (!api) {
+        return -1;
+    }
+    memcpy(&PySocketModule, api, sizeof(PySocketModule));
+    return 0;
+}
+#endif
+
+
 /* Module */
 PyObject*
 init_pyuv(void)
@@ -48,6 +79,12 @@ init_pyuv(void)
 
     /* Initialize GIL */
     PyEval_InitThreads();
+
+#ifdef PYUV_WINDOWS
+    if (pyuv_import_socket()) {
+        return NULL;
+    }
+#endif
 
     /* Main module */
 #ifdef PYUV_PYTHON3

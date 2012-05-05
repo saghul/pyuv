@@ -4,9 +4,15 @@ import common
 import errno
 import pyuv
 import socket
+import sys
 
 
 TEST_PORT = 1234
+
+if sys.platform == "win32":
+    NONBLOCKING = (errno.WSAEWOULDBLOCK,)
+else:
+    NONBLOCKING = (errno.EAGAIN, errno.EINPROGRESS, errno.EWOULDBLOCK)
 
 class PollTest(unittest2.TestCase):
 
@@ -43,7 +49,7 @@ class PollTest(unittest2.TestCase):
                 self.connecting = False
                 self.poll.stop()
                 self.poll.start(pyuv.UV_READABLE, self.poll_cb)
-            elif err == errno.EINPROGRESS:
+            elif err in NONBLOCKING:
                 return
             else:
                 self.poll.close()
@@ -70,12 +76,16 @@ class PollTest(unittest2.TestCase):
             r = self.sock.connect_ex(("127.0.0.1", TEST_PORT))
             if r and r != errno.EINTR:
                 break
-        if r != errno.EINPROGRESS:
+        if r not in NONBLOCKING:
             self.server.close()
             self.fail("Error connecting socket: %d" % r)
             return
         self.connecting = True
-        self.poll = pyuv.Poll(self.loop, self.sock.fileno())
+        if sys.version_info >= (3, 0):
+            _sock = self.sock
+        else:
+            _sock = self.sock._sock
+        self.poll = pyuv.Poll(self.loop, _sock)
         self.poll.start(pyuv.UV_WRITABLE, self.poll_cb)
         self.loop.run()
 
