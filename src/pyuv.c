@@ -178,8 +178,6 @@ init_pyuv(void)
 
     /* Handle types */
     PyModule_AddIntMacro(pyuv, UV_UNKNOWN_HANDLE);
-    PyModule_AddIntMacro(pyuv, UV_FILE);
-    PyModule_AddIntMacro(pyuv, UV_POLL);
 #define XX(uc, lc) PyModule_AddIntMacro(pyuv, UV_##uc);
     UV_HANDLE_TYPE_MAP(XX)
 #undef XX
