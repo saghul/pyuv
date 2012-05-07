@@ -342,6 +342,8 @@ static PySocketModule_APIObject PySocketModule;
 /* Convert a Windows handle into a usable file descriptor */
 #ifdef PYUV_WINDOWS
     #define PYUV_WIN32_HANDLE_TO_FD(handle) _open_osfhandle (handle, 0)
+    #define PYUV_FD_TO_WIN32_HANDLE(fd) _get_osfhandle (fd)
+
 #endif
 
 #endif
