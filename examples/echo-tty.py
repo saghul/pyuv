@@ -16,7 +16,7 @@ def on_tty_read(handle, data, error):
         tty_stdin.close()
         tty_stdout.close()
     else:
-        tty_stdout.write([data, LINESEP])
+        tty_stdout.write(data+LINESEP)
 
 loop = pyuv.Loop.default_loop()
 
@@ -25,7 +25,8 @@ tty_stdin.start_read(on_tty_read)
 
 tty_stdout = pyuv.TTY(loop, sys.stdout.fileno())
 
-print("Window size: (%d, %d)" % tty_stdin.get_winsize())
+if sys.platform != "win32":
+    print("Window size: (%d, %d)" % tty_stdin.get_winsize())
 
 loop.run()
 
