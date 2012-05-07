@@ -131,7 +131,6 @@ class ProcessTest(unittest2.TestCase):
         self.assertEqual(self.close_cb_called, 2)
         self.assertEqual(self.received_output, b"TEST")
 
-    @platform_skip(["win32"])
     def test_process_stdin(self):
         self.exit_cb_called = 0
         self.close_cb_called = 0
