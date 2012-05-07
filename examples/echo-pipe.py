@@ -14,7 +14,7 @@ def on_pipe_read(handle, data, error):
         pipe_stdin.close()
         pipe_stdout.close()
     else:
-        pipe_stdout.write([data, LINESEP])
+        pipe_stdout.write(data+LINESEP)
 
 
 loop = pyuv.Loop.default_loop()
