@@ -620,7 +620,11 @@ process_open(uv_fs_t* req, PyObject **path, PyObject **fd, PyObject **errorno)
     } else {
         *errorno = Py_None;
         Py_INCREF(Py_None);
+#ifdef PYUV_WINDOWS
+        *fd = PyInt_FromLong((long)PYUV_FD_TO_WIN32_HANDLE(req->result));
+#else
         *fd = PyInt_FromLong((long)req->result);
+#endif
     }
 }
 
@@ -1179,6 +1183,14 @@ FS_func_fstat(PyObject *obj, PyObject *args, PyObject *kwargs)
         return NULL;
     }
 
+#ifdef PYUV_WINDOWS
+    fd = PYUV_WIN32_HANDLE_TO_FD(fd);
+    if (fd == -1) {
+        PyErr_SetFromWindowsErr(0);
+        return NULL;
+    }
+#endif
+
     fs_req = PyMem_Malloc(sizeof(uv_fs_t));
     if (!fs_req) {
         PyErr_NoMemory();
@@ -1573,6 +1585,14 @@ FS_func_fchmod(PyObject *obj, PyObject *args, PyObject *kwargs)
         return NULL;
     }
 
+#ifdef PYUV_WINDOWS
+    fd = PYUV_WIN32_HANDLE_TO_FD(fd);
+    if (fd == -1) {
+        PyErr_SetFromWindowsErr(0);
+        return NULL;
+    }
+#endif
+
     fs_req = PyMem_Malloc(sizeof(uv_fs_t));
     if (!fs_req) {
         PyErr_NoMemory();
@@ -1902,6 +1922,14 @@ FS_func_fchown(PyObject *obj, PyObject *args, PyObject *kwargs)
         return NULL;
     }
 
+#ifdef PYUV_WINDOWS
+    fd = PYUV_WIN32_HANDLE_TO_FD(fd);
+    if (fd == -1) {
+        PyErr_SetFromWindowsErr(0);
+        return NULL;
+    }
+#endif
+
     fs_req = PyMem_Malloc(sizeof(uv_fs_t));
     if (!fs_req) {
         PyErr_NoMemory();
@@ -2040,6 +2068,14 @@ FS_func_close(PyObject *obj, PyObject *args, PyObject *kwargs)
         return NULL;
     }
 
+#ifdef PYUV_WINDOWS
+    fd = PYUV_WIN32_HANDLE_TO_FD(fd);
+    if (fd == -1) {
+        PyErr_SetFromWindowsErr(0);
+        return NULL;
+    }
+#endif
+
     fs_req = PyMem_Malloc(sizeof(uv_fs_t));
     if (!fs_req) {
         PyErr_NoMemory();
@@ -2103,6 +2139,14 @@ FS_func_read(PyObject *obj, PyObject *args, PyObject *kwargs)
         PyErr_SetString(PyExc_TypeError, "a callable is required");
         return NULL;
     }
+
+#ifdef PYUV_WINDOWS
+    fd = PYUV_WIN32_HANDLE_TO_FD(fd);
+    if (fd == -1) {
+        PyErr_SetFromWindowsErr(0);
+        return NULL;
+    }
+#endif
 
     fs_req = PyMem_Malloc(sizeof(uv_fs_t));
     if (!fs_req) {
@@ -2195,6 +2239,14 @@ FS_func_write(PyObject *obj, PyObject *args, PyObject *kwargs)
         return NULL;
     }
 
+#ifdef PYUV_WINDOWS
+    fd = PYUV_WIN32_HANDLE_TO_FD(fd);
+    if (fd == -1) {
+        PyErr_SetFromWindowsErr(0);
+        return NULL;
+    }
+#endif
+
     fs_req = PyMem_Malloc(sizeof(uv_fs_t));
     if (!fs_req) {
         PyErr_NoMemory();
@@ -2285,6 +2337,14 @@ FS_func_fsync(PyObject *obj, PyObject *args, PyObject *kwargs)
         return NULL;
     }
 
+#ifdef PYUV_WINDOWS
+    fd = PYUV_WIN32_HANDLE_TO_FD(fd);
+    if (fd == -1) {
+        PyErr_SetFromWindowsErr(0);
+        return NULL;
+    }
+#endif
+
     fs_req = PyMem_Malloc(sizeof(uv_fs_t));
     if (!fs_req) {
         PyErr_NoMemory();
@@ -2348,6 +2408,14 @@ FS_func_fdatasync(PyObject *obj, PyObject *args, PyObject *kwargs)
         return NULL;
     }
 
+#ifdef PYUV_WINDOWS
+    fd = PYUV_WIN32_HANDLE_TO_FD(fd);
+    if (fd == -1) {
+        PyErr_SetFromWindowsErr(0);
+        return NULL;
+    }
+#endif
+
     fs_req = PyMem_Malloc(sizeof(uv_fs_t));
     if (!fs_req) {
         PyErr_NoMemory();
@@ -2410,6 +2478,14 @@ FS_func_ftruncate(PyObject *obj, PyObject *args, PyObject *kwargs)
         PyErr_SetString(PyExc_TypeError, "a callable is required");
         return NULL;
     }
+
+#ifdef PYUV_WINDOWS
+    fd = PYUV_WIN32_HANDLE_TO_FD(fd);
+    if (fd == -1) {
+        PyErr_SetFromWindowsErr(0);
+        return NULL;
+    }
+#endif
 
     fs_req = PyMem_Malloc(sizeof(uv_fs_t));
     if (!fs_req) {
@@ -2550,6 +2626,19 @@ FS_func_sendfile(PyObject *obj, PyObject *args, PyObject *kwargs)
         return NULL;
     }
 
+#ifdef PYUV_WINDOWS
+    in_fd = PYUV_WIN32_HANDLE_TO_FD(in_fd);
+    if (in_fd == -1) {
+        PyErr_SetFromWindowsErr(0);
+        return NULL;
+    }
+    out_fd = PYUV_WIN32_HANDLE_TO_FD(out_fd);
+    if (out_fd == -1) {
+        PyErr_SetFromWindowsErr(0);
+        return NULL;
+    }
+#endif
+
     fs_req = PyMem_Malloc(sizeof(uv_fs_t));
     if (!fs_req) {
         PyErr_NoMemory();
@@ -2689,6 +2778,14 @@ FS_func_futime(PyObject *obj, PyObject *args, PyObject *kwargs)
         PyErr_SetString(PyExc_TypeError, "a callable is required");
         return NULL;
     }
+
+#ifdef PYUV_WINDOWS
+    fd = PYUV_WIN32_HANDLE_TO_FD(fd);
+    if (fd == -1) {
+        PyErr_SetFromWindowsErr(0);
+        return NULL;
+    }
+#endif
 
     fs_req = PyMem_Malloc(sizeof(uv_fs_t));
     if (!fs_req) {

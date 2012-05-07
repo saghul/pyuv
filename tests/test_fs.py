@@ -89,7 +89,7 @@ class FSTestLstat(unittest2.TestCase):
         self.loop.run()
         self.assertEqual(self.errorno, None)
 
-@platform_skip(["win32"])
+
 class FSTestFstat(unittest2.TestCase):
 
     def setUp(self):
@@ -612,27 +612,26 @@ class FSTestOpen(unittest2.TestCase):
         self.assertEqual(self.errorno, pyuv.errno.UV_ENOENT)
 
 
-@platform_skip(["win32"])
 class FSTestRead(unittest2.TestCase):
 
     def setUp(self):
         self.loop = pyuv.Loop.default_loop()
         with open(TEST_FILE, 'w') as f:
             f.write('test1234567890')
-        self.file = open(TEST_FILE, 'r')
 
     def tearDown(self):
-        self.file.close()
         os.remove(TEST_FILE)
 
     def read_cb(self, loop, path, read_data, errorno):
         self.errorno = errorno
         self.data = read_data
+        pyuv.fs.close(self.loop, self.fd)
 
     def test_read(self):
         self.data = None
         self.errorno = None
-        pyuv.fs.read(self.loop, self.file.fileno(), 4, -1, self.read_cb)
+        self.fd = pyuv.fs.open(self.loop, TEST_FILE, os.O_RDONLY, stat.S_IREAD)
+        pyuv.fs.read(self.loop, self.fd, 4, -1, self.read_cb)
         self.loop.run()
         self.assertEqual(self.errorno, None)
         self.assertEqual(self.data, 'test')
@@ -640,7 +639,9 @@ class FSTestRead(unittest2.TestCase):
     def test_read_sync(self):
         def timer_cb(handle):
             handle.close()
-            self.data = pyuv.fs.read(self.loop, self.file.fileno(), 4, -1)
+            fd = pyuv.fs.open(self.loop, TEST_FILE, os.O_RDONLY, stat.S_IREAD)
+            self.data = pyuv.fs.read(self.loop, fd, 4, -1)
+            pyuv.fs.close(self.loop, fd)
         self.data = None
         timer = pyuv.Timer(self.loop)
         timer.start(timer_cb, 0.1, 0)
@@ -648,25 +649,24 @@ class FSTestRead(unittest2.TestCase):
         self.assertEqual(self.data, 'test')
 
 
-@platform_skip(["win32"])
 class FSTestWrite(unittest2.TestCase):
 
     def setUp(self):
         self.loop = pyuv.Loop.default_loop()
-        self.file = open(TEST_FILE, 'w')
+        self.fd = pyuv.fs.open(self.loop, TEST_FILE, os.O_WRONLY|os.O_CREAT|os.O_TRUNC, stat.S_IWRITE|stat.S_IREAD)
 
     def tearDown(self):
         os.remove(TEST_FILE)
 
     def write_cb(self, loop, path, bytes_written, errorno):
-        self.file.close()
+        pyuv.fs.close(self.loop, self.fd)
         self.bytes_written = bytes_written
         self.errorno = errorno
 
     def test_write(self):
         self.bytes_written = None
         self.errorno = None
-        pyuv.fs.write(self.loop, self.file.fileno(), "TEST", -1, self.write_cb)
+        pyuv.fs.write(self.loop, self.fd, "TEST", -1, self.write_cb)
         self.loop.run()
         self.assertEqual(self.bytes_written, 4)
         self.assertEqual(self.errorno, None)
@@ -675,7 +675,7 @@ class FSTestWrite(unittest2.TestCase):
     def test_write_null(self):
         self.bytes_written = None
         self.errorno = None
-        pyuv.fs.write(self.loop, self.file.fileno(), "TES\x00T", -1, self.write_cb)
+        pyuv.fs.write(self.loop, self.fd, "TES\x00T", -1, self.write_cb)
         self.loop.run()
         self.assertEqual(self.bytes_written, 5)
         self.assertEqual(self.errorno, None)
@@ -684,7 +684,8 @@ class FSTestWrite(unittest2.TestCase):
     def test_write_sync(self):
         def timer_cb(handle):
             handle.close()
-            self.bytes_written = pyuv.fs.write(self.loop, self.file.fileno(), "TEST", -1)
+            self.bytes_written = pyuv.fs.write(self.loop, self.fd, "TEST", -1)
+            pyuv.fs.close(self.loop, self.fd)
         self.bytes_written = None
         timer = pyuv.Timer(self.loop)
         timer.start(timer_cb, 0.1, 0)
@@ -693,73 +694,70 @@ class FSTestWrite(unittest2.TestCase):
         self.assertEqual(open(TEST_FILE, 'r').read(), "TEST")
 
 
-@platform_skip(["win32"])
 class FSTestFsync(unittest2.TestCase):
 
     def setUp(self):
         self.loop = pyuv.Loop.default_loop()
-        self.file = open(TEST_FILE, 'w')
-
-    def tearDown(self):
-        os.remove(TEST_FILE)
 
     def write_cb(self, loop, path, bytes_written, errorno):
         self.assertEqual(bytes_written, 4)
         self.assertEqual(errorno, None)
-        pyuv.fs.fdatasync(self.loop, self.file.fileno(), self.fdatasync_cb)
+        pyuv.fs.fdatasync(self.loop, self.fd, self.fdatasync_cb)
 
     def fdatasync_cb(self, loop, path, errorno):
         self.assertEqual(errorno, None)
-        pyuv.fs.fsync(self.loop, self.file.fileno(), self.fsync_cb)
+        pyuv.fs.fsync(self.loop, self.fd, self.fsync_cb)
 
     def fsync_cb(self, loop, path, errorno):
         self.assertEqual(errorno, None)
 
     def test_fsync(self):
-        pyuv.fs.write(self.loop, self.file.fileno(), "TEST", -1, self.write_cb)
+        self.fd = pyuv.fs.open(self.loop, TEST_FILE, os.O_RDWR|os.O_CREAT|os.O_TRUNC, stat.S_IREAD|stat.S_IWRITE)
+        pyuv.fs.write(self.loop, self.fd, "TEST", -1, self.write_cb)
         self.loop.run()
-        self.file.close()
+        pyuv.fs.close(self.loop, self.fd)
         self.assertEqual(open(TEST_FILE, 'r').read(), "TEST")
 
     def test_fsync_sync(self):
         def timer_cb(handle):
             handle.close()
-            pyuv.fs.write(self.loop, self.file.fileno(), "TEST", -1)
-            pyuv.fs.fdatasync(self.loop, self.file.fileno())
-            pyuv.fs.fsync(self.loop, self.file.fileno())
+            pyuv.fs.write(self.loop, self.fd, "TEST", -1)
+            pyuv.fs.fdatasync(self.loop, self.fd)
+            pyuv.fs.fsync(self.loop, self.fd)
         timer = pyuv.Timer(self.loop)
         timer.start(timer_cb, 0.1, 0)
+        self.fd = pyuv.fs.open(self.loop, TEST_FILE, os.O_RDWR|os.O_CREAT|os.O_TRUNC, stat.S_IREAD|stat.S_IWRITE)
         self.loop.run()
-        self.file.close()
+        pyuv.fs.close(self.loop, self.fd)
         self.assertEqual(open(TEST_FILE, 'r').read(), "TEST")
 
 
-@platform_skip(["win32"])
 class FSTestFtruncate(unittest2.TestCase):
 
     def setUp(self):
         self.loop = pyuv.Loop.default_loop()
-        self.file = open(TEST_FILE, 'w')
-        self.file.write("test-data")
-        self.file.flush()
+        with open(TEST_FILE, 'w') as f:
+            f.write("test-data")
 
     def tearDown(self):
-        self.file.close()
         os.remove(TEST_FILE)
 
     def ftruncate_cb(self, loop, path, errorno):
         self.errorno = errorno
+        pyuv.fs.close(self.loop, self.fd)
 
     def test_ftruncate1(self):
         self.errorno = None
-        pyuv.fs.ftruncate(self.loop, self.file.fileno(), 4, self.ftruncate_cb)
+        self.fd = pyuv.fs.open(self.loop, TEST_FILE, os.O_RDWR, stat.S_IREAD|stat.S_IWRITE)
+        pyuv.fs.ftruncate(self.loop, self.fd, 4, self.ftruncate_cb)
         self.loop.run()
         self.assertEqual(self.errorno, None)
         self.assertEqual(open(TEST_FILE, 'r').read(), "test")
 
     def test_ftruncate2(self):
         self.errorno = None
-        pyuv.fs.ftruncate(self.loop, self.file.fileno(), 0, self.ftruncate_cb)
+        self.fd = pyuv.fs.open(self.loop, TEST_FILE, os.O_RDWR, stat.S_IREAD|stat.S_IWRITE)
+        pyuv.fs.ftruncate(self.loop, self.fd, 0, self.ftruncate_cb)
         self.loop.run()
         self.assertEqual(self.errorno, None)
         self.assertEqual(open(TEST_FILE, 'r').read(), "")
@@ -767,7 +765,9 @@ class FSTestFtruncate(unittest2.TestCase):
     def test_ftruncate_sync(self):
         def timer_cb(handle):
             handle.close()
-            pyuv.fs.ftruncate(self.loop, self.file.fileno(), 0)
+            fd = pyuv.fs.open(self.loop, TEST_FILE, os.O_RDWR, stat.S_IREAD|stat.S_IWRITE)
+            pyuv.fs.ftruncate(self.loop, fd, 0)
+            pyuv.fs.close(self.loop, fd)
         timer = pyuv.Timer(self.loop)
         timer.start(timer_cb, 0.1, 0)
         self.loop.run()
@@ -882,21 +882,21 @@ class FSTestSendfile(unittest2.TestCase):
         self.assertEqual(open(TEST_FILE, 'r').read(), open(TEST_FILE2, 'r').read())
 
 
-@platform_skip(["win32"])
 class FSTestUtime(unittest2.TestCase):
 
     def setUp(self):
         self.loop = pyuv.Loop.default_loop()
         with open(TEST_FILE, 'w') as f:
             f.write("test")
-        self.file = open(TEST_FILE, 'r')
+        self.fd = None
 
     def tearDown(self):
-        self.file.close()
         os.remove(TEST_FILE)
 
     def utime_cb(self, loop, path, errorno):
         self.errorno = errorno
+        if self.fd is not None:
+            pyuv.fs.close(self.loop, self.fd)
 
     def test_utime(self):
         self.errorno = None
@@ -911,7 +911,8 @@ class FSTestUtime(unittest2.TestCase):
     def test_futime(self):
         self.errorno = None
         atime = mtime = 400497753
-        pyuv.fs.futime(self.loop, self.file.fileno(), atime, mtime, self.utime_cb)
+        self.fd = pyuv.fs.open(self.loop, TEST_FILE, os.O_RDWR, stat.S_IWRITE|stat.S_IREAD)
+        pyuv.fs.futime(self.loop, self.fd, atime, mtime, self.utime_cb)
         self.loop.run()
         self.assertEqual(self.errorno, None)
         s = os.stat(TEST_FILE)
@@ -932,7 +933,9 @@ class FSTestUtime(unittest2.TestCase):
     def test_futime_sync(self):
         def timer_cb(handle):
             handle.close()
-            pyuv.fs.futime(self.loop, self.file.fileno(), atime, mtime)
+            self.fd = pyuv.fs.open(self.loop, TEST_FILE, os.O_RDWR, stat.S_IWRITE|stat.S_IREAD)
+            pyuv.fs.futime(self.loop, self.fd, atime, mtime)
+            pyuv.fs.close(self.loop, self.fd)
         atime = mtime = 400497753
         timer = pyuv.Timer(self.loop)
         timer.start(timer_cb, 0.1, 0)
