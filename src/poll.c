@@ -219,7 +219,7 @@ Poll_tp_init(Poll *self, PyObject *args, PyObject *kwargs)
         return -1;
     }
 #ifdef PYUV_WINDOWS
-    fdnum = _open_osfhandle(fdnum, 0);
+    fdnum = PYUV_WIN32_HANDLE_TO_FD(fdnum);
     if (fdnum == -1) {
         PyErr_SetFromWindowsErr(0);
         return -1;

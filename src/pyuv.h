@@ -339,6 +339,11 @@ typedef struct {
 static PySocketModule_APIObject PySocketModule;
 #endif
 
+/* Convert a Windows handle into a usable file descriptor */
+#ifdef PYUV_WINDOWS
+    #define PYUV_WIN32_HANDLE_TO_FD(handle) _open_osfhandle (handle, 0)
+#endif
+
 #endif
 
 
