@@ -270,6 +270,24 @@ class UDPTestMulticast(unittest2.TestCase):
         self.assertEquals(self.received_data, b"PING")
 
 
+class UDPTestBigDatagram(unittest2.TestCase):
+
+    def setUp(self):
+        self.loop = pyuv.Loop.default_loop()
+
+    def send_cb(self, handle, error):
+        self.handle.close()
+        self.errorno = error
+
+    def test_udp_big_datagram(self):
+        self.errorno = None
+        self.handle = pyuv.UDP(self.loop)
+        data = "X"*65536
+        self.handle.send(("127.0.0.1", TEST_PORT), data, self.send_cb)
+        self.loop.run()
+        self.assertEqual(self.errorno, pyuv.errno.UV_EMSGSIZE)
+
+
 if __name__ == '__main__':
     unittest2.main(verbosity=2)
 
