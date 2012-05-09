@@ -186,6 +186,22 @@ Poll_fd_get(Poll *self, void *closure)
 }
 
 
+static PyObject *
+Poll_slow_get(Poll *self, void *closure)
+{
+    UNUSED_ARG(closure);
+#ifdef PYUV_WINDOWS
+    if (!(handle->flags & UV_HANDLE_POLL_SLOW)) {
+        Py_RETURN_FALSE;
+    } else {
+        Py_RETURN_TRUE;
+    }
+#else
+    Py_RETURN_FALSE;
+#endif
+}
+
+
 static int
 Poll_tp_init(Poll *self, PyObject *args, PyObject *kwargs)
 {
@@ -321,6 +337,7 @@ static PyMemberDef Poll_tp_members[] = {
 static PyGetSetDef Poll_tp_getsets[] = {
     {"active", (getter)Poll_active_get, 0, "Indicates if handle is active", NULL},
     {"fd", (getter)Poll_fd_get, 0, "File descriptor being monitored", NULL},
+    {"slow", (getter)Poll_slow_get, 0, "Indicates if the handle is running in slow mode (Windows)", NULL},
     {NULL}
 };
 
