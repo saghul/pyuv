@@ -191,11 +191,13 @@ Poll_slow_get(Poll *self, void *closure)
 {
     UNUSED_ARG(closure);
 #ifdef PYUV_WINDOWS
-    if (!(handle->flags & UV_HANDLE_POLL_SLOW)) {
+    #define UV_HANDLE_POLL_SLOW  0x02000000 /* copied from src/win/internal.h*/
+    if (!(self->uv_handle->flags & UV_HANDLE_POLL_SLOW)) {
         Py_RETURN_FALSE;
     } else {
         Py_RETURN_TRUE;
     }
+    #undef UV_HANDLE_POLL_SLOW
 #else
     Py_RETURN_FALSE;
 #endif
