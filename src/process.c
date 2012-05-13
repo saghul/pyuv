@@ -44,46 +44,6 @@ on_process_exit(uv_process_t *process, int exit_status, int term_signal)
 }
 
 
-static void
-on_process_close(uv_handle_t *handle)
-{
-    PyGILState_STATE gstate = PyGILState_Ensure();
-    Process *self;
-    PyObject *result;
-
-    ASSERT(handle);
-    self = (Process *)handle->data;
-    ASSERT(self);
-
-    if (self->on_close_cb != Py_None) {
-        result = PyObject_CallFunctionObjArgs(self->on_close_cb, self, NULL);
-        if (result == NULL) {
-            PyErr_WriteUnraisable(self->on_close_cb);
-        }
-        Py_XDECREF(result);
-    }
-
-    handle->data = NULL;
-    PyMem_Free(handle);
-
-    /* Refcount was increased in func_close */
-    Py_DECREF(self);
-
-    PyGILState_Release(gstate);
-}
-
-
-static void
-on_process_dealloc_close(uv_handle_t *handle)
-{
-    PyGILState_STATE gstate = PyGILState_Ensure();
-    ASSERT(handle);
-    handle->data = NULL;
-    PyMem_Free(handle);
-    PyGILState_Release(gstate);
-}
-
-
 static PyObject *
 Process_func_spawn(Process *self, PyObject *args, PyObject *kwargs)
 {
@@ -104,7 +64,7 @@ Process_func_spawn(Process *self, PyObject *args, PyObject *kwargs)
     stdin_pipe = stdout_pipe = stderr_pipe = Py_None;
     flags = uid = gid = 0;
 
-    if (self->uv_handle) {
+    if (UV_HANDLE(self)) {
         PyErr_SetString(PyExc_ProcessError, "Process already spawned");
         return NULL;
     }
@@ -230,13 +190,13 @@ Process_func_spawn(Process *self, PyObject *args, PyObject *kwargs)
     options.env = process_env;
 
     if (stdin_pipe != Py_None)
-        options.stdin_stream = (uv_pipe_t *)((IOStream *)stdin_pipe)->uv_handle;
+        options.stdin_stream = (uv_pipe_t *)UV_HANDLE(stdin_pipe);
 
     if (stdout_pipe != Py_None)
-        options.stdout_stream = (uv_pipe_t *)((IOStream *)stdout_pipe)->uv_handle;
+        options.stdout_stream = (uv_pipe_t *)UV_HANDLE(stdout_pipe);
 
     if (stderr_pipe != Py_None)
-        options.stderr_stream = (uv_pipe_t *)((IOStream *)stderr_pipe)->uv_handle;
+        options.stderr_stream = (uv_pipe_t *)UV_HANDLE(stderr_pipe);
 
     uv_process = PyMem_Malloc(sizeof(uv_process_t));
     if (!uv_process) {
@@ -244,9 +204,9 @@ Process_func_spawn(Process *self, PyObject *args, PyObject *kwargs)
         goto error;
     }
     uv_process->data = (void *)self;
-    self->uv_handle = uv_process;
+    UV_HANDLE(self) = (uv_handle_t *)uv_process;
 
-    r = uv_spawn(UV_LOOP(self), self->uv_handle, options);
+    r = uv_spawn(UV_HANDLE_LOOP(self), uv_process, options);
 
     if (options.args) {
         for (ptr = options.args; *ptr != NULL; ptr++) {
@@ -265,9 +225,9 @@ Process_func_spawn(Process *self, PyObject *args, PyObject *kwargs)
     }
 
     if (r != 0) {
-        raise_uv_exception(self->loop, PyExc_ProcessError);
+        raise_uv_exception(UV_HANDLE_LOOP(self), PyExc_ProcessError);
         PyMem_Free(uv_process);
-        self->uv_handle = NULL;
+        UV_HANDLE(self) = NULL;
         goto error;
     }
 
@@ -288,7 +248,7 @@ Process_func_kill(Process *self, PyObject *args)
 {
     int signum, r;
 
-    if (!self->uv_handle) {
+    if (!UV_HANDLE(self)) {
         PyErr_SetString(PyExc_ProcessError, "Process wasn't spawned yet");
         return NULL;
     }
@@ -297,43 +257,11 @@ Process_func_kill(Process *self, PyObject *args)
         return NULL;
     }
 
-    r = uv_process_kill(self->uv_handle, signum);
+    r = uv_process_kill((uv_process_t *)UV_HANDLE(self), signum);
     if (r != 0) {
-        raise_uv_exception(self->loop, PyExc_ProcessError);
+        raise_uv_exception(UV_HANDLE_LOOP(self), PyExc_ProcessError);
         return NULL;
     }
-
-    Py_RETURN_NONE;
-}
-
-
-static PyObject *
-Process_func_close(Process *self, PyObject *args)
-{
-    PyObject *callback = Py_None;
-
-    if (!self->uv_handle) {
-        PyErr_SetString(PyExc_ProcessError, "Process wasn't spawned yet");
-        return NULL;
-    }
-
-    if (!PyArg_ParseTuple(args, "|O:close", &callback)) {
-        return NULL;
-    }
-
-    if (callback != Py_None && !PyCallable_Check(callback)) {
-        PyErr_SetString(PyExc_TypeError, "a callable or None is required");
-        return NULL;
-    }
-
-    Py_INCREF(callback);
-    self->on_close_cb = callback;
-
-    /* Increase refcount so that object is not removed before the callback is called */
-    Py_INCREF(self);
-
-    uv_close((uv_handle_t *)self->uv_handle, on_process_close);
-    self->uv_handle = NULL;
 
     Py_RETURN_NONE;
 }
@@ -344,10 +272,10 @@ Process_pid_get(Process *self, void *closure)
 {
     UNUSED_ARG(closure);
 
-    if (!self->uv_handle) {
+    if (!UV_HANDLE(self)) {
         Py_RETURN_NONE;
     }
-    return PyInt_FromLong((long)self->uv_handle->pid);
+    return PyInt_FromLong((long)((uv_process_t *)UV_HANDLE(self))->pid);
 }
 
 
@@ -359,7 +287,7 @@ Process_tp_init(Process *self, PyObject *args, PyObject *kwargs)
 
     UNUSED_ARG(kwargs);
 
-    if (self->uv_handle) {
+    if (UV_HANDLE(self)) {
         PyErr_SetString(PyExc_ProcessError, "Object already initialized");
         return -1;
     }
@@ -368,9 +296,9 @@ Process_tp_init(Process *self, PyObject *args, PyObject *kwargs)
         return -1;
     }
 
-    tmp = (PyObject *)self->loop;
+    tmp = (PyObject *)((Handle *)self)->loop;
     Py_INCREF(loop);
-    self->loop = loop;
+    ((Handle *)self)->loop = loop;
     Py_XDECREF(tmp);
 
     return 0;
@@ -380,12 +308,10 @@ Process_tp_init(Process *self, PyObject *args, PyObject *kwargs)
 static PyObject *
 Process_tp_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
 {
-    Process *self = (Process *)PyType_GenericNew(type, args, kwargs);
+    Process *self = (Process *)HandleType.tp_new(type, args, kwargs);
     if (!self) {
         return NULL;
     }
-    self->uv_handle = NULL;
-    self->weakreflist = NULL;
     return (PyObject *)self;
 }
 
@@ -393,13 +319,11 @@ Process_tp_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
 static int
 Process_tp_traverse(Process *self, visitproc visit, void *arg)
 {
-    Py_VISIT(self->data);
-    Py_VISIT(self->on_close_cb);
     Py_VISIT(self->on_exit_cb);
     Py_VISIT(self->stdin_pipe);
     Py_VISIT(self->stdout_pipe);
     Py_VISIT(self->stderr_pipe);
-    Py_VISIT(self->loop);
+    HandleType.tp_traverse((PyObject *)self, visit, arg);
     return 0;
 }
 
@@ -407,29 +331,12 @@ Process_tp_traverse(Process *self, visitproc visit, void *arg)
 static int
 Process_tp_clear(Process *self)
 {
-    Py_CLEAR(self->data);
-    Py_CLEAR(self->on_close_cb);
     Py_CLEAR(self->on_exit_cb);
     Py_CLEAR(self->stdin_pipe);
     Py_CLEAR(self->stdout_pipe);
     Py_CLEAR(self->stderr_pipe);
-    Py_CLEAR(self->loop);
+    HandleType.tp_clear((PyObject *)self);
     return 0;
-}
-
-
-static void
-Process_tp_dealloc(Process *self)
-{
-    if (self->uv_handle) {
-        uv_close((uv_handle_t *)self->uv_handle, on_process_dealloc_close);
-        self->uv_handle = NULL;
-    }
-    if (self->weakreflist != NULL) {
-        PyObject_ClearWeakRefs((PyObject *)self);
-    }
-    Process_tp_clear(self);
-    Py_TYPE(self)->tp_free((PyObject *)self);
 }
 
 
@@ -437,15 +344,7 @@ static PyMethodDef
 Process_tp_methods[] = {
     { "spawn", (PyCFunction)Process_func_spawn, METH_VARARGS|METH_KEYWORDS, "Spawn the child process." },
     { "kill", (PyCFunction)Process_func_kill, METH_VARARGS, "Kill this process with the specified signal number." },
-    { "close", (PyCFunction)Process_func_close, METH_VARARGS, "Close the Process." },
     { NULL }
-};
-
-
-static PyMemberDef Process_tp_members[] = {
-    {"loop", T_OBJECT_EX, offsetof(Process, loop), READONLY, "Loop where this Process is running on."},
-    {"data", T_OBJECT, offsetof(Process, data), 0, "Arbitrary data."},
-    {NULL}
 };
 
 
@@ -460,7 +359,7 @@ static PyTypeObject ProcessType = {
     "pyuv.Process",                                                 /*tp_name*/
     sizeof(Process),                                                /*tp_basicsize*/
     0,                                                              /*tp_itemsize*/
-    (destructor)Process_tp_dealloc,                                 /*tp_dealloc*/
+    0,                                                              /*tp_dealloc*/
     0,                                                              /*tp_print*/
     0,                                                              /*tp_getattr*/
     0,                                                              /*tp_setattr*/
@@ -480,11 +379,11 @@ static PyTypeObject ProcessType = {
     (traverseproc)Process_tp_traverse,                              /*tp_traverse*/
     (inquiry)Process_tp_clear,                                      /*tp_clear*/
     0,                                                              /*tp_richcompare*/
-    offsetof(Process, weakreflist),                                 /*tp_weaklistoffset*/
+    0,                                                              /*tp_weaklistoffset*/
     0,                                                              /*tp_iter*/
     0,                                                              /*tp_iternext*/
     Process_tp_methods,                                             /*tp_methods*/
-    Process_tp_members,                                             /*tp_members*/
+    0,                                                              /*tp_members*/
     Process_tp_getsets,                                             /*tp_getsets*/
     0,                                                              /*tp_base*/
     0,                                                              /*tp_dict*/

@@ -1184,7 +1184,7 @@ DNSResolver_func_getaddrinfo(DNSResolver *self, PyObject *args, PyObject *kwargs
 
     r = uv_getaddrinfo(UV_LOOP(self), handle, &getaddrinfo_cb, name, port_str, &hints);
     if (r != 0) {
-        raise_uv_exception(self->loop, PyExc_DNSError);
+        raise_uv_exception(UV_LOOP(self), PyExc_DNSError);
         goto error;
     }
 
@@ -1477,7 +1477,6 @@ DNSResolver_tp_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
 static int
 DNSResolver_tp_traverse(DNSResolver *self, visitproc visit, void *arg)
 {
-    Py_VISIT(self->data);
     Py_VISIT(self->loop);
     return 0;
 }
@@ -1486,7 +1485,6 @@ DNSResolver_tp_traverse(DNSResolver *self, visitproc visit, void *arg)
 static int
 DNSResolver_tp_clear(DNSResolver *self)
 {
-    Py_CLEAR(self->data);
     Py_CLEAR(self->loop);
     return 0;
 }
@@ -1518,7 +1516,6 @@ DNSResolver_tp_methods[] = {
 
 static PyMemberDef DNSResolver_tp_members[] = {
     {"loop", T_OBJECT_EX, offsetof(DNSResolver, loop), READONLY, "Loop where this DNSResolver is running on."},
-    {"data", T_OBJECT, offsetof(DNSResolver, data), 0, "Arbitrary data."},
     {NULL}
 };
 

@@ -9,47 +9,6 @@ static PyObject* PyExc_SignalError;
 
 
 static void
-on_signal_close(uv_handle_t *handle)
-{
-    PyGILState_STATE gstate = PyGILState_Ensure();
-    Signal *self;
-    PyObject *result;
-
-    ASSERT(handle);
-
-    self = (Signal *)handle->data;
-    ASSERT(self);
-
-    if (self->on_close_cb != Py_None) {
-        result = PyObject_CallFunctionObjArgs(self->on_close_cb, self, NULL);
-        if (result == NULL) {
-            PyErr_WriteUnraisable(self->on_close_cb);
-        }
-        Py_XDECREF(result);
-    }
-
-    handle->data = NULL;
-    PyMem_Free(handle);
-
-    /* Refcount was increased in func_close */
-    Py_DECREF(self);
-
-    PyGILState_Release(gstate);
-}
-
-
-static void
-on_signal_dealloc_close(uv_handle_t *handle)
-{
-    PyGILState_STATE gstate = PyGILState_Ensure();
-    ASSERT(handle);
-    handle->data = NULL;
-    PyMem_Free(handle);
-    PyGILState_Release(gstate);
-}
-
-
-static void
 on_signal_callback(uv_prepare_t *handle, int status)
 {
     PyGILState_STATE gstate = PyGILState_Ensure();
@@ -77,14 +36,14 @@ Signal_func_start(Signal *self)
 {
     int r;
 
-    if (!self->uv_handle) {
+    if (!UV_HANDLE(self)) {
         PyErr_SetString(PyExc_SignalError, "Signal is closed");
         return NULL;
     }
 
-    r = uv_prepare_start(self->uv_handle, on_signal_callback);
+    r = uv_prepare_start((uv_prepare_t *)UV_HANDLE(self), on_signal_callback);
     if (r != 0) {
-        raise_uv_exception(self->loop, PyExc_SignalError);
+        raise_uv_exception(UV_HANDLE_LOOP(self), PyExc_SignalError);
         return NULL;
     }
 
@@ -97,58 +56,18 @@ Signal_func_stop(Signal *self)
 {
     int r;
 
-    if (!self->uv_handle) {
+    if (!UV_HANDLE(self)) {
         PyErr_SetString(PyExc_SignalError, "Signal is already closed");
         return NULL;
     }
 
-    r = uv_prepare_stop(self->uv_handle);
+    r = uv_prepare_stop((uv_prepare_t *)UV_HANDLE(self));
     if (r != 0) {
-        raise_uv_exception(self->loop, PyExc_SignalError);
+        raise_uv_exception(UV_HANDLE_LOOP(self), PyExc_SignalError);
         return NULL;
     }
 
     Py_RETURN_NONE;
-}
-
-
-static PyObject *
-Signal_func_close(Signal *self, PyObject *args)
-{
-    PyObject *callback = Py_None;
-
-    if (!self->uv_handle) {
-        PyErr_SetString(PyExc_SignalError, "Signal is already closed");
-        return NULL;
-    }
-
-    if (!PyArg_ParseTuple(args, "|O:close", &callback)) {
-        return NULL;
-    }
-
-    if (callback != Py_None && !PyCallable_Check(callback)) {
-        PyErr_SetString(PyExc_TypeError, "a callable or None is required");
-        return NULL;
-    }
-
-    Py_INCREF(callback);
-    self->on_close_cb = callback;
-
-    /* Increase refcount so that object is not removed before the callback is called */
-    Py_INCREF(self);
-
-    uv_close((uv_handle_t *)self->uv_handle, on_signal_close);
-    self->uv_handle = NULL;
-
-    Py_RETURN_NONE;
-}
-
-
-static PyObject *
-Signal_active_get(Signal *self, void *closure)
-{
-    UNUSED_ARG(closure);
-    return PyBool_FromLong((long)uv_is_active((uv_handle_t *)self->uv_handle));
 }
 
 
@@ -162,7 +81,7 @@ Signal_tp_init(Signal *self, PyObject *args, PyObject *kwargs)
 
     UNUSED_ARG(kwargs);
 
-    if (self->uv_handle) {
+    if (UV_HANDLE(self)) {
         PyErr_SetString(PyExc_SignalError, "Object already initialized");
         return -1;
     }
@@ -171,9 +90,9 @@ Signal_tp_init(Signal *self, PyObject *args, PyObject *kwargs)
         return -1;
     }
 
-    tmp = (PyObject *)self->loop;
+    tmp = (PyObject *)((Handle *)self)->loop;
     Py_INCREF(loop);
-    self->loop = loop;
+    ((Handle *)self)->loop = loop;
     Py_XDECREF(tmp);
 
     uv_prepare = PyMem_Malloc(sizeof(uv_prepare_t));
@@ -183,14 +102,14 @@ Signal_tp_init(Signal *self, PyObject *args, PyObject *kwargs)
         return -1;
     }
 
-    r = uv_prepare_init(UV_LOOP(self), uv_prepare);
+    r = uv_prepare_init(UV_HANDLE_LOOP(self), uv_prepare);
     if (r != 0) {
-        raise_uv_exception(self->loop, PyExc_SignalError);
+        raise_uv_exception(UV_HANDLE_LOOP(self), PyExc_SignalError);
         Py_DECREF(loop);
         return -1;
     }
     uv_prepare->data = (void *)self;
-    self->uv_handle = uv_prepare;
+    UV_HANDLE(self) = (uv_handle_t *)uv_prepare;
 
     return 0;
 }
@@ -199,12 +118,10 @@ Signal_tp_init(Signal *self, PyObject *args, PyObject *kwargs)
 static PyObject *
 Signal_tp_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
 {
-    Signal *self = (Signal *)PyType_GenericNew(type, args, kwargs);
+    Signal *self = (Signal *)HandleType.tp_new(type, args, kwargs);
     if (!self) {
         return NULL;
     }
-    self->uv_handle = NULL;
-    self->weakreflist = NULL;
     return (PyObject *)self;
 }
 
@@ -212,9 +129,7 @@ Signal_tp_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
 static int
 Signal_tp_traverse(Signal *self, visitproc visit, void *arg)
 {
-    Py_VISIT(self->data);
-    Py_VISIT(self->on_close_cb);
-    Py_VISIT(self->loop);
+    HandleType.tp_traverse((PyObject *)self, visit, arg);
     return 0;
 }
 
@@ -222,25 +137,8 @@ Signal_tp_traverse(Signal *self, visitproc visit, void *arg)
 static int
 Signal_tp_clear(Signal *self)
 {
-    Py_CLEAR(self->data);
-    Py_CLEAR(self->on_close_cb);
-    Py_CLEAR(self->loop);
+    HandleType.tp_clear((PyObject *)self);
     return 0;
-}
-
-
-static void
-Signal_tp_dealloc(Signal *self)
-{
-    if (self->uv_handle) {
-        uv_close((uv_handle_t *)self->uv_handle, on_signal_dealloc_close);
-        self->uv_handle = NULL;
-    }
-    if (self->weakreflist != NULL) {
-        PyObject_ClearWeakRefs((PyObject *)self);
-    }
-    Signal_tp_clear(self);
-    Py_TYPE(self)->tp_free((PyObject *)self);
 }
 
 
@@ -248,21 +146,7 @@ static PyMethodDef
 Signal_tp_methods[] = {
     { "start", (PyCFunction)Signal_func_start, METH_VARARGS|METH_KEYWORDS, "Start the Signal." },
     { "stop", (PyCFunction)Signal_func_stop, METH_NOARGS, "Stop the Signal." },
-    { "close", (PyCFunction)Signal_func_close, METH_VARARGS, "Close the Signal." },
     { NULL }
-};
-
-
-static PyMemberDef Signal_tp_members[] = {
-    {"loop", T_OBJECT_EX, offsetof(Signal, loop), READONLY, "Loop where this Signal is running on."},
-    {"data", T_OBJECT, offsetof(Signal, data), 0, "Arbitrary data."},
-    {NULL}
-};
-
-
-static PyGetSetDef Signal_tp_getsets[] = {
-    {"active", (getter)Signal_active_get, 0, "Indicates if handle is active", NULL},
-    {NULL}
 };
 
 
@@ -271,7 +155,7 @@ static PyTypeObject SignalType = {
     "pyuv.Signal",                                                  /*tp_name*/
     sizeof(Signal),                                                 /*tp_basicsize*/
     0,                                                              /*tp_itemsize*/
-    (destructor)Signal_tp_dealloc,                                  /*tp_dealloc*/
+    0,                                                              /*tp_dealloc*/
     0,                                                              /*tp_print*/
     0,                                                              /*tp_getattr*/
     0,                                                              /*tp_setattr*/
@@ -291,12 +175,12 @@ static PyTypeObject SignalType = {
     (traverseproc)Signal_tp_traverse,                               /*tp_traverse*/
     (inquiry)Signal_tp_clear,                                       /*tp_clear*/
     0,                                                              /*tp_richcompare*/
-    offsetof(Signal, weakreflist),                                  /*tp_weaklistoffset*/
+    0,                                                              /*tp_weaklistoffset*/
     0,                                                              /*tp_iter*/
     0,                                                              /*tp_iternext*/
     Signal_tp_methods,                                              /*tp_methods*/
-    Signal_tp_members,                                              /*tp_members*/
-    Signal_tp_getsets,                                              /*tp_getsets*/
+    0,                                                              /*tp_members*/
+    0,                                                              /*tp_getsets*/
     0,                                                              /*tp_base*/
     0,                                                              /*tp_dict*/
     0,                                                              /*tp_descr_get*/

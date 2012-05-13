@@ -55,7 +55,9 @@ typedef int Bool;
         }                                                                   \
     } while(0)                                                              \
 
-#define UV_LOOP(x) x->loop->uv_loop
+#define UV_LOOP(x) (x)->loop->uv_loop
+#define UV_HANDLE(x) ((Handle *)x)->uv_handle
+#define UV_HANDLE_LOOP(x) UV_LOOP((Handle *)x)
 
 #if defined(__MINGW32__) || defined(_MSC_VER)
     #define PYUV_WINDOWS
@@ -75,92 +77,69 @@ typedef struct {
 
 static PyTypeObject LoopType;
 
-/* Async */
+/* Handle */
 typedef struct {
     PyObject_HEAD
     PyObject *weakreflist;
+    PyObject *dict;
     Loop *loop;
     PyObject *on_close_cb;
+    uv_handle_t *uv_handle;
+} Handle;
+
+static PyTypeObject HandleType;
+
+/* Async */
+typedef struct {
+    Handle handle;
     PyObject *callback;
-    PyObject *data;
-    uv_async_t *uv_handle;
 } Async;
 
 static PyTypeObject AsyncType;
 
 /* Timer */
 typedef struct {
-    PyObject_HEAD
-    PyObject *weakreflist;
-    Loop *loop;
-    PyObject *on_close_cb;
+    Handle handle;
     PyObject *callback;
-    PyObject *data;
-    uv_timer_t *uv_handle;
 } Timer;
 
 static PyTypeObject TimerType;
 
 /* Prepare */
 typedef struct {
-    PyObject_HEAD
-    PyObject *weakreflist;
-    Loop *loop;
-    PyObject *on_close_cb;
+    Handle handle;
     PyObject *callback;
-    PyObject *data;
-    uv_prepare_t *uv_handle;
 } Prepare;
 
 static PyTypeObject PrepareType;
 
 /* Idle */
 typedef struct {
-    PyObject_HEAD
-    PyObject *weakreflist;
-    Loop *loop;
-    PyObject *on_close_cb;
+    Handle handle;
     PyObject *callback;
-    PyObject *data;
-    uv_idle_t *uv_handle;
 } Idle;
 
 static PyTypeObject IdleType;
 
 /* Check */
 typedef struct {
-    PyObject_HEAD
-    PyObject *weakreflist;
-    Loop *loop;
-    PyObject *on_close_cb;
+    Handle handle;
     PyObject *callback;
-    PyObject *data;
-    uv_check_t *uv_handle;
 } Check;
 
 static PyTypeObject CheckType;
 
 /* Signal */
 typedef struct {
-    PyObject_HEAD
-    PyObject *weakreflist;
-    Loop *loop;
-    PyObject *on_close_cb;
-    PyObject *data;
-    uv_prepare_t *uv_handle;
+    Handle handle;
 } Signal;
 
 static PyTypeObject SignalType;
 
 /* IOStream */
 typedef struct {
-    PyObject_HEAD
-    PyObject *weakreflist;
-    Loop *loop;
+    Handle handle;
     PyObject *on_read_cb;
-    PyObject *on_close_cb;
-    PyObject *data;
-    uv_stream_t *uv_handle;
 } IOStream;
 
 static PyTypeObject IOStreamType;
@@ -190,61 +169,27 @@ static PyTypeObject TTYType;
 
 /* UDP */
 typedef struct {
-    PyObject_HEAD
-    PyObject *weakreflist;
-    Loop *loop;
+    Handle handle;
     PyObject *on_read_cb;
-    PyObject *on_close_cb;
-    PyObject *data;
-    uv_udp_t *uv_handle;
 } UDP;
 
 static PyTypeObject UDPType;
 
 /* Poll */
 typedef struct {
-    PyObject_HEAD
-    PyObject *weakreflist;
-    Loop *loop;
+    Handle handle;
     PyObject *callback;
-    PyObject *on_close_cb;
-    PyObject *data;
-    uv_poll_t *uv_handle;
-    long fd;
 } Poll;
 
 static PyTypeObject PollType;
 
-/* DNSResolver */
-typedef struct {
-    PyObject_HEAD
-    Loop *loop;
-    PyObject *data;
-    ares_channel channel;
-} DNSResolver;
-
-static PyTypeObject DNSResolverType;
-
-/* ThreadPool */
-typedef struct {
-    PyObject_HEAD
-    Loop *loop;
-} ThreadPool;
-
-static PyTypeObject ThreadPoolType;
-
 /* Process */
 typedef struct {
-    PyObject_HEAD
-    PyObject *weakreflist;
-    Loop *loop;
-    PyObject *on_close_cb;
+    Handle handle;
     PyObject *on_exit_cb;
     PyObject *stdin_pipe;
     PyObject *stdout_pipe;
     PyObject *stderr_pipe;
-    PyObject *data;
-    uv_process_t *uv_handle;
 } Process;
 
 static PyTypeObject ProcessType;
@@ -261,6 +206,23 @@ typedef struct {
 } FSEvent;
 
 static PyTypeObject FSEventType;
+
+/* DNSResolver */
+typedef struct {
+    PyObject_HEAD
+    Loop *loop;
+    ares_channel channel;
+} DNSResolver;
+
+static PyTypeObject DNSResolverType;
+
+/* ThreadPool */
+typedef struct {
+    PyObject_HEAD
+    Loop *loop;
+} ThreadPool;
+
+static PyTypeObject ThreadPoolType;
 
 
 /* Some helper stuff */
@@ -315,9 +277,9 @@ PyUVModule_AddObject(PyObject *module, const char *name, PyObject *value)
 
 /* Raise appropriate exception when an error is produced inside libuv */
 static INLINE void
-raise_uv_exception(Loop *loop, PyObject *exc_type)
+raise_uv_exception(uv_loop_t *loop, PyObject *exc_type)
 {
-    uv_err_t err = uv_last_error(loop->uv_loop);
+    uv_err_t err = uv_last_error(loop);
     PyObject *exc_data = Py_BuildValue("(is)", err.code, uv_strerror(err));
     if (exc_data != NULL) {
         PyErr_SetObject(exc_type, exc_data);

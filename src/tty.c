@@ -7,9 +7,7 @@ TTY_func_set_mode(TTY *self, PyObject *args)
 {
     int r, mode;
 
-    IOStream *base = (IOStream *)self;
-
-    if (!base->uv_handle) {
+    if (!UV_HANDLE(self)) {
         PyErr_SetString(PyExc_TTYError, "already closed");
         return NULL;
     }
@@ -18,9 +16,9 @@ TTY_func_set_mode(TTY *self, PyObject *args)
         return NULL;
     }
 
-    r = uv_tty_set_mode((uv_tty_t *)base->uv_handle, mode);
+    r = uv_tty_set_mode((uv_tty_t *)UV_HANDLE(self), mode);
     if (r != 0) {
-        raise_uv_exception(base->loop, PyExc_TTYError);
+        raise_uv_exception(UV_HANDLE_LOOP(self), PyExc_TTYError);
         return NULL;
     }
 
@@ -61,16 +59,14 @@ TTY_func_get_winsize(TTY *self)
 {
     int r, width, height;
 
-    IOStream *base = (IOStream *)self;
-
-    if (!base->uv_handle) {
+    if (!UV_HANDLE(self)) {
         PyErr_SetString(PyExc_TTYError, "already closed");
         return NULL;
     }
 
-    r = uv_tty_get_winsize((uv_tty_t *)base->uv_handle, &width, &height);
+    r = uv_tty_get_winsize((uv_tty_t *)UV_HANDLE(self), &width, &height);
     if (r != 0) {
-        raise_uv_exception(base->loop, PyExc_TTYError);
+        raise_uv_exception(UV_HANDLE_LOOP(self), PyExc_TTYError);
         return NULL;
     }
 
@@ -82,15 +78,13 @@ static int
 TTY_tp_init(TTY *self, PyObject *args, PyObject *kwargs)
 {
     int fd, r;
-    uv_tty_t *uv_stream;
+    uv_tty_t *uv_tty;
     Loop *loop;
     PyObject *tmp = NULL;
 
-    IOStream *base = (IOStream *)self;
-
     UNUSED_ARG(kwargs);
 
-    if (base->uv_handle) {
+    if (UV_HANDLE(self)) {
         PyErr_SetString(PyExc_IOStreamError, "Object already initialized");
         return -1;
     }
@@ -104,26 +98,26 @@ TTY_tp_init(TTY *self, PyObject *args, PyObject *kwargs)
         return -1;
     }
 
-    tmp = (PyObject *)base->loop;
+    tmp = (PyObject *)((Handle *)self)->loop;
     Py_INCREF(loop);
-    base->loop = loop;
+    ((Handle *)self)->loop = loop;
     Py_XDECREF(tmp);
 
-    uv_stream = PyMem_Malloc(sizeof(uv_tty_t));
-    if (!uv_stream) {
+    uv_tty = PyMem_Malloc(sizeof(uv_tty_t));
+    if (!uv_tty) {
         PyErr_NoMemory();
         Py_DECREF(loop);
         return -1;
     }
 
-    r = uv_tty_init(UV_LOOP(base), uv_stream, fd, (fd == 0)?1:0);
+    r = uv_tty_init(UV_HANDLE_LOOP(self), uv_tty, fd, (fd == 0)?1:0);
     if (r != 0) {
-        raise_uv_exception(base->loop, PyExc_TTYError);
+        raise_uv_exception(UV_HANDLE_LOOP(self), PyExc_TTYError);
         Py_DECREF(loop);
         return -1;
     }
-    uv_stream->data = (void *)self;
-    base->uv_handle = (uv_stream_t *)uv_stream;
+    uv_tty->data = (void *)self;
+    UV_HANDLE(self) = (uv_handle_t *)uv_tty;
 
     return 0;
 }

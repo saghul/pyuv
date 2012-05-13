@@ -7,7 +7,6 @@ on_tcp_connection(uv_stream_t* server, int status)
 {
     PyGILState_STATE gstate = PyGILState_Ensure();
     TCP *self;
-    IOStream *base;
     PyObject *result, *py_errorno;
 
     ASSERT(server);
@@ -17,10 +16,8 @@ on_tcp_connection(uv_stream_t* server, int status)
     /* Object could go out of scope in the callback, increase refcount to avoid it */
     Py_INCREF(self);
 
-    base = (IOStream *)self;
-
     if (status != 0) {
-        uv_err_t err = uv_last_error(UV_LOOP(base));
+        uv_err_t err = uv_last_error(UV_HANDLE_LOOP(self));
         py_errorno = PyInt_FromLong((long)err.code);
     } else {
         py_errorno = Py_None;
@@ -45,7 +42,6 @@ on_tcp_client_connection(uv_connect_t *req, int status)
     PyGILState_STATE gstate = PyGILState_Ensure();
     iostream_req_data_t* req_data;
     TCP *self;
-    IOStream *base;
     PyObject *callback, *result, *py_errorno;
 
     ASSERT(req);
@@ -58,10 +54,8 @@ on_tcp_client_connection(uv_connect_t *req, int status)
     /* Object could go out of scope in the callback, increase refcount to avoid it */
     Py_INCREF(self);
 
-    base = (IOStream *)self;
-
     if (status != 0) {
-        uv_err_t err = uv_last_error(UV_LOOP(base));
+        uv_err_t err = uv_last_error(UV_HANDLE_LOOP(self));
         py_errorno = PyInt_FromLong(err.code);
     } else {
         py_errorno = Py_None;
@@ -92,9 +86,7 @@ TCP_func_bind(TCP *self, PyObject *args)
     struct in_addr addr4;
     struct in6_addr addr6;
 
-    IOStream *base = (IOStream *)self;
-
-    if (!base->uv_handle) {
+    if (!UV_HANDLE(self)) {
         PyErr_SetString(PyExc_TCPError, "already closed");
         return NULL;
     }
@@ -118,13 +110,13 @@ TCP_func_bind(TCP *self, PyObject *args)
     }
 
     if (address_type == AF_INET) {
-        r = uv_tcp_bind((uv_tcp_t *)base->uv_handle, uv_ip4_addr(bind_ip, bind_port));
+        r = uv_tcp_bind((uv_tcp_t *)UV_HANDLE(self), uv_ip4_addr(bind_ip, bind_port));
     } else {
-        r = uv_tcp_bind6((uv_tcp_t *)base->uv_handle, uv_ip6_addr(bind_ip, bind_port));
+        r = uv_tcp_bind6((uv_tcp_t *)UV_HANDLE(self), uv_ip6_addr(bind_ip, bind_port));
     }
 
     if (r != 0) {
-        raise_uv_exception(base->loop, PyExc_TCPError);
+        raise_uv_exception(UV_HANDLE_LOOP(self), PyExc_TCPError);
         return NULL;
     }
 
@@ -138,12 +130,10 @@ TCP_func_listen(TCP *self, PyObject *args)
     int r, backlog;
     PyObject *callback, *tmp;
 
-    IOStream *base = (IOStream *)self;
-
     backlog = 128;
     tmp = NULL;
 
-    if (!base->uv_handle) {
+    if (!UV_HANDLE(self)) {
         PyErr_SetString(PyExc_TCPError, "already closed");
         return NULL;
     }
@@ -162,9 +152,9 @@ TCP_func_listen(TCP *self, PyObject *args)
         return NULL;
     }
 
-    r = uv_listen(base->uv_handle, backlog, on_tcp_connection);
+    r = uv_listen((uv_stream_t *)UV_HANDLE(self), backlog, on_tcp_connection);
     if (r != 0) {
-        raise_uv_exception(base->loop, PyExc_TCPError);
+        raise_uv_exception(UV_HANDLE_LOOP(self), PyExc_TCPError);
         return NULL;
     }
 
@@ -183,9 +173,7 @@ TCP_func_accept(TCP *self, PyObject *args)
     int r;
     PyObject *client;
 
-    IOStream *base = (IOStream *)self;
-
-    if (!base->uv_handle) {
+    if (!UV_HANDLE(self)) {
         PyErr_SetString(PyExc_TCPError, "already closed");
         return NULL;
     }
@@ -199,9 +187,9 @@ TCP_func_accept(TCP *self, PyObject *args)
         return NULL;
     }
 
-    r = uv_accept(base->uv_handle, ((IOStream *)client)->uv_handle);
+    r = uv_accept((uv_stream_t *)UV_HANDLE(self), (uv_stream_t *)UV_HANDLE(client));
     if (r != 0) {
-        raise_uv_exception(base->loop, PyExc_TCPError);
+        raise_uv_exception(UV_HANDLE_LOOP(self), PyExc_TCPError);
         return NULL;
     }
 
@@ -220,9 +208,7 @@ TCP_func_connect(TCP *self, PyObject *args)
     iostream_req_data_t *req_data = NULL;
     PyObject *callback;
 
-    IOStream *base = (IOStream *)self;
-
-    if (!base->uv_handle) {
+    if (!UV_HANDLE(self)) {
         PyErr_SetString(PyExc_TCPError, "closed");
         return NULL;
     }
@@ -268,13 +254,13 @@ TCP_func_connect(TCP *self, PyObject *args)
     connect_req->data = (void *)req_data;
 
     if (address_type == AF_INET) {
-        r = uv_tcp_connect(connect_req, (uv_tcp_t *)base->uv_handle, uv_ip4_addr(connect_ip, connect_port), on_tcp_client_connection);
+        r = uv_tcp_connect(connect_req, (uv_tcp_t *)UV_HANDLE(self), uv_ip4_addr(connect_ip, connect_port), on_tcp_client_connection);
     } else {
-        r = uv_tcp_connect6(connect_req, (uv_tcp_t *)base->uv_handle, uv_ip6_addr(connect_ip, connect_port), on_tcp_client_connection);
+        r = uv_tcp_connect6(connect_req, (uv_tcp_t *)UV_HANDLE(self), uv_ip6_addr(connect_ip, connect_port), on_tcp_client_connection);
     }
 
     if (r != 0) {
-        raise_uv_exception(base->loop, PyExc_TCPError);
+        raise_uv_exception(UV_HANDLE_LOOP(self), PyExc_TCPError);
         goto error;
     }
 
@@ -301,18 +287,16 @@ TCP_func_getsockname(TCP *self)
     struct sockaddr_in *addr4;
     struct sockaddr_in6 *addr6;
 
-    IOStream *base = (IOStream *)self;
-
     namelen = sizeof(sockname);
 
-    if (!base->uv_handle) {
+    if (!UV_HANDLE(self)) {
         PyErr_SetString(PyExc_TCPError, "closed");
         return NULL;
     }
 
-    r = uv_tcp_getsockname((uv_tcp_t *)base->uv_handle, &sockname, &namelen);
+    r = uv_tcp_getsockname((uv_tcp_t *)UV_HANDLE(self), &sockname, &namelen);
     if (r != 0) {
-        raise_uv_exception(base->loop, PyExc_TCPError);
+        raise_uv_exception(UV_HANDLE_LOOP(self), PyExc_TCPError);
         return NULL;
     }
 
@@ -340,18 +324,16 @@ TCP_func_getpeername(TCP *self)
     struct sockaddr_in *addr4;
     struct sockaddr_in6 *addr6;
 
-    IOStream *base = (IOStream *)self;
-
     namelen = sizeof(peername);
 
-    if (!base->uv_handle) {
+    if (!UV_HANDLE(self)) {
         PyErr_SetString(PyExc_TCPError, "closed");
         return NULL;
     }
 
-    r = uv_tcp_getpeername((uv_tcp_t *)base->uv_handle, &peername, &namelen);
+    r = uv_tcp_getpeername((uv_tcp_t *)UV_HANDLE(self), &peername, &namelen);
     if (r != 0) {
-        raise_uv_exception(base->loop, PyExc_TCPError);
+        raise_uv_exception(UV_HANDLE_LOOP(self), PyExc_TCPError);
         return NULL;
     }
 
@@ -378,9 +360,7 @@ TCP_func_nodelay(TCP *self, PyObject *args)
     int r;
     PyObject *enable;
 
-    IOStream *base = (IOStream *)self;
-
-    if (!base->uv_handle) {
+    if (!UV_HANDLE(self)) {
         PyErr_SetString(PyExc_TCPError, "already closed");
         return NULL;
     }
@@ -389,9 +369,9 @@ TCP_func_nodelay(TCP *self, PyObject *args)
         return NULL;
     }
 
-    r = uv_tcp_nodelay((uv_tcp_t *)base->uv_handle, (enable == Py_True) ? 1 : 0);
+    r = uv_tcp_nodelay((uv_tcp_t *)UV_HANDLE(self), (enable == Py_True) ? 1 : 0);
     if (r != 0) {
-        raise_uv_exception(base->loop, PyExc_TCPError);
+        raise_uv_exception(UV_HANDLE_LOOP(self), PyExc_TCPError);
         return NULL;
     }
 
@@ -406,9 +386,7 @@ TCP_func_keepalive(TCP *self, PyObject *args)
     unsigned int delay;
     PyObject *enable;
 
-    IOStream *base = (IOStream *)self;
-
-    if (!base->uv_handle) {
+    if (!UV_HANDLE(self)) {
         PyErr_SetString(PyExc_TCPError, "already closed");
         return NULL;
     }
@@ -417,9 +395,9 @@ TCP_func_keepalive(TCP *self, PyObject *args)
         return NULL;
     }
 
-    r = uv_tcp_keepalive((uv_tcp_t *)base->uv_handle, (enable == Py_True) ? 1 : 0, delay);
+    r = uv_tcp_keepalive((uv_tcp_t *)UV_HANDLE(self), (enable == Py_True) ? 1 : 0, delay);
     if (r != 0) {
-        raise_uv_exception(base->loop, PyExc_TCPError);
+        raise_uv_exception(UV_HANDLE_LOOP(self), PyExc_TCPError);
         return NULL;
     }
 
@@ -442,9 +420,7 @@ TCP_func_simultaneous_accepts(TCP *self, PyObject *args)
     int r;
     PyObject *enable;
 
-    IOStream *base = (IOStream *)self;
-
-    if (!base->uv_handle) {
+    if (!UV_HANDLE(self)) {
         PyErr_SetString(PyExc_TCPError, "already closed");
         return NULL;
     }
@@ -453,9 +429,9 @@ TCP_func_simultaneous_accepts(TCP *self, PyObject *args)
         return NULL;
     }
 
-    r = uv_tcp_simultaneous_accepts((uv_tcp_t *)base->uv_handle, (enable == Py_True) ? 1 : 0);
+    r = uv_tcp_simultaneous_accepts((uv_tcp_t *)UV_HANDLE(self), (enable == Py_True) ? 1 : 0);
     if (r != 0) {
-        raise_uv_exception(base->loop, PyExc_TCPError);
+        raise_uv_exception(UV_HANDLE_LOOP(self), PyExc_TCPError);
         return NULL;
     }
 
@@ -467,15 +443,13 @@ static int
 TCP_tp_init(TCP *self, PyObject *args, PyObject *kwargs)
 {
     int r;
-    uv_tcp_t *uv_stream;
+    uv_tcp_t *uv_tcp;
     Loop *loop;
     PyObject *tmp = NULL;
 
-    IOStream *base = (IOStream *)self;
-
     UNUSED_ARG(kwargs);
 
-    if (base->uv_handle) {
+    if (UV_HANDLE(self)) {
         PyErr_SetString(PyExc_TCPError, "Object already initialized");
         return -1;
     }
@@ -484,26 +458,26 @@ TCP_tp_init(TCP *self, PyObject *args, PyObject *kwargs)
         return -1;
     }
 
-    tmp = (PyObject *)base->loop;
+    tmp = (PyObject *)((Handle *)self)->loop;
     Py_INCREF(loop);
-    base->loop = loop;
+    ((Handle *)self)->loop = loop;
     Py_XDECREF(tmp);
 
-    uv_stream = PyMem_Malloc(sizeof(uv_tcp_t));
-    if (!uv_stream) {
+    uv_tcp = PyMem_Malloc(sizeof(uv_tcp_t));
+    if (!uv_tcp) {
         PyErr_NoMemory();
         Py_DECREF(loop);
         return -1;
     }
 
-    r = uv_tcp_init(UV_LOOP(base), (uv_tcp_t *)uv_stream);
+    r = uv_tcp_init(UV_HANDLE_LOOP(self), (uv_tcp_t *)uv_tcp);
     if (r != 0) {
-        raise_uv_exception(base->loop, PyExc_TCPError);
+        raise_uv_exception(UV_HANDLE_LOOP(self), PyExc_TCPError);
         Py_DECREF(loop);
         return -1;
     }
-    uv_stream->data = (void *)self;
-    base->uv_handle = (uv_stream_t *)uv_stream;
+    uv_tcp->data = (void *)self;
+    UV_HANDLE(self) = (uv_handle_t *)uv_tcp;
 
     return 0;
 }

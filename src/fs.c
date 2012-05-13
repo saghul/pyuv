@@ -1116,7 +1116,7 @@ stat_func(PyObject *args, PyObject *kwargs, int type)
         r = uv_fs_lstat(loop->uv_loop, fs_req, path, (callback != NULL) ? stat_cb : NULL);
     }
     if (r < 0) {
-        raise_uv_exception(loop, PyExc_FSError);
+        raise_uv_exception(loop->uv_loop, PyExc_FSError);
         ret = NULL;
         goto end;
     }
@@ -1214,7 +1214,7 @@ FS_func_fstat(PyObject *obj, PyObject *args, PyObject *kwargs)
     fs_req->data = (void *)req_data;
     r = uv_fs_fstat(loop->uv_loop, fs_req, fd, (callback != NULL) ? stat_cb : NULL);
     if (r < 0) {
-        raise_uv_exception(loop, PyExc_FSError);
+        raise_uv_exception(loop->uv_loop, PyExc_FSError);
         ret = NULL;
         goto end;
     }
@@ -1287,7 +1287,7 @@ FS_func_unlink(PyObject *obj, PyObject *args, PyObject *kwargs)
     fs_req->data = (void *)req_data;
     r = uv_fs_unlink(loop->uv_loop, fs_req, path, (callback != NULL) ? unlink_cb : NULL);
     if (r < 0) {
-        raise_uv_exception(loop, PyExc_FSError);
+        raise_uv_exception(loop->uv_loop, PyExc_FSError);
         goto end;
     }
 
@@ -1351,7 +1351,7 @@ FS_func_mkdir(PyObject *obj, PyObject *args, PyObject *kwargs)
     fs_req->data = (void *)req_data;
     r = uv_fs_mkdir(loop->uv_loop, fs_req, path, mode, (callback != NULL) ? mkdir_cb : NULL);
     if (r < 0) {
-        raise_uv_exception(loop, PyExc_FSError);
+        raise_uv_exception(loop->uv_loop, PyExc_FSError);
         goto end;
     }
 
@@ -1415,7 +1415,7 @@ FS_func_rmdir(PyObject *obj, PyObject *args, PyObject *kwargs)
     fs_req->data = (void *)req_data;
     r = uv_fs_rmdir(loop->uv_loop, fs_req, path, (callback != NULL) ? rmdir_cb : NULL);
     if (r < 0) {
-        raise_uv_exception(loop, PyExc_FSError);
+        raise_uv_exception(loop->uv_loop, PyExc_FSError);
         goto end;
     }
 
@@ -1479,7 +1479,7 @@ FS_func_rename(PyObject *obj, PyObject *args, PyObject *kwargs)
     fs_req->data = (void *)req_data;
     r = uv_fs_rename(loop->uv_loop, fs_req, path, new_path, (callback != NULL) ? rename_cb : NULL);
     if (r < 0) {
-        raise_uv_exception(loop, PyExc_FSError);
+        raise_uv_exception(loop->uv_loop, PyExc_FSError);
         goto end;
     }
 
@@ -1543,7 +1543,7 @@ FS_func_chmod(PyObject *obj, PyObject *args, PyObject *kwargs)
     fs_req->data = (void *)req_data;
     r = uv_fs_chmod(loop->uv_loop, fs_req, path, mode, (callback != NULL) ? chmod_cb : NULL);
     if (r < 0) {
-        raise_uv_exception(loop, PyExc_FSError);
+        raise_uv_exception(loop->uv_loop, PyExc_FSError);
         goto end;
     }
 
@@ -1614,7 +1614,7 @@ FS_func_fchmod(PyObject *obj, PyObject *args, PyObject *kwargs)
     fs_req->data = (void *)req_data;
     r = uv_fs_fchmod(loop->uv_loop, fs_req, fd, mode, (callback != NULL) ? chmod_cb : NULL);
     if (r < 0) {
-        raise_uv_exception(loop, PyExc_FSError);
+        raise_uv_exception(loop->uv_loop, PyExc_FSError);
         goto end;
     }
 
@@ -1678,7 +1678,7 @@ FS_func_link(PyObject *obj, PyObject *args, PyObject *kwargs)
     fs_req->data = (void *)req_data;
     r = uv_fs_link(loop->uv_loop, fs_req, path, new_path, (callback != NULL) ? link_cb : NULL);
     if (r < 0) {
-        raise_uv_exception(loop, PyExc_FSError);
+        raise_uv_exception(loop->uv_loop, PyExc_FSError);
         goto end;
     }
 
@@ -1742,7 +1742,7 @@ FS_func_symlink(PyObject *obj, PyObject *args, PyObject *kwargs)
     fs_req->data = (void *)req_data;
     r = uv_fs_symlink(loop->uv_loop, fs_req, path, new_path, flags, (callback != NULL) ? symlink_cb : NULL);
     if (r < 0) {
-        raise_uv_exception(loop, PyExc_FSError);
+        raise_uv_exception(loop->uv_loop, PyExc_FSError);
         goto end;
     }
 
@@ -1808,7 +1808,7 @@ FS_func_readlink(PyObject *obj, PyObject *args, PyObject *kwargs)
     fs_req->data = (void *)req_data;
     r = uv_fs_readlink(loop->uv_loop, fs_req, path, (callback != NULL) ? readlink_cb : NULL);
     if (r < 0) {
-        raise_uv_exception(loop, PyExc_FSError);
+        raise_uv_exception(loop->uv_loop, PyExc_FSError);
         ret = NULL;
         goto end;
     }
@@ -1880,7 +1880,7 @@ FS_func_chown(PyObject *obj, PyObject *args, PyObject *kwargs)
     fs_req->data = (void *)req_data;
     r = uv_fs_chown(loop->uv_loop, fs_req, path, uid, gid, (callback != NULL) ? chown_cb : NULL);
     if (r < 0) {
-        raise_uv_exception(loop, PyExc_FSError);
+        raise_uv_exception(loop->uv_loop, PyExc_FSError);
         goto end;
     }
 
@@ -1951,7 +1951,7 @@ FS_func_fchown(PyObject *obj, PyObject *args, PyObject *kwargs)
     fs_req->data = (void *)req_data;
     r = uv_fs_fchown(loop->uv_loop, fs_req, fd, uid, gid, (callback != NULL) ? chown_cb : NULL);
     if (r != 0) {
-        raise_uv_exception(loop, PyExc_FSError);
+        raise_uv_exception(loop->uv_loop, PyExc_FSError);
         goto end;
     }
 
@@ -2017,7 +2017,7 @@ FS_func_open(PyObject *obj, PyObject *args, PyObject *kwargs)
     fs_req->data = (void *)req_data;
     r = uv_fs_open(loop->uv_loop, fs_req, path, flags, mode, (callback != NULL) ? open_cb : NULL);
     if (r < 0) {
-        raise_uv_exception(loop, PyExc_FSError);
+        raise_uv_exception(loop->uv_loop, PyExc_FSError);
         ret = NULL;
         goto end;
     }
@@ -2097,7 +2097,7 @@ FS_func_close(PyObject *obj, PyObject *args, PyObject *kwargs)
     fs_req->data = (void *)req_data;
     r = uv_fs_close(loop->uv_loop, fs_req, fd, (callback != NULL) ? close_cb : NULL);
     if (r < 0) {
-        raise_uv_exception(loop, PyExc_FSError);
+        raise_uv_exception(loop->uv_loop, PyExc_FSError);
         goto end;
     }
 
@@ -2180,7 +2180,7 @@ FS_func_read(PyObject *obj, PyObject *args, PyObject *kwargs)
     fs_req->data = (void *)req_data;
     r = uv_fs_read(loop->uv_loop, fs_req, fd, req_data->buf.base, length, offset, (callback != NULL) ? read_cb : NULL);
     if (r < 0) {
-        raise_uv_exception(loop, PyExc_FSError);
+        raise_uv_exception(loop->uv_loop, PyExc_FSError);
         ret = NULL;
         goto end;
     }
@@ -2281,7 +2281,7 @@ FS_func_write(PyObject *obj, PyObject *args, PyObject *kwargs)
     fs_req->data = (void *)req_data;
     r = uv_fs_write(loop->uv_loop, fs_req, fd, req_data->buf.base, req_data->buf.len, offset, (callback != NULL) ? write_cb : NULL);
     if (r < 0) {
-        raise_uv_exception(loop, PyExc_FSError);
+        raise_uv_exception(loop->uv_loop, PyExc_FSError);
         ret = NULL;
         goto end;
     }
@@ -2366,7 +2366,7 @@ FS_func_fsync(PyObject *obj, PyObject *args, PyObject *kwargs)
     fs_req->data = (void *)req_data;
     r = uv_fs_fsync(loop->uv_loop, fs_req, fd, (callback != NULL) ? fsync_cb : NULL);
     if (r < 0) {
-        raise_uv_exception(loop, PyExc_FSError);
+        raise_uv_exception(loop->uv_loop, PyExc_FSError);
         goto end;
     }
 
@@ -2437,7 +2437,7 @@ FS_func_fdatasync(PyObject *obj, PyObject *args, PyObject *kwargs)
     fs_req->data = (void *)req_data;
     r = uv_fs_fdatasync(loop->uv_loop, fs_req, fd, (callback != NULL) ? fsync_cb : NULL);
     if (r != 0) {
-        raise_uv_exception(loop, PyExc_FSError);
+        raise_uv_exception(loop->uv_loop, PyExc_FSError);
         goto end;
     }
 
@@ -2508,7 +2508,7 @@ FS_func_ftruncate(PyObject *obj, PyObject *args, PyObject *kwargs)
     fs_req->data = (void *)req_data;
     r = uv_fs_ftruncate(loop->uv_loop, fs_req, fd, offset, (callback != NULL) ? ftruncate_cb : NULL);
     if (r < 0) {
-        raise_uv_exception(loop, PyExc_FSError);
+        raise_uv_exception(loop->uv_loop, PyExc_FSError);
         goto end;
     }
 
@@ -2575,7 +2575,7 @@ FS_func_readdir(PyObject *obj, PyObject *args, PyObject *kwargs)
     fs_req->data = (void *)req_data;
     r = uv_fs_readdir(loop->uv_loop, fs_req, path, flags, (callback != NULL) ? readdir_cb : NULL);
     if (r < 0) {
-        raise_uv_exception(loop, PyExc_FSError);
+        raise_uv_exception(loop->uv_loop, PyExc_FSError);
         ret = NULL;
         goto end;
     }
@@ -2662,7 +2662,7 @@ FS_func_sendfile(PyObject *obj, PyObject *args, PyObject *kwargs)
     fs_req->data = (void *)req_data;
     r = uv_fs_sendfile(loop->uv_loop, fs_req, out_fd, in_fd, in_offset, length, (callback != NULL) ? sendfile_cb : NULL);
     if (r < 0) {
-        raise_uv_exception(loop, PyExc_FSError);
+        raise_uv_exception(loop->uv_loop, PyExc_FSError);
         ret = NULL;
         goto end;
     }
@@ -2736,7 +2736,7 @@ FS_func_utime(PyObject *obj, PyObject *args, PyObject *kwargs)
     fs_req->data = (void *)req_data;
     r = uv_fs_utime(loop->uv_loop, fs_req, path, atime, mtime, (callback != NULL) ? utime_cb : NULL);
     if (r < 0) {
-        raise_uv_exception(loop, PyExc_FSError);
+        raise_uv_exception(loop->uv_loop, PyExc_FSError);
         goto end;
     }
 
@@ -2808,7 +2808,7 @@ FS_func_futime(PyObject *obj, PyObject *args, PyObject *kwargs)
     fs_req->data = (void *)req_data;
     r = uv_fs_futime(loop->uv_loop, fs_req, fd, atime, mtime, (callback != NULL) ? utime_cb : NULL);
     if (r < 0) {
-        raise_uv_exception(loop, PyExc_FSError);
+        raise_uv_exception(loop->uv_loop, PyExc_FSError);
         goto end;
     }
 
@@ -2862,46 +2862,6 @@ static PyObject* PyExc_FSEventError;
 
 
 static void
-on_fsevent_close(uv_handle_t *handle)
-{
-    PyGILState_STATE gstate = PyGILState_Ensure();
-    FSEvent *self;
-    PyObject *result;
-
-    ASSERT(handle);
-    self = (FSEvent *)handle->data;
-    ASSERT(self);
-
-    if (self->on_close_cb != Py_None) {
-        result = PyObject_CallFunctionObjArgs(self->on_close_cb, self, NULL);
-        if (result == NULL) {
-            PyErr_WriteUnraisable(self->on_close_cb);
-        }
-        Py_XDECREF(result);
-    }
-
-    handle->data = NULL;
-    PyMem_Free(handle);
-
-    /* Refcount was increased in func_close */
-    Py_DECREF(self);
-
-    PyGILState_Release(gstate);
-}
-
-
-static void
-on_fsevent_dealloc_close(uv_handle_t *handle)
-{
-    PyGILState_STATE gstate = PyGILState_Ensure();
-    ASSERT(handle);
-    handle->data = NULL;
-    PyMem_Free(handle);
-    PyGILState_Release(gstate);
-}
-
-
-static void
 on_fsevent_callback(uv_fs_event_t *handle, const char *filename, int events, int status)
 {
     PyGILState_STATE gstate = PyGILState_Ensure();
@@ -2924,7 +2884,7 @@ on_fsevent_callback(uv_fs_event_t *handle, const char *filename, int events, int
     }
 
     if (status < 0) {
-        uv_err_t err = uv_last_error(UV_LOOP(self));
+        uv_err_t err = uv_last_error(UV_HANDLE_LOOP(self));
         errorno = PyInt_FromLong((long)err.code);
     } else {
         errorno = Py_None;
@@ -2959,7 +2919,7 @@ FSEvent_func_start(FSEvent *self, PyObject *args, PyObject *kwargs)
 
     tmp = NULL;
 
-    if (self->uv_handle) {
+    if (UV_HANDLE(self)) {
         PyErr_SetString(PyExc_FSEventError, "FSEvent was already started");
         return NULL;
     }
@@ -2979,13 +2939,13 @@ FSEvent_func_start(FSEvent *self, PyObject *args, PyObject *kwargs)
         return NULL;
     }
     fs_event->data = (void *)self;
-    self->uv_handle = fs_event;
+    UV_HANDLE(self) = (uv_handle_t *)fs_event;
 
-    r = uv_fs_event_init(UV_LOOP(self), self->uv_handle, path, on_fsevent_callback, flags);
+    r = uv_fs_event_init(UV_HANDLE_LOOP(self), fs_event, path, on_fsevent_callback, flags);
     if (r != 0) {
-        raise_uv_exception(self->loop, PyExc_FSEventError);
+        raise_uv_exception(UV_HANDLE_LOOP(self), PyExc_FSEventError);
         PyMem_Free(fs_event);
-        self->uv_handle = NULL;
+        UV_HANDLE(self) = NULL;
         return NULL;
     }
 
@@ -2993,38 +2953,6 @@ FSEvent_func_start(FSEvent *self, PyObject *args, PyObject *kwargs)
     Py_INCREF(callback);
     self->on_fsevent_cb = callback;
     Py_XDECREF(tmp);
-
-    Py_RETURN_NONE;
-}
-
-
-static PyObject *
-FSEvent_func_close(FSEvent *self, PyObject *args)
-{
-    PyObject *callback = Py_None;
-
-    if (!self->uv_handle) {
-        PyErr_SetString(PyExc_FSEventError, "FSEvent has not been started");
-        return NULL;
-    }
-
-    if (!PyArg_ParseTuple(args, "|O:close", &callback)) {
-        return NULL;
-    }
-
-    if (callback != Py_None && !PyCallable_Check(callback)) {
-        PyErr_SetString(PyExc_TypeError, "a callable or None is required");
-        return NULL;
-    }
-
-    Py_INCREF(callback);
-    self->on_close_cb = callback;
-
-    /* Increase refcount so that object is not removed before the callback is called */
-    Py_INCREF(self);
-
-    uv_close((uv_handle_t *)self->uv_handle, on_fsevent_close);
-    self->uv_handle = NULL;
 
     Py_RETURN_NONE;
 }
@@ -3038,7 +2966,7 @@ FSEvent_tp_init(FSEvent *self, PyObject *args, PyObject *kwargs)
 
     UNUSED_ARG(kwargs);
 
-    if (self->uv_handle) {
+    if (UV_HANDLE(self)) {
         PyErr_SetString(PyExc_FSEventError, "Object already initialized");
         return -1;
     }
@@ -3047,9 +2975,9 @@ FSEvent_tp_init(FSEvent *self, PyObject *args, PyObject *kwargs)
         return -1;
     }
 
-    tmp = (PyObject *)self->loop;
+    tmp = (PyObject *)((Handle *)self)->loop;
     Py_INCREF(loop);
-    self->loop = loop;
+    ((Handle *)self)->loop = loop;
     Py_XDECREF(tmp);
 
     return 0;
@@ -3059,12 +2987,10 @@ FSEvent_tp_init(FSEvent *self, PyObject *args, PyObject *kwargs)
 static PyObject *
 FSEvent_tp_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
 {
-    FSEvent *self = (FSEvent *)PyType_GenericNew(type, args, kwargs);
+    FSEvent *self = (FSEvent *)HandleType.tp_new(type, args, kwargs);
     if (!self) {
         return NULL;
     }
-    self->uv_handle = NULL;
-    self->weakreflist = NULL;
     return (PyObject *)self;
 }
 
@@ -3072,10 +2998,8 @@ FSEvent_tp_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
 static int
 FSEvent_tp_traverse(FSEvent *self, visitproc visit, void *arg)
 {
-    Py_VISIT(self->data);
     Py_VISIT(self->on_fsevent_cb);
-    Py_VISIT(self->on_close_cb);
-    Py_VISIT(self->loop);
+    HandleType.tp_traverse((PyObject *)self, visit, arg);
     return 0;
 }
 
@@ -3083,41 +3007,16 @@ FSEvent_tp_traverse(FSEvent *self, visitproc visit, void *arg)
 static int
 FSEvent_tp_clear(FSEvent *self)
 {
-    Py_CLEAR(self->data);
     Py_CLEAR(self->on_fsevent_cb);
-    Py_CLEAR(self->on_close_cb);
-    Py_CLEAR(self->loop);
+    HandleType.tp_clear((PyObject *)self);
     return 0;
-}
-
-
-static void
-FSEvent_tp_dealloc(FSEvent *self)
-{
-    if (self->uv_handle) {
-        uv_close((uv_handle_t *)self->uv_handle, on_fsevent_dealloc_close);
-        self->uv_handle = NULL;
-    }
-    if (self->weakreflist != NULL) {
-        PyObject_ClearWeakRefs((PyObject *)self);
-    }
-    FSEvent_tp_clear(self);
-    Py_TYPE(self)->tp_free((PyObject *)self);
 }
 
 
 static PyMethodDef
 FSEvent_tp_methods[] = {
     { "start", (PyCFunction)FSEvent_func_start, METH_VARARGS|METH_KEYWORDS, "Start the FSEvent." },
-    { "close", (PyCFunction)FSEvent_func_close, METH_VARARGS, "Close the FSEvent." },
     { NULL }
-};
-
-
-static PyMemberDef FSEvent_tp_members[] = {
-    {"loop", T_OBJECT_EX, offsetof(FSEvent, loop), READONLY, "Loop where this FSEvent is running on."},
-    {"data", T_OBJECT, offsetof(FSEvent, data), 0, "Arbitrary data."},
-    {NULL}
 };
 
 
@@ -3126,7 +3025,7 @@ static PyTypeObject FSEventType = {
     "pyuv.fs.FSEvent",                                              /*tp_name*/
     sizeof(FSEvent),                                                /*tp_basicsize*/
     0,                                                              /*tp_itemsize*/
-    (destructor)FSEvent_tp_dealloc,                                 /*tp_dealloc*/
+    0,                                                              /*tp_dealloc*/
     0,                                                              /*tp_print*/
     0,                                                              /*tp_getattr*/
     0,                                                              /*tp_setattr*/
@@ -3146,11 +3045,11 @@ static PyTypeObject FSEventType = {
     (traverseproc)FSEvent_tp_traverse,                              /*tp_traverse*/
     (inquiry)FSEvent_tp_clear,                                      /*tp_clear*/
     0,                                                              /*tp_richcompare*/
-    offsetof(FSEvent, weakreflist),                                 /*tp_weaklistoffset*/
+    0,                                                              /*tp_weaklistoffset*/
     0,                                                              /*tp_iter*/
     0,                                                              /*tp_iternext*/
     FSEvent_tp_methods,                                             /*tp_methods*/
-    FSEvent_tp_members,                                             /*tp_members*/
+    0,                                                              /*tp_members*/
     0,                                                              /*tp_getsets*/
     0,                                                              /*tp_base*/
     0,                                                              /*tp_dict*/
@@ -3191,6 +3090,7 @@ init_fs(void)
     PyModule_AddIntMacro(module, UV_FS_EVENT_WATCH_ENTRY);
     PyModule_AddIntMacro(module, UV_FS_EVENT_STAT);
 
+    FSEventType.tp_base = &HandleType;
     PyUVModule_AddType(module, "FSEvent", &FSEventType);
 
     return module;

@@ -3,47 +3,6 @@ static PyObject* PyExc_CheckError;
 
 
 static void
-on_check_close(uv_handle_t *handle)
-{
-    PyGILState_STATE gstate = PyGILState_Ensure();
-    Check *self;
-    PyObject *result;
-
-    ASSERT(handle);
-
-    self = (Check *)handle->data;
-    ASSERT(self);
-
-    if (self->on_close_cb != Py_None) {
-        result = PyObject_CallFunctionObjArgs(self->on_close_cb, self, NULL);
-        if (result == NULL) {
-            PyErr_WriteUnraisable(self->on_close_cb);
-        }
-        Py_XDECREF(result);
-    }
-
-    handle->data = NULL;
-    PyMem_Free(handle);
-
-    /* Refcount was increased in func_close */
-    Py_DECREF(self);
-
-    PyGILState_Release(gstate);
-}
-
-
-static void
-on_check_dealloc_close(uv_handle_t *handle)
-{
-    PyGILState_STATE gstate = PyGILState_Ensure();
-    ASSERT(handle);
-    handle->data = NULL;
-    PyMem_Free(handle);
-    PyGILState_Release(gstate);
-}
-
-
-static void
 on_check_callback(uv_check_t *handle, int status)
 {
     PyGILState_STATE gstate = PyGILState_Ensure();
@@ -77,7 +36,7 @@ Check_func_start(Check *self, PyObject *args)
 
     tmp = NULL;
 
-    if (!self->uv_handle) {
+    if (!UV_HANDLE(self)) {
         PyErr_SetString(PyExc_CheckError, "Check is closed");
         return NULL;
     }
@@ -91,9 +50,9 @@ Check_func_start(Check *self, PyObject *args)
         return NULL;
     }
 
-    r = uv_check_start(self->uv_handle, on_check_callback);
+    r = uv_check_start((uv_check_t *)UV_HANDLE(self), on_check_callback);
     if (r != 0) {
-        raise_uv_exception(self->loop, PyExc_CheckError);
+        raise_uv_exception(UV_HANDLE_LOOP(self), PyExc_CheckError);
         return NULL;
     }
 
@@ -111,58 +70,18 @@ Check_func_stop(Check *self)
 {
     int r;
 
-    if (!self->uv_handle) {
+    if (!UV_HANDLE(self)) {
         PyErr_SetString(PyExc_CheckError, "Check is already closed");
         return NULL;
     }
 
-    r = uv_check_stop(self->uv_handle);
+    r = uv_check_stop((uv_check_t *)UV_HANDLE(self));
     if (r != 0) {
-        raise_uv_exception(self->loop, PyExc_CheckError);
+        raise_uv_exception(UV_HANDLE_LOOP(self), PyExc_CheckError);
         return NULL;
     }
 
     Py_RETURN_NONE;
-}
-
-
-static PyObject *
-Check_func_close(Check *self, PyObject *args)
-{
-    PyObject *callback = Py_None;
-
-    if (!self->uv_handle) {
-        PyErr_SetString(PyExc_CheckError, "Check is already closed");
-        return NULL;
-    }
-
-    if (!PyArg_ParseTuple(args, "|O:close", &callback)) {
-        return NULL;
-    }
-
-    if (callback != Py_None && !PyCallable_Check(callback)) {
-        PyErr_SetString(PyExc_TypeError, "a callable or None is required");
-        return NULL;
-    }
-
-    Py_INCREF(callback);
-    self->on_close_cb = callback;
-
-    /* Increase refcount so that object is not removed before the callback is called */
-    Py_INCREF(self);
-
-    uv_close((uv_handle_t *)self->uv_handle, on_check_close);
-    self->uv_handle = NULL;
-
-    Py_RETURN_NONE;
-}
-
-
-static PyObject *
-Check_active_get(Check *self, void *closure)
-{
-    UNUSED_ARG(closure);
-    return PyBool_FromLong((long)uv_is_active((uv_handle_t *)self->uv_handle));
 }
 
 
@@ -176,7 +95,7 @@ Check_tp_init(Check *self, PyObject *args, PyObject *kwargs)
 
     UNUSED_ARG(kwargs);
 
-    if (self->uv_handle) {
+    if (UV_HANDLE(self)) {
         PyErr_SetString(PyExc_CheckError, "Object already initialized");
         return -1;
     }
@@ -185,9 +104,9 @@ Check_tp_init(Check *self, PyObject *args, PyObject *kwargs)
         return -1;
     }
 
-    tmp = (PyObject *)self->loop;
+    tmp = (PyObject *)((Handle *)self)->loop;
     Py_INCREF(loop);
-    self->loop = loop;
+    ((Handle *)self)->loop = loop;
     Py_XDECREF(tmp);
 
     uv_check = PyMem_Malloc(sizeof(uv_check_t));
@@ -197,14 +116,14 @@ Check_tp_init(Check *self, PyObject *args, PyObject *kwargs)
         return -1;
     }
 
-    r = uv_check_init(UV_LOOP(self), uv_check);
+    r = uv_check_init(UV_HANDLE_LOOP(self), uv_check);
     if (r != 0) {
-        raise_uv_exception(self->loop, PyExc_CheckError);
+        raise_uv_exception(UV_HANDLE_LOOP(self), PyExc_CheckError);
         Py_DECREF(loop);
         return -1;
     }
     uv_check->data = (void *)self;
-    self->uv_handle = uv_check;
+    UV_HANDLE(self) = (uv_handle_t *)uv_check;
 
     return 0;
 }
@@ -213,12 +132,10 @@ Check_tp_init(Check *self, PyObject *args, PyObject *kwargs)
 static PyObject *
 Check_tp_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
 {
-    Check *self = (Check *)PyType_GenericNew(type, args, kwargs);
+    Check *self = (Check *)HandleType.tp_new(type, args, kwargs);
     if (!self) {
         return NULL;
     }
-    self->uv_handle = NULL;
-    self->weakreflist = NULL;
     return (PyObject *)self;
 }
 
@@ -226,10 +143,8 @@ Check_tp_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
 static int
 Check_tp_traverse(Check *self, visitproc visit, void *arg)
 {
-    Py_VISIT(self->data);
     Py_VISIT(self->callback);
-    Py_VISIT(self->on_close_cb);
-    Py_VISIT(self->loop);
+    HandleType.tp_traverse((PyObject *)self, visit, arg);
     return 0;
 }
 
@@ -237,26 +152,9 @@ Check_tp_traverse(Check *self, visitproc visit, void *arg)
 static int
 Check_tp_clear(Check *self)
 {
-    Py_CLEAR(self->data);
     Py_CLEAR(self->callback);
-    Py_CLEAR(self->on_close_cb);
-    Py_CLEAR(self->loop);
+    HandleType.tp_clear((PyObject *)self);
     return 0;
-}
-
-
-static void
-Check_tp_dealloc(Check *self)
-{
-    if (self->uv_handle) {
-        uv_close((uv_handle_t *)self->uv_handle, on_check_dealloc_close);
-        self->uv_handle = NULL;
-    }
-    if (self->weakreflist != NULL) {
-        PyObject_ClearWeakRefs((PyObject *)self);
-    }
-    Check_tp_clear(self);
-    Py_TYPE(self)->tp_free((PyObject *)self);
 }
 
 
@@ -264,21 +162,7 @@ static PyMethodDef
 Check_tp_methods[] = {
     { "start", (PyCFunction)Check_func_start, METH_VARARGS, "Start the Check." },
     { "stop", (PyCFunction)Check_func_stop, METH_NOARGS, "Stop the Check." },
-    { "close", (PyCFunction)Check_func_close, METH_VARARGS, "Close the Check." },
     { NULL }
-};
-
-
-static PyMemberDef Check_tp_members[] = {
-    {"loop", T_OBJECT_EX, offsetof(Check, loop), READONLY, "Loop where this Check is running on."},
-    {"data", T_OBJECT, offsetof(Check, data), 0, "Arbitrary data."},
-    {NULL}
-};
-
-
-static PyGetSetDef Check_tp_getsets[] = {
-    {"active", (getter)Check_active_get, 0, "Indicates if handle is active", NULL},
-    {NULL}
 };
 
 
@@ -287,7 +171,7 @@ static PyTypeObject CheckType = {
     "pyuv.Check",                                                   /*tp_name*/
     sizeof(Check),                                                  /*tp_basicsize*/
     0,                                                              /*tp_itemsize*/
-    (destructor)Check_tp_dealloc,                                   /*tp_dealloc*/
+    0,                                                              /*tp_dealloc*/
     0,                                                              /*tp_print*/
     0,                                                              /*tp_getattr*/
     0,                                                              /*tp_setattr*/
@@ -307,12 +191,12 @@ static PyTypeObject CheckType = {
     (traverseproc)Check_tp_traverse,                                /*tp_traverse*/
     (inquiry)Check_tp_clear,                                        /*tp_clear*/
     0,                                                              /*tp_richcompare*/
-    offsetof(Check, weakreflist),                                   /*tp_weaklistoffset*/
+    0,                                                              /*tp_weaklistoffset*/
     0,                                                              /*tp_iter*/
     0,                                                              /*tp_iternext*/
     Check_tp_methods,                                               /*tp_methods*/
-    Check_tp_members,                                               /*tp_members*/
-    Check_tp_getsets,                                               /*tp_getsets*/
+    0,                                                              /*tp_members*/
+    0,                                                              /*tp_getsets*/
     0,                                                              /*tp_base*/
     0,                                                              /*tp_dict*/
     0,                                                              /*tp_descr_get*/

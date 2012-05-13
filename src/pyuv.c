@@ -2,6 +2,7 @@
 #include "pyuv.h"
 
 #include "loop.c"
+#include "handle.c"
 #include "async.c"
 #include "timer.c"
 #include "prepare.c"
@@ -146,6 +147,17 @@ init_pyuv(void)
     PyUVModule_AddObject(pyuv, "util", util);
 
     /* Types */
+    AsyncType.tp_base = &HandleType;
+    TimerType.tp_base = &HandleType;
+    PrepareType.tp_base = &HandleType;
+    IdleType.tp_base = &HandleType;
+    CheckType.tp_base = &HandleType;
+    SignalType.tp_base = &HandleType;
+    UDPType.tp_base = &HandleType;
+    PollType.tp_base = &HandleType;
+    ProcessType.tp_base = &HandleType;
+
+    IOStreamType.tp_base = &HandleType;
     TCPType.tp_base = &IOStreamType;
     PipeType.tp_base = &IOStreamType;
     TTYType.tp_base = &IOStreamType;
@@ -162,8 +174,8 @@ init_pyuv(void)
     PyUVModule_AddType(pyuv, "TTY", &TTYType);
     PyUVModule_AddType(pyuv, "UDP", &UDPType);
     PyUVModule_AddType(pyuv, "Poll", &PollType);
-    PyUVModule_AddType(pyuv, "ThreadPool", &ThreadPoolType);
     PyUVModule_AddType(pyuv, "Process", &ProcessType);
+    PyUVModule_AddType(pyuv, "ThreadPool", &ThreadPoolType);
 
     /* PyStructSequence types */
     if (LoopCountersResultType.tp_name == 0)
