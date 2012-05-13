@@ -45,6 +45,10 @@ on_udp_read(uv_udp_t* handle, int nread, uv_buf_t buf, struct sockaddr* addr, un
     /* Object could go out of scope in the callback, increase refcount to avoid it */
     Py_INCREF(self);
 
+    if (nread == 0) {
+        goto done;
+    }
+
     if (nread > 0) {
         ASSERT(addr);
         if (addr->sa_family == AF_INET) {
@@ -68,17 +72,16 @@ on_udp_read(uv_udp_t* handle, int nread, uv_buf_t buf, struct sockaddr* addr, un
         py_errorno = PyInt_FromLong((long)err.code);
     }
 
-    if (nread != 0) {
-        result = PyObject_CallFunctionObjArgs(self->on_read_cb, self, address_tuple, data, py_errorno, NULL);
-        if (result == NULL) {
-            PyErr_WriteUnraisable(self->on_read_cb);
-        }
-        Py_XDECREF(result);
-        Py_DECREF(address_tuple);
-        Py_DECREF(data);
-        Py_DECREF(py_errorno);
+    result = PyObject_CallFunctionObjArgs(self->on_read_cb, self, address_tuple, data, py_errorno, NULL);
+    if (result == NULL) {
+        PyErr_WriteUnraisable(self->on_read_cb);
     }
+    Py_XDECREF(result);
+    Py_DECREF(address_tuple);
+    Py_DECREF(data);
+    Py_DECREF(py_errorno);
 
+done:
     PyMem_Free(buf.base);
 
     Py_DECREF(self);
