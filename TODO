@@ -7,3 +7,6 @@
 
 - Support compiling with Visual Studio
 
+- Modify UDP.send to accept buffers like TCP.write
+    - Add UDP.sendlines
+
