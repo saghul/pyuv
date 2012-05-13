@@ -212,7 +212,7 @@ Loop_tp_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
 static int
 Loop_tp_traverse(Loop *self, visitproc visit, void *arg)
 {
-    Py_VISIT(self->data);
+    Py_VISIT(self->dict);
     return 0;
 }
 
@@ -220,7 +220,7 @@ Loop_tp_traverse(Loop *self, visitproc visit, void *arg)
 static int
 Loop_tp_clear(Loop *self)
 {
-    Py_CLEAR(self->data);
+    Py_CLEAR(self->dict);
     return 0;
 }
 
@@ -239,6 +239,45 @@ Loop_tp_dealloc(Loop *self)
 }
 
 
+static PyObject*
+Loop_dict_get(Loop *self, void* c)
+{
+    UNUSED_ARG(c);
+
+    if (self->dict == NULL) {
+        self->dict = PyDict_New();
+        if (self->dict == NULL) {
+            return NULL;
+        }
+    }
+    Py_INCREF(self->dict);
+    return self->dict;
+}
+
+
+static int
+Loop_dict_set(Loop *self, PyObject* val, void* c)
+{
+    PyObject* tmp;
+
+    UNUSED_ARG(c);
+
+    if (val == NULL) {
+        PyErr_SetString(PyExc_TypeError, "__dict__ may not be deleted");
+        return -1;
+    }
+    if (!PyDict_Check(val)) {
+        PyErr_SetString(PyExc_TypeError, "__dict__ must be a dictionary");
+        return -1;
+    }
+    tmp = self->dict;
+    Py_INCREF(val);
+    self->dict = val;
+    Py_XDECREF(tmp);
+    return 0;
+}
+
+
 static PyMethodDef
 Loop_tp_methods[] = {
     { "run", (PyCFunction)Loop_func_run, METH_NOARGS, "Run the event loop." },
@@ -252,13 +291,8 @@ Loop_tp_methods[] = {
 };
 
 
-static PyMemberDef Loop_tp_members[] = {
-    {"data", T_OBJECT, offsetof(Loop, data), 0, "Arbitrary data."},
-    {NULL}
-};
-
-
 static PyGetSetDef Loop_tp_getsets[] = {
+    {"__dict__", (getter)Loop_dict_get, (setter)Loop_dict_set, NULL},
     {"default", (getter)Loop_default_get, NULL, "Is this the default loop?", NULL},
     {"counters", (getter)Loop_counters_get, NULL, "Loop counters", NULL},
     {NULL}
@@ -294,13 +328,13 @@ static PyTypeObject LoopType = {
     0,                                                              /*tp_iter*/
     0,                                                              /*tp_iternext*/
     Loop_tp_methods,                                                /*tp_methods*/
-    Loop_tp_members,                                                /*tp_members*/
+    0,                                                              /*tp_members*/
     Loop_tp_getsets,                                                /*tp_getsets*/
     0,                                                              /*tp_base*/
     0,                                                              /*tp_dict*/
     0,                                                              /*tp_descr_get*/
     0,                                                              /*tp_descr_set*/
-    0,                                                              /*tp_dictoffset*/
+    offsetof(Loop, dict),                                           /*tp_dictoffset*/
     0,                                                              /*tp_init*/
     0,                                                              /*tp_alloc*/
     Loop_tp_new,                                                    /*tp_new*/

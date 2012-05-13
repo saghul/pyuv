@@ -68,7 +68,7 @@ typedef int Bool;
 typedef struct {
     PyObject_HEAD
     PyObject *weakreflist;
-    PyObject *data;
+    PyObject *dict;
     uv_loop_t *uv_loop;
     int is_default;
 } Loop;
