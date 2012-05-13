@@ -282,7 +282,7 @@ class UDPTestBigDatagram(unittest2.TestCase):
     def test_udp_big_datagram(self):
         self.errorno = None
         self.handle = pyuv.UDP(self.loop)
-        data = "X"*65536
+        data = b"X"*65536
         self.handle.send(("127.0.0.1", TEST_PORT), data, self.send_cb)
         self.loop.run()
         self.assertEqual(self.errorno, pyuv.errno.UV_EMSGSIZE)
