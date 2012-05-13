@@ -13,6 +13,7 @@ static PyStructSequence_Field loop_counters_result_fields[] = {
     {"udp_init", ""},
     {"pipe_init", ""},
     {"tty_init", ""},
+    {"poll_init", ""},
     {"prepare_init", ""},
     {"check_init", ""},
     {"idle_init", ""},
@@ -27,7 +28,7 @@ static PyStructSequence_Desc loop_counters_result_desc = {
     "loop_counters_result",
     NULL,
     loop_counters_result_fields,
-    15
+    16
 };
 
 
@@ -187,6 +188,7 @@ Loop_counters_get(Loop *self, void *closure)
     PyStructSequence_SET_ITEM(counters, pos++, get_counter_value(uv_counters->udp_init));
     PyStructSequence_SET_ITEM(counters, pos++, get_counter_value(uv_counters->pipe_init));
     PyStructSequence_SET_ITEM(counters, pos++, get_counter_value(uv_counters->tty_init));
+    PyStructSequence_SET_ITEM(counters, pos++, get_counter_value(uv_counters->poll_init));
     PyStructSequence_SET_ITEM(counters, pos++, get_counter_value(uv_counters->prepare_init));
     PyStructSequence_SET_ITEM(counters, pos++, get_counter_value(uv_counters->check_init));
     PyStructSequence_SET_ITEM(counters, pos++, get_counter_value(uv_counters->idle_init));
