@@ -36,7 +36,23 @@ static PyModuleDef pyuv_module = {
 
 /* borrowed from pyev */
 #ifdef PYUV_WINDOWS
-static int pyuv_import_socket(void)
+static int
+pyuv_setmaxstdio(void)
+{
+    if (_setmaxstdio(PYUV_MAXSTDIO) != PYUV_MAXSTDIO) {
+        if (errno) {
+            PyErr_SetFromErrno(PyExc_WindowsError);
+        }
+        else {
+            PyErr_SetString(PyExc_WindowsError, "_setmaxstdio failed");
+        }
+        return -1;
+    }
+    return 0;
+}
+
+static int
+pyuv_import_socket(void)
 {
     void *api;
 
@@ -82,7 +98,7 @@ init_pyuv(void)
     PyEval_InitThreads();
 
 #ifdef PYUV_WINDOWS
-    if (pyuv_import_socket()) {
+    if (pyuv_setmaxstdio() || pyuv_import_socket()) {
         return NULL;
     }
 #endif
