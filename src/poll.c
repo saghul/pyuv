@@ -207,7 +207,8 @@ Poll_slow_get(Poll *self, void *closure)
 static int
 Poll_tp_init(Poll *self, PyObject *args, PyObject *kwargs)
 {
-    int r, fdnum;
+    int r;
+    long fdnum;
     uv_poll_t *uv_poll = NULL;
     Loop *loop;
     PyObject *fd, *tmp;
@@ -236,13 +237,6 @@ Poll_tp_init(Poll *self, PyObject *args, PyObject *kwargs)
     if (fdnum == -1) {
         return -1;
     }
-#ifdef PYUV_WINDOWS
-    fdnum = PYUV_WIN32_HANDLE_TO_FD(fdnum);
-    if (fdnum == -1) {
-        PyErr_SetFromWindowsErr(0);
-        return -1;
-    }
-#endif
 
     tmp = (PyObject *)self->loop;
     Py_INCREF(loop);
@@ -256,7 +250,7 @@ Poll_tp_init(Poll *self, PyObject *args, PyObject *kwargs)
         return -1;
     }
 
-    r = uv_poll_init(UV_LOOP(self), uv_poll, fdnum);
+    r = uv_poll_init_socket(UV_LOOP(self), uv_poll, (uv_os_sock_t)fdnum);
     if (r != 0) {
         raise_uv_exception(self->loop, PyExc_PollError);
         Py_DECREF(loop);

@@ -210,7 +210,7 @@ typedef struct {
     PyObject *on_close_cb;
     PyObject *data;
     uv_poll_t *uv_handle;
-    int fd;
+    long fd;
 } Poll;
 
 static PyTypeObject PollType;
