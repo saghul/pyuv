@@ -2958,6 +2958,18 @@ FSEvent_func_start(FSEvent *self, PyObject *args, PyObject *kwargs)
 }
 
 
+static PyObject *
+FSEvent_filename_get(FSEvent *self, void *closure)
+{
+    UNUSED_ARG(closure);
+
+    if (!UV_HANDLE(self)) {
+        Py_RETURN_NONE;
+    }
+    return PYUVString_FromString(((uv_fs_event_t *)UV_HANDLE(self))->filename);
+}
+
+
 static int
 FSEvent_tp_init(FSEvent *self, PyObject *args, PyObject *kwargs)
 {
@@ -3020,6 +3032,12 @@ FSEvent_tp_methods[] = {
 };
 
 
+static PyGetSetDef FSEvent_tp_getsets[] = {
+    {"filename", (getter)FSEvent_filename_get, NULL, "Name of the file/directory being monitored.", NULL},
+    {NULL}
+};
+
+
 static PyTypeObject FSEventType = {
     PyVarObject_HEAD_INIT(NULL, 0)
     "pyuv.fs.FSEvent",                                              /*tp_name*/
@@ -3050,7 +3068,7 @@ static PyTypeObject FSEventType = {
     0,                                                              /*tp_iternext*/
     FSEvent_tp_methods,                                             /*tp_methods*/
     0,                                                              /*tp_members*/
-    0,                                                              /*tp_getsets*/
+    FSEvent_tp_getsets,                                             /*tp_getsets*/
     0,                                                              /*tp_base*/
     0,                                                              /*tp_dict*/
     0,                                                              /*tp_descr_get*/
