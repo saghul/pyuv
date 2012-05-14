@@ -61,8 +61,7 @@ format_time(time_t sec, unsigned long nsec)
 static void
 process_stat(uv_fs_t* req, PyObject **path, PyObject **stat_data, PyObject **errorno) {
     struct stat *st;
-    unsigned long ansec, mnsec, cnsec, bsec, bnsec;
-    PyObject *tmp;
+    unsigned long ansec, mnsec, cnsec, bnsec;
 
     ASSERT(req);
     ASSERT(req->fs_type == UV_FS_STAT || req->fs_type == UV_FS_LSTAT || req->fs_type == UV_FS_FSTAT);
@@ -165,14 +164,12 @@ process_stat(uv_fs_t* req, PyObject **path, PyObject **stat_data, PyObject **err
     PyStructSequence_SET_ITEM(*stat_data, 14, Py_None);
 #endif
 #ifdef HAVE_STRUCT_STAT_ST_BIRTHTIME
-    bsec = (long)st->st_birthtime;
 #ifdef HAVE_STAT_TV_NSEC2
     bnsec = st->st_birthtimespec.tv_nsec;
 #else
     bnsec = 0;
 #endif
-    tmp = PyInt_FromLong((long)bsec);
-    PyStructSequence_SET_ITEM(*stat_data, 15, tmp);
+    PyStructSequence_SET_ITEM(*stat_data, 15, format_time(st->st_birthtime, bnsec));
 #else
     Py_INCREF(Py_None);
     PyStructSequence_SET_ITEM(*stat_data, 15, Py_None);
