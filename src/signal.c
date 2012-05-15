@@ -144,7 +144,7 @@ Signal_tp_clear(Signal *self)
 
 static PyMethodDef
 Signal_tp_methods[] = {
-    { "start", (PyCFunction)Signal_func_start, METH_VARARGS|METH_KEYWORDS, "Start the Signal." },
+    { "start", (PyCFunction)Signal_func_start, METH_NOARGS, "Start the Signal." },
     { "stop", (PyCFunction)Signal_func_stop, METH_NOARGS, "Stop the Signal." },
     { NULL }
 };
