@@ -23,6 +23,9 @@ on_async_callback(uv_async_t *async, int status)
     }
     Py_XDECREF(result);
 
+    Py_XDECREF(self->callback);
+    self->callback = NULL;
+
     Py_DECREF(self);
     PyGILState_Release(gstate);
 }

@@ -81,6 +81,9 @@ Check_func_stop(Check *self)
         return NULL;
     }
 
+    Py_XDECREF(self->callback);
+    self->callback = NULL;
+
     Py_RETURN_NONE;
 }
 

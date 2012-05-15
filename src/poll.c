@@ -92,6 +92,9 @@ Poll_func_stop(Poll *self)
         return NULL;
     }
 
+    Py_XDECREF(self->callback);
+    self->callback = NULL;
+
     Py_RETURN_NONE;
 }
 

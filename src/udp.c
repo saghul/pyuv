@@ -238,6 +238,10 @@ UDP_func_stop_recv(UDP *self)
         raise_uv_exception(UV_HANDLE_LOOP(self), PyExc_UDPError);
         return NULL;
     }
+
+    Py_XDECREF(self->on_read_cb);
+    self->on_read_cb = NULL;
+
     Py_RETURN_NONE;
 }
 

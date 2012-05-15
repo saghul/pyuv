@@ -81,6 +81,9 @@ Prepare_func_stop(Prepare *self)
         return NULL;
     }
 
+    Py_XDECREF(self->callback);
+    self->callback = NULL;
+
     Py_RETURN_NONE;
 }
 

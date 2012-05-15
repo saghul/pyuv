@@ -81,6 +81,9 @@ Idle_func_stop(Idle *self)
         return NULL;
     }
 
+    Py_XDECREF(self->callback);
+    self->callback = NULL;
+
     Py_RETURN_NONE;
 }
 

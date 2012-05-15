@@ -269,6 +269,9 @@ IOStream_func_stop_read(IOStream *self)
         return NULL;
     }
 
+    Py_XDECREF(self->on_read_cb);
+    self->on_read_cb = NULL;
+
     Py_RETURN_NONE;
 }
 
