@@ -6,7 +6,7 @@ typedef struct {
     PyObject *args;
     PyObject *kwargs;
     PyObject *result;
-    int status;
+    PyObject *error;
     PyObject *after_work_func;
 } tpool_req_data_t;
 
@@ -17,6 +17,9 @@ work_cb(uv_work_t *req)
     PyGILState_STATE gstate = PyGILState_Ensure();
     tpool_req_data_t *data;
     PyObject *args, *kw, *result;
+    PyObject *error, *err_type, *err_value, *err_tb;
+
+    err_type = err_value = err_tb = NULL;
 
     ASSERT(req);
 
@@ -26,12 +29,36 @@ work_cb(uv_work_t *req)
 
     result = PyObject_Call(data->func, args, kw);
     if (result == NULL) {
-        PyErr_WriteUnraisable(data->func);
+        PyErr_Fetch(&err_type, &err_value, &err_tb);
+        PyErr_NormalizeException(&err_type, &err_value, &err_tb);
+        error = PyTuple_New(3);
+        if (!error) {
+            PyErr_WriteUnraisable(data->func);
+            error = Py_None;
+            Py_INCREF(Py_None);
+        } else {
+            if (!err_type) {
+                err_type = Py_None;
+                Py_INCREF(Py_None);
+            }
+            if (!err_value) {
+                err_value = Py_None;
+                Py_INCREF(Py_None);
+            }
+            if (!err_tb) {
+                err_tb = Py_None;
+                Py_INCREF(Py_None);
+            }
+            PyTuple_SET_ITEM(error, 0, err_type);
+            PyTuple_SET_ITEM(error, 1, err_value);
+            PyTuple_SET_ITEM(error, 2, err_tb);
+            data->error = error;
+        }
         result = Py_None;
         Py_INCREF(Py_None);
-        data->status = -1;
     } else {
-        data->status = 0;
+        data->error = Py_None;
+        Py_INCREF(Py_None);
     }
     data->result = result;
 
@@ -51,7 +78,7 @@ after_work_cb(uv_work_t *req)
     data = (tpool_req_data_t*)req->data;
 
     if (data->after_work_func) {
-        result = PyObject_CallFunctionObjArgs(data->after_work_func, PyInt_FromLong((long)data->status), data->result, NULL);
+        result = PyObject_CallFunctionObjArgs(data->after_work_func, data->result, data->error, NULL);
         if (result == NULL) {
             PyErr_WriteUnraisable(data->after_work_func);
         }
@@ -63,6 +90,7 @@ after_work_cb(uv_work_t *req)
     Py_XDECREF(data->kwargs);
     Py_XDECREF(data->after_work_func);
     Py_DECREF(data->result);
+    Py_DECREF(data->error);
 
     PyMem_Free(req->data);
     PyMem_Free(req);

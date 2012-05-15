@@ -18,8 +18,8 @@ class ThreadPoolTest(unittest2.TestCase):
         self.pool_cb_called += 1
         time.sleep(0.1)
 
-    def after_work_cb(self, status, result):
-        self.assertEqual(status, 0)
+    def after_work_cb(self, result, error):
+        self.assertEqual(error, None)
         self.pool_after_work_cb_called += 1
 
     def test_threadpool1(self):
@@ -33,8 +33,8 @@ class ThreadPoolTest(unittest2.TestCase):
     def raise_in_pool(self, *args, **kw):
         1/0
 
-    def after_work_cb2(self, status, result):
-        self.assertEqual(status, -1)
+    def after_work_cb2(self, result, error):
+        self.assertEqual(error[0], ZeroDivisionError)
 
     def test_threadpool2(self):
         self.pool.queue_work(self.raise_in_pool, self.after_work_cb2)
