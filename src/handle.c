@@ -24,6 +24,9 @@ on_handle_close(uv_handle_t *handle)
     handle->data = NULL;
     PyMem_Free(handle);
 
+    Py_XDECREF(self->on_close_cb);
+    self->on_close_cb = NULL;
+
     /* Refcount was increased in func_close */
     Py_DECREF(self);
 
@@ -112,6 +115,7 @@ Handle_tp_traverse(Handle *self, visitproc visit, void *arg)
 static int
 Handle_tp_clear(Handle *self)
 {
+    Py_CLEAR(self->on_close_cb);
     Py_CLEAR(self->loop);
     Py_CLEAR(self->dict);
     return 0;
