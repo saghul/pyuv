@@ -10,7 +10,3 @@
 - Modify UDP.send to accept buffers like TCP.write
     - Add UDP.sendlines
 
-- Exception hierarchy
-    - Add HandleError
-    - Make all handle errors inherit from HandleError
-
