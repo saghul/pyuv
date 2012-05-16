@@ -1,5 +1,5 @@
 
-static PyObject* PyExc_UVError;
+static PyObject* PyExc_HandleError;
 
 
 static void
@@ -48,7 +48,7 @@ Handle_func_close(Handle *self, PyObject *args)
     PyObject *callback = Py_None;
 
     if (!self->uv_handle) {
-        PyErr_SetString(PyExc_UVError, "Handle is already closed");
+        PyErr_SetString(PyExc_HandleError, "Handle is already closed");
         return NULL;
     }
 

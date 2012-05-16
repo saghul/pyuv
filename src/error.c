@@ -1,6 +1,4 @@
 
-static PyObject* PyExc_UVError;
-
 #ifdef PYUV_PYTHON3
 static PyModuleDef pyuv_error_module = {
     PyModuleDef_HEAD_INIT,
@@ -25,25 +23,27 @@ init_error(void)
     }
 
     PyExc_UVError = PyErr_NewException("pyuv.error.UVError", NULL, NULL);
-    PyExc_AsyncError = PyErr_NewException("pyuv.error.AsyncError", PyExc_UVError, NULL);
-    PyExc_TimerError = PyErr_NewException("pyuv.error.TimerError", PyExc_UVError, NULL);
-    PyExc_PrepareError = PyErr_NewException("pyuv.error.PrepareError", PyExc_UVError, NULL);
-    PyExc_IdleError = PyErr_NewException("pyuv.error.IdleError", PyExc_UVError, NULL);
-    PyExc_CheckError = PyErr_NewException("pyuv.error.CheckError", PyExc_UVError, NULL);
-    PyExc_SignalError = PyErr_NewException("pyuv.error.SignalError", PyExc_UVError, NULL);
-    PyExc_IOStreamError = PyErr_NewException("pyuv.error.IOStreamError", PyExc_UVError, NULL);
+    PyExc_HandleError = PyErr_NewException("pyuv.error.HandleError", PyExc_UVError, NULL);
+    PyExc_AsyncError = PyErr_NewException("pyuv.error.AsyncError", PyExc_HandleError, NULL);
+    PyExc_TimerError = PyErr_NewException("pyuv.error.TimerError", PyExc_HandleError, NULL);
+    PyExc_PrepareError = PyErr_NewException("pyuv.error.PrepareError", PyExc_HandleError, NULL);
+    PyExc_IdleError = PyErr_NewException("pyuv.error.IdleError", PyExc_HandleError, NULL);
+    PyExc_CheckError = PyErr_NewException("pyuv.error.CheckError", PyExc_HandleError, NULL);
+    PyExc_SignalError = PyErr_NewException("pyuv.error.SignalError", PyExc_HandleError, NULL);
+    PyExc_IOStreamError = PyErr_NewException("pyuv.error.IOStreamError", PyExc_HandleError, NULL);
     PyExc_TCPError = PyErr_NewException("pyuv.error.TCPError", PyExc_IOStreamError, NULL);
     PyExc_PipeError = PyErr_NewException("pyuv.error.PipeError", PyExc_IOStreamError, NULL);
     PyExc_TTYError = PyErr_NewException("pyuv.error.TTYError", PyExc_IOStreamError, NULL);
-    PyExc_UDPError = PyErr_NewException("pyuv.error.UDPError", PyExc_UVError, NULL);
-    PyExc_PollError = PyErr_NewException("pyuv.error.PollError", PyExc_UVError, NULL);
+    PyExc_UDPError = PyErr_NewException("pyuv.error.UDPError", PyExc_HandleError, NULL);
+    PyExc_PollError = PyErr_NewException("pyuv.error.PollError", PyExc_HandleError, NULL);
     PyExc_DNSError = PyErr_NewException("pyuv.error.DNSError", NULL, NULL);
     PyExc_ThreadPoolError = PyErr_NewException("pyuv.error.ThreadPoolError", PyExc_UVError, NULL);
     PyExc_FSError = PyErr_NewException("pyuv.error.FSError", PyExc_UVError, NULL);
-    PyExc_FSEventError = PyErr_NewException("pyuv.error.FSEventError", PyExc_UVError, NULL);
-    PyExc_ProcessError = PyErr_NewException("pyuv.error.ProcessError", PyExc_UVError, NULL);
+    PyExc_FSEventError = PyErr_NewException("pyuv.error.FSEventError", PyExc_HandleError, NULL);
+    PyExc_ProcessError = PyErr_NewException("pyuv.error.ProcessError", PyExc_HandleError, NULL);
 
     PyUVModule_AddType(module, "UVError", (PyTypeObject *)PyExc_UVError);
+    PyUVModule_AddType(module, "HandleError", (PyTypeObject *)PyExc_HandleError);
     PyUVModule_AddType(module, "AsyncError", (PyTypeObject *)PyExc_AsyncError);
     PyUVModule_AddType(module, "TimerError", (PyTypeObject *)PyExc_TimerError);
     PyUVModule_AddType(module, "PrepareError", (PyTypeObject *)PyExc_PrepareError);

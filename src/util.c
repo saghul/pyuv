@@ -1,4 +1,7 @@
 
+static PyObject* PyExc_UVError;
+
+
 static PyObject *
 Util_func_hrtime(PyObject *obj)
 {
