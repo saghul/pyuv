@@ -157,10 +157,10 @@ init_pyuv(void)
     PollType.tp_base = &HandleType;
     ProcessType.tp_base = &HandleType;
 
-    IOStreamType.tp_base = &HandleType;
-    TCPType.tp_base = &IOStreamType;
-    PipeType.tp_base = &IOStreamType;
-    TTYType.tp_base = &IOStreamType;
+    StreamType.tp_base = &HandleType;
+    TCPType.tp_base = &StreamType;
+    PipeType.tp_base = &StreamType;
+    TTYType.tp_base = &StreamType;
 
     PyUVModule_AddType(pyuv, "Loop", &LoopType);
     PyUVModule_AddType(pyuv, "Async", &AsyncType);

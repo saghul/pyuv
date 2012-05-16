@@ -136,17 +136,17 @@ typedef struct {
 
 static PyTypeObject SignalType;
 
-/* IOStream */
+/* Stream */
 typedef struct {
     Handle handle;
     PyObject *on_read_cb;
-} IOStream;
+} Stream;
 
-static PyTypeObject IOStreamType;
+static PyTypeObject StreamType;
 
 /* TCP */
 typedef struct {
-    IOStream iostream;
+    Stream stream;
     PyObject *on_new_connection_cb;
 } TCP;
 
@@ -154,7 +154,7 @@ static PyTypeObject TCPType;
 
 /* Pipe */
 typedef struct {
-    IOStream iostream;
+    Stream stream;
     PyObject *on_new_connection_cb;
 } Pipe;
 
@@ -162,7 +162,7 @@ static PyTypeObject PipeType;
 
 /* TTY */
 typedef struct {
-    IOStream iostream;
+    Stream stream;
 } TTY;
 
 static PyTypeObject TTYType;

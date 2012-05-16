@@ -85,7 +85,7 @@ TTY_tp_init(TTY *self, PyObject *args, PyObject *kwargs)
     UNUSED_ARG(kwargs);
 
     if (UV_HANDLE(self)) {
-        PyErr_SetString(PyExc_IOStreamError, "Object already initialized");
+        PyErr_SetString(PyExc_StreamError, "Object already initialized");
         return -1;
     }
 
@@ -126,7 +126,7 @@ TTY_tp_init(TTY *self, PyObject *args, PyObject *kwargs)
 static PyObject *
 TTY_tp_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
 {
-    TTY *self = (TTY *)IOStreamType.tp_new(type, args, kwargs);
+    TTY *self = (TTY *)StreamType.tp_new(type, args, kwargs);
     if (!self) {
         return NULL;
     }
@@ -137,7 +137,7 @@ TTY_tp_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
 static int
 TTY_tp_traverse(TTY *self, visitproc visit, void *arg)
 {
-    IOStreamType.tp_traverse((PyObject *)self, visit, arg);
+    StreamType.tp_traverse((PyObject *)self, visit, arg);
     return 0;
 }
 
@@ -145,7 +145,7 @@ TTY_tp_traverse(TTY *self, visitproc visit, void *arg)
 static int
 TTY_tp_clear(TTY *self)
 {
-    IOStreamType.tp_clear((PyObject *)self);
+    StreamType.tp_clear((PyObject *)self);
     return 0;
 }
 

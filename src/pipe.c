@@ -81,11 +81,11 @@ on_pipe_read2(uv_pipe_t* handle, int nread, uv_buf_t buf, uv_handle_type pending
 {
     PyGILState_STATE gstate = PyGILState_Ensure();
     uv_err_t err;
-    IOStream *self;
+    Stream *self;
     PyObject *result, *data, *py_errorno, *py_pending;
     ASSERT(handle);
 
-    self = (IOStream *)handle->data;
+    self = (Stream *)handle->data;
     ASSERT(self);
     /* Object could go out of scope in the callback, increase refcount to avoid it */
     Py_INCREF(self);
@@ -202,7 +202,7 @@ Pipe_func_accept(Pipe *self, PyObject *args)
         return NULL;
     }
 
-    if (!PyObject_IsSubclass((PyObject *)client->ob_type, (PyObject *)&IOStreamType)) {
+    if (!PyObject_IsSubclass((PyObject *)client->ob_type, (PyObject *)&StreamType)) {
         PyErr_SetString(PyExc_TypeError, "Only stream objects are supported for accept");
         return NULL;
     }
@@ -341,9 +341,9 @@ Pipe_func_start_read2(Pipe *self, PyObject *args)
         return NULL;
     }
 
-    tmp = ((IOStream *)self)->on_read_cb;
+    tmp = ((Stream *)self)->on_read_cb;
     Py_INCREF(callback);
-    ((IOStream *)self)->on_read_cb = callback;
+    ((Stream *)self)->on_read_cb = callback;
     Py_XDECREF(tmp);
 
     Py_RETURN_NONE;
@@ -512,7 +512,7 @@ Pipe_tp_init(Pipe *self, PyObject *args, PyObject *kwargs)
 static PyObject *
 Pipe_tp_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
 {
-    Pipe *self = (Pipe *)IOStreamType.tp_new(type, args, kwargs);
+    Pipe *self = (Pipe *)StreamType.tp_new(type, args, kwargs);
     if (!self) {
         return NULL;
     }
@@ -524,7 +524,7 @@ static int
 Pipe_tp_traverse(Pipe *self, visitproc visit, void *arg)
 {
     Py_VISIT(self->on_new_connection_cb);
-    IOStreamType.tp_traverse((PyObject *)self, visit, arg);
+    StreamType.tp_traverse((PyObject *)self, visit, arg);
     return 0;
 }
 
@@ -533,7 +533,7 @@ static int
 Pipe_tp_clear(Pipe *self)
 {
     Py_CLEAR(self->on_new_connection_cb);
-    IOStreamType.tp_clear((PyObject *)self);
+    StreamType.tp_clear((PyObject *)self);
     return 0;
 }
 

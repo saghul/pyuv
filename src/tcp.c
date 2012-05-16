@@ -182,7 +182,7 @@ TCP_func_accept(TCP *self, PyObject *args)
         return NULL;
     }
 
-    if (!PyObject_IsSubclass((PyObject *)client->ob_type, (PyObject *)&IOStreamType)) {
+    if (!PyObject_IsSubclass((PyObject *)client->ob_type, (PyObject *)&StreamType)) {
         PyErr_SetString(PyExc_TypeError, "Only stream objects are supported for accept");
         return NULL;
     }
@@ -486,7 +486,7 @@ TCP_tp_init(TCP *self, PyObject *args, PyObject *kwargs)
 static PyObject *
 TCP_tp_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
 {
-    TCP *self = (TCP *)IOStreamType.tp_new(type, args, kwargs);
+    TCP *self = (TCP *)StreamType.tp_new(type, args, kwargs);
     if (!self) {
         return NULL;
     }
@@ -498,7 +498,7 @@ static int
 TCP_tp_traverse(TCP *self, visitproc visit, void *arg)
 {
     Py_VISIT(self->on_new_connection_cb);
-    IOStreamType.tp_traverse((PyObject *)self, visit, arg);
+    StreamType.tp_traverse((PyObject *)self, visit, arg);
     return 0;
 }
 
@@ -507,7 +507,7 @@ static int
 TCP_tp_clear(TCP *self)
 {
     Py_CLEAR(self->on_new_connection_cb);
-    IOStreamType.tp_clear((PyObject *)self);
+    StreamType.tp_clear((PyObject *)self);
     return 0;
 }
 
