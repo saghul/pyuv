@@ -123,6 +123,37 @@ Loop_func_default_loop(PyObject *cls)
 
 
 static PyObject *
+Loop_active_handles_get(Loop *self, void *closure)
+{
+    ngx_queue_t *q;
+    uv_handle_t *handle;
+    PyObject *list, *item;
+
+    UNUSED_ARG(closure);
+
+    list = PyList_New(0);
+    if (!list) {
+        PyErr_NoMemory();
+        return NULL;
+    }
+#ifdef UV_LEAN_AND_MEAN
+    return list;
+#else
+    ngx_queue_foreach(q, &self->uv_loop->active_handles) {
+        handle = ngx_queue_data(q, uv_handle_t, active_queue);
+        if (handle->data) {
+            item = (PyObject *)handle->data;
+            if (PyList_Append(list, item))
+                continue;
+            Py_DECREF(item);
+        }
+    }
+    return list;
+#endif
+}
+
+
+static PyObject *
 Loop_default_get(Loop *self, void *closure)
 {
     UNUSED_ARG(closure);
@@ -275,6 +306,7 @@ Loop_tp_methods[] = {
 
 static PyGetSetDef Loop_tp_getsets[] = {
     {"__dict__", (getter)Loop_dict_get, (setter)Loop_dict_set, NULL},
+    {"active_handles", (getter)Loop_active_handles_get, NULL, "List of active handles in this loop", NULL},
     {"default", (getter)Loop_default_get, NULL, "Is this the default loop?", NULL},
     {"counters", (getter)Loop_counters_get, NULL, "Loop counters", NULL},
     {NULL}
