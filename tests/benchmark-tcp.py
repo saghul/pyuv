@@ -43,14 +43,14 @@ def async_exit(async):
     server.close()
 
 def signal_cb(sig, frame):
-    async.send(async_exit)
+    async.send()
 
 
 print("PyUV version %s" % pyuv.__version__)
 
 loop = pyuv.Loop.default_loop()
 
-async = pyuv.Async(loop)
+async = pyuv.Async(loop, async_exit)
 clients = []
 
 server = pyuv.TCP(loop)
