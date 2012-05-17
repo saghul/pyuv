@@ -6,7 +6,7 @@ import pyuv
 
 
 class WeakrefTest(unittest2.TestCase):
-    handle_types = ('Async', 'Check', 'Idle', 'Pipe', 'Prepare', 'TCP', 'Timer', 'UDP')
+    handle_types = ('Check', 'Idle', 'Pipe', 'Prepare', 'TCP', 'Timer', 'UDP')
 
     def test_weakref(self):
         loop = pyuv.Loop.default_loop()

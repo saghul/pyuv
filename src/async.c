@@ -23,33 +23,18 @@ on_async_callback(uv_async_t *async, int status)
     }
     Py_XDECREF(result);
 
-    Py_XDECREF(self->callback);
-    self->callback = NULL;
-
     Py_DECREF(self);
     PyGILState_Release(gstate);
 }
 
 
 static PyObject *
-Async_func_send(Async *self, PyObject *args)
+Async_func_send(Async *self)
 {
     int r;
-    PyObject *tmp, *callback;
-
-    tmp = NULL;
 
     if (!UV_HANDLE(self)) {
         PyErr_SetString(PyExc_AsyncError, "async is closed");
-        return NULL;
-    }
-
-    if (!PyArg_ParseTuple(args, "O:send", &callback)) {
-        return NULL;
-    }
-
-    if (!PyCallable_Check(callback)) {
-        PyErr_SetString(PyExc_TypeError, "a callable is required");
         return NULL;
     }
 
@@ -58,11 +43,6 @@ Async_func_send(Async *self, PyObject *args)
         raise_uv_exception(UV_LOOP((Handle *)self), PyExc_AsyncError);
         return NULL;
     }
-
-    tmp = self->callback;
-    Py_INCREF(callback);
-    self->callback = callback;
-    Py_XDECREF(tmp);
 
     Py_RETURN_NONE;
 }
@@ -74,6 +54,7 @@ Async_tp_init(Async *self, PyObject *args, PyObject *kwargs)
     int r;
     uv_async_t *uv_async = NULL;
     Loop *loop;
+    PyObject *callback;
     PyObject *tmp = NULL;
 
     UNUSED_ARG(kwargs);
@@ -83,7 +64,12 @@ Async_tp_init(Async *self, PyObject *args, PyObject *kwargs)
         return -1;
     }
 
-    if (!PyArg_ParseTuple(args, "O!:__init__", &LoopType, &loop)) {
+    if (!PyArg_ParseTuple(args, "O!O:__init__", &LoopType, &loop, &callback)) {
+        return -1;
+    }
+
+    if (!PyCallable_Check(callback)) {
+        PyErr_SetString(PyExc_TypeError, "a callable is required");
         return -1;
     }
 
@@ -105,6 +91,12 @@ Async_tp_init(Async *self, PyObject *args, PyObject *kwargs)
         Py_DECREF(loop);
         return -1;
     }
+
+    tmp = self->callback;
+    Py_INCREF(callback);
+    self->callback = callback;
+    Py_XDECREF(tmp);
+
     uv_async->data = (void *)self;
     UV_HANDLE(self) = (uv_handle_t *)uv_async;
 
@@ -143,7 +135,7 @@ Async_tp_clear(Async *self)
 
 static PyMethodDef
 Async_tp_methods[] = {
-    { "send", (PyCFunction)Async_func_send, METH_VARARGS, "Send the Async signal." },
+    { "send", (PyCFunction)Async_func_send, METH_NOARGS, "Send the Async signal." },
     { NULL }
 };
 

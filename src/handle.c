@@ -46,6 +46,22 @@ on_handle_dealloc_close(uv_handle_t *handle)
 
 
 static PyObject *
+Handle_func_ref(Handle *self)
+{
+    uv_ref(self->uv_handle);
+    Py_RETURN_NONE;
+}
+
+
+static PyObject *
+Handle_func_unref(Handle *self)
+{
+    uv_unref(self->uv_handle);
+    Py_RETURN_NONE;
+}
+
+
+static PyObject *
 Handle_func_close(Handle *self, PyObject *args)
 {
     PyObject *callback = Py_None;
@@ -178,6 +194,8 @@ Handle_dict_set(Handle *self, PyObject* val, void* c)
 
 static PyMethodDef
 Handle_tp_methods[] = {
+    { "ref", (PyCFunction)Handle_func_ref, METH_NOARGS, "Increase the event loop reference count." },
+    { "unref", (PyCFunction)Handle_func_unref, METH_NOARGS, "Decrease the event loop reference count." },
     { "close", (PyCFunction)Handle_func_close, METH_VARARGS, "Close handle." },
     { NULL }
 };

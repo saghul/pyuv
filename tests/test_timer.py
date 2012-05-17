@@ -38,10 +38,7 @@ class TimerTest(unittest2.TestCase):
             timer.close()
         loop = pyuv.Loop.default_loop()
         timer = pyuv.Timer(loop)
-        loop.unref()
         loop.run()
-        # When timer is destroyed it will unref the loop again, so loop.run() would block next time
-        loop.ref()
         self.assertEqual(self.timer_cb_called, 0)
 
     def test_timer_ref2(self):
@@ -53,11 +50,12 @@ class TimerTest(unittest2.TestCase):
         loop = pyuv.Loop.default_loop()
         timer = pyuv.Timer(loop)
         timer.start(timer_cb, 0.1, 0)
-        loop.unref()
+        timer.unref()
         loop.run()
-        # When timer is destroyed it will unref the loop again, so loop.run() would block next time
-        loop.ref()
         self.assertEqual(self.timer_cb_called, 0)
+        timer.ref()
+        loop.run()
+        self.assertEqual(self.timer_cb_called, 1)
 
 
 if __name__ == '__main__':
