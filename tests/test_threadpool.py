@@ -1,4 +1,5 @@
 
+import functools
 import threading
 import time
 
@@ -24,8 +25,12 @@ class ThreadPoolTest(unittest2.TestCase):
 
     def test_threadpool1(self):
         self.pool.queue_work(self.run_in_pool, self.after_work_cb)
-        self.pool.queue_work(self.run_in_pool, self.after_work_cb, (1, 2, 3), {})
-        self.pool.queue_work(self.run_in_pool, self.after_work_cb, (), {'test': 1})
+        args = (1, 2, 3)
+        kw = {}
+        self.pool.queue_work(functools.partial(self.run_in_pool, *args, **kw), self.after_work_cb)
+        args = ()
+        kw = {'test': 1}
+        self.pool.queue_work(functools.partial(self.run_in_pool, *args, **kw), self.after_work_cb)
         self.loop.run()
         self.assertEqual(self.pool_cb_called, 3)
         self.assertEqual(self.pool_after_work_cb_called, 3)
