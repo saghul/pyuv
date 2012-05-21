@@ -50,7 +50,7 @@ class libuv_build_ext(build_ext):
     libuv_dir      = os.path.join('deps', 'libuv')
     libuv_repo     = 'https://github.com/joyent/libuv.git'
     libuv_branch   = 'master'
-    libuv_revision = 'e82d464'
+    libuv_revision = '6fd9bfb'
     libuv_patches  = ['patches/c-ares_naptr_support.patch']
 
     user_options = build_ext.user_options
