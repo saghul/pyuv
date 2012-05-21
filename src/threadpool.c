@@ -160,13 +160,13 @@ error:
 
 
 static PyObject *
-ThreadPool_func_set_max_parallel_threads(PyObject *cls, PyObject *args)
+ThreadPool_func_set_parallel_threads(PyObject *cls, PyObject *args)
 {
     int nthreads;
 
     UNUSED_ARG(cls);
 
-    if (!PyArg_ParseTuple(args, "i:set_max_parallel_threads", &nthreads)) {
+    if (!PyArg_ParseTuple(args, "i:set_parallel_threads", &nthreads)) {
         return NULL;
     }
 
@@ -175,51 +175,12 @@ ThreadPool_func_set_max_parallel_threads(PyObject *cls, PyObject *args)
         return NULL;
     }
 
-#ifdef PYUV_WINDOWS
-    PyErr_SetString(PyExc_NotImplementedError, "not implemented");
-    return NULL;
-#else
-    eio_set_max_parallel(nthreads);
-    Py_RETURN_NONE;
-#endif
-}
-
-
-static PyObject *
-ThreadPool_func_set_min_parallel_threads(PyObject *cls, PyObject *args)
-{
-    int nthreads;
-
-    UNUSED_ARG(cls);
-
-    if (!PyArg_ParseTuple(args, "i:set_max_parallel_threads", &nthreads)) {
-        return NULL;
-    }
-
-    if (nthreads <= 0) {
-        PyErr_SetString(PyExc_ValueError, "value must be higher than 0.");
-        return NULL;
-    }
-
-#ifdef PYUV_WINDOWS
-    PyErr_SetString(PyExc_NotImplementedError, "not implemented");
-    return NULL;
-#else
+#ifndef PYUV_WINDOWS
     eio_set_min_parallel(nthreads);
+    eio_set_max_parallel(nthreads);
+#endif
+
     Py_RETURN_NONE;
-#endif
-}
-
-
-static PyObject *
-ThreadPool_func_get_nthreads(PyObject *cls)
-{
-#ifdef PYUV_WINDOWS
-    PyErr_SetString(PyExc_NotImplementedError, "not implemented");
-    return NULL;
-#else
-    return PyInt_FromLong((long)eio_nthreads());
-#endif
 }
 
 
@@ -280,9 +241,7 @@ ThreadPool_tp_dealloc(ThreadPool *self)
 static PyMethodDef
 ThreadPool_tp_methods[] = {
     { "queue_work", (PyCFunction)ThreadPool_func_queue_work, METH_VARARGS|METH_KEYWORDS, "Queue the given function to be run in the thread pool." },
-    { "set_max_parallel_threads", (PyCFunction)ThreadPool_func_set_max_parallel_threads, METH_CLASS|METH_VARARGS, "Set the maximum number of allowed threads in the pool." },
-    { "set_min_parallel_threads", (PyCFunction)ThreadPool_func_set_min_parallel_threads, METH_CLASS|METH_VARARGS, "Set the minimum number of allowed threads in the pool." },
-    { "get_nthreads", (PyCFunction)ThreadPool_func_get_nthreads, METH_CLASS|METH_NOARGS, "Return the number of woker threads currently running." },
+    { "set_parallel_threads", (PyCFunction)ThreadPool_func_set_parallel_threads, METH_CLASS|METH_VARARGS, "Set the maximum number of allowed threads in the pool." },
     { NULL }
 };
 
