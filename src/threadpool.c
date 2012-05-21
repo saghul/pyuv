@@ -92,7 +92,7 @@ threadpool_after_work_cb(uv_work_t *req)
 
 
 static PyObject *
-ThreadPool_func_queue_work(ThreadPool *self, PyObject *args, PyObject *kwargs)
+ThreadPool_func_queue_work(ThreadPool *self, PyObject *args)
 {
     int r;
     uv_work_t *work_req = NULL;
@@ -240,7 +240,7 @@ ThreadPool_tp_dealloc(ThreadPool *self)
 
 static PyMethodDef
 ThreadPool_tp_methods[] = {
-    { "queue_work", (PyCFunction)ThreadPool_func_queue_work, METH_VARARGS|METH_KEYWORDS, "Queue the given function to be run in the thread pool." },
+    { "queue_work", (PyCFunction)ThreadPool_func_queue_work, METH_VARARGS, "Queue the given function to be run in the thread pool." },
     { "set_parallel_threads", (PyCFunction)ThreadPool_func_set_parallel_threads, METH_CLASS|METH_VARARGS, "Set the maximum number of allowed threads in the pool." },
     { NULL }
 };
