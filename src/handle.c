@@ -13,7 +13,7 @@ on_handle_close(uv_handle_t *handle)
     self = (Handle *)handle->data;
     ASSERT(self);
 
-    if (self->on_close_cb != Py_None) {
+    if (self->on_close_cb) {
         result = PyObject_CallFunctionObjArgs(self->on_close_cb, self, NULL);
         if (result == NULL) {
             PyErr_WriteUnraisable(self->on_close_cb);
@@ -64,7 +64,7 @@ Handle_func_unref(Handle *self)
 static PyObject *
 Handle_func_close(Handle *self, PyObject *args)
 {
-    PyObject *callback = Py_None;
+    PyObject *callback = NULL;
 
     if (!self->uv_handle) {
         PyErr_SetString(PyExc_HandleError, "Handle is already closed");
@@ -75,12 +75,12 @@ Handle_func_close(Handle *self, PyObject *args)
         return NULL;
     }
 
-    if (callback != Py_None && !PyCallable_Check(callback)) {
-        PyErr_SetString(PyExc_TypeError, "a callable or None is required");
+    if (callback && !PyCallable_Check(callback)) {
+        PyErr_SetString(PyExc_TypeError, "a callable is required");
         return NULL;
     }
 
-    Py_INCREF(callback);
+    Py_XINCREF(callback);
     self->on_close_cb = callback;
 
     /* Increase refcount so that object is not removed before the callback is called */
