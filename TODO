@@ -1,12 +1,10 @@
+
 - Better docstrings
+
+- Support compiling with Visual Studio
 
 - Find out why some tests fail on Windows
     - Multicast
     - IPC, sharing a TCP handle
     - Some fs operations using fileno()
-
-- Support compiling with Visual Studio
-
-- Modify UDP.send to accept buffers like TCP.write
-    - Add UDP.sendlines
 
