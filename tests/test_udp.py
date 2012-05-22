@@ -1,7 +1,4 @@
 
-import os
-import sys
-
 from common import unittest2, platform_skip
 import common
 import pyuv
@@ -113,7 +110,7 @@ class UDPTestList(unittest2.TestCase):
         ip, port = ip_port
         data = data.strip()
         self.assertEquals(data, b"PING")
-        self.server.send((ip, port), [b"PONG", common.linesep])
+        self.server.sendlines((ip, port), [b"PONG", common.linesep])
 
     def on_client_recv(self, handle, ip_port, data, error):
         ip, port = ip_port
@@ -123,7 +120,7 @@ class UDPTestList(unittest2.TestCase):
         self.server.close(self.on_close)
 
     def timer_cb(self, timer):
-        self.client.send(("127.0.0.1", TEST_PORT), [b"PING", common.linesep])
+        self.client.sendlines(("127.0.0.1", TEST_PORT), [b"PING", common.linesep])
         timer.close(self.on_close)
 
     def test_udp_pingpong_list(self):
@@ -154,7 +151,7 @@ class UDPTestListNull(unittest2.TestCase):
         ip, port = ip_port
         data = data.strip()
         self.assertEquals(data, b"PIN\x00G")
-        self.server.send((ip, port), [b"PONG", common.linesep])
+        self.server.sendlines((ip, port), [b"PONG", common.linesep])
 
     def on_client_recv(self, handle, ip_port, data, error):
         ip, port = ip_port
@@ -164,7 +161,7 @@ class UDPTestListNull(unittest2.TestCase):
         self.server.close(self.on_close)
 
     def timer_cb(self, timer):
-        self.client.send(("127.0.0.1", TEST_PORT), [b"PIN\x00G", common.linesep])
+        self.client.sendlines(("127.0.0.1", TEST_PORT), [b"PIN\x00G", common.linesep])
         timer.close(self.on_close)
 
     def test_udp_pingpong_list_null(self):
@@ -191,19 +188,17 @@ class UDPTestInvalidData(unittest2.TestCase):
     def on_close(self, handle):
         self.on_close_called += 1
 
-    def on_server_recv(self, handle, ip_port, data):
+    def on_server_recv(self, handle, ip_port, data, error):
         ip, port = ip_port
         self.client.close(self.on_close)
         self.server.close(self.on_close)
         self.fail("Expected send to fail.")
 
     def timer_cb(self, timer):
-        if sys.version_info >= (3, 0):
-            data = 'Unicode'
-        else:
-            data = unicode('Unicode')
-        self.assertRaises(TypeError, self.client.send, ("127.0.0.1", TEST_PORT), data+os.linesep)
+        self.assertRaises(TypeError, self.client.send, ("127.0.0.1", TEST_PORT), object())
         self.assertRaises(TypeError, self.client.send, ("127.0.0.1", TEST_PORT), 1)
+        self.assertRaises(TypeError, self.client.sendlines, ("127.0.0.1", TEST_PORT), object())
+        self.assertRaises(TypeError, self.client.sendlines, ("127.0.0.1", TEST_PORT), 1)
 
         self.client.close(self.on_close)
         self.server.close(self.on_close)
