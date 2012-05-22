@@ -143,9 +143,10 @@ Loop_active_handles_get(Loop *self, void *closure)
         handle = ngx_queue_data(q, uv_handle_t, active_queue);
         if (handle->data) {
             item = (PyObject *)handle->data;
+            ASSERT(item);
             if (PyList_Append(list, item))
                 continue;
-            Py_DECREF(item);
+            /* No need to Py_DECREF here, we need the item to be referenced only once, and PyList_Append does that */
         }
     }
     return list;
