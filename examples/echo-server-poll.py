@@ -24,7 +24,6 @@ class Connection(object):
         logging.debug("{0}: ready".format(self))
 
     def reset(self, events):
-        self.watcher.stop()
         self.watcher.start(events, self.io_cb)
 
     def handle_error(self, msg, level=logging.ERROR, exc_info=True):
