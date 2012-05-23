@@ -89,13 +89,15 @@ Loop_func_run(Loop *self)
 static PyObject *
 Loop_func_run_once(Loop *self)
 {
+    int r;
+
     Py_BEGIN_ALLOW_THREADS
-    uv_run_once(self->uv_loop);
+    r = uv_run_once(self->uv_loop);
     Py_END_ALLOW_THREADS
     if (PyErr_Occurred()) {
         PyErr_WriteUnraisable(Py_None);
     }
-    Py_RETURN_NONE;
+    return PyBool_FromLong((long)r);
 }
 
 
