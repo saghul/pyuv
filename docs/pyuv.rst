@@ -6,7 +6,7 @@
 *********************************************
 
 .. py:module:: pyuv
-    :platform: POSIX
+    :platform: POSIX, Windows
     :synopsis: Python interface to linuv.
 
 .. seealso::
@@ -27,6 +27,7 @@ Objects
     udp
     pipe
     tty
+    poll
     threadpool
     process
     async

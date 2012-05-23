@@ -374,9 +374,11 @@
 
         :py:class:`Loop` object where this handle runs.
 
-    .. py:attribute:: data
+    .. py:attribute:: filename
 
-        Any Python object attached to this handle.
+        *Read only*
+
+        Filename being monitored.
 
 
 Module constants

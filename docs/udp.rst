@@ -51,6 +51,22 @@
 
         Callback signature: ``callback(udp_handle, error)``.
 
+    .. py:method:: sendlines((ip, port), seq, [callback])
+
+        :param string ip: IP address where data will be sent.
+
+        :param int port: Port number where data will be sent.
+
+        :param object seq: Data to be written on the ``UDP`` connection. It can be any iterable object and the same
+            logic is applied for the contained elements as in the ``send`` method.
+
+        :param callable callback: Callback to be called after the send operation
+            has been performed.
+
+        Send data over the ``UDP`` connection.
+
+        Callback signature: ``callback(udp_handle, error)``.
+
     .. py:method:: start_recv(callback)
 
         :param callable callback: Callback to be called when data is received on the
@@ -105,9 +121,5 @@
         *Read only*
 
         :py:class:`Loop` object where this handle runs.
-
-    .. py:attribute:: data
-
-        Any Python object attached to this handle.
 
 

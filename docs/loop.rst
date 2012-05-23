@@ -27,18 +27,8 @@
 
     .. py:method:: run_once
         
-        Run a single loop iteration.
-
-    .. py:method:: ref
-    .. py:method:: unref
-
-        Manually manage event loop reference count. This doesn't have anything to
-        do with Python reference counting. The ``run`` funtion will not return until
-        the loop's reference count reaches zero.
-
-        This functions may be used to prevent the loop from being alive only if
-        certain handles are active, such as :py:class:`Timer` handles. In that case
-        ``unref`` should be called after the Timer was started.
+        Run a single loop iteration. Returns true if there are any pending events to process,
+        false otherwise.
 
     .. py:method:: now
     .. py:method:: update_time
@@ -53,9 +43,11 @@
 
         This are advanced functions not be used in standard applications.
 
-    .. py:attribute:: data
+    .. py:attribute:: active_handles
 
-        Any Python object attached to this loop.
+        *Read only*
+
+        List of the currently active handles.
 
     .. py:attribute:: counters
 

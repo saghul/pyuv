@@ -17,6 +17,10 @@ are used throughout `puyv`.
 
     Base exception class. Parent of all other exception classes.
 
+.. py:exception:: HandleError()
+
+    Base exception class. Parent of all other handle exception classes.
+
 .. py:exception:: AsyncError()
 
     Exception raised if an error is found when calling ``Async`` handle functions.

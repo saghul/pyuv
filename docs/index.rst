@@ -28,9 +28,14 @@ Features:
  * Asynchronous DNS
  * Asynchronous file system APIs
  * Thread pool scheduling
+ * High resolution time
+ * System memory information
+ * System CPUs information
+ * Network interfaces information
  * ANSI escape code controlled TTY
  * File system events
  * IPC and TCP socket sharing between processes
+ * Arbitrary file descriptor polling
 
 .. seealso::
     `libuv's source code <http://github.com/joyent/libuv>`_
