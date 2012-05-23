@@ -130,4 +130,3 @@ c-ares library constants
 .. seealso::
     `c-ares documentation <http://linux.die.net/man/3/ares_getnameinfo>`_
 
-

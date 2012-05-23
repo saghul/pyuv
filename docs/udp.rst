@@ -122,4 +122,9 @@
 
         :py:class:`Loop` object where this handle runs.
 
+    .. py:attribute:: active
+
+        *Read only*
+
+        Indicates if this handle is active.
 

@@ -54,4 +54,3 @@
 
         Indicates if this handle is active.
 
-

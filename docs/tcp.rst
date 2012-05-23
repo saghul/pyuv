@@ -163,3 +163,9 @@
 
         Indicates if this handle is writable.
 
+    .. py:attribute:: active
+
+        *Read only*
+
+        Indicates if this handle is active.
+

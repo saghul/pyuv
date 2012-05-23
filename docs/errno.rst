@@ -31,4 +31,3 @@ This module contains the defined error constants from libuv and c-ares.
 
     Get the string representation of the given c-ares error number.
 
-

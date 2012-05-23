@@ -77,4 +77,9 @@
 
         PID of the spawned process.
 
+    .. py:attribute:: active
+
+        *Read only*
+
+        Indicates if this handle is active.
 

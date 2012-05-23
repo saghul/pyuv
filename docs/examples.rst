@@ -35,4 +35,3 @@ Standard IO Echo server using TTY handles
 
 .. literalinclude:: ../examples/echo-tty.py
 
-

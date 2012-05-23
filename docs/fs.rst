@@ -380,6 +380,12 @@
 
         Filename being monitored.
 
+    .. py:attribute:: active
+
+        *Read only*
+
+        Indicates if this handle is active.
+
 
 Module constants
 
@@ -388,5 +394,4 @@ Module constants
 .. py:data:: pyuv.fs.UV_CHANGE
 .. py:data:: pyuv.fs.UV_FS_EVENT_WATCH_ENTRY
 .. py:data:: pyuv.fs.UV_FS_EVENT_STAT
-
 
