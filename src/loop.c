@@ -80,7 +80,7 @@ Loop_func_run(Loop *self)
     uv_run(self->uv_loop);
     Py_END_ALLOW_THREADS
     if (PyErr_Occurred()) {
-        return NULL;
+        PyErr_WriteUnraisable(Py_None);
     }
     Py_RETURN_NONE;
 }
@@ -93,7 +93,7 @@ Loop_func_run_once(Loop *self)
     uv_run_once(self->uv_loop);
     Py_END_ALLOW_THREADS
     if (PyErr_Occurred()) {
-        return NULL;
+        PyErr_WriteUnraisable(Py_None);
     }
     Py_RETURN_NONE;
 }
