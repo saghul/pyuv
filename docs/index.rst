@@ -48,6 +48,7 @@ Contents
     :titlesonly:
 
     pyuv
+    refcount
 
 
 Examples
