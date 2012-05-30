@@ -39,11 +39,7 @@ static void
 on_handle_dealloc_close(uv_handle_t *handle)
 {
     PyGILState_STATE gstate = PyGILState_Ensure();
-    Handle *self;
     ASSERT(handle);
-    self = (Handle *)handle->data;
-    ASSERT(self);
-    self->uv_handle = NULL;
     handle->data = NULL;
     PyMem_Free(handle);
     PyGILState_Release(gstate);
