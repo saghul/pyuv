@@ -64,11 +64,12 @@ class IPCTest(unittest2.TestCase):
         self.local_conn_accepted = False
         self.tcp_server = None
         self.channel = pyuv.Pipe(self.loop, True)
+        stdio = [pyuv.StdIO(stream=self.channel, flags=pyuv.UV_CREATE_PIPE|pyuv.UV_READABLE_PIPE|pyuv.UV_WRITABLE_PIPE)]
         proc = pyuv.Process(self.loop)
         if sys.platform == 'win32':
-            proc.spawn(file="cmd.exe", args=[b"/c", EXECUTABLE+ b" proc_ipc.py", b"listen_before_write"], exit_callback=self.proc_exit_cb, stdin=self.channel)
+            proc.spawn(file="cmd.exe", args=[b"/c", EXECUTABLE+ b" proc_ipc.py", b"listen_before_write"], exit_callback=self.proc_exit_cb, stdio=stdio)
         else:
-            proc.spawn(file=sys.executable , args=[b"proc_ipc.py", b"listen_before_write"], exit_callback=self.proc_exit_cb, stdin=self.channel)
+            proc.spawn(file=sys.executable , args=[b"proc_ipc.py", b"listen_before_write"], exit_callback=self.proc_exit_cb, stdio=stdio)
         self.channel.start_read2(self.on_channel_read)
         self.loop.run()
 
@@ -77,11 +78,12 @@ class IPCTest(unittest2.TestCase):
         self.local_conn_accepted = False
         self.tcp_server = None
         self.channel = pyuv.Pipe(self.loop, True)
+        stdio = [pyuv.StdIO(stream=self.channel, flags=pyuv.UV_CREATE_PIPE|pyuv.UV_READABLE_PIPE|pyuv.UV_WRITABLE_PIPE)]
         proc = pyuv.Process(self.loop)
         if sys.platform == 'win32':
-            proc.spawn(file="cmd.exe", args=[b"/c", EXECUTABLE+ b" proc_ipc.py", b"listen_after_write"], exit_callback=self.proc_exit_cb, stdin=self.channel)
+            proc.spawn(file="cmd.exe", args=[b"/c", EXECUTABLE+ b" proc_ipc.py", b"listen_after_write"], exit_callback=self.proc_exit_cb, stdio=stdio)
         else:
-            proc.spawn(file=sys.executable, args=[b"proc_ipc.py", b"listen_after_write"], exit_callback=self.proc_exit_cb, stdin=self.channel)
+            proc.spawn(file=sys.executable, args=[b"proc_ipc.py", b"listen_after_write"], exit_callback=self.proc_exit_cb, stdio=stdio)
         self.channel.start_read2(self.on_channel_read)
         self.loop.run()
 
@@ -107,13 +109,13 @@ class IPCSendRecvTest(unittest2.TestCase):
         # Handle that will be sent to the process and back
         self.send_pipe = pyuv.Pipe(self.loop, True)
         self.send_pipe.bind(TEST_PIPE)
-
         self.channel = pyuv.Pipe(self.loop, True)
+        stdio = [pyuv.StdIO(stream=self.channel, flags=pyuv.UV_CREATE_PIPE|pyuv.UV_READABLE_PIPE|pyuv.UV_WRITABLE_PIPE)]
         proc = pyuv.Process(self.loop)
         if sys.platform == 'win32':
-            proc.spawn(file="cmd.exe", args=[b"/c", EXECUTABLE+ b" proc_ipc_echo.py"], exit_callback=self.proc_exit_cb, stdin=self.channel)
+            proc.spawn(file="cmd.exe", args=[b"/c", EXECUTABLE+ b" proc_ipc_echo.py"], exit_callback=self.proc_exit_cb, stdio=stdio)
         else:
-            proc.spawn(file=sys.executable, args=[b"proc_ipc_echo.py"], exit_callback=self.proc_exit_cb, stdin=self.channel)
+            proc.spawn(file=sys.executable, args=[b"proc_ipc_echo.py"], exit_callback=self.proc_exit_cb, stdio=stdio)
         self.channel.write2(b".", self.send_pipe)
         self.channel.start_read2(self.on_channel_read)
         self.loop.run()
