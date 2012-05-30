@@ -25,9 +25,6 @@ on_iostream_alloc(uv_stream_t* handle, size_t suggested_size)
 }
 
 
-/*
- * Called when all pending write requests have been sent, write direction has been closed.
- */
 static void
 on_iostream_shutdown(uv_shutdown_t* req, int status)
 {
