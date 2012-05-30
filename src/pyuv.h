@@ -185,11 +185,18 @@ static PyTypeObject PollType;
 
 /* Process */
 typedef struct {
+    PyObject_HEAD
+    PyObject *stream;
+    int fd;
+    int flags;
+} StdIO;
+
+static PyTypeObject StdIOType;
+
+typedef struct {
     Handle handle;
     PyObject *on_exit_cb;
-    PyObject *stdin_pipe;
-    PyObject *stdout_pipe;
-    PyObject *stderr_pipe;
+    PyObject *stdio;
 } Process;
 
 static PyTypeObject ProcessType;

@@ -174,6 +174,7 @@ init_pyuv(void)
     PyUVModule_AddType(pyuv, "TTY", &TTYType);
     PyUVModule_AddType(pyuv, "UDP", &UDPType);
     PyUVModule_AddType(pyuv, "Poll", &PollType);
+    PyUVModule_AddType(pyuv, "StdIO", &StdIOType);
     PyUVModule_AddType(pyuv, "Process", &ProcessType);
     PyUVModule_AddType(pyuv, "ThreadPool", &ThreadPoolType);
 
@@ -203,6 +204,11 @@ init_pyuv(void)
     PyModule_AddIntMacro(pyuv, UV_PROCESS_WINDOWS_VERBATIM_ARGUMENTS);
     PyModule_AddIntMacro(pyuv, UV_READABLE);
     PyModule_AddIntMacro(pyuv, UV_WRITABLE);
+    PyModule_AddIntMacro(pyuv, UV_IGNORE);
+    PyModule_AddIntMacro(pyuv, UV_CREATE_PIPE);
+    PyModule_AddIntMacro(pyuv, UV_READABLE_PIPE);
+    PyModule_AddIntMacro(pyuv, UV_WRITABLE_PIPE);
+    PyModule_AddIntMacro(pyuv, UV_RAW_FD);
 
     /* Handle types */
     PyModule_AddIntMacro(pyuv, UV_UNKNOWN_HANDLE);

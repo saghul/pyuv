@@ -8,6 +8,182 @@
  * http://stackoverflow.com/questions/2055918/forcing-a-program-to-flush-its-standard-output-when-redirected
  */
 
+/* Container for standard IO */
+static int
+StdIO_tp_init(StdIO *self, PyObject *args, PyObject *kwargs)
+{
+    int flags = UV_IGNORE;
+    int fd = -1;
+    uv_handle_type handle_type;
+    PyObject *stream, *tmp;
+
+    static char *kwlist[] = {"stream", "fd", "flags", NULL};
+
+    stream = tmp = NULL;
+
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "|Oii:__init__", kwlist, &stream, &fd, &flags)) {
+        return -1;
+    }
+
+    if (stream != NULL && fd != -1) {
+        PyErr_SetString(PyExc_ValueError, "either stream or fd must be specified, but not both");
+        return -1;
+    }
+
+    if (stream != NULL) {
+        if (!PyObject_IsSubclass((PyObject *)stream->ob_type, (PyObject *)&StreamType)) {
+            PyErr_SetString(PyExc_TypeError, "Only stream objects are supported");
+            return -1;
+        }
+        if (!((flags & ~(UV_CREATE_PIPE | UV_READABLE_PIPE | UV_WRITABLE_PIPE))==0)) {
+            PyErr_SetString(PyExc_ValueError, "invalid flags specified for stream");
+            return -1;
+        }
+        handle_type = ((Handle *)stream)->uv_handle->type;
+        if (handle_type != UV_NAMED_PIPE && handle_type != UV_TTY) {
+            PyErr_SetString(PyExc_TypeError, "Only Pipes and TTY handles are supported");
+            return -1;
+        }
+    }
+
+    if (fd != -1 && !((flags & ~(UV_RAW_FD))==0)) {
+        PyErr_SetString(PyExc_ValueError, "invalid flags specified for fd");
+        return -1;
+    }
+
+    if (stream == NULL && fd == -1 && !((flags & ~(UV_IGNORE))==0)) {
+        PyErr_SetString(PyExc_ValueError, "invalid flags specified for ignore");
+        return -1;
+    }
+
+    tmp = self->stream;
+    Py_XINCREF(stream);
+    self->stream = stream;
+    Py_XDECREF(tmp);
+
+    self->fd = fd;
+    self->flags = flags;
+
+    return 0;
+}
+
+
+static PyObject *
+StdIO_stream_get(StdIO *self, void *closure)
+{
+    UNUSED_ARG(closure);
+    if (!self->stream) {
+        Py_INCREF(Py_None);
+        Py_RETURN_NONE;
+    } else {
+        return self->stream;
+    }
+}
+
+
+static PyObject *
+StdIO_fd_get(StdIO *self, void *closure)
+{
+    UNUSED_ARG(closure);
+    return PyInt_FromLong((long)self->fd);
+}
+
+
+static PyObject *
+StdIO_flags_get(StdIO *self, void *closure)
+{
+    UNUSED_ARG(closure);
+    return PyInt_FromLong((long)self->fd);
+}
+
+
+static PyObject *
+StdIO_tp_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
+{
+    StdIO *self = (StdIO *)PyType_GenericNew(type, args, kwargs);
+    if (!self) {
+        return NULL;
+    }
+    return (PyObject *)self;
+}
+
+
+static int
+StdIO_tp_traverse(StdIO *self, visitproc visit, void *arg)
+{
+    Py_VISIT(self->stream);
+    return 0;
+}
+
+
+static int
+StdIO_tp_clear(StdIO *self)
+{
+    Py_CLEAR(self->stream);
+    return 0;
+}
+
+
+static void
+StdIO_tp_dealloc(StdIO *self)
+{
+    StdIO_tp_clear(self);
+    Py_TYPE(self)->tp_free((PyObject *)self);
+}
+
+
+static PyGetSetDef StdIO_tp_getsets[] = {
+    {"stream", (getter)StdIO_stream_get, NULL, "Stream object.", NULL},
+    {"fd", (getter)StdIO_fd_get, NULL, "File descriptor.", NULL},
+    {"flags", (getter)StdIO_flags_get, NULL, "Flags.", NULL},
+    {NULL}
+};
+
+
+static PyTypeObject StdIOType = {
+    PyVarObject_HEAD_INIT(NULL, 0)
+    "pyuv.StdIO",                                                   /*tp_name*/
+    sizeof(StdIO),                                                  /*tp_basicsize*/
+    0,                                                              /*tp_itemsize*/
+    (destructor)StdIO_tp_dealloc,                                   /*tp_dealloc*/
+    0,                                                              /*tp_print*/
+    0,                                                              /*tp_getattr*/
+    0,                                                              /*tp_setattr*/
+    0,                                                              /*tp_compare*/
+    0,                                                              /*tp_repr*/
+    0,                                                              /*tp_as_number*/
+    0,                                                              /*tp_as_sequence*/
+    0,                                                              /*tp_as_mapping*/
+    0,                                                              /*tp_hash */
+    0,                                                              /*tp_call*/
+    0,                                                              /*tp_str*/
+    0,                                                              /*tp_getattro*/
+    0,                                                              /*tp_setattro*/
+    0,                                                              /*tp_as_buffer*/
+    Py_TPFLAGS_DEFAULT | Py_TPFLAGS_HAVE_GC,                        /*tp_flags*/
+    0,                                                              /*tp_doc*/
+    (traverseproc)StdIO_tp_traverse,                                /*tp_traverse*/
+    (inquiry)StdIO_tp_clear,                                        /*tp_clear*/
+    0,                                                              /*tp_richcompare*/
+    0,                                                              /*tp_weaklistoffset*/
+    0,                                                              /*tp_iter*/
+    0,                                                              /*tp_iternext*/
+    0,                                                              /*tp_methods*/
+    0,                                                              /*tp_members*/
+    StdIO_tp_getsets,                                               /*tp_getsets*/
+    0,                                                              /*tp_base*/
+    0,                                                              /*tp_dict*/
+    0,                                                              /*tp_descr_get*/
+    0,                                                              /*tp_descr_set*/
+    0,                                                              /*tp_dictoffset*/
+    (initproc)StdIO_tp_init,                                        /*tp_init*/
+    0,                                                              /*tp_alloc*/
+    StdIO_tp_new,                                                   /*tp_new*/
+};
+
+
+/* Process handle */
+
 static PyObject* PyExc_ProcessError;
 
 
@@ -47,29 +223,30 @@ on_process_exit(uv_process_t *process, int exit_status, int term_signal)
 static PyObject *
 Process_func_spawn(Process *self, PyObject *args, PyObject *kwargs)
 {
-    int r, flags;
+    int r, flags, stdio_count;
     unsigned int uid, gid;
     char *cwd, *cwd2, *file, *file2, *arg_str, *tmp_str, *key_str, *value_str;
     char **ptr, **process_args, **process_env;
     Py_ssize_t i, n, pos;
-    PyObject *key, *value, *item, *tmp, *callback, *arguments, *env, *stdin_pipe, *stdout_pipe, *stderr_pipe;
+    PyObject *key, *value, *item, *tmp, *callback, *arguments, *env, *stdio;
     uv_process_t *uv_process;
     uv_process_options_t options;
+    uv_stdio_container_t *stdio_container;
 
-    static char *kwlist[] = {"file", "exit_callback", "args", "env", "cwd", "uid", "gid", "flags", "stdin", "stdout", "stderr", NULL};
+    static char *kwlist[] = {"file", "exit_callback", "args", "env", "cwd", "uid", "gid", "flags", "stdio", NULL};
 
     cwd = NULL;
     ptr = process_args = process_env = NULL;
-    tmp = arguments = env = NULL;
-    stdin_pipe = stdout_pipe = stderr_pipe = Py_None;
-    flags = uid = gid = 0;
+    tmp = arguments = env = stdio = NULL;
+    stdio_container = NULL;
+    flags = uid = gid = stdio_count = 0;
 
     if (UV_HANDLE(self)) {
         PyErr_SetString(PyExc_ProcessError, "Process already spawned");
         return NULL;
     }
 
-    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "s|OOO!sIIiO!O!O!:__init__", kwlist, &file, &callback, &arguments, &PyDict_Type, &env, &cwd, &uid, &gid, &flags, &PipeType, &stdin_pipe, &PipeType, &stdout_pipe, &PipeType, &stderr_pipe)) {
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "s|OOO!sIIiO:__init__", kwlist, &file, &callback, &arguments, &PyDict_Type, &env, &cwd, &uid, &gid, &flags, &stdio)) {
         return NULL;
     }
 
@@ -79,7 +256,12 @@ Process_func_spawn(Process *self, PyObject *args, PyObject *kwargs)
     }
 
     if (arguments && !PySequence_Check(arguments)) {
-        PyErr_SetString(PyExc_TypeError, "only iterable objects are supported");
+        PyErr_SetString(PyExc_TypeError, "only iterable objects are supported for 'args'");
+        return NULL;
+    }
+
+    if (stdio && !PySequence_Check(stdio)) {
+        PyErr_SetString(PyExc_TypeError, "only iterable objects are supported for 'stdio'");
         return NULL;
     }
 
@@ -88,19 +270,9 @@ Process_func_spawn(Process *self, PyObject *args, PyObject *kwargs)
     self->on_exit_cb = callback;
     Py_XDECREF(tmp);
 
-    tmp = (PyObject *)self->stdin_pipe;
-    Py_INCREF(stdin_pipe);
-    self->stdin_pipe = stdin_pipe;
-    Py_XDECREF(tmp);
-
-    tmp = (PyObject *)self->stdout_pipe;
-    Py_INCREF(stdout_pipe);
-    self->stdout_pipe = stdout_pipe;
-    Py_XDECREF(tmp);
-
-    tmp = (PyObject *)self->stderr_pipe;
-    Py_INCREF(stderr_pipe);
-    self->stderr_pipe = stderr_pipe;
+    tmp = self->stdio;
+    Py_XINCREF(stdio);
+    self->stdio = stdio;
     Py_XDECREF(tmp);
 
     memset(&options, 0, sizeof(uv_process_options_t));
@@ -189,14 +361,32 @@ Process_func_spawn(Process *self, PyObject *args, PyObject *kwargs)
     }
     options.env = process_env;
 
-    if (stdin_pipe != Py_None)
-        options.stdin_stream = (uv_pipe_t *)UV_HANDLE(stdin_pipe);
-
-    if (stdout_pipe != Py_None)
-        options.stdout_stream = (uv_pipe_t *)UV_HANDLE(stdout_pipe);
-
-    if (stderr_pipe != Py_None)
-        options.stderr_stream = (uv_pipe_t *)UV_HANDLE(stderr_pipe);
+    if (stdio) {
+        n = PySequence_Length(stdio);
+        stdio_container = (uv_stdio_container_t *)PyMem_Malloc(sizeof(uv_stdio_container_t) * n);
+        if (!stdio_container) {
+            PyErr_NoMemory();
+            goto error;
+        }
+        item = NULL;
+        for (i = 0;i < n; i++) {
+            item = PySequence_GetItem(stdio, i);
+            if (!item || !PyObject_TypeCheck(item, &StdIOType)) {
+                Py_XDECREF(item);
+                continue;
+            }
+            stdio_count++;
+            stdio_container[i].flags = ((StdIO *)item)->flags;
+            if (((StdIO *)item)->flags & UV_CREATE_PIPE) {
+                stdio_container[i].data.stream = (uv_stream_t *)(UV_HANDLE(((StdIO *)item)->stream));
+            } else if (((StdIO *)item)->flags & UV_RAW_FD) {
+                stdio_container[i].data.fd = ((StdIO *)item)->fd;
+            }
+            Py_DECREF(item);
+        }
+    }
+    options.stdio = stdio_container;
+    options.stdio_count = stdio_count;
 
     uv_process = PyMem_Malloc(sizeof(uv_process_t));
     if (!uv_process) {
@@ -223,6 +413,9 @@ Process_func_spawn(Process *self, PyObject *args, PyObject *kwargs)
         }
         PyMem_Free(options.env);
     }
+    if (options.stdio) {
+        PyMem_Free(options.stdio);
+    }
 
     if (r != 0) {
         raise_uv_exception(UV_HANDLE_LOOP(self), PyExc_ProcessError);
@@ -235,9 +428,7 @@ Process_func_spawn(Process *self, PyObject *args, PyObject *kwargs)
 
 error:
     Py_DECREF(self->on_exit_cb);
-    Py_DECREF(self->stdin_pipe);
-    Py_DECREF(self->stdout_pipe);
-    Py_DECREF(self->stderr_pipe);
+    Py_XDECREF(self->stdio);
     return NULL;
 
 }
@@ -320,9 +511,7 @@ static int
 Process_tp_traverse(Process *self, visitproc visit, void *arg)
 {
     Py_VISIT(self->on_exit_cb);
-    Py_VISIT(self->stdin_pipe);
-    Py_VISIT(self->stdout_pipe);
-    Py_VISIT(self->stderr_pipe);
+    Py_VISIT(self->stdio);
     HandleType.tp_traverse((PyObject *)self, visit, arg);
     return 0;
 }
@@ -332,9 +521,7 @@ static int
 Process_tp_clear(Process *self)
 {
     Py_CLEAR(self->on_exit_cb);
-    Py_CLEAR(self->stdin_pipe);
-    Py_CLEAR(self->stdout_pipe);
-    Py_CLEAR(self->stderr_pipe);
+    Py_CLEAR(self->stdio);
     HandleType.tp_clear((PyObject *)self);
     return 0;
 }

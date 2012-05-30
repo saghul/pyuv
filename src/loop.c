@@ -127,32 +127,8 @@ Loop_func_default_loop(PyObject *cls)
 static PyObject *
 Loop_active_handles_get(Loop *self, void *closure)
 {
-    ngx_queue_t *q;
-    uv_handle_t *handle;
-    PyObject *list, *item;
-
     UNUSED_ARG(closure);
-
-    list = PyList_New(0);
-    if (!list) {
-        PyErr_NoMemory();
-        return NULL;
-    }
-#ifdef UV_LEAN_AND_MEAN
-    return list;
-#else
-    ngx_queue_foreach(q, &self->uv_loop->active_handles) {
-        handle = ngx_queue_data(q, uv_handle_t, active_queue);
-        if (handle->data) {
-            item = (PyObject *)handle->data;
-            ASSERT(item);
-            if (PyList_Append(list, item))
-                continue;
-            /* No need to Py_DECREF here, we need the item to be referenced only once, and PyList_Append does that */
-        }
-    }
-    return list;
-#endif
+    return PyInt_FromLong((long)self->uv_loop->active_handles);
 }
 
 
