@@ -39,7 +39,7 @@ Timer_func_start(Timer *self, PyObject *args, PyObject *kwargs)
 
     tmp = NULL;
 
-    if (!UV_HANDLE(self)) {
+    if (UV_HANDLE_CLOSED(self)) {
         PyErr_SetString(PyExc_TimerError, "Timer is closed");
         return NULL;
     }
@@ -83,7 +83,7 @@ Timer_func_stop(Timer *self)
 {
     int r;
 
-    if (!UV_HANDLE(self)) {
+    if (UV_HANDLE_CLOSED(self)) {
         PyErr_SetString(PyExc_TimerError, "Timer is closed");
         return NULL;
     }
@@ -103,7 +103,7 @@ Timer_func_again(Timer *self)
 {
     int r;
 
-    if (!UV_HANDLE(self)) {
+    if (UV_HANDLE_CLOSED(self)) {
         PyErr_SetString(PyExc_TimerError, "Timer is closed");
         return NULL;
     }
@@ -122,7 +122,7 @@ static PyObject *
 Timer_repeat_get(Timer *self, void *closure)
 {
     UNUSED_ARG(closure);
-    if (!UV_HANDLE(self)) {
+    if (UV_HANDLE_CLOSED(self)) {
         PyErr_SetString(PyExc_TimerError, "Timer is closed");
         return NULL;
     }
@@ -137,7 +137,7 @@ Timer_repeat_set(Timer *self, PyObject *value, void *closure)
 
     UNUSED_ARG(closure);
 
-    if (!UV_HANDLE(self)) {
+    if (UV_HANDLE_CLOSED(self)) {
         PyErr_SetString(PyExc_TimerError, "Timer is closed");
         return -1;
     }

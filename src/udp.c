@@ -148,7 +148,7 @@ UDP_func_bind(UDP *self, PyObject *args)
     struct in_addr addr4;
     struct in6_addr addr6;
 
-    if (!UV_HANDLE(self)) {
+    if (UV_HANDLE_CLOSED(self)) {
         PyErr_SetString(PyExc_UDPError, "closed");
         return NULL;
     }
@@ -194,7 +194,7 @@ UDP_func_start_recv(UDP *self, PyObject *args)
 
     tmp = NULL;
 
-    if (!UV_HANDLE(self)) {
+    if (UV_HANDLE_CLOSED(self)) {
         PyErr_SetString(PyExc_UDPError, "closed");
         return NULL;
     }
@@ -228,7 +228,7 @@ UDP_func_stop_recv(UDP *self)
 {
     int r;
 
-    if (!UV_HANDLE(self)) {
+    if (UV_HANDLE_CLOSED(self)) {
         PyErr_SetString(PyExc_UDPError, "closed");
         return NULL;
     }
@@ -265,7 +265,7 @@ UDP_func_send(UDP *self, PyObject *args)
     buf_count = 0;
     callback = Py_None;
 
-    if (!UV_HANDLE(self)) {
+    if (UV_HANDLE_CLOSED(self)) {
         PyErr_SetString(PyExc_UDPError, "Handle is closed");
         return NULL;
     }
@@ -397,7 +397,7 @@ UDP_func_sendlines(UDP *self, PyObject *args)
     callback = Py_None;
     default_encoding = PyUnicode_GetDefaultEncoding();
 
-    if (!UV_HANDLE(self)) {
+    if (UV_HANDLE_CLOSED(self)) {
         PyErr_SetString(PyExc_UDPError, "Handle is closed");
         return NULL;
     }
@@ -588,7 +588,7 @@ UDP_func_set_membership(UDP *self, PyObject *args)
 
     interface_address = NULL;
 
-    if (!UV_HANDLE(self)) {
+    if (UV_HANDLE_CLOSED(self)) {
         PyErr_SetString(PyExc_UDPError, "closed");
         return NULL;
     }
@@ -618,7 +618,7 @@ UDP_func_getsockname(UDP *self)
 
     namelen = sizeof(sockname);
 
-    if (!UV_HANDLE(self)) {
+    if (UV_HANDLE_CLOSED(self)) {
         PyErr_SetString(PyExc_UDPError, "closed");
         return NULL;
     }
@@ -649,7 +649,7 @@ UDP_func_set_multicast_ttl(UDP *self, PyObject *args)
 {
     int r, ttl;
 
-    if (!UV_HANDLE(self)) {
+    if (UV_HANDLE_CLOSED(self)) {
         PyErr_SetString(PyExc_UDPError, "closed");
         return NULL;
     }
@@ -679,7 +679,7 @@ UDP_func_set_broadcast(UDP *self, PyObject *args)
     int r;
     PyObject *enable;
 
-    if (!UV_HANDLE(self)) {
+    if (UV_HANDLE_CLOSED(self)) {
         PyErr_SetString(PyExc_UDPError, "already closed");
         return NULL;
     }
@@ -704,7 +704,7 @@ UDP_func_set_multicast_loop(UDP *self, PyObject *args)
     int r;
     PyObject *enable;
 
-    if (!UV_HANDLE(self)) {
+    if (UV_HANDLE_CLOSED(self)) {
         PyErr_SetString(PyExc_UDPError, "already closed");
         return NULL;
     }
@@ -728,7 +728,7 @@ UDP_func_set_ttl(UDP *self, PyObject *args)
 {
     int r, ttl;
 
-    if (!UV_HANDLE(self)) {
+    if (UV_HANDLE_CLOSED(self)) {
         PyErr_SetString(PyExc_UDPError, "closed");
         return NULL;
     }

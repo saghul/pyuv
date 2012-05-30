@@ -36,7 +36,7 @@ Prepare_func_start(Prepare *self, PyObject *args)
 
     tmp = NULL;
 
-    if (!UV_HANDLE(self)) {
+    if (UV_HANDLE_CLOSED(self)) {
         PyErr_SetString(PyExc_PrepareError, "Prepare is closed");
         return NULL;
     }
@@ -70,7 +70,7 @@ Prepare_func_stop(Prepare *self)
 {
     int r;
 
-    if (!UV_HANDLE(self)) {
+    if (UV_HANDLE_CLOSED(self)) {
         PyErr_SetString(PyExc_PrepareError, "Prepare is already closed");
         return NULL;
     }

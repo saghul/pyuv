@@ -36,7 +36,7 @@ Check_func_start(Check *self, PyObject *args)
 
     tmp = NULL;
 
-    if (!UV_HANDLE(self)) {
+    if (UV_HANDLE_CLOSED(self)) {
         PyErr_SetString(PyExc_CheckError, "Check is closed");
         return NULL;
     }
@@ -70,7 +70,7 @@ Check_func_stop(Check *self)
 {
     int r;
 
-    if (!UV_HANDLE(self)) {
+    if (UV_HANDLE_CLOSED(self)) {
         PyErr_SetString(PyExc_CheckError, "Check is already closed");
         return NULL;
     }

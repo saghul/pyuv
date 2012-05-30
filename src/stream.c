@@ -170,7 +170,7 @@ Stream_func_shutdown(Stream *self, PyObject *args)
     iostream_req_data_t *req_data = NULL;
     PyObject *callback = Py_None;
 
-    if (!UV_HANDLE(self)) {
+    if (UV_HANDLE_CLOSED(self)) {
         PyErr_SetString(PyExc_StreamError, "Stream is already closed");
         return NULL;
     }
@@ -224,7 +224,7 @@ Stream_func_start_read(Stream *self, PyObject *args)
 
     tmp = NULL;
 
-    if (!UV_HANDLE(self)) {
+    if (UV_HANDLE_CLOSED(self)) {
         PyErr_SetString(PyExc_StreamError, "Stream is closed");
         return NULL;
     }
@@ -258,7 +258,7 @@ Stream_func_stop_read(Stream *self)
 {
     int r;
 
-    if (!UV_HANDLE(self)) {
+    if (UV_HANDLE_CLOSED(self)) {
         PyErr_SetString(PyExc_StreamError, "Stream is closed");
         return NULL;
     }
@@ -293,7 +293,7 @@ Stream_func_write(Stream *self, PyObject *args)
     buf_count = 0;
     callback = Py_None;
 
-    if (!UV_HANDLE(self)) {
+    if (UV_HANDLE_CLOSED(self)) {
         PyErr_SetString(PyExc_StreamError, "Stream is closed");
         return NULL;
     }
@@ -423,7 +423,7 @@ Stream_func_writelines(Stream *self, PyObject *args)
     callback = Py_None;
     default_encoding = PyUnicode_GetDefaultEncoding();
 
-    if (!UV_HANDLE(self)) {
+    if (UV_HANDLE_CLOSED(self)) {
         PyErr_SetString(PyExc_StreamError, "Stream is closed");
         return NULL;
     }

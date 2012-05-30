@@ -53,7 +53,7 @@ on_handle_dealloc_close(uv_handle_t *handle)
 static PyObject *
 Handle_func_ref(Handle *self)
 {
-    if (!self->uv_handle) {
+    if (UV_HANDLE_CLOSED(self)) {
         PyErr_SetString(PyExc_HandleError, "Handle is already closed");
         return NULL;
     }
@@ -65,7 +65,7 @@ Handle_func_ref(Handle *self)
 static PyObject *
 Handle_func_unref(Handle *self)
 {
-    if (!self->uv_handle) {
+    if (UV_HANDLE_CLOSED(self)) {
         PyErr_SetString(PyExc_HandleError, "Handle is already closed");
         return NULL;
     }
@@ -79,7 +79,7 @@ Handle_func_close(Handle *self, PyObject *args)
 {
     PyObject *callback = NULL;
 
-    if (!self->uv_handle) {
+    if (UV_HANDLE_CLOSED(self)) {
         PyErr_SetString(PyExc_HandleError, "Handle is already closed");
         return NULL;
     }

@@ -7,7 +7,7 @@ TTY_func_set_mode(TTY *self, PyObject *args)
 {
     int r, mode;
 
-    if (!UV_HANDLE(self)) {
+    if (UV_HANDLE_CLOSED(self)) {
         PyErr_SetString(PyExc_TTYError, "already closed");
         return NULL;
     }
@@ -59,7 +59,7 @@ TTY_func_get_winsize(TTY *self)
 {
     int r, width, height;
 
-    if (!UV_HANDLE(self)) {
+    if (UV_HANDLE_CLOSED(self)) {
         PyErr_SetString(PyExc_TTYError, "already closed");
         return NULL;
     }

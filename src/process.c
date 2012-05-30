@@ -439,7 +439,7 @@ Process_func_kill(Process *self, PyObject *args)
 {
     int signum, r;
 
-    if (!UV_HANDLE(self)) {
+    if (UV_HANDLE_CLOSED(self)) {
         PyErr_SetString(PyExc_ProcessError, "Process wasn't spawned yet");
         return NULL;
     }
@@ -463,7 +463,7 @@ Process_pid_get(Process *self, void *closure)
 {
     UNUSED_ARG(closure);
 
-    if (!UV_HANDLE(self)) {
+    if (UV_HANDLE_CLOSED(self)) {
         Py_RETURN_NONE;
     }
     return PyInt_FromLong((long)((uv_process_t *)UV_HANDLE(self))->pid);

@@ -57,6 +57,7 @@ typedef int Bool;
 
 #define UV_LOOP(x) (x)->loop->uv_loop
 #define UV_HANDLE(x) ((Handle *)x)->uv_handle
+#define UV_HANDLE_CLOSED(x) (!UV_HANDLE(x) || uv_is_closing(UV_HANDLE(x)))
 #define UV_HANDLE_LOOP(x) UV_LOOP((Handle *)x)
 
 #if defined(__MINGW32__) || defined(_MSC_VER)
