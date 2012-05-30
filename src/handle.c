@@ -1,5 +1,6 @@
 
 static PyObject* PyExc_HandleError;
+static PyObject* PyExc_HandleClosedError;
 
 
 static void
@@ -49,10 +50,7 @@ on_handle_dealloc_close(uv_handle_t *handle)
 static PyObject *
 Handle_func_ref(Handle *self)
 {
-    if (UV_HANDLE_CLOSED(self)) {
-        PyErr_SetString(PyExc_HandleError, "Handle is already closed");
-        return NULL;
-    }
+    RAISE_IF_HANDLE_CLOSED(self, PyExc_HandleClosedError, NULL);
     uv_ref(self->uv_handle);
     Py_RETURN_NONE;
 }
@@ -61,10 +59,7 @@ Handle_func_ref(Handle *self)
 static PyObject *
 Handle_func_unref(Handle *self)
 {
-    if (UV_HANDLE_CLOSED(self)) {
-        PyErr_SetString(PyExc_HandleError, "Handle is already closed");
-        return NULL;
-    }
+    RAISE_IF_HANDLE_CLOSED(self, PyExc_HandleClosedError, NULL);
     uv_unref(self->uv_handle);
     Py_RETURN_NONE;
 }
@@ -75,10 +70,7 @@ Handle_func_close(Handle *self, PyObject *args)
 {
     PyObject *callback = NULL;
 
-    if (UV_HANDLE_CLOSED(self)) {
-        PyErr_SetString(PyExc_HandleError, "Handle is already closed");
-        return NULL;
-    }
+    RAISE_IF_HANDLE_CLOSED(self, PyExc_HandleClosedError, NULL);
 
     if (!PyArg_ParseTuple(args, "|O:close", &callback)) {
         return NULL;

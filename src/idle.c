@@ -36,10 +36,7 @@ Idle_func_start(Idle *self, PyObject *args)
 
     tmp = NULL;
 
-    if (UV_HANDLE_CLOSED(self)) {
-        PyErr_SetString(PyExc_IdleError, "Idle is closed");
-        return NULL;
-    }
+    RAISE_IF_HANDLE_CLOSED(self, PyExc_HandleClosedError, NULL);
 
     if (!PyArg_ParseTuple(args, "O:start", &callback)) {
         return NULL;
@@ -70,10 +67,7 @@ Idle_func_stop(Idle *self)
 {
     int r;
 
-    if (UV_HANDLE_CLOSED(self)) {
-        PyErr_SetString(PyExc_IdleError, "Idle is already closed");
-        return NULL;
-    }
+    RAISE_IF_HANDLE_CLOSED(self, PyExc_HandleClosedError, NULL);
 
     r = uv_idle_stop((uv_idle_t *)UV_HANDLE(self));
     if (r != 0) {

@@ -86,10 +86,7 @@ TCP_func_bind(TCP *self, PyObject *args)
     struct in_addr addr4;
     struct in6_addr addr6;
 
-    if (UV_HANDLE_CLOSED(self)) {
-        PyErr_SetString(PyExc_TCPError, "already closed");
-        return NULL;
-    }
+    RAISE_IF_HANDLE_CLOSED(self, PyExc_HandleClosedError, NULL);
 
     if (!PyArg_ParseTuple(args, "(si):bind", &bind_ip, &bind_port)) {
         return NULL;
@@ -133,10 +130,7 @@ TCP_func_listen(TCP *self, PyObject *args)
     backlog = 128;
     tmp = NULL;
 
-    if (UV_HANDLE_CLOSED(self)) {
-        PyErr_SetString(PyExc_TCPError, "already closed");
-        return NULL;
-    }
+    RAISE_IF_HANDLE_CLOSED(self, PyExc_HandleClosedError, NULL);
 
     if (!PyArg_ParseTuple(args, "O|i:listen", &callback, &backlog)) {
         return NULL;
@@ -173,10 +167,7 @@ TCP_func_accept(TCP *self, PyObject *args)
     int r;
     PyObject *client;
 
-    if (UV_HANDLE_CLOSED(self)) {
-        PyErr_SetString(PyExc_TCPError, "already closed");
-        return NULL;
-    }
+    RAISE_IF_HANDLE_CLOSED(self, PyExc_HandleClosedError, NULL);
 
     if (!PyArg_ParseTuple(args, "O:accept", &client)) {
         return NULL;
@@ -208,10 +199,7 @@ TCP_func_connect(TCP *self, PyObject *args)
     iostream_req_data_t *req_data = NULL;
     PyObject *callback;
 
-    if (UV_HANDLE_CLOSED(self)) {
-        PyErr_SetString(PyExc_TCPError, "closed");
-        return NULL;
-    }
+    RAISE_IF_HANDLE_CLOSED(self, PyExc_HandleClosedError, NULL);
 
     if (!PyArg_ParseTuple(args, "(si)O:connect", &connect_ip, &connect_port, &callback)) {
         return NULL;
@@ -289,10 +277,7 @@ TCP_func_getsockname(TCP *self)
 
     namelen = sizeof(sockname);
 
-    if (UV_HANDLE_CLOSED(self)) {
-        PyErr_SetString(PyExc_TCPError, "closed");
-        return NULL;
-    }
+    RAISE_IF_HANDLE_CLOSED(self, PyExc_HandleClosedError, NULL);
 
     r = uv_tcp_getsockname((uv_tcp_t *)UV_HANDLE(self), &sockname, &namelen);
     if (r != 0) {
@@ -326,10 +311,7 @@ TCP_func_getpeername(TCP *self)
 
     namelen = sizeof(peername);
 
-    if (UV_HANDLE_CLOSED(self)) {
-        PyErr_SetString(PyExc_TCPError, "closed");
-        return NULL;
-    }
+    RAISE_IF_HANDLE_CLOSED(self, PyExc_HandleClosedError, NULL);
 
     r = uv_tcp_getpeername((uv_tcp_t *)UV_HANDLE(self), &peername, &namelen);
     if (r != 0) {
@@ -360,10 +342,7 @@ TCP_func_nodelay(TCP *self, PyObject *args)
     int r;
     PyObject *enable;
 
-    if (UV_HANDLE_CLOSED(self)) {
-        PyErr_SetString(PyExc_TCPError, "already closed");
-        return NULL;
-    }
+    RAISE_IF_HANDLE_CLOSED(self, PyExc_HandleClosedError, NULL);
 
     if (!PyArg_ParseTuple(args, "O!:nodelay", &PyBool_Type, &enable)) {
         return NULL;
@@ -386,10 +365,7 @@ TCP_func_keepalive(TCP *self, PyObject *args)
     unsigned int delay;
     PyObject *enable;
 
-    if (UV_HANDLE_CLOSED(self)) {
-        PyErr_SetString(PyExc_TCPError, "already closed");
-        return NULL;
-    }
+    RAISE_IF_HANDLE_CLOSED(self, PyExc_HandleClosedError, NULL);
 
     if (!PyArg_ParseTuple(args, "O!I:keepalive", &PyBool_Type, &enable, &delay)) {
         return NULL;
@@ -420,10 +396,7 @@ TCP_func_simultaneous_accepts(TCP *self, PyObject *args)
     int r;
     PyObject *enable;
 
-    if (UV_HANDLE_CLOSED(self)) {
-        PyErr_SetString(PyExc_TCPError, "already closed");
-        return NULL;
-    }
+    RAISE_IF_HANDLE_CLOSED(self, PyExc_HandleClosedError, NULL);
 
     if (!PyArg_ParseTuple(args, "O!:simultaneous_accepts", &PyBool_Type, &enable)) {
         return NULL;

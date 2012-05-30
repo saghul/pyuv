@@ -33,10 +33,7 @@ Async_func_send(Async *self)
 {
     int r;
 
-    if (UV_HANDLE_CLOSED(self)) {
-        PyErr_SetString(PyExc_AsyncError, "async is closed");
-        return NULL;
-    }
+    RAISE_IF_HANDLE_CLOSED(self, PyExc_HandleClosedError, NULL);
 
     r = uv_async_send((uv_async_t *)UV_HANDLE(self));
     if (r != 0) {

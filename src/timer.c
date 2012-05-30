@@ -39,10 +39,7 @@ Timer_func_start(Timer *self, PyObject *args, PyObject *kwargs)
 
     tmp = NULL;
 
-    if (UV_HANDLE_CLOSED(self)) {
-        PyErr_SetString(PyExc_TimerError, "Timer is closed");
-        return NULL;
-    }
+    RAISE_IF_HANDLE_CLOSED(self, PyExc_HandleClosedError, NULL);
 
     if (!PyArg_ParseTupleAndKeywords(args, kwargs, "Odd:__init__", kwlist, &callback, &timeout, &repeat)) {
         return NULL;
@@ -83,10 +80,7 @@ Timer_func_stop(Timer *self)
 {
     int r;
 
-    if (UV_HANDLE_CLOSED(self)) {
-        PyErr_SetString(PyExc_TimerError, "Timer is closed");
-        return NULL;
-    }
+    RAISE_IF_HANDLE_CLOSED(self, PyExc_HandleClosedError, NULL);
 
     r = uv_timer_stop((uv_timer_t *)UV_HANDLE(self));
     if (r != 0) {
@@ -103,10 +97,7 @@ Timer_func_again(Timer *self)
 {
     int r;
 
-    if (UV_HANDLE_CLOSED(self)) {
-        PyErr_SetString(PyExc_TimerError, "Timer is closed");
-        return NULL;
-    }
+    RAISE_IF_HANDLE_CLOSED(self, PyExc_HandleClosedError, NULL);
 
     r = uv_timer_again((uv_timer_t *)UV_HANDLE(self));
     if (r != 0) {
@@ -122,10 +113,7 @@ static PyObject *
 Timer_repeat_get(Timer *self, void *closure)
 {
     UNUSED_ARG(closure);
-    if (UV_HANDLE_CLOSED(self)) {
-        PyErr_SetString(PyExc_TimerError, "Timer is closed");
-        return NULL;
-    }
+    RAISE_IF_HANDLE_CLOSED(self, PyExc_HandleClosedError, NULL);
     return PyFloat_FromDouble(uv_timer_get_repeat((uv_timer_t *)UV_HANDLE(self))/1000.0);
 }
 
@@ -137,10 +125,7 @@ Timer_repeat_set(Timer *self, PyObject *value, void *closure)
 
     UNUSED_ARG(closure);
 
-    if (UV_HANDLE_CLOSED(self)) {
-        PyErr_SetString(PyExc_TimerError, "Timer is closed");
-        return -1;
-    }
+    RAISE_IF_HANDLE_CLOSED(self, PyExc_HandleClosedError, -1);
 
     if (!value) {
         PyErr_SetString(PyExc_TypeError, "cannot delete attribute");

@@ -125,10 +125,7 @@ Pipe_func_bind(Pipe *self, PyObject *args)
     int r;
     char *name;
 
-    if (UV_HANDLE_CLOSED(self)) {
-        PyErr_SetString(PyExc_PipeError, "already closed");
-        return NULL;
-    }
+    RAISE_IF_HANDLE_CLOSED(self, PyExc_HandleClosedError, NULL);
 
     if (!PyArg_ParseTuple(args, "s:bind", &name)) {
         return NULL;
@@ -153,10 +150,7 @@ Pipe_func_listen(Pipe *self, PyObject *args)
     backlog = 128;
     tmp = NULL;
 
-    if (UV_HANDLE_CLOSED(self)) {
-        PyErr_SetString(PyExc_PipeError, "already closed");
-        return NULL;
-    }
+    RAISE_IF_HANDLE_CLOSED(self, PyExc_HandleClosedError, NULL);
 
     if (!PyArg_ParseTuple(args, "O|i:listen", &callback, &backlog)) {
         return NULL;
@@ -193,10 +187,7 @@ Pipe_func_accept(Pipe *self, PyObject *args)
     int r;
     PyObject *client;
 
-    if (UV_HANDLE_CLOSED(self)) {
-        PyErr_SetString(PyExc_PipeError, "already closed");
-        return NULL;
-    }
+    RAISE_IF_HANDLE_CLOSED(self, PyExc_HandleClosedError, NULL);
 
     if (!PyArg_ParseTuple(args, "O:accept", &client)) {
         return NULL;
@@ -225,10 +216,7 @@ Pipe_func_connect(Pipe *self, PyObject *args)
     iostream_req_data_t *req_data = NULL;
     PyObject *callback;
 
-    if (UV_HANDLE_CLOSED(self)) {
-        PyErr_SetString(PyExc_PipeError, "closed");
-        return NULL;
-    }
+    RAISE_IF_HANDLE_CLOSED(self, PyExc_HandleClosedError, NULL);
 
     if (!PyArg_ParseTuple(args, "sO:connect", &name, &callback)) {
         return NULL;
@@ -277,10 +265,7 @@ Pipe_func_open(Pipe *self, PyObject *args)
 {
     int fd;
 
-    if (UV_HANDLE_CLOSED(self)) {
-        PyErr_SetString(PyExc_PipeError, "closed");
-        return NULL;
-    }
+    RAISE_IF_HANDLE_CLOSED(self, PyExc_HandleClosedError, NULL);
 
     if (!PyArg_ParseTuple(args, "i:open", &fd)) {
         return NULL;
@@ -298,10 +283,7 @@ Pipe_func_pending_instances(Pipe *self, PyObject *args)
     /* This function applies to Windows only */
     int count;
 
-    if (UV_HANDLE_CLOSED(self)) {
-        PyErr_SetString(PyExc_PipeError, "closed");
-        return NULL;
-    }
+    RAISE_IF_HANDLE_CLOSED(self, PyExc_HandleClosedError, NULL);
 
     if (!PyArg_ParseTuple(args, "i:pending_instances", &count)) {
         return NULL;
@@ -321,10 +303,7 @@ Pipe_func_start_read2(Pipe *self, PyObject *args)
 
     tmp = NULL;
 
-    if (UV_HANDLE_CLOSED(self)) {
-        PyErr_SetString(PyExc_PipeError, "Pipe is closed");
-        return NULL;
-    }
+    RAISE_IF_HANDLE_CLOSED(self, PyExc_HandleClosedError, NULL);
 
     if (!PyArg_ParseTuple(args, "O:start_read2", &callback)) {
         return NULL;
@@ -367,10 +346,7 @@ Pipe_func_write2(Pipe *self, PyObject *args)
     buf_count = 0;
     callback = Py_None;
 
-    if (UV_HANDLE_CLOSED(self)) {
-        PyErr_SetString(PyExc_PipeError, "Pipe is closed");
-        return NULL;
-    }
+    RAISE_IF_HANDLE_CLOSED(self, PyExc_HandleClosedError, NULL);
 
     if (!PyArg_ParseTuple(args, "s*O|O:write2", &pbuf, &send_handle, &callback)) {
         return NULL;

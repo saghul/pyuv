@@ -59,6 +59,13 @@ typedef int Bool;
 #define UV_HANDLE(x) ((Handle *)x)->uv_handle
 #define UV_HANDLE_CLOSED(x) (!UV_HANDLE(x) || uv_is_closing(UV_HANDLE(x)))
 #define UV_HANDLE_LOOP(x) UV_LOOP((Handle *)x)
+#define RAISE_IF_HANDLE_CLOSED(obj, exc_type, retval)                       \
+    do {                                                                    \
+        if (UV_HANDLE_CLOSED(obj)) {                                        \
+            PyErr_SetString(exc_type, "");                                  \
+            return retval;                                                  \
+        }                                                                   \
+    } while(0)                                                              \
 
 #if defined(__MINGW32__) || defined(_MSC_VER)
     #define PYUV_WINDOWS

@@ -36,10 +36,7 @@ Signal_func_start(Signal *self)
 {
     int r;
 
-    if (UV_HANDLE_CLOSED(self)) {
-        PyErr_SetString(PyExc_SignalError, "Signal is closed");
-        return NULL;
-    }
+    RAISE_IF_HANDLE_CLOSED(self, PyExc_HandleClosedError, NULL);
 
     r = uv_prepare_start((uv_prepare_t *)UV_HANDLE(self), on_signal_callback);
     if (r != 0) {
@@ -56,10 +53,7 @@ Signal_func_stop(Signal *self)
 {
     int r;
 
-    if (UV_HANDLE_CLOSED(self)) {
-        PyErr_SetString(PyExc_SignalError, "Signal is already closed");
-        return NULL;
-    }
+    RAISE_IF_HANDLE_CLOSED(self, PyExc_HandleClosedError, NULL);
 
     r = uv_prepare_stop((uv_prepare_t *)UV_HANDLE(self));
     if (r != 0) {

@@ -148,10 +148,7 @@ UDP_func_bind(UDP *self, PyObject *args)
     struct in_addr addr4;
     struct in6_addr addr6;
 
-    if (UV_HANDLE_CLOSED(self)) {
-        PyErr_SetString(PyExc_UDPError, "closed");
-        return NULL;
-    }
+    RAISE_IF_HANDLE_CLOSED(self, PyExc_HandleClosedError, NULL);
 
     if (!PyArg_ParseTuple(args, "(si):bind", &bind_ip, &bind_port)) {
         return NULL;
@@ -194,10 +191,7 @@ UDP_func_start_recv(UDP *self, PyObject *args)
 
     tmp = NULL;
 
-    if (UV_HANDLE_CLOSED(self)) {
-        PyErr_SetString(PyExc_UDPError, "closed");
-        return NULL;
-    }
+    RAISE_IF_HANDLE_CLOSED(self, PyExc_HandleClosedError, NULL);
 
     if (!PyArg_ParseTuple(args, "O:start_recv", &callback)) {
         return NULL;
@@ -228,10 +222,7 @@ UDP_func_stop_recv(UDP *self)
 {
     int r;
 
-    if (UV_HANDLE_CLOSED(self)) {
-        PyErr_SetString(PyExc_UDPError, "closed");
-        return NULL;
-    }
+    RAISE_IF_HANDLE_CLOSED(self, PyExc_HandleClosedError, NULL);
 
     r = uv_udp_recv_stop((uv_udp_t *)UV_HANDLE(self));
     if (r != 0) {
@@ -265,10 +256,7 @@ UDP_func_send(UDP *self, PyObject *args)
     buf_count = 0;
     callback = Py_None;
 
-    if (UV_HANDLE_CLOSED(self)) {
-        PyErr_SetString(PyExc_UDPError, "Handle is closed");
-        return NULL;
-    }
+    RAISE_IF_HANDLE_CLOSED(self, PyExc_HandleClosedError, NULL);
 
     if (!PyArg_ParseTuple(args, "(si)s*|O:send", &dest_ip, &dest_port, &pbuf, &callback)) {
         return NULL;
@@ -397,10 +385,7 @@ UDP_func_sendlines(UDP *self, PyObject *args)
     callback = Py_None;
     default_encoding = PyUnicode_GetDefaultEncoding();
 
-    if (UV_HANDLE_CLOSED(self)) {
-        PyErr_SetString(PyExc_UDPError, "Handle is closed");
-        return NULL;
-    }
+    RAISE_IF_HANDLE_CLOSED(self, PyExc_HandleClosedError, NULL);
 
     if (!PyArg_ParseTuple(args, "(si)O|O:sendlines", &dest_ip, &dest_port, &seq, &callback)) {
         return NULL;
@@ -588,10 +573,7 @@ UDP_func_set_membership(UDP *self, PyObject *args)
 
     interface_address = NULL;
 
-    if (UV_HANDLE_CLOSED(self)) {
-        PyErr_SetString(PyExc_UDPError, "closed");
-        return NULL;
-    }
+    RAISE_IF_HANDLE_CLOSED(self, PyExc_HandleClosedError, NULL);
 
     if (!PyArg_ParseTuple(args, "si|s:set_membership", &multicast_address, &membership, &interface_address)) {
         return NULL;
@@ -618,10 +600,7 @@ UDP_func_getsockname(UDP *self)
 
     namelen = sizeof(sockname);
 
-    if (UV_HANDLE_CLOSED(self)) {
-        PyErr_SetString(PyExc_UDPError, "closed");
-        return NULL;
-    }
+    RAISE_IF_HANDLE_CLOSED(self, PyExc_HandleClosedError, NULL);
 
     r = uv_udp_getsockname((uv_udp_t *)UV_HANDLE(self), &sockname, &namelen);
     if (r != 0) {
@@ -649,10 +628,7 @@ UDP_func_set_multicast_ttl(UDP *self, PyObject *args)
 {
     int r, ttl;
 
-    if (UV_HANDLE_CLOSED(self)) {
-        PyErr_SetString(PyExc_UDPError, "closed");
-        return NULL;
-    }
+    RAISE_IF_HANDLE_CLOSED(self, PyExc_HandleClosedError, NULL);
 
     if (!PyArg_ParseTuple(args, "i:set_multicast_ttl", &ttl)) {
         return NULL;
@@ -679,10 +655,7 @@ UDP_func_set_broadcast(UDP *self, PyObject *args)
     int r;
     PyObject *enable;
 
-    if (UV_HANDLE_CLOSED(self)) {
-        PyErr_SetString(PyExc_UDPError, "already closed");
-        return NULL;
-    }
+    RAISE_IF_HANDLE_CLOSED(self, PyExc_HandleClosedError, NULL);
 
     if (!PyArg_ParseTuple(args, "O!:set_broadcast", &PyBool_Type, &enable)) {
         return NULL;
@@ -704,10 +677,7 @@ UDP_func_set_multicast_loop(UDP *self, PyObject *args)
     int r;
     PyObject *enable;
 
-    if (UV_HANDLE_CLOSED(self)) {
-        PyErr_SetString(PyExc_UDPError, "already closed");
-        return NULL;
-    }
+    RAISE_IF_HANDLE_CLOSED(self, PyExc_HandleClosedError, NULL);
 
     if (!PyArg_ParseTuple(args, "O!:set_multicast_loop", &PyBool_Type, &enable)) {
         return NULL;
@@ -728,10 +698,7 @@ UDP_func_set_ttl(UDP *self, PyObject *args)
 {
     int r, ttl;
 
-    if (UV_HANDLE_CLOSED(self)) {
-        PyErr_SetString(PyExc_UDPError, "closed");
-        return NULL;
-    }
+    RAISE_IF_HANDLE_CLOSED(self, PyExc_HandleClosedError, NULL);
 
     if (!PyArg_ParseTuple(args, "i:set_multicast_ttl", &ttl)) {
         return NULL;

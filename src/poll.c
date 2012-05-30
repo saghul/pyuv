@@ -47,10 +47,7 @@ Poll_func_start(Poll *self, PyObject *args)
 
     tmp = NULL;
 
-    if (UV_HANDLE_CLOSED(self)) {
-        PyErr_SetString(PyExc_PollError, "Poll is closed");
-        return NULL;
-    }
+    RAISE_IF_HANDLE_CLOSED(self, PyExc_HandleClosedError, NULL);
 
     if (!PyArg_ParseTuple(args, "iO:start", &events, &callback)) {
         return NULL;
@@ -81,10 +78,7 @@ Poll_func_stop(Poll *self)
 {
     int r;
 
-    if (UV_HANDLE_CLOSED(self)) {
-        PyErr_SetString(PyExc_PollError, "Poll is already closed");
-        return NULL;
-    }
+    RAISE_IF_HANDLE_CLOSED(self, PyExc_HandleClosedError, NULL);
 
     r = uv_poll_stop((uv_poll_t *)UV_HANDLE(self));
     if (r != 0) {
@@ -103,10 +97,7 @@ static PyObject *
 Poll_slow_get(Poll *self, void *closure)
 {
     UNUSED_ARG(closure);
-    if (UV_HANDLE_CLOSED(self)) {
-        PyErr_SetString(PyExc_PollError, "Poll is already closed");
-        return NULL;
-    }
+    RAISE_IF_HANDLE_CLOSED(self, PyExc_HandleClosedError, NULL);
 #ifdef PYUV_WINDOWS
     #define UV_HANDLE_POLL_SLOW  0x02000000 /* copied from src/win/internal.h */
     if (!(UV_HANDLE(self)->flags & UV_HANDLE_POLL_SLOW)) {

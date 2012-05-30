@@ -24,6 +24,7 @@ init_error(void)
 
     PyExc_UVError = PyErr_NewException("pyuv.error.UVError", NULL, NULL);
     PyExc_HandleError = PyErr_NewException("pyuv.error.HandleError", PyExc_UVError, NULL);
+    PyExc_HandleClosedError = PyErr_NewException("pyuv.error.HandleClosedError", PyExc_HandleError, NULL);
     PyExc_AsyncError = PyErr_NewException("pyuv.error.AsyncError", PyExc_HandleError, NULL);
     PyExc_TimerError = PyErr_NewException("pyuv.error.TimerError", PyExc_HandleError, NULL);
     PyExc_PrepareError = PyErr_NewException("pyuv.error.PrepareError", PyExc_HandleError, NULL);
