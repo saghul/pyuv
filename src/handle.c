@@ -21,6 +21,7 @@ on_handle_close(uv_handle_t *handle)
         Py_XDECREF(result);
     }
 
+    self->uv_handle = NULL;
     handle->data = NULL;
     PyMem_Free(handle);
 
@@ -38,7 +39,11 @@ static void
 on_handle_dealloc_close(uv_handle_t *handle)
 {
     PyGILState_STATE gstate = PyGILState_Ensure();
+    Handle *self;
     ASSERT(handle);
+    self = (Handle *)handle->data;
+    ASSERT(self);
+    self->uv_handle = NULL;
     handle->data = NULL;
     PyMem_Free(handle);
     PyGILState_Release(gstate);
@@ -48,6 +53,10 @@ on_handle_dealloc_close(uv_handle_t *handle)
 static PyObject *
 Handle_func_ref(Handle *self)
 {
+    if (!self->uv_handle) {
+        PyErr_SetString(PyExc_HandleError, "Handle is already closed");
+        return NULL;
+    }
     uv_ref(self->uv_handle);
     Py_RETURN_NONE;
 }
@@ -56,6 +65,10 @@ Handle_func_ref(Handle *self)
 static PyObject *
 Handle_func_unref(Handle *self)
 {
+    if (!self->uv_handle) {
+        PyErr_SetString(PyExc_HandleError, "Handle is already closed");
+        return NULL;
+    }
     uv_unref(self->uv_handle);
     Py_RETURN_NONE;
 }
@@ -87,7 +100,6 @@ Handle_func_close(Handle *self, PyObject *args)
     Py_INCREF(self);
 
     uv_close(self->uv_handle, on_handle_close);
-    self->uv_handle = NULL;
 
     Py_RETURN_NONE;
 }
@@ -143,7 +155,6 @@ Handle_tp_dealloc(Handle *self)
 {
     if (self->uv_handle) {
         uv_close(self->uv_handle, on_handle_dealloc_close);
-        self->uv_handle = NULL;
     }
     if (self->weakreflist != NULL) {
         PyObject_ClearWeakRefs((PyObject *)self);
