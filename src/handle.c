@@ -118,11 +118,11 @@ Handle_active_get(Handle *self, void *closure)
 
 
 static PyObject *
-Handle_closing_get(Handle *self, void *closure)
+Handle_closed_get(Handle *self, void *closure)
 {
     UNUSED_ARG(closure);
     if (!self->uv_handle) {
-        Py_RETURN_FALSE;
+        Py_RETURN_TRUE;
     } else {
         return PyBool_FromLong((long)uv_is_closing(self->uv_handle));
     }
@@ -233,7 +233,7 @@ static PyMemberDef Handle_tp_members[] = {
 static PyGetSetDef Handle_tp_getsets[] = {
     {"__dict__", (getter)Handle_dict_get, (setter)Handle_dict_set, NULL},
     {"active", (getter)Handle_active_get, NULL, "Indicates if this handle is active.", NULL},
-    {"closing", (getter)Handle_closing_get, NULL, "Indicates if this handle is closing.", NULL},
+    {"closed", (getter)Handle_closed_get, NULL, "Indicates if this handle is closing or already closed.", NULL},
     {NULL}
 };
 
