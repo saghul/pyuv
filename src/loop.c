@@ -116,6 +116,43 @@ Loop_func_update_time(Loop *self)
 }
 
 
+static void
+walk_cb(uv_handle_t* handle, void* arg)
+{
+    PyObject *callback = (PyObject *)arg;
+    PyObject *result, *obj;
+    if (handle->data != NULL) {
+        obj = (PyObject *)handle->data;
+        result = PyObject_CallFunctionObjArgs(callback, obj, NULL);
+        if (result == NULL) {
+            PyErr_WriteUnraisable(callback);
+        }
+        Py_XDECREF(result);
+    }
+}
+
+static PyObject *
+Loop_func_walk(Loop *self, PyObject *args)
+{
+    PyObject *callback;
+
+    if (!PyArg_ParseTuple(args, "O:walk", &callback)) {
+        return NULL;
+    }
+
+    if (!PyCallable_Check(callback)) {
+        PyErr_SetString(PyExc_TypeError, "a callable is required");
+        return NULL;
+    }
+
+    Py_INCREF(callback);
+    uv_walk(self->uv_loop, (uv_walk_cb)walk_cb, (void*)callback);
+    Py_DECREF(callback);
+
+    Py_RETURN_NONE;
+}
+
+
 static PyObject *
 Loop_func_default_loop(PyObject *cls)
 {
@@ -278,6 +315,7 @@ Loop_tp_methods[] = {
     { "run_once", (PyCFunction)Loop_func_run_once, METH_NOARGS, "Run a single event loop iteration, waiting for events if necessary." },
     { "now", (PyCFunction)Loop_func_now, METH_NOARGS, "Return event loop time, expressed in nanoseconds." },
     { "update_time", (PyCFunction)Loop_func_update_time, METH_NOARGS, "Update event loop's notion of time by querying the kernel." },
+    { "walk", (PyCFunction)Loop_func_walk, METH_VARARGS, "Walk all handles in the loop." },
     { "default_loop", (PyCFunction)Loop_func_default_loop, METH_CLASS|METH_NOARGS, "Instantiate the default loop." },
     { NULL }
 };
