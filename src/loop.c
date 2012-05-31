@@ -323,7 +323,7 @@ Loop_tp_methods[] = {
 
 static PyGetSetDef Loop_tp_getsets[] = {
     {"__dict__", (getter)Loop_dict_get, (setter)Loop_dict_set, NULL},
-    {"active_handles", (getter)Loop_active_handles_get, NULL, "List of active handles in this loop", NULL},
+    {"active_handles", (getter)Loop_active_handles_get, NULL, "Number of active handles in this loop", NULL},
     {"default", (getter)Loop_default_get, NULL, "Is this the default loop?", NULL},
     {"counters", (getter)Loop_counters_get, NULL, "Loop counters", NULL},
     {NULL}
