@@ -8,3 +8,5 @@
     - IPC, sharing a TCP handle
     - Some fs operations using fileno()
 
+- Add support for junction points in Windows
+
