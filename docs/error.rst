@@ -21,6 +21,10 @@ are used throughout `puyv`.
 
     Base exception class. Parent of all other handle exception classes.
 
+.. py:exception:: HandleClosedError()
+
+    Exception raised if a handle is already closed and some function is called on it.
+
 .. py:exception:: StreamError()
 
     Base exception class for stream errors.

@@ -128,3 +128,10 @@
 
         Indicates if this handle is active.
 
+    .. py:attribute:: closed
+
+        *Read only*
+
+        Indicates if this handle is closing or already closed.
+
+
