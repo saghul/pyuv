@@ -133,7 +133,7 @@ Pipe_func_bind(Pipe *self, PyObject *args)
 
     r = uv_pipe_bind((uv_pipe_t *)UV_HANDLE(self), name);
     if (r != 0) {
-        raise_uv_exception(UV_HANDLE_LOOP(self), PyExc_PipeError);
+        RAISE_UV_EXCEPTION(UV_HANDLE_LOOP(self), PyExc_PipeError);
         return NULL;
     }
 
@@ -168,7 +168,7 @@ Pipe_func_listen(Pipe *self, PyObject *args)
 
     r = uv_listen((uv_stream_t *)UV_HANDLE(self), backlog, on_pipe_connection);
     if (r != 0) {
-        raise_uv_exception(UV_HANDLE_LOOP(self), PyExc_PipeError);
+        RAISE_UV_EXCEPTION(UV_HANDLE_LOOP(self), PyExc_PipeError);
         return NULL;
     }
 
@@ -200,7 +200,7 @@ Pipe_func_accept(Pipe *self, PyObject *args)
 
     r = uv_accept((uv_stream_t *)UV_HANDLE(self), (uv_stream_t *)UV_HANDLE(client));
     if (r != 0) {
-        raise_uv_exception(UV_HANDLE_LOOP(self), PyExc_PipeError);
+        RAISE_UV_EXCEPTION(UV_HANDLE_LOOP(self), PyExc_PipeError);
         return NULL;
     }
 
@@ -316,7 +316,7 @@ Pipe_func_start_read2(Pipe *self, PyObject *args)
 
     r = uv_read2_start((uv_stream_t *)UV_HANDLE(self), (uv_alloc_cb)on_iostream_alloc, (uv_read2_cb)on_pipe_read2);
     if (r != 0) {
-        raise_uv_exception(UV_HANDLE_LOOP(self), PyExc_PipeError);
+        RAISE_UV_EXCEPTION(UV_HANDLE_LOOP(self), PyExc_PipeError);
         return NULL;
     }
 
@@ -410,7 +410,7 @@ Pipe_func_write2(Pipe *self, PyObject *args)
 
     r = uv_write2(wr, (uv_stream_t *)UV_HANDLE(self), bufs, buf_count, (uv_stream_t *)UV_HANDLE(send_handle), on_iostream_write);
     if (r != 0) {
-        raise_uv_exception(UV_HANDLE_LOOP(self), PyExc_PipeError);
+        RAISE_UV_EXCEPTION(UV_HANDLE_LOOP(self), PyExc_PipeError);
         goto error;
     }
 
@@ -474,7 +474,7 @@ Pipe_tp_init(Pipe *self, PyObject *args, PyObject *kwargs)
 
     r = uv_pipe_init(UV_HANDLE_LOOP(self), uv_pipe, (ipc == Py_True) ? 1 : 0);
     if (r != 0) {
-        raise_uv_exception(UV_HANDLE_LOOP(self), PyExc_PipeError);
+        RAISE_UV_EXCEPTION(UV_HANDLE_LOOP(self), PyExc_PipeError);
         Py_DECREF(loop);
         return -1;
     }

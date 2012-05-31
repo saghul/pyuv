@@ -40,7 +40,7 @@ Signal_func_start(Signal *self)
 
     r = uv_prepare_start((uv_prepare_t *)UV_HANDLE(self), on_signal_callback);
     if (r != 0) {
-        raise_uv_exception(UV_HANDLE_LOOP(self), PyExc_SignalError);
+        RAISE_UV_EXCEPTION(UV_HANDLE_LOOP(self), PyExc_SignalError);
         return NULL;
     }
 
@@ -57,7 +57,7 @@ Signal_func_stop(Signal *self)
 
     r = uv_prepare_stop((uv_prepare_t *)UV_HANDLE(self));
     if (r != 0) {
-        raise_uv_exception(UV_HANDLE_LOOP(self), PyExc_SignalError);
+        RAISE_UV_EXCEPTION(UV_HANDLE_LOOP(self), PyExc_SignalError);
         return NULL;
     }
 
@@ -98,7 +98,7 @@ Signal_tp_init(Signal *self, PyObject *args, PyObject *kwargs)
 
     r = uv_prepare_init(UV_HANDLE_LOOP(self), uv_prepare);
     if (r != 0) {
-        raise_uv_exception(UV_HANDLE_LOOP(self), PyExc_SignalError);
+        RAISE_UV_EXCEPTION(UV_HANDLE_LOOP(self), PyExc_SignalError);
         Py_DECREF(loop);
         return -1;
     }

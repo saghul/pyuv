@@ -60,7 +60,7 @@ Poll_func_start(Poll *self, PyObject *args)
 
     r = uv_poll_start((uv_poll_t *)UV_HANDLE(self), events, on_poll_callback);
     if (r != 0) {
-        raise_uv_exception(UV_HANDLE_LOOP(self), PyExc_PollError);
+        RAISE_UV_EXCEPTION(UV_HANDLE_LOOP(self), PyExc_PollError);
         return NULL;
     }
 
@@ -82,7 +82,7 @@ Poll_func_stop(Poll *self)
 
     r = uv_poll_stop((uv_poll_t *)UV_HANDLE(self));
     if (r != 0) {
-        raise_uv_exception(UV_HANDLE_LOOP(self), PyExc_PollError);
+        RAISE_UV_EXCEPTION(UV_HANDLE_LOOP(self), PyExc_PollError);
         return NULL;
     }
 
@@ -160,7 +160,7 @@ Poll_tp_init(Poll *self, PyObject *args, PyObject *kwargs)
 
     r = uv_poll_init_socket(UV_HANDLE_LOOP(self), uv_poll, (uv_os_sock_t)fdnum);
     if (r != 0) {
-        raise_uv_exception(UV_HANDLE_LOOP(self), PyExc_PollError);
+        RAISE_UV_EXCEPTION(UV_HANDLE_LOOP(self), PyExc_PollError);
         Py_DECREF(loop);
         return -1;
     }

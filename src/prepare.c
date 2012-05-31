@@ -49,7 +49,7 @@ Prepare_func_start(Prepare *self, PyObject *args)
 
     r = uv_prepare_start((uv_prepare_t *)UV_HANDLE(self), on_prepare_callback);
     if (r != 0) {
-        raise_uv_exception(UV_HANDLE_LOOP(self), PyExc_PrepareError);
+        RAISE_UV_EXCEPTION(UV_HANDLE_LOOP(self), PyExc_PrepareError);
         return NULL;
     }
 
@@ -71,7 +71,7 @@ Prepare_func_stop(Prepare *self)
 
     r = uv_prepare_stop((uv_prepare_t *)UV_HANDLE(self));
     if (r != 0) {
-        raise_uv_exception(UV_HANDLE_LOOP(self), PyExc_PrepareError);
+        RAISE_UV_EXCEPTION(UV_HANDLE_LOOP(self), PyExc_PrepareError);
         return NULL;
     }
 
@@ -115,7 +115,7 @@ Prepare_tp_init(Prepare *self, PyObject *args, PyObject *kwargs)
 
     r = uv_prepare_init(UV_HANDLE_LOOP(self), uv_prepare);
     if (r != 0) {
-        raise_uv_exception(UV_HANDLE_LOOP(self), PyExc_PrepareError);
+        RAISE_UV_EXCEPTION(UV_HANDLE_LOOP(self), PyExc_PrepareError);
         Py_DECREF(loop);
         return -1;
     }

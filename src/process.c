@@ -418,7 +418,7 @@ Process_func_spawn(Process *self, PyObject *args, PyObject *kwargs)
     }
 
     if (r != 0) {
-        raise_uv_exception(UV_HANDLE_LOOP(self), PyExc_ProcessError);
+        RAISE_UV_EXCEPTION(UV_HANDLE_LOOP(self), PyExc_ProcessError);
         PyMem_Free(uv_process);
         UV_HANDLE(self) = NULL;
         goto error;
@@ -450,7 +450,7 @@ Process_func_kill(Process *self, PyObject *args)
 
     r = uv_process_kill((uv_process_t *)UV_HANDLE(self), signum);
     if (r != 0) {
-        raise_uv_exception(UV_HANDLE_LOOP(self), PyExc_ProcessError);
+        RAISE_UV_EXCEPTION(UV_HANDLE_LOOP(self), PyExc_ProcessError);
         return NULL;
     }
 

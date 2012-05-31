@@ -1184,7 +1184,7 @@ DNSResolver_func_getaddrinfo(DNSResolver *self, PyObject *args, PyObject *kwargs
 
     r = uv_getaddrinfo(UV_LOOP(self), handle, &getaddrinfo_cb, name, port_str, &hints);
     if (r != 0) {
-        raise_uv_exception(UV_LOOP(self), PyExc_DNSError);
+        RAISE_UV_EXCEPTION(UV_LOOP(self), PyExc_DNSError);
         goto error;
     }
 

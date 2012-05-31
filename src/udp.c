@@ -175,7 +175,7 @@ UDP_func_bind(UDP *self, PyObject *args)
     }
 
     if (r != 0) {
-        raise_uv_exception(UV_HANDLE_LOOP(self), PyExc_UDPError);
+        RAISE_UV_EXCEPTION(UV_HANDLE_LOOP(self), PyExc_UDPError);
         return NULL;
     }
 
@@ -204,7 +204,7 @@ UDP_func_start_recv(UDP *self, PyObject *args)
 
     r = uv_udp_recv_start((uv_udp_t *)UV_HANDLE(self), (uv_alloc_cb)on_udp_alloc, (uv_udp_recv_cb)on_udp_read);
     if (r != 0) {
-        raise_uv_exception(UV_HANDLE_LOOP(self), PyExc_UDPError);
+        RAISE_UV_EXCEPTION(UV_HANDLE_LOOP(self), PyExc_UDPError);
         return NULL;
     }
 
@@ -226,7 +226,7 @@ UDP_func_stop_recv(UDP *self)
 
     r = uv_udp_recv_stop((uv_udp_t *)UV_HANDLE(self));
     if (r != 0) {
-        raise_uv_exception(UV_HANDLE_LOOP(self), PyExc_UDPError);
+        RAISE_UV_EXCEPTION(UV_HANDLE_LOOP(self), PyExc_UDPError);
         return NULL;
     }
 
@@ -333,7 +333,7 @@ UDP_func_send(UDP *self, PyObject *args)
         r = uv_udp_send6(wr, (uv_udp_t *)UV_HANDLE(self), bufs, buf_count, uv_ip6_addr(dest_ip, dest_port), (uv_udp_send_cb)on_udp_send);
     }
     if (r != 0) {
-        raise_uv_exception(UV_HANDLE_LOOP(self), PyExc_UDPError);
+        RAISE_UV_EXCEPTION(UV_HANDLE_LOOP(self), PyExc_UDPError);
         goto error;
     }
 
@@ -538,7 +538,7 @@ UDP_func_sendlines(UDP *self, PyObject *args)
         r = uv_udp_send6(wr, (uv_udp_t *)UV_HANDLE(self), bufs, buf_count, uv_ip6_addr(dest_ip, dest_port), (uv_udp_send_cb)on_udp_send);
     }
     if (r != 0) {
-        raise_uv_exception(UV_HANDLE_LOOP(self), PyExc_UDPError);
+        RAISE_UV_EXCEPTION(UV_HANDLE_LOOP(self), PyExc_UDPError);
         goto error;
     }
 
@@ -581,7 +581,7 @@ UDP_func_set_membership(UDP *self, PyObject *args)
 
     r = uv_udp_set_membership((uv_udp_t *)UV_HANDLE(self), multicast_address, interface_address, membership);
     if (r != 0) {
-        raise_uv_exception(UV_HANDLE_LOOP(self), PyExc_UDPError);
+        RAISE_UV_EXCEPTION(UV_HANDLE_LOOP(self), PyExc_UDPError);
         return NULL;
     }
 
@@ -604,7 +604,7 @@ UDP_func_getsockname(UDP *self)
 
     r = uv_udp_getsockname((uv_udp_t *)UV_HANDLE(self), &sockname, &namelen);
     if (r != 0) {
-        raise_uv_exception(UV_HANDLE_LOOP(self), PyExc_UDPError);
+        RAISE_UV_EXCEPTION(UV_HANDLE_LOOP(self), PyExc_UDPError);
         return NULL;
     }
 
@@ -641,7 +641,7 @@ UDP_func_set_multicast_ttl(UDP *self, PyObject *args)
 
     r = uv_udp_set_multicast_ttl((uv_udp_t *)UV_HANDLE(self), ttl);
     if (r != 0) {
-        raise_uv_exception(UV_HANDLE_LOOP(self), PyExc_UDPError);
+        RAISE_UV_EXCEPTION(UV_HANDLE_LOOP(self), PyExc_UDPError);
         return NULL;
     }
 
@@ -663,7 +663,7 @@ UDP_func_set_broadcast(UDP *self, PyObject *args)
 
     r = uv_udp_set_broadcast((uv_udp_t *)UV_HANDLE(self), (enable == Py_True) ? 1 : 0);
     if (r != 0) {
-        raise_uv_exception(UV_HANDLE_LOOP(self), PyExc_UDPError);
+        RAISE_UV_EXCEPTION(UV_HANDLE_LOOP(self), PyExc_UDPError);
         return NULL;
     }
 
@@ -685,7 +685,7 @@ UDP_func_set_multicast_loop(UDP *self, PyObject *args)
 
     r = uv_udp_set_multicast_loop((uv_udp_t *)UV_HANDLE(self), (enable == Py_True) ? 1 : 0);
     if (r != 0) {
-        raise_uv_exception(UV_HANDLE_LOOP(self), PyExc_UDPError);
+        RAISE_UV_EXCEPTION(UV_HANDLE_LOOP(self), PyExc_UDPError);
         return NULL;
     }
 
@@ -711,7 +711,7 @@ UDP_func_set_ttl(UDP *self, PyObject *args)
 
     r = uv_udp_set_ttl((uv_udp_t *)UV_HANDLE(self), ttl);
     if (r != 0) {
-        raise_uv_exception(UV_HANDLE_LOOP(self), PyExc_UDPError);
+        RAISE_UV_EXCEPTION(UV_HANDLE_LOOP(self), PyExc_UDPError);
         return NULL;
     }
 
@@ -751,7 +751,7 @@ UDP_tp_init(UDP *self, PyObject *args, PyObject *kwargs)
     }
     r = uv_udp_init(UV_HANDLE_LOOP(self), uv_udp_handle);
     if (r != 0) {
-        raise_uv_exception(UV_HANDLE_LOOP(self), PyExc_UDPError);
+        RAISE_UV_EXCEPTION(UV_HANDLE_LOOP(self), PyExc_UDPError);
         Py_DECREF(loop);
         return -1;
     }

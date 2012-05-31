@@ -49,7 +49,7 @@ Idle_func_start(Idle *self, PyObject *args)
 
     r = uv_idle_start((uv_idle_t *)UV_HANDLE(self), on_idle_callback);
     if (r != 0) {
-        raise_uv_exception(UV_HANDLE_LOOP(self), PyExc_IdleError);
+        RAISE_UV_EXCEPTION(UV_HANDLE_LOOP(self), PyExc_IdleError);
         return NULL;
     }
 
@@ -71,7 +71,7 @@ Idle_func_stop(Idle *self)
 
     r = uv_idle_stop((uv_idle_t *)UV_HANDLE(self));
     if (r != 0) {
-        raise_uv_exception(UV_HANDLE_LOOP(self), PyExc_IdleError);
+        RAISE_UV_EXCEPTION(UV_HANDLE_LOOP(self), PyExc_IdleError);
         return NULL;
     }
 
@@ -115,7 +115,7 @@ Idle_tp_init(Idle *self, PyObject *args, PyObject *kwargs)
 
     r = uv_idle_init(UV_HANDLE_LOOP(self), uv_idle);
     if (r != 0) {
-        raise_uv_exception(UV_HANDLE_LOOP(self), PyExc_IdleError);
+        RAISE_UV_EXCEPTION(UV_HANDLE_LOOP(self), PyExc_IdleError);
         Py_DECREF(loop);
         return -1;
     }

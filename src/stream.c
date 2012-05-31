@@ -192,7 +192,7 @@ Stream_func_shutdown(Stream *self, PyObject *args)
 
     r = uv_shutdown(req, (uv_stream_t *)UV_HANDLE(self), on_iostream_shutdown);
     if (r != 0) {
-        raise_uv_exception(UV_HANDLE_LOOP(self), PyExc_StreamError);
+        RAISE_UV_EXCEPTION(UV_HANDLE_LOOP(self), PyExc_StreamError);
         goto error;
     }
 
@@ -231,7 +231,7 @@ Stream_func_start_read(Stream *self, PyObject *args)
 
     r = uv_read_start((uv_stream_t *)UV_HANDLE(self), (uv_alloc_cb)on_iostream_alloc, (uv_read_cb)on_iostream_read);
     if (r != 0) {
-        raise_uv_exception(UV_HANDLE_LOOP(self), PyExc_StreamError);
+        RAISE_UV_EXCEPTION(UV_HANDLE_LOOP(self), PyExc_StreamError);
         return NULL;
     }
 
@@ -253,7 +253,7 @@ Stream_func_stop_read(Stream *self)
 
     r = uv_read_stop((uv_stream_t *)UV_HANDLE(self));
     if (r != 0) {
-        raise_uv_exception(UV_HANDLE_LOOP(self), PyExc_StreamError);
+        RAISE_UV_EXCEPTION(UV_HANDLE_LOOP(self), PyExc_StreamError);
         return NULL;
     }
 
@@ -340,7 +340,7 @@ Stream_func_write(Stream *self, PyObject *args)
 
     r = uv_write(wr, (uv_stream_t *)UV_HANDLE(self), bufs, buf_count, on_iostream_write);
     if (r != 0) {
-        raise_uv_exception(UV_HANDLE_LOOP(self), PyExc_StreamError);
+        RAISE_UV_EXCEPTION(UV_HANDLE_LOOP(self), PyExc_StreamError);
         goto error;
     }
 
@@ -543,7 +543,7 @@ Stream_func_writelines(Stream *self, PyObject *args)
 
     r = uv_write(wr, (uv_stream_t *)UV_HANDLE(self), bufs, buf_count, on_iostream_write);
     if (r != 0) {
-        raise_uv_exception(UV_HANDLE_LOOP(self), PyExc_StreamError);
+        RAISE_UV_EXCEPTION(UV_HANDLE_LOOP(self), PyExc_StreamError);
         goto error;
     }
 

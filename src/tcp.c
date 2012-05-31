@@ -113,7 +113,7 @@ TCP_func_bind(TCP *self, PyObject *args)
     }
 
     if (r != 0) {
-        raise_uv_exception(UV_HANDLE_LOOP(self), PyExc_TCPError);
+        RAISE_UV_EXCEPTION(UV_HANDLE_LOOP(self), PyExc_TCPError);
         return NULL;
     }
 
@@ -148,7 +148,7 @@ TCP_func_listen(TCP *self, PyObject *args)
 
     r = uv_listen((uv_stream_t *)UV_HANDLE(self), backlog, on_tcp_connection);
     if (r != 0) {
-        raise_uv_exception(UV_HANDLE_LOOP(self), PyExc_TCPError);
+        RAISE_UV_EXCEPTION(UV_HANDLE_LOOP(self), PyExc_TCPError);
         return NULL;
     }
 
@@ -180,7 +180,7 @@ TCP_func_accept(TCP *self, PyObject *args)
 
     r = uv_accept((uv_stream_t *)UV_HANDLE(self), (uv_stream_t *)UV_HANDLE(client));
     if (r != 0) {
-        raise_uv_exception(UV_HANDLE_LOOP(self), PyExc_TCPError);
+        RAISE_UV_EXCEPTION(UV_HANDLE_LOOP(self), PyExc_TCPError);
         return NULL;
     }
 
@@ -248,7 +248,7 @@ TCP_func_connect(TCP *self, PyObject *args)
     }
 
     if (r != 0) {
-        raise_uv_exception(UV_HANDLE_LOOP(self), PyExc_TCPError);
+        RAISE_UV_EXCEPTION(UV_HANDLE_LOOP(self), PyExc_TCPError);
         goto error;
     }
 
@@ -281,7 +281,7 @@ TCP_func_getsockname(TCP *self)
 
     r = uv_tcp_getsockname((uv_tcp_t *)UV_HANDLE(self), &sockname, &namelen);
     if (r != 0) {
-        raise_uv_exception(UV_HANDLE_LOOP(self), PyExc_TCPError);
+        RAISE_UV_EXCEPTION(UV_HANDLE_LOOP(self), PyExc_TCPError);
         return NULL;
     }
 
@@ -315,7 +315,7 @@ TCP_func_getpeername(TCP *self)
 
     r = uv_tcp_getpeername((uv_tcp_t *)UV_HANDLE(self), &peername, &namelen);
     if (r != 0) {
-        raise_uv_exception(UV_HANDLE_LOOP(self), PyExc_TCPError);
+        RAISE_UV_EXCEPTION(UV_HANDLE_LOOP(self), PyExc_TCPError);
         return NULL;
     }
 
@@ -350,7 +350,7 @@ TCP_func_nodelay(TCP *self, PyObject *args)
 
     r = uv_tcp_nodelay((uv_tcp_t *)UV_HANDLE(self), (enable == Py_True) ? 1 : 0);
     if (r != 0) {
-        raise_uv_exception(UV_HANDLE_LOOP(self), PyExc_TCPError);
+        RAISE_UV_EXCEPTION(UV_HANDLE_LOOP(self), PyExc_TCPError);
         return NULL;
     }
 
@@ -373,7 +373,7 @@ TCP_func_keepalive(TCP *self, PyObject *args)
 
     r = uv_tcp_keepalive((uv_tcp_t *)UV_HANDLE(self), (enable == Py_True) ? 1 : 0, delay);
     if (r != 0) {
-        raise_uv_exception(UV_HANDLE_LOOP(self), PyExc_TCPError);
+        RAISE_UV_EXCEPTION(UV_HANDLE_LOOP(self), PyExc_TCPError);
         return NULL;
     }
 
@@ -404,7 +404,7 @@ TCP_func_simultaneous_accepts(TCP *self, PyObject *args)
 
     r = uv_tcp_simultaneous_accepts((uv_tcp_t *)UV_HANDLE(self), (enable == Py_True) ? 1 : 0);
     if (r != 0) {
-        raise_uv_exception(UV_HANDLE_LOOP(self), PyExc_TCPError);
+        RAISE_UV_EXCEPTION(UV_HANDLE_LOOP(self), PyExc_TCPError);
         return NULL;
     }
 
@@ -445,7 +445,7 @@ TCP_tp_init(TCP *self, PyObject *args, PyObject *kwargs)
 
     r = uv_tcp_init(UV_HANDLE_LOOP(self), (uv_tcp_t *)uv_tcp);
     if (r != 0) {
-        raise_uv_exception(UV_HANDLE_LOOP(self), PyExc_TCPError);
+        RAISE_UV_EXCEPTION(UV_HANDLE_LOOP(self), PyExc_TCPError);
         Py_DECREF(loop);
         return -1;
     }

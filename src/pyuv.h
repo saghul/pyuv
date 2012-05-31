@@ -56,9 +56,13 @@ typedef int Bool;
     } while(0)                                                              \
 
 #define UV_LOOP(x) (x)->loop->uv_loop
+
 #define UV_HANDLE(x) ((Handle *)x)->uv_handle
+
 #define UV_HANDLE_CLOSED(x) (!UV_HANDLE(x) || uv_is_closing(UV_HANDLE(x)))
+
 #define UV_HANDLE_LOOP(x) UV_LOOP((Handle *)x)
+
 #define RAISE_IF_HANDLE_CLOSED(obj, exc_type, retval)                       \
     do {                                                                    \
         if (UV_HANDLE_CLOSED(obj)) {                                        \
@@ -66,6 +70,16 @@ typedef int Bool;
             return retval;                                                  \
         }                                                                   \
     } while(0)                                                              \
+
+#define RAISE_UV_EXCEPTION(loop, exc_type)                                          \
+    do {                                                                            \
+        uv_err_t err = uv_last_error(loop);                                         \
+        PyObject *exc_data = Py_BuildValue("(is)", err.code, uv_strerror(err));     \
+        if (exc_data != NULL) {                                                     \
+            PyErr_SetObject(exc_type, exc_data);                                    \
+            Py_DECREF(exc_data);                                                    \
+        }                                                                           \
+    } while(0)                                                                      \
 
 #if defined(__MINGW32__) || defined(_MSC_VER)
     #define PYUV_WINDOWS
@@ -283,24 +297,6 @@ PyUVModule_AddObject(PyObject *module, const char *name, PyObject *value)
     return 0;
 }
 
-
-#if defined(__GNUC__) && !defined(__STRICT_ANSI__)
-    #define INLINE inline
-#else
-    #define INLINE
-#endif
-
-/* Raise appropriate exception when an error is produced inside libuv */
-static INLINE void
-raise_uv_exception(uv_loop_t *loop, PyObject *exc_type)
-{
-    uv_err_t err = uv_last_error(loop);
-    PyObject *exc_data = Py_BuildValue("(is)", err.code, uv_strerror(err));
-    if (exc_data != NULL) {
-        PyErr_SetObject(exc_type, exc_data);
-        Py_DECREF(exc_data);
-    }
-}
 
 /* borrowed from pyev */
 #ifdef PYUV_WINDOWS
