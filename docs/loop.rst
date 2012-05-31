@@ -21,12 +21,12 @@
         loop if only a single loop is needed.
 
     .. py:method:: run
-        
+
         Run the event loop. This method will block until there is no active
         handle running on the loop.
 
     .. py:method:: run_once
-        
+
         Run a single loop iteration. Returns true if there are any pending events to process,
         false otherwise.
 
@@ -56,7 +56,7 @@
 
         *Read only*
 
-        List of the currently active handles.
+        Number of currently active handles.
 
     .. py:attribute:: counters
 
