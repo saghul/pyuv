@@ -64,8 +64,6 @@ class ProcessTest(unittest2.TestCase):
             self.exit_cb_called += 1
             proc.close(handle_close_cb)
         def stdout_read_cb(handle, data, error):
-            if error:
-                print error
             if data is not None:
                 self.received_output = data.strip()
             handle.close(handle_close_cb)

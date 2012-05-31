@@ -21,7 +21,6 @@ class WalkTest(unittest2.TestCase):
         def walk_cb(handle):
             handles.append(handle)
         loop.walk(walk_cb)
-        print handles
         self.assertTrue(timer not in handles)
 
 
