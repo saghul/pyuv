@@ -945,7 +945,6 @@ class FSTestUtime(unittest2.TestCase):
         self.assertEqual(s.st_mtime, mtime)
 
 
-@platform_skip(["linux"])
 class FSEventTestBasic(unittest2.TestCase):
 
     def setUp(self):
