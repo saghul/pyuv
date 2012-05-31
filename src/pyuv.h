@@ -46,6 +46,10 @@ typedef int Bool;
 
 #define UNUSED_ARG(arg)  (void)arg
 
+#if defined(__MINGW32__) || defined(_MSC_VER)
+    #define PYUV_WINDOWS
+#endif
+
 #define ASSERT(x)                                                           \
     do {                                                                    \
         if (!(x)) {                                                         \
@@ -80,10 +84,6 @@ typedef int Bool;
             Py_DECREF(exc_data);                                                    \
         }                                                                           \
     } while(0)                                                                      \
-
-#if defined(__MINGW32__) || defined(_MSC_VER)
-    #define PYUV_WINDOWS
-#endif
 
 
 /* Python types definitions */
