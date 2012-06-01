@@ -1,3 +1,29 @@
+Version 0.7.0
+=============
+ - Added weak referencing support to handles
+ - Added Poll handle
+ - Added more tests: weakrefs, gc, ...
+ - Added instance dictionary to Loop and all handles
+ - Added filename property to FSEvent handle
+ - Added TCP echo server example using Poll handles, adapted from pyev
+ - Added active_handles property to Loop
+ - Added Loop.walk function to iterate over the loop handles
+ - Added support for spawning detached child processes
+ - Adapted UDP.send to accept objects conforming to the buffer interface and
+   also added UDP.sendlines
+ - Improved efficiency by avoiding copying strings on write/send
+ - Refactored Process stdio support
+ - Refactored ThreadPool API
+ - Refactored exception hierarchy
+ - Refactored code according to refcount refactor in libuv
+ - Refactored Async handle API
+ - Refactored API to set parallel thread number in the thread pool
+ - Fixed compilation warnings on Python 3
+ - Fixed TTY example on Windows
+ - Fixed some fs operations relaying on fileno() on Windows
+ - Raised libuv revision to 38a6f9f
+ - Updated documentation
+
 Version 0.6.1
 =============
  - Added ability to set uid and gid on Process.spawn
