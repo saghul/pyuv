@@ -36,14 +36,15 @@
 
         :param int gid: GID of the group to be used if flag ``UV_PROCESS_SETGID`` is used.
 
-        :param int flags: Available flags: ``UV_PROCESS_SETUID``, ``UV_PROCESS_SETGID``, ``UV_PROCESS_WINDOWS_VERBATIM_ARGUMENTS``:
-            set UID, set GID and enclose arguments in double quotes on Windows, respectively.
+        :param int flags: Available flags:
 
-        :param Pipe stdin: Uninitialized ``Pipe`` which will be used as the process stdin.
+            - ``UV_PROCESS_SETUID``: set child UID
+            - ``UV_PROCESS_SETGID``: set child GID
+            - ``UV_PROCESS_WINDOWS_VERBATIM_ARGUMENTS``: enclose arguments in double quotes on Windows
+            - ``UV_PROCESS_DETACHED``: detach child process from parent
 
-        :param Pipe stdout: Uninitialized ``Pipe`` which will be used as the process stdout.
-
-        :param Pipe stderr: Uninitialized ``Pipe`` which will be used as the process stderr.
+        :param list stdio: Sequence containing ``StdIO`` containers which will be used to pass stdio
+            handles to the child process. See the ``StdIO`` class documentation for for information.
 
         Spawn the specified child process.
 
@@ -88,5 +89,25 @@
         *Read only*
 
         Indicates if this handle is closing or already closed.
+
+
+.. py:class:: StdIO([[[stream], fd], flags])
+
+    :param object stream: Stream object.
+
+    :param int fd: File descriptor.
+
+    :param int flags: Flags.
+
+    Create a new container for passing stdio to a child process. Stream can be any stream object,
+    that is ``TCP``, ``Pipe`` or ``TTY``. An arbitrary file descriptor can be passed by setting
+    the ``fd`` parameter.
+
+    The operation mode is selected by setting the ``flags`` parameter:
+
+    - UV_IGNORE: this container should be ignored.
+    - UV_CREATE_PIPE: indicates a pipe should be created. UV_READABLE_PIPE and UV_WRITABLE_PIPE determine the direction of flow, from the child process' perspective. Both flags may be specified to create a duplex data stream.
+    - UV_INHERIT_FD: inherit the given file descriptor in the child.
+    - UV_INHERIT_STREAN: inherit the file descriptor of the given stream in the child.
 
 
