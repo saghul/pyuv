@@ -3,15 +3,15 @@ static PyObject* PyExc_UDPError;
 
 
 typedef struct {
-    PyObject *obj;
-    PyObject *callback;
-    void *data;
-} udp_req_data_t;
-
-typedef struct {
     uv_buf_t *bufs;
     int buf_count;
 } udp_send_data_t;
+
+typedef struct {
+    PyObject *obj;
+    PyObject *callback;
+    udp_send_data_t *data;
+} udp_req_data_t;
 
 
 static uv_buf_t
@@ -325,7 +325,7 @@ UDP_func_send(UDP *self, PyObject *args)
 
     write_data->bufs = bufs;
     write_data->buf_count = buf_count;
-    req_data->data = (void *)write_data;
+    req_data->data = write_data;
 
     if (address_type == AF_INET) {
         r = uv_udp_send(wr, (uv_udp_t *)UV_HANDLE(self), bufs, buf_count, uv_ip4_addr(dest_ip, dest_port), (uv_udp_send_cb)on_udp_send);
@@ -530,7 +530,7 @@ UDP_func_sendlines(UDP *self, PyObject *args)
 
     write_data->bufs = bufs;
     write_data->buf_count = buf_count;
-    req_data->data = (void *)write_data;
+    req_data->data = write_data;
 
     if (address_type == AF_INET) {
         r = uv_udp_send(wr, (uv_udp_t *)UV_HANDLE(self), bufs, buf_count, uv_ip4_addr(dest_ip, dest_port), (uv_udp_send_cb)on_udp_send);
