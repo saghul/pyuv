@@ -45,7 +45,7 @@ on_pipe_client_connection(uv_connect_t *req, int status)
     ASSERT(req);
 
     req_data = (stream_req_data_t *)req->data;
-    self = (Pipe *)req_data->obj;
+    self = (Pipe *)req->handle->data;
     callback = req_data->callback;
 
     ASSERT(self);
@@ -239,7 +239,6 @@ Pipe_func_connect(Pipe *self, PyObject *args)
         goto error;
     }
 
-    req_data->obj = (PyObject *)self;
     Py_INCREF(callback);
     req_data->callback = callback;
     connect_req->data = (void *)req_data;
@@ -381,7 +380,6 @@ Pipe_func_write2(Pipe *self, PyObject *args)
         goto error;
     }
 
-    req_data->obj = (PyObject *)self;
     Py_INCREF(callback);
     req_data->callback = callback;
     wr->data = (void *)req_data;

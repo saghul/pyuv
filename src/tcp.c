@@ -46,8 +46,7 @@ on_tcp_client_connection(uv_connect_t *req, int status)
 
     ASSERT(req);
     req_data = (stream_req_data_t *)req->data;
-
-    self = (TCP *)req_data->obj;
+    self = (TCP *)req->handle->data;
     callback = req_data->callback;
 
     ASSERT(self);
@@ -236,7 +235,6 @@ TCP_func_connect(TCP *self, PyObject *args)
         goto error;
     }
 
-    req_data->obj = (PyObject *)self;
     Py_INCREF(callback);
     req_data->callback = callback;
     connect_req->data = (void *)req_data;

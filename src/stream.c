@@ -8,7 +8,6 @@ typedef struct {
 } stream_write_data_t;
 
 typedef struct {
-    PyObject *obj;
     PyObject *callback;
     stream_write_data_t *data;
 } stream_req_data_t;
@@ -35,7 +34,7 @@ on_stream_shutdown(uv_shutdown_t* req, int status)
     PyObject *callback, *result, *py_errorno;
 
     req_data = (stream_req_data_t *)req->data;
-    self = (Stream *)req_data->obj;
+    self = (Stream *)req->handle->data;
     callback = req_data->callback;
 
     ASSERT(self);
@@ -122,7 +121,7 @@ on_stream_write(uv_write_t* req, int status)
 
     req_data = (stream_req_data_t *)req->data;
     write_data = req_data->data;
-    self = (Stream *)req_data->obj;
+    self = (Stream *)req->handle->data;
     callback = req_data->callback;
 
     ASSERT(self);
@@ -185,7 +184,6 @@ Stream_func_shutdown(Stream *self, PyObject *args)
         goto error;
     }
 
-    req_data->obj = (PyObject *)self;
     Py_INCREF(callback);
     req_data->callback = callback;
     req->data = (void *)req_data;
@@ -311,7 +309,6 @@ Stream_func_write(Stream *self, PyObject *args)
         goto error;
     }
 
-    req_data->obj = (PyObject *)self;
     Py_INCREF(callback);
     req_data->callback = callback;
     wr->data = (void *)req_data;
@@ -437,7 +434,6 @@ Stream_func_writelines(Stream *self, PyObject *args)
         goto error;
     }
 
-    req_data->obj = (PyObject *)self;
     Py_INCREF(callback);
     req_data->callback = callback;
     wr->data = (void *)req_data;

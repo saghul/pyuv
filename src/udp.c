@@ -8,7 +8,6 @@ typedef struct {
 } udp_send_data_t;
 
 typedef struct {
-    PyObject *obj;
     PyObject *callback;
     udp_send_data_t *data;
 } udp_req_data_t;
@@ -102,9 +101,9 @@ on_udp_send(uv_udp_send_t* req, int status)
     ASSERT(req);
 
     req_data = (udp_req_data_t *)req->data;
-    send_data = (udp_send_data_t *)req_data->data;
+    send_data = req_data->data;
 
-    self = (UDP *)req_data->obj;
+    self = (UDP *)req->handle->data;
     callback = req_data->callback;
 
     ASSERT(self);
@@ -300,7 +299,6 @@ UDP_func_send(UDP *self, PyObject *args)
         goto error;
     }
 
-    req_data->obj = (PyObject *)self;
     Py_INCREF(callback);
     req_data->callback = callback;
     wr->data = (void *)req_data;
@@ -428,7 +426,6 @@ UDP_func_sendlines(UDP *self, PyObject *args)
         goto error;
     }
 
-    req_data->obj = (PyObject *)self;
     Py_INCREF(callback);
     req_data->callback = callback;
     wr->data = (void *)req_data;
