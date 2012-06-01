@@ -40,12 +40,12 @@ static void
 on_tcp_client_connection(uv_connect_t *req, int status)
 {
     PyGILState_STATE gstate = PyGILState_Ensure();
-    iostream_req_data_t* req_data;
+    stream_req_data_t* req_data;
     TCP *self;
     PyObject *callback, *result, *py_errorno;
 
     ASSERT(req);
-    req_data = (iostream_req_data_t *)req->data;
+    req_data = (stream_req_data_t *)req->data;
 
     self = (TCP *)req_data->obj;
     callback = req_data->callback;
@@ -196,7 +196,7 @@ TCP_func_connect(TCP *self, PyObject *args)
     struct in_addr addr4;
     struct in6_addr addr6;
     uv_connect_t *connect_req = NULL;
-    iostream_req_data_t *req_data = NULL;
+    stream_req_data_t *req_data = NULL;
     PyObject *callback;
 
     RAISE_IF_HANDLE_CLOSED(self, PyExc_HandleClosedError, NULL);
@@ -230,7 +230,7 @@ TCP_func_connect(TCP *self, PyObject *args)
         goto error;
     }
 
-    req_data = (iostream_req_data_t*) PyMem_Malloc(sizeof(iostream_req_data_t));
+    req_data = (stream_req_data_t*) PyMem_Malloc(sizeof(stream_req_data_t));
     if (!req_data) {
         PyErr_NoMemory();
         goto error;

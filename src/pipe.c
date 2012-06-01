@@ -39,12 +39,12 @@ static void
 on_pipe_client_connection(uv_connect_t *req, int status)
 {
     PyGILState_STATE gstate = PyGILState_Ensure();
-    iostream_req_data_t* req_data;
+    stream_req_data_t* req_data;
     Pipe *self;
     PyObject *callback, *result, *py_errorno;
     ASSERT(req);
 
-    req_data = (iostream_req_data_t *)req->data;
+    req_data = (stream_req_data_t *)req->data;
     self = (Pipe *)req_data->obj;
     callback = req_data->callback;
 
@@ -213,7 +213,7 @@ Pipe_func_connect(Pipe *self, PyObject *args)
 {
     char *name;
     uv_connect_t *connect_req = NULL;
-    iostream_req_data_t *req_data = NULL;
+    stream_req_data_t *req_data = NULL;
     PyObject *callback;
 
     RAISE_IF_HANDLE_CLOSED(self, PyExc_HandleClosedError, NULL);
@@ -233,7 +233,7 @@ Pipe_func_connect(Pipe *self, PyObject *args)
         goto error;
     }
 
-    req_data = (iostream_req_data_t*) PyMem_Malloc(sizeof(iostream_req_data_t));
+    req_data = (stream_req_data_t*) PyMem_Malloc(sizeof(stream_req_data_t));
     if (!req_data) {
         PyErr_NoMemory();
         goto error;
@@ -314,7 +314,7 @@ Pipe_func_start_read2(Pipe *self, PyObject *args)
         return NULL;
     }
 
-    r = uv_read2_start((uv_stream_t *)UV_HANDLE(self), (uv_alloc_cb)on_iostream_alloc, (uv_read2_cb)on_pipe_read2);
+    r = uv_read2_start((uv_stream_t *)UV_HANDLE(self), (uv_alloc_cb)on_stream_alloc, (uv_read2_cb)on_pipe_read2);
     if (r != 0) {
         RAISE_UV_EXCEPTION(UV_HANDLE_LOOP(self), PyExc_PipeError);
         return NULL;
@@ -340,8 +340,8 @@ Pipe_func_write2(Pipe *self, PyObject *args)
     uv_buf_t tmpbuf;
     uv_buf_t *bufs = NULL;
     uv_write_t *wr = NULL;
-    iostream_req_data_t *req_data = NULL;
-    iostream_write_data_t *write_data = NULL;
+    stream_req_data_t *req_data = NULL;
+    stream_write_data_t *write_data = NULL;
 
     buf_count = 0;
     callback = Py_None;
@@ -369,13 +369,13 @@ Pipe_func_write2(Pipe *self, PyObject *args)
         goto error;
     }
 
-    req_data = (iostream_req_data_t*) PyMem_Malloc(sizeof(iostream_req_data_t));
+    req_data = (stream_req_data_t*) PyMem_Malloc(sizeof(stream_req_data_t));
     if (!req_data) {
         PyErr_NoMemory();
         goto error;
     }
 
-    write_data = (iostream_write_data_t *) PyMem_Malloc(sizeof(iostream_write_data_t));
+    write_data = (stream_write_data_t *) PyMem_Malloc(sizeof(stream_write_data_t));
     if (!write_data) {
         PyErr_NoMemory();
         goto error;
@@ -408,7 +408,7 @@ Pipe_func_write2(Pipe *self, PyObject *args)
     write_data->buf_count = buf_count;
     req_data->data = (void *)write_data;
 
-    r = uv_write2(wr, (uv_stream_t *)UV_HANDLE(self), bufs, buf_count, (uv_stream_t *)UV_HANDLE(send_handle), on_iostream_write);
+    r = uv_write2(wr, (uv_stream_t *)UV_HANDLE(self), bufs, buf_count, (uv_stream_t *)UV_HANDLE(send_handle), on_stream_write);
     if (r != 0) {
         RAISE_UV_EXCEPTION(UV_HANDLE_LOOP(self), PyExc_PipeError);
         goto error;
