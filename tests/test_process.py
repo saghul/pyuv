@@ -253,6 +253,24 @@ class ProcessTest(unittest2.TestCase):
         self.assertEqual(self.exit_cb_called, 1)
         self.assertEqual(self.close_cb_called, 1)
 
+    def test_process_detached(self):
+        self.exit_cb_called = 0
+        def proc_exit_cb(proc, exit_status, term_signal):
+            self.exit_cb_called += 1
+        loop = pyuv.Loop.default_loop()
+        proc = pyuv.Process(loop)
+        if sys.platform == 'win32':
+            proc.spawn(file="cmd.exe", args=[b"/c", b"proc_basic.py"], exit_callback=proc_exit_cb, flags=pyuv.UV_PROCESS_DETACHED)
+        else:
+            proc.spawn(file="./proc_basic.py", exit_callback=proc_exit_cb, flags=pyuv.UV_PROCESS_DETACHED)
+        proc.unref()
+        pid = proc.pid
+        loop.run()
+        self.assertEqual(self.exit_cb_called, 0)
+        proc.kill(0)
+        proc.kill(15)
+        self.assertNotEqual(pid, None)
+
 
 if __name__ == '__main__':
     unittest2.main(verbosity=2)
