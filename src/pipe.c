@@ -406,7 +406,7 @@ Pipe_func_write2(Pipe *self, PyObject *args)
 
     write_data->bufs = bufs;
     write_data->buf_count = buf_count;
-    req_data->data = (void *)write_data;
+    req_data->data = write_data;
 
     r = uv_write2(wr, (uv_stream_t *)UV_HANDLE(self), bufs, buf_count, (uv_stream_t *)UV_HANDLE(send_handle), on_stream_write);
     if (r != 0) {

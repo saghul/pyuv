@@ -3,15 +3,15 @@ static PyObject* PyExc_StreamError;
 
 
 typedef struct {
-    PyObject *obj;
-    PyObject *callback;
-    void *data;
-} stream_req_data_t;
-
-typedef struct {
     uv_buf_t *bufs;
     int buf_count;
 } stream_write_data_t;
+
+typedef struct {
+    PyObject *obj;
+    PyObject *callback;
+    stream_write_data_t *data;
+} stream_req_data_t;
 
 
 static uv_buf_t
@@ -121,7 +121,7 @@ on_stream_write(uv_write_t* req, int status)
     ASSERT(req);
 
     req_data = (stream_req_data_t *)req->data;
-    write_data = (stream_write_data_t *)req_data->data;
+    write_data = req_data->data;
     self = (Stream *)req_data->obj;
     callback = req_data->callback;
 
@@ -336,7 +336,7 @@ Stream_func_write(Stream *self, PyObject *args)
 
     write_data->bufs = bufs;
     write_data->buf_count = buf_count;
-    req_data->data = (void *)write_data;
+    req_data->data = write_data;
 
     r = uv_write(wr, (uv_stream_t *)UV_HANDLE(self), bufs, buf_count, on_stream_write);
     if (r != 0) {
@@ -539,7 +539,7 @@ Stream_func_writelines(Stream *self, PyObject *args)
 
     write_data->bufs = bufs;
     write_data->buf_count = buf_count;
-    req_data->data = (void *)write_data;
+    req_data->data = write_data;
 
     r = uv_write(wr, (uv_stream_t *)UV_HANDLE(self), bufs, buf_count, on_stream_write);
     if (r != 0) {
