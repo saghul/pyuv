@@ -14,7 +14,6 @@ StdIO_tp_init(StdIO *self, PyObject *args, PyObject *kwargs)
 {
     int flags = UV_IGNORE;
     int fd = -1;
-    uv_handle_type handle_type;
     PyObject *stream, *tmp;
 
     static char *kwlist[] = {"stream", "fd", "flags", NULL};
