@@ -208,7 +208,8 @@ init_pyuv(void)
     PyModule_AddIntMacro(pyuv, UV_CREATE_PIPE);
     PyModule_AddIntMacro(pyuv, UV_READABLE_PIPE);
     PyModule_AddIntMacro(pyuv, UV_WRITABLE_PIPE);
-    PyModule_AddIntMacro(pyuv, UV_RAW_FD);
+    PyModule_AddIntMacro(pyuv, UV_INHERIT_FD);
+    PyModule_AddIntMacro(pyuv, UV_INHERIT_STREAM);
     /* Poll constants */
     PyModule_AddIntMacro(pyuv, UV_READABLE);
     PyModule_AddIntMacro(pyuv, UV_WRITABLE);

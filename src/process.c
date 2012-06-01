@@ -35,18 +35,13 @@ StdIO_tp_init(StdIO *self, PyObject *args, PyObject *kwargs)
             PyErr_SetString(PyExc_TypeError, "Only stream objects are supported");
             return -1;
         }
-        if (!((flags & ~(UV_CREATE_PIPE | UV_READABLE_PIPE | UV_WRITABLE_PIPE))==0)) {
+        if (!((flags & ~(UV_CREATE_PIPE | UV_READABLE_PIPE | UV_WRITABLE_PIPE | UV_INHERIT_STREAM))==0)) {
             PyErr_SetString(PyExc_ValueError, "invalid flags specified for stream");
-            return -1;
-        }
-        handle_type = ((Handle *)stream)->uv_handle->type;
-        if (handle_type != UV_NAMED_PIPE && handle_type != UV_TTY) {
-            PyErr_SetString(PyExc_TypeError, "Only Pipes and TTY handles are supported");
             return -1;
         }
     }
 
-    if (fd != -1 && !((flags & ~(UV_RAW_FD))==0)) {
+    if (fd != -1 && !((flags & ~(UV_INHERIT_FD))==0)) {
         PyErr_SetString(PyExc_ValueError, "invalid flags specified for fd");
         return -1;
     }
@@ -377,9 +372,9 @@ Process_func_spawn(Process *self, PyObject *args, PyObject *kwargs)
             }
             stdio_count++;
             stdio_container[i].flags = ((StdIO *)item)->flags;
-            if (((StdIO *)item)->flags & UV_CREATE_PIPE) {
+            if (((StdIO *)item)->flags & (UV_CREATE_PIPE | UV_INHERIT_STREAM)) {
                 stdio_container[i].data.stream = (uv_stream_t *)(UV_HANDLE(((StdIO *)item)->stream));
-            } else if (((StdIO *)item)->flags & UV_RAW_FD) {
+            } else if (((StdIO *)item)->flags & UV_INHERIT_FD) {
                 stdio_container[i].data.fd = ((StdIO *)item)->fd;
             }
             Py_DECREF(item);
