@@ -5,6 +5,7 @@ static PyObject* PyExc_UDPError;
 typedef struct {
     uv_buf_t *bufs;
     int buf_count;
+    Py_buffer view;
 } udp_send_data_t;
 
 typedef struct {
@@ -126,8 +127,12 @@ on_udp_send(uv_udp_send_t* req, int status)
         Py_DECREF(py_errorno);
     }
 
-    for (i = 0; i < send_data->buf_count; i++) {
-        PyMem_Free(send_data->bufs[i].base);
+    if (send_data->buf_count == 1) {
+        PyBuffer_Release(&send_data->view);
+    } else {
+        for (i = 0; i < send_data->buf_count; i++) {
+            PyMem_Free(send_data->bufs[i].base);
+        }
     }
     PyMem_Free(send_data);
     Py_DECREF(callback);
@@ -239,14 +244,12 @@ UDP_func_stop_recv(UDP *self)
 static PyObject *
 UDP_func_send(UDP *self, PyObject *args)
 {
-    int i, r, buf_count, dest_port, address_type;
-    char *data_str, *tmp, *dest_ip;
+    int r, buf_count, dest_port, address_type;
+    char *dest_ip;
     struct in_addr addr4;
     struct in6_addr addr6;
     Py_buffer pbuf;
-    Py_ssize_t data_len;
     PyObject *callback;
-    uv_buf_t tmpbuf;
     uv_buf_t *bufs = NULL;
     uv_udp_send_t *wr = NULL;
     udp_req_data_t *req_data = NULL;
@@ -309,20 +312,12 @@ UDP_func_send(UDP *self, PyObject *args)
         goto error;
     }
 
-    data_str = pbuf.buf;
-    data_len = pbuf.len;
-    tmp = (char *) PyMem_Malloc(data_len);
-    if (!tmp) {
-        PyErr_NoMemory();
-        goto error;
-    }
-    memcpy(tmp, data_str, data_len);
-    tmpbuf = uv_buf_init(tmp, data_len);
-    bufs[0] = tmpbuf;
+    bufs[0] = uv_buf_init(pbuf.buf, pbuf.len);
     buf_count = 1;
 
     write_data->bufs = bufs;
     write_data->buf_count = buf_count;
+    write_data->view = pbuf;
     req_data->data = write_data;
 
     if (address_type == AF_INET) {
@@ -335,16 +330,11 @@ UDP_func_send(UDP *self, PyObject *args)
         goto error;
     }
 
-    PyBuffer_Release(&pbuf);
-
     Py_RETURN_NONE;
 
 error:
     PyBuffer_Release(&pbuf);
     if (bufs) {
-        for (i = 0; i < buf_count; i++) {
-            PyMem_Free(bufs[i].base);
-        }
         PyMem_Free(bufs);
     }
     if (write_data) {

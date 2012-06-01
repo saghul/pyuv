@@ -5,6 +5,7 @@ static PyObject* PyExc_StreamError;
 typedef struct {
     uv_buf_t *bufs;
     int buf_count;
+    Py_buffer view;
 } stream_write_data_t;
 
 typedef struct {
@@ -144,8 +145,12 @@ on_stream_write(uv_write_t* req, int status)
         Py_DECREF(py_errorno);
     }
 
-    for (i = 0; i < write_data->buf_count; i++) {
-        PyMem_Free(write_data->bufs[i].base);
+    if (write_data->buf_count == 1) {
+        PyBuffer_Release(&write_data->view);
+    } else {
+        for (i = 0; i < write_data->buf_count; i++) {
+            PyMem_Free(write_data->bufs[i].base);
+        }
     }
     PyMem_Free(write_data->bufs);
     PyMem_Free(write_data);
@@ -265,12 +270,9 @@ Stream_func_stop_read(Stream *self)
 static PyObject *
 Stream_func_write(Stream *self, PyObject *args)
 {
-    int i, r, buf_count;
-    char *data_str, *tmp;
+    int r, buf_count;
     Py_buffer pbuf;
-    Py_ssize_t data_len;
     PyObject *callback;
-    uv_buf_t tmpbuf;
     uv_buf_t *bufs = NULL;
     uv_write_t *wr = NULL;
     stream_req_data_t *req_data = NULL;
@@ -319,20 +321,12 @@ Stream_func_write(Stream *self, PyObject *args)
         goto error;
     }
 
-    data_str = pbuf.buf;
-    data_len = pbuf.len;
-    tmp = (char *) PyMem_Malloc(data_len);
-    if (!tmp) {
-        PyErr_NoMemory();
-        goto error;
-    }
-    memcpy(tmp, data_str, data_len);
-    tmpbuf = uv_buf_init(tmp, data_len);
-    bufs[0] = tmpbuf;
+    bufs[0] = uv_buf_init(pbuf.buf, pbuf.len);
     buf_count = 1;
 
     write_data->bufs = bufs;
     write_data->buf_count = buf_count;
+    write_data->view = pbuf;
     req_data->data = write_data;
 
     r = uv_write(wr, (uv_stream_t *)UV_HANDLE(self), bufs, buf_count, on_stream_write);
@@ -341,16 +335,11 @@ Stream_func_write(Stream *self, PyObject *args)
         goto error;
     }
 
-    PyBuffer_Release(&pbuf);
-
     Py_RETURN_NONE;
 
 error:
     PyBuffer_Release(&pbuf);
     if (bufs) {
-        for (i = 0; i < buf_count; i++) {
-            PyMem_Free(bufs[i].base);
-        }
         PyMem_Free(bufs);
     }
     if (write_data) {

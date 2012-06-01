@@ -332,11 +332,8 @@ static PyObject *
 Pipe_func_write2(Pipe *self, PyObject *args)
 {
     int i, r, buf_count;
-    char *data_str, *tmp;
     Py_buffer pbuf;
-    Py_ssize_t data_len;
     PyObject *callback, *send_handle;
-    uv_buf_t tmpbuf;
     uv_buf_t *bufs = NULL;
     uv_write_t *wr = NULL;
     stream_req_data_t *req_data = NULL;
@@ -390,20 +387,12 @@ Pipe_func_write2(Pipe *self, PyObject *args)
         goto error;
     }
 
-    data_str = pbuf.buf;
-    data_len = pbuf.len;
-    tmp = (char *) PyMem_Malloc(data_len);
-    if (!tmp) {
-        PyErr_NoMemory();
-        goto error;
-    }
-    memcpy(tmp, data_str, data_len);
-    tmpbuf = uv_buf_init(tmp, data_len);
-    bufs[0] = tmpbuf;
+    bufs[0] = uv_buf_init(pbuf.buf, pbuf.len);
     buf_count = 1;
 
     write_data->bufs = bufs;
     write_data->buf_count = buf_count;
+    write_data->view = pbuf;
     req_data->data = write_data;
 
     r = uv_write2(wr, (uv_stream_t *)UV_HANDLE(self), bufs, buf_count, (uv_stream_t *)UV_HANDLE(send_handle), on_stream_write);
@@ -411,8 +400,6 @@ Pipe_func_write2(Pipe *self, PyObject *args)
         RAISE_UV_EXCEPTION(UV_HANDLE_LOOP(self), PyExc_PipeError);
         goto error;
     }
-
-    PyBuffer_Release(&pbuf);
 
     Py_RETURN_NONE;
 
