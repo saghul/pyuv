@@ -123,10 +123,12 @@ walk_cb(uv_handle_t* handle, void* arg)
     PyObject *result, *obj;
     if (handle->data != NULL) {
         obj = (PyObject *)handle->data;
+        Py_INCREF(obj);
         result = PyObject_CallFunctionObjArgs(callback, obj, NULL);
         if (result == NULL) {
             PyErr_WriteUnraisable(callback);
         }
+        Py_DECREF(obj);
         Py_XDECREF(result);
     }
 }
