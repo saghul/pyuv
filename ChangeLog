@@ -1,3 +1,7 @@
+Version 0.7.1
+=============
+ - Fixed crash when Loop.walk returned a Python object being deallocated
+
 Version 0.7.0
 =============
  - Added weak referencing support to handles
