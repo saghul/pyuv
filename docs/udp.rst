@@ -35,6 +35,10 @@
 
         Callback signature: ``callback(udp_handle)``.
 
+    .. py:method:: getsockname
+
+        Return tuple containing IP address and port of the local socket.
+
     .. py:method:: send((ip, port), data, [callback])
 
         :param string ip: IP address where data will be sent.
