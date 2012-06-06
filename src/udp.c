@@ -82,7 +82,10 @@ on_udp_read(uv_udp_t* handle, int nread, uv_buf_t buf, struct sockaddr* addr, un
     Py_DECREF(py_errorno);
 
 done:
-    PyMem_Free(buf.base);
+    /* In case of error libuv may not call alloc_cb */
+    if (buf.base != NULL) {
+        PyMem_Free(buf.base);
+    }
 
     Py_DECREF(self);
     PyGILState_Release(gstate);

@@ -112,7 +112,10 @@ on_pipe_read2(uv_pipe_t* handle, int nread, uv_buf_t buf, uv_handle_type pending
     Py_DECREF(py_pending);
     Py_DECREF(py_errorno);
 
-    PyMem_Free(buf.base);
+    /* In case of error libuv may not call alloc_cb */
+    if (buf.base != NULL) {
+        PyMem_Free(buf.base);
+    }
 
     Py_DECREF(self);
     PyGILState_Release(gstate);

@@ -100,7 +100,10 @@ on_stream_read(uv_stream_t* handle, int nread, uv_buf_t buf)
     Py_DECREF(data);
     Py_DECREF(py_errorno);
 
-    PyMem_Free(buf.base);
+    /* In case of error libuv may not call alloc_cb */
+    if (buf.base != NULL) {
+        PyMem_Free(buf.base);
+    }
 
     Py_DECREF(self);
     PyGILState_Release(gstate);
