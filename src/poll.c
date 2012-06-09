@@ -116,10 +116,10 @@ static int
 Poll_tp_init(Poll *self, PyObject *args, PyObject *kwargs)
 {
     int r;
-    long fdnum;
+    long fd;
     uv_poll_t *uv_poll = NULL;
     Loop *loop;
-    PyObject *fd, *tmp;
+    PyObject *tmp;
 
     tmp = NULL;
 
@@ -130,19 +130,7 @@ Poll_tp_init(Poll *self, PyObject *args, PyObject *kwargs)
         return -1;
     }
 
-    if (!PyArg_ParseTuple(args, "O!O:__init__", &LoopType, &loop, &fd)) {
-        return -1;
-    }
-
-#ifdef PYUV_WINDOWS
-    if (!PyObject_TypeCheck(fd, PySocketModule.Sock_Type)) {
-        PyErr_SetString(PyExc_TypeError, "only socket objects are supported in this configuration");
-        return -1;
-    }
-#endif
-
-    fdnum = PyObject_AsFileDescriptor(fd);
-    if (fdnum == -1) {
+    if (!PyArg_ParseTuple(args, "O!l:__init__", &LoopType, &loop, &fd)) {
         return -1;
     }
 
@@ -158,7 +146,7 @@ Poll_tp_init(Poll *self, PyObject *args, PyObject *kwargs)
         return -1;
     }
 
-    r = uv_poll_init_socket(UV_HANDLE_LOOP(self), uv_poll, (uv_os_sock_t)fdnum);
+    r = uv_poll_init_socket(UV_HANDLE_LOOP(self), uv_poll, (uv_os_sock_t)fd);
     if (r != 0) {
         RAISE_UV_EXCEPTION(UV_HANDLE_LOOP(self), PyExc_PollError);
         Py_DECREF(loop);

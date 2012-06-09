@@ -51,35 +51,6 @@ pyuv_setmaxstdio(void)
     }
     return 0;
 }
-
-static int
-pyuv_import_socket(void)
-{
-    void *api;
-
-#if PY_MAJOR_VERSION == 2 && PY_MINOR_VERSION < 7
-    PyObject *_socket, *_socket_CAPI;
-    _socket = PyImport_ImportModule("_socket");
-    if (!_socket) {
-        return -1;
-    }
-    _socket_CAPI = PyObject_GetAttrString(_socket, "CAPI");
-    if (!_socket_CAPI) {
-        Py_DECREF(_socket);
-        return -1;
-    }
-    api = PyCObject_AsVoidPtr(_socket_CAPI);
-    Py_DECREF(_socket_CAPI);
-    Py_DECREF(_socket);
-#else
-    api = PyCapsule_Import("_socket.CAPI", 0);
-#endif
-    if (!api) {
-        return -1;
-    }
-    memcpy(&PySocketModule, api, sizeof(PySocketModule));
-    return 0;
-}
 #endif
 
 
@@ -99,7 +70,7 @@ init_pyuv(void)
     PyEval_InitThreads();
 
 #ifdef PYUV_WINDOWS
-    if (pyuv_setmaxstdio() || pyuv_import_socket()) {
+    if (pyuv_setmaxstdio()) {
         return NULL;
     }
 #endif

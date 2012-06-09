@@ -81,11 +81,7 @@ class PollTest(unittest2.TestCase):
             self.fail("Error connecting socket: %d" % r)
             return
         self.connecting = True
-        if sys.version_info >= (3, 0):
-            _sock = self.sock
-        else:
-            _sock = self.sock._sock
-        self.poll = pyuv.Poll(self.loop, _sock)
+        self.poll = pyuv.Poll(self.loop, self.sock.fileno())
         self.poll.start(pyuv.UV_WRITABLE, self.poll_cb)
         self.loop.run()
 

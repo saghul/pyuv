@@ -301,16 +301,6 @@ PyUVModule_AddObject(PyObject *module, const char *name, PyObject *value)
 
 /* borrowed from pyev */
 #ifdef PYUV_WINDOWS
-/* avoid including socketmodule.h (not available anyway) */
-typedef struct {
-    PyTypeObject *Sock_Type;
-    PyObject *error;
-#if PY_MAJOR_VERSION >= 3 && PY_MINOR_VERSION >= 2
-    PyObject *timeout_error;
-#endif
-} PySocketModule_APIObject;
-
-static PySocketModule_APIObject PySocketModule;
 
 #define PYUV_MAXSTDIO 2048
 
