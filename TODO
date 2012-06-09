@@ -6,5 +6,4 @@
 - Find out why some tests fail on Windows
     - Multicast
     - IPC, sharing a TCP handle
-    - Some fs operations using fileno()
 
