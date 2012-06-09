@@ -42,28 +42,16 @@ class FSTestStat(unittest2.TestCase):
         self.assertEqual(self.errorno, None)
 
     def test_stat_sync(self):
-        self.stat_data = None
-        def timer_cb(handle):
-            self.stat_data = pyuv.fs.stat(self.loop, TEST_FILE)
-            handle.close()
-        timer = pyuv.Timer(self.loop)
-        timer.start(timer_cb, 0.1, 0)
-        self.loop.run()
+        self.stat_data = pyuv.fs.stat(self.loop, TEST_FILE)
         self.assertNotEqual(self.stat_data, None)
 
     def test_stat_error_sync(self):
-        self.errorno = None
-        def timer_cb(handle):
-            handle.close()
-            try:
-                pyuv.fs.stat(self.loop, BAD_FILE)
-            except pyuv.error.FSError as e:
-                self.errorno = e.args[0]
-            else:
-                self.fail("Should have raised FSError")
-        timer = pyuv.Timer(self.loop)
-        timer.start(timer_cb, 0.1, 0)
-        self.loop.run()
+        try:
+            pyuv.fs.stat(self.loop, BAD_FILE)
+        except pyuv.error.FSError as e:
+            self.errorno = e.args[0]
+        else:
+            self.errorno = None
         self.assertEqual(self.errorno, pyuv.errno.UV_ENOENT)
 
 
@@ -111,13 +99,7 @@ class FSTestFstat(unittest2.TestCase):
         self.assertEqual(self.errorno, None)
 
     def test_fstat_sync(self):
-        self.stat_data = None
-        def timer_cb(handle):
-            self.stat_data = pyuv.fs.fstat(self.loop, self.file.fileno())
-            handle.close()
-        timer = pyuv.Timer(self.loop)
-        timer.start(timer_cb, 0.1, 0)
-        self.loop.run()
+        self.stat_data = pyuv.fs.fstat(self.loop, self.file.fileno())
         self.assertNotEqual(self.stat_data, None)
 
 
@@ -153,26 +135,15 @@ class FSTestUnlink(unittest2.TestCase):
         self.assertEqual(self.errorno, None)
 
     def test_unlink_sync(self):
-        def timer_cb(handle):
-            pyuv.fs.unlink(self.loop, TEST_FILE)
-            handle.close()
-        timer = pyuv.Timer(self.loop)
-        timer.start(timer_cb, 0.1, 0)
-        self.loop.run()
+        pyuv.fs.unlink(self.loop, TEST_FILE)
 
     def test_unlink_error_sync(self):
-        self.errorno = None
-        def timer_cb(handle):
-            handle.close()
-            try:
-                pyuv.fs.unlink(self.loop, BAD_FILE)
-            except pyuv.error.FSError as e:
-                self.errorno = e.args[0]
-            else:
-                self.fail("Should have raised FSError")
-        timer = pyuv.Timer(self.loop)
-        timer.start(timer_cb, 0.1, 0)
-        self.loop.run()
+        try:
+            pyuv.fs.unlink(self.loop, BAD_FILE)
+        except pyuv.error.FSError as e:
+            self.errorno = e.args[0]
+        else:
+            self.errorno = None
         self.assertEqual(self.errorno, pyuv.errno.UV_ENOENT)
 
 
@@ -206,27 +177,16 @@ class FSTestMkdir(unittest2.TestCase):
         self.assertTrue(os.path.isdir(TEST_DIR))
 
     def test_mkdir_sync(self):
-        def timer_cb(handle):
-            handle.close()
-            pyuv.fs.mkdir(self.loop, TEST_DIR, 0o755)
-        timer = pyuv.Timer(self.loop)
-        timer.start(timer_cb, 0.1, 0)
-        self.loop.run()
+        pyuv.fs.mkdir(self.loop, TEST_DIR, 0o755)
         self.assertTrue(os.path.isdir(TEST_DIR))
 
     def test_mkdir_error_sync(self):
-        self.errorno = None
-        def timer_cb(handle):
-            handle.close()
-            try:
-                pyuv.fs.mkdir(self.loop, BAD_DIR, 0o755)
-            except pyuv.error.FSError as e:
-                self.errorno = e.args[0]
-            else:
-                self.fail("Should have raised FSError")
-        timer = pyuv.Timer(self.loop)
-        timer.start(timer_cb, 0.1, 0)
-        self.loop.run()
+        try:
+            pyuv.fs.mkdir(self.loop, BAD_DIR, 0o755)
+        except pyuv.error.FSError as e:
+            self.errorno = e.args[0]
+        else:
+            self.errorno = None
         self.assertEqual(self.errorno, pyuv.errno.UV_EEXIST)
 
 
@@ -259,27 +219,16 @@ class FSTestRmdir(unittest2.TestCase):
         self.assertFalse(os.path.isdir(TEST_DIR))
 
     def test_rmdir_sync(self):
-        def timer_cb(handle):
-            handle.close()
-            pyuv.fs.rmdir(self.loop, TEST_DIR)
-        timer = pyuv.Timer(self.loop)
-        timer.start(timer_cb, 0.1, 0)
-        self.loop.run()
+        pyuv.fs.rmdir(self.loop, TEST_DIR)
         self.assertFalse(os.path.isdir(TEST_DIR))
 
     def test_rmdir_error_sync(self):
-        self.errorno = None
-        def timer_cb(handle):
-            handle.close()
-            try:
-                pyuv.fs.rmdir(self.loop, BAD_DIR)
-            except pyuv.error.FSError as e:
-                self.errorno = e.args[0]
-            else:
-                self.fail("Should have raised FSError")
-        timer = pyuv.Timer(self.loop)
-        timer.start(timer_cb, 0.1, 0)
-        self.loop.run()
+        try:
+            pyuv.fs.rmdir(self.loop, BAD_DIR)
+        except pyuv.error.FSError as e:
+            self.errorno = e.args[0]
+        else:
+            self.errorno = None
         self.assertEqual(self.errorno, pyuv.errno.UV_ENOENT)
 
 
@@ -312,12 +261,7 @@ class FSTestRename(unittest2.TestCase):
         self.assertTrue(os.path.exists(TEST_FILE2))
 
     def test_rename_sync(self):
-        def timer_cb(handle):
-            handle.close()
-            pyuv.fs.rename(self.loop, TEST_FILE, TEST_FILE2)
-        timer = pyuv.Timer(self.loop)
-        timer.start(timer_cb, 0.1, 0)
-        self.loop.run()
+        pyuv.fs.rename(self.loop, TEST_FILE, TEST_FILE2)
         self.assertFalse(os.path.exists(TEST_FILE))
         self.assertTrue(os.path.exists(TEST_FILE2))
 
@@ -344,12 +288,7 @@ class FSTestChmod(unittest2.TestCase):
         self.assertTrue(bool(mode & stat.S_IRWXU) and bool(mode & stat.S_IRWXG) and bool(mode & stat.S_IRWXO))
 
     def test_chmod_sync(self):
-        def timer_cb(handle):
-            handle.close()
-            pyuv.fs.chmod(self.loop, TEST_FILE, 0o777)
-        timer = pyuv.Timer(self.loop)
-        timer.start(timer_cb, 0.1, 0)
-        self.loop.run()
+        pyuv.fs.chmod(self.loop, TEST_FILE, 0o777)
         mode = os.stat(TEST_FILE).st_mode
         self.assertTrue(bool(mode & stat.S_IRWXU) and bool(mode & stat.S_IRWXG) and bool(mode & stat.S_IRWXO))
 
@@ -378,12 +317,7 @@ class FSTestFchmod(unittest2.TestCase):
         self.assertTrue(bool(mode & stat.S_IRWXU) and bool(mode & stat.S_IRWXG) and bool(mode & stat.S_IRWXO))
 
     def test_fchmod_sync(self):
-        def timer_cb(handle):
-            handle.close()
-            pyuv.fs.fchmod(self.loop, self.file.fileno(), 0o777)
-        timer = pyuv.Timer(self.loop)
-        timer.start(timer_cb, 0.1, 0)
-        self.loop.run()
+        pyuv.fs.fchmod(self.loop, self.file.fileno(), 0o777)
         mode = os.stat(TEST_FILE).st_mode
         self.assertTrue(bool(mode & stat.S_IRWXU) and bool(mode & stat.S_IRWXG) and bool(mode & stat.S_IRWXO))
 
@@ -410,12 +344,7 @@ class FSTestLink(unittest2.TestCase):
         self.assertEqual(os.stat(TEST_FILE).st_ino, os.stat(TEST_LINK).st_ino)
 
     def test_link_sync(self):
-        def timer_cb(handle):
-            handle.close()
-            pyuv.fs.link(self.loop, TEST_FILE, TEST_LINK)
-        timer = pyuv.Timer(self.loop)
-        timer.start(timer_cb, 0.1, 0)
-        self.loop.run()
+        pyuv.fs.link(self.loop, TEST_FILE, TEST_LINK)
         self.assertEqual(os.stat(TEST_FILE).st_ino, os.stat(TEST_LINK).st_ino)
 
 
@@ -445,12 +374,7 @@ class FSTestSymlink(unittest2.TestCase):
         self.assertTrue(os.path.islink(TEST_LINK))
 
     def test_symlink_sync(self):
-        def timer_cb(handle):
-            handle.close()
-            pyuv.fs.symlink(self.loop, TEST_FILE, TEST_LINK, 0)
-        timer = pyuv.Timer(self.loop)
-        timer.start(timer_cb, 0.1, 0)
-        self.loop.run()
+        pyuv.fs.symlink(self.loop, TEST_FILE, TEST_LINK, 0)
         self.assertTrue(os.path.islink(TEST_LINK))
 
 
@@ -480,12 +404,7 @@ class FSTestReadlink(unittest2.TestCase):
         self.assertEqual(self.link_path, TEST_FILE)
 
     def test_readlink_sync(self):
-        def timer_cb(handle):
-            handle.close()
-            self.link_path = pyuv.fs.readlink(self.loop, TEST_LINK)
-        timer = pyuv.Timer(self.loop)
-        timer.start(timer_cb, 0.1, 0)
-        self.loop.run()
+        self.link_path = pyuv.fs.readlink(self.loop, TEST_LINK)
         self.assertEqual(self.link_path, TEST_FILE)
 
 
@@ -509,12 +428,7 @@ class FSTestChown(unittest2.TestCase):
         self.assertEqual(self.errorno, None)
 
     def test_chown_sync(self):
-        def timer_cb(handle):
-            handle.close()
-            pyuv.fs.chown(self.loop, TEST_FILE, -1, -1)
-        timer = pyuv.Timer(self.loop)
-        timer.start(timer_cb, 0.1, 0)
-        self.loop.run()
+        pyuv.fs.chown(self.loop, TEST_FILE, -1, -1)
 
 
 class FSTestFchown(unittest2.TestCase):
@@ -538,12 +452,7 @@ class FSTestFchown(unittest2.TestCase):
         self.assertEqual(self.errorno, None)
 
     def test_fchown_sync(self):
-        def timer_cb(handle):
-            handle.close()
-            pyuv.fs.fchown(self.loop, self.file.fileno(), -1, -1)
-        timer = pyuv.Timer(self.loop)
-        timer.start(timer_cb, 0.1, 0)
-        self.loop.run()
+        pyuv.fs.fchown(self.loop, self.file.fileno(), -1, -1)
 
 
 class FSTestOpen(unittest2.TestCase):
@@ -588,27 +497,16 @@ class FSTestOpen(unittest2.TestCase):
         self.assertEqual(self.errorno, pyuv.errno.UV_ENOENT)
 
     def test_open_sync(self):
-        def timer_cb(handle):
-            handle.close()
-            fd = pyuv.fs.open(self.loop, TEST_FILE, os.O_WRONLY|os.O_CREAT|os.O_TRUNC, stat.S_IREAD|stat.S_IWRITE)
-            pyuv.fs.close(self.loop, fd)
-        timer = pyuv.Timer(self.loop)
-        timer.start(timer_cb, 0.1, 0)
-        self.loop.run()
+        fd = pyuv.fs.open(self.loop, TEST_FILE, os.O_WRONLY|os.O_CREAT|os.O_TRUNC, stat.S_IREAD|stat.S_IWRITE)
+        pyuv.fs.close(self.loop, fd)
 
     def test_open_error_sync(self):
-        self.errorno = None
-        def timer_cb(handle):
-            handle.close()
-            try:
-                pyuv.fs.open(self.loop, BAD_FILE, os.O_RDONLY, 0)
-            except pyuv.error.FSError as e:
-                self.errorno = e.args[0]
-            else:
-                self.fail("Should have raised FSError")
-        timer = pyuv.Timer(self.loop)
-        timer.start(timer_cb, 0.1, 0)
-        self.loop.run()
+        try:
+            pyuv.fs.open(self.loop, BAD_FILE, os.O_RDONLY, 0)
+        except pyuv.error.FSError as e:
+            self.errorno = e.args[0]
+        else:
+            self.errorno = None
         self.assertEqual(self.errorno, pyuv.errno.UV_ENOENT)
 
 
@@ -637,15 +535,9 @@ class FSTestRead(unittest2.TestCase):
         self.assertEqual(self.data, 'test')
 
     def test_read_sync(self):
-        def timer_cb(handle):
-            handle.close()
-            fd = pyuv.fs.open(self.loop, TEST_FILE, os.O_RDONLY, stat.S_IREAD)
-            self.data = pyuv.fs.read(self.loop, fd, 4, -1)
-            pyuv.fs.close(self.loop, fd)
-        self.data = None
-        timer = pyuv.Timer(self.loop)
-        timer.start(timer_cb, 0.1, 0)
-        self.loop.run()
+        fd = pyuv.fs.open(self.loop, TEST_FILE, os.O_RDONLY, stat.S_IREAD)
+        self.data = pyuv.fs.read(self.loop, fd, 4, -1)
+        pyuv.fs.close(self.loop, fd)
         self.assertEqual(self.data, 'test')
 
 
@@ -682,14 +574,8 @@ class FSTestWrite(unittest2.TestCase):
         self.assertEqual(open(TEST_FILE, 'r').read(), "TES\x00T")
 
     def test_write_sync(self):
-        def timer_cb(handle):
-            handle.close()
-            self.bytes_written = pyuv.fs.write(self.loop, self.fd, "TEST", -1)
-            pyuv.fs.close(self.loop, self.fd)
-        self.bytes_written = None
-        timer = pyuv.Timer(self.loop)
-        timer.start(timer_cb, 0.1, 0)
-        self.loop.run()
+        self.bytes_written = pyuv.fs.write(self.loop, self.fd, "TEST", -1)
+        pyuv.fs.close(self.loop, self.fd)
         self.assertEqual(self.bytes_written, 4)
         self.assertEqual(open(TEST_FILE, 'r').read(), "TEST")
 
@@ -719,15 +605,10 @@ class FSTestFsync(unittest2.TestCase):
         self.assertEqual(open(TEST_FILE, 'r').read(), "TEST")
 
     def test_fsync_sync(self):
-        def timer_cb(handle):
-            handle.close()
-            pyuv.fs.write(self.loop, self.fd, "TEST", -1)
-            pyuv.fs.fdatasync(self.loop, self.fd)
-            pyuv.fs.fsync(self.loop, self.fd)
-        timer = pyuv.Timer(self.loop)
-        timer.start(timer_cb, 0.1, 0)
         self.fd = pyuv.fs.open(self.loop, TEST_FILE, os.O_RDWR|os.O_CREAT|os.O_TRUNC, stat.S_IREAD|stat.S_IWRITE)
-        self.loop.run()
+        pyuv.fs.write(self.loop, self.fd, "TEST", -1)
+        pyuv.fs.fdatasync(self.loop, self.fd)
+        pyuv.fs.fsync(self.loop, self.fd)
         pyuv.fs.close(self.loop, self.fd)
         self.assertEqual(open(TEST_FILE, 'r').read(), "TEST")
 
@@ -763,14 +644,9 @@ class FSTestFtruncate(unittest2.TestCase):
         self.assertEqual(open(TEST_FILE, 'r').read(), "")
 
     def test_ftruncate_sync(self):
-        def timer_cb(handle):
-            handle.close()
-            fd = pyuv.fs.open(self.loop, TEST_FILE, os.O_RDWR, stat.S_IREAD|stat.S_IWRITE)
-            pyuv.fs.ftruncate(self.loop, fd, 0)
-            pyuv.fs.close(self.loop, fd)
-        timer = pyuv.Timer(self.loop)
-        timer.start(timer_cb, 0.1, 0)
-        self.loop.run()
+        fd = pyuv.fs.open(self.loop, TEST_FILE, os.O_RDWR, stat.S_IREAD|stat.S_IWRITE)
+        pyuv.fs.ftruncate(self.loop, fd, 0)
+        pyuv.fs.close(self.loop, fd)
         self.assertEqual(open(TEST_FILE, 'r').read(), "")
 
 
@@ -810,31 +686,19 @@ class FSTestReaddir(unittest2.TestCase):
         self.assertTrue(TEST_DIR2 in self.files)
 
     def test_readdir_sync(self):
-        def timer_cb(handle):
-            handle.close()
-            self.files = pyuv.fs.readdir(self.loop, TEST_DIR, 0)
-        self.files = None
-        timer = pyuv.Timer(self.loop)
-        timer.start(timer_cb, 0.1, 0)
-        self.loop.run()
+        self.files = pyuv.fs.readdir(self.loop, TEST_DIR, 0)
         self.assertNotEqual(self.files, None)
         self.assertTrue(TEST_FILE in self.files)
         self.assertTrue(TEST_FILE2 in self.files)
         self.assertTrue(TEST_DIR2 in self.files)
 
     def test_readdir_error_sync(self):
-        def timer_cb(handle):
-            handle.close()
-            try:
-                pyuv.fs.readdir(self.loop, BAD_DIR, 0)
-            except pyuv.error.FSError as e:
-                self.errorno = e.args[0]
-            else:
-                self.fail("Should have raised FSError")
-        self.errorno = None
-        timer = pyuv.Timer(self.loop)
-        timer.start(timer_cb, 0.1, 0)
-        self.loop.run()
+        try:
+            pyuv.fs.readdir(self.loop, BAD_DIR, 0)
+        except pyuv.error.FSError as e:
+            self.errorno = e.args[0]
+        else:
+            self.errorno = None
         self.assertEqual(self.errorno, pyuv.errno.UV_ENOENT)
 
 
@@ -871,13 +735,7 @@ class FSTestSendfile(unittest2.TestCase):
         self.assertEqual(open(TEST_FILE, 'r').read(), open(TEST_FILE2, 'r').read())
 
     def test_sendfile_sync(self):
-        def timer_cb(handle):
-            handle.close()
-            self.bytes_written = pyuv.fs.sendfile(self.loop, self.new_file.fileno(), self.file.fileno(), 0, 131072)
-        self.bytes_written = None
-        timer = pyuv.Timer(self.loop)
-        timer.start(timer_cb, 0.1, 0)
-        self.loop.run()
+        self.bytes_written = pyuv.fs.sendfile(self.loop, self.new_file.fileno(), self.file.fileno(), 0, 131072)
         self.assertEqual(self.bytes_written, 65546)
         self.assertEqual(open(TEST_FILE, 'r').read(), open(TEST_FILE2, 'r').read())
 
@@ -919,27 +777,17 @@ class FSTestUtime(unittest2.TestCase):
         self.assertTrue(s.st_atime == atime and s.st_mtime == mtime)
 
     def test_utime_sync(self):
-        def timer_cb(handle):
-            handle.close()
-            pyuv.fs.utime(self.loop, TEST_FILE, atime, mtime)
         atime = mtime = 400497753
-        timer = pyuv.Timer(self.loop)
-        timer.start(timer_cb, 0.1, 0)
-        self.loop.run()
+        pyuv.fs.utime(self.loop, TEST_FILE, atime, mtime)
         s = os.stat(TEST_FILE)
         self.assertEqual(s.st_atime, atime)
         self.assertEqual(s.st_mtime, mtime)
 
     def test_futime_sync(self):
-        def timer_cb(handle):
-            handle.close()
-            self.fd = pyuv.fs.open(self.loop, TEST_FILE, os.O_RDWR, stat.S_IWRITE|stat.S_IREAD)
-            pyuv.fs.futime(self.loop, self.fd, atime, mtime)
-            pyuv.fs.close(self.loop, self.fd)
         atime = mtime = 400497753
-        timer = pyuv.Timer(self.loop)
-        timer.start(timer_cb, 0.1, 0)
-        self.loop.run()
+        self.fd = pyuv.fs.open(self.loop, TEST_FILE, os.O_RDWR, stat.S_IWRITE|stat.S_IREAD)
+        pyuv.fs.futime(self.loop, self.fd, atime, mtime)
+        pyuv.fs.close(self.loop, self.fd)
         s = os.stat(TEST_FILE)
         self.assertEqual(s.st_atime, atime)
         self.assertEqual(s.st_mtime, mtime)
