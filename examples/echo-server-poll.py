@@ -1,4 +1,5 @@
 
+import sys
 import socket
 import signal
 import weakref
@@ -10,6 +11,8 @@ logging.basicConfig(level=logging.DEBUG)
 
 STOPSIGNALS = (signal.SIGINT, signal.SIGTERM)
 NONBLOCKING = (errno.EAGAIN, errno.EWOULDBLOCK)
+if sys.platform == "win32":
+    NONBLOCKING = NONBLOCKING + (errno.WSAEWOULDBLOCK,)
 
 
 class Connection(object):
@@ -79,7 +82,7 @@ class Server(object):
         self.address = self.sock.getsockname()
         self.loop = pyuv.Loop.default_loop()
         self.signal_watcher = pyuv.Signal(self.loop)
-        self.poll_watcher = pyuv.Poll(self.loop, self.sock._sock)
+        self.poll_watcher = pyuv.Poll(self.loop, self.sock.fileno())
         self.async = pyuv.Async(self.loop, self.async_cb)
         self.conns = weakref.WeakValueDictionary()
         for sig in STOPSIGNALS:
