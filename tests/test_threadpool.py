@@ -3,7 +3,7 @@ import functools
 import threading
 import time
 
-from common import platform_skip, unittest2
+from common import unittest2
 import pyuv
 
 
@@ -72,7 +72,6 @@ class ThreadPoolMultiLoopTest(unittest2.TestCase):
         self.assertEqual(self.pool_cb_called, 3)
 
 
-@platform_skip(["win32"])
 class ThreadPoolThreadCount(unittest2.TestCase):
 
     def setUp(self):
