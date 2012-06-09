@@ -127,13 +127,17 @@
     Callback signature: ``callback(loop, path, errorno)``
 
 
-.. py:function:: pyuv.fs.symlink(loop, path, new_path, [callback])
+.. py:function:: pyuv.fs.symlink(loop, path, new_path, flags, [callback])
 
     :param string path: Original file.
 
     :param string new_path: Name for the symlink.
 
     :param loop: loop object where this function runs.
+
+    :param int flags: flags to be used on Windows platform. If ``UV_FS_SYMLINK_DIR`` is specified the symlink
+        will be created to a directory. If ``UV_FS_SYMLINK_JUNCTION`` a junction point will be created instead
+        of a symlink.
 
     :param callable callback: Function that will be called with the result of the function.
 
