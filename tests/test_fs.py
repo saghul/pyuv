@@ -704,7 +704,6 @@ class FSTestReaddir(unittest2.TestCase):
         self.assertEqual(self.errorno, pyuv.errno.UV_ENOENT)
 
 
-@platform_skip(["win32"])
 class FSTestSendfile(unittest2.TestCase):
 
     def setUp(self):
@@ -714,12 +713,8 @@ class FSTestSendfile(unittest2.TestCase):
             os.lseek(f.fileno(), 65536, os.SEEK_CUR)
             f.write("end\n")
             f.flush()
-        self.file = open(TEST_FILE, 'r')
-        self.new_file = open(TEST_FILE2, 'w')
 
     def tearDown(self):
-        self.file.close()
-        self.new_file.close()
         os.remove(TEST_FILE)
         os.remove(TEST_FILE2)
 
@@ -730,15 +725,21 @@ class FSTestSendfile(unittest2.TestCase):
     def test_sendfile(self):
         self.result = None
         self.errorno = None
-        pyuv.fs.sendfile(self.loop, self.new_file.fileno(), self.file.fileno(), 0, 131072, self.sendfile_cb)
+        fd = pyuv.fs.open(self.loop, TEST_FILE, os.O_RDWR, stat.S_IREAD|stat.S_IWRITE)
+        fd2 = pyuv.fs.open(self.loop, TEST_FILE2, os.O_RDWR|os.O_CREAT, stat.S_IREAD|stat.S_IWRITE)
+        pyuv.fs.sendfile(self.loop, fd2, fd, 0, 131072, self.sendfile_cb)
         self.loop.run()
-        self.assertEqual(self.bytes_written, 65546)
+        pyuv.fs.close(self.loop, fd)
+        pyuv.fs.close(self.loop, fd2)
         self.assertEqual(self.errorno, None)
         self.assertEqual(open(TEST_FILE, 'r').read(), open(TEST_FILE2, 'r').read())
 
     def test_sendfile_sync(self):
-        self.bytes_written = pyuv.fs.sendfile(self.loop, self.new_file.fileno(), self.file.fileno(), 0, 131072)
-        self.assertEqual(self.bytes_written, 65546)
+        fd = pyuv.fs.open(self.loop, TEST_FILE, os.O_RDWR, stat.S_IREAD|stat.S_IWRITE)
+        fd2 = pyuv.fs.open(self.loop, TEST_FILE2, os.O_RDWR|os.O_CREAT, stat.S_IREAD|stat.S_IWRITE)
+        self.bytes_written = pyuv.fs.sendfile(self.loop, fd2, fd, 0, 131072)
+        pyuv.fs.close(self.loop, fd)
+        pyuv.fs.close(self.loop, fd2)
         self.assertEqual(open(TEST_FILE, 'r').read(), open(TEST_FILE2, 'r').read())
 
 
