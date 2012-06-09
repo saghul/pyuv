@@ -3099,11 +3099,12 @@ init_fs(void)
         return NULL;
     }
 
-    PyModule_AddIntMacro(module, UV_FS_SYMLINK_DIR);
     PyModule_AddIntMacro(module, UV_RENAME);
     PyModule_AddIntMacro(module, UV_CHANGE);
     PyModule_AddIntMacro(module, UV_FS_EVENT_WATCH_ENTRY);
     PyModule_AddIntMacro(module, UV_FS_EVENT_STAT);
+    PyModule_AddIntMacro(module, UV_FS_SYMLINK_DIR);
+    PyModule_AddIntMacro(module, UV_FS_SYMLINK_JUNCTION);
 
     FSEventType.tp_base = &HandleType;
     PyUVModule_AddType(module, "FSEvent", &FSEventType);
