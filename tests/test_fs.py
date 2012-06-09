@@ -293,16 +293,14 @@ class FSTestChmod(unittest2.TestCase):
         self.assertTrue(bool(mode & stat.S_IRWXU) and bool(mode & stat.S_IRWXG) and bool(mode & stat.S_IRWXO))
 
 
-@platform_skip(["win32"])
 class FSTestFchmod(unittest2.TestCase):
 
     def setUp(self):
         self.loop = pyuv.Loop.default_loop()
-        self.file = open(TEST_FILE, 'w')
-        self.file.write('test')
+        with open(TEST_FILE, 'w') as f:
+		    f.write('test')
 
     def tearDown(self):
-        self.file.close()
         os.remove(TEST_FILE)
 
     def fchmod_cb(self, loop, path, errorno):
@@ -310,14 +308,18 @@ class FSTestFchmod(unittest2.TestCase):
 
     def test_fchmod(self):
         self.errorno = None
-        pyuv.fs.fchmod(self.loop, self.file.fileno(), 0o777, self.fchmod_cb)
+        fd = pyuv.fs.open(self.loop, TEST_FILE, os.O_RDWR, stat.S_IREAD | stat.S_IWRITE)
+        pyuv.fs.fchmod(self.loop, fd, 0o777, self.fchmod_cb)
         self.loop.run()
+        pyuv.fs.close(self.loop, fd)
         self.assertEqual(self.errorno, None)
         mode = os.stat(TEST_FILE).st_mode
         self.assertTrue(bool(mode & stat.S_IRWXU) and bool(mode & stat.S_IRWXG) and bool(mode & stat.S_IRWXO))
 
     def test_fchmod_sync(self):
-        pyuv.fs.fchmod(self.loop, self.file.fileno(), 0o777)
+        fd = pyuv.fs.open(self.loop, TEST_FILE, os.O_RDWR, stat.S_IREAD | stat.S_IWRITE)
+        pyuv.fs.fchmod(self.loop, fd, 0o777)
+        pyuv.fs.close(self.loop, fd)
         mode = os.stat(TEST_FILE).st_mode
         self.assertTrue(bool(mode & stat.S_IRWXU) and bool(mode & stat.S_IRWXG) and bool(mode & stat.S_IRWXO))
 
