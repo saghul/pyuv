@@ -371,11 +371,11 @@ class FSTestSymlink(unittest2.TestCase):
         pyuv.fs.symlink(self.loop, TEST_FILE, TEST_LINK, 0, self.symlink_cb)
         self.loop.run()
         self.assertEqual(self.errorno, None)
-        self.assertTrue(os.path.islink(TEST_LINK))
+        self.assertTrue(os.stat(TEST_LINK).st_mode & stat.S_IFLNK)
 
     def test_symlink_sync(self):
         pyuv.fs.symlink(self.loop, TEST_FILE, TEST_LINK, 0)
-        self.assertTrue(os.path.islink(TEST_LINK))
+        self.assertTrue(os.stat(TEST_LINK).st_mode & stat.S_IFLNK)
 
 
 @platform_skip(["win32"])
