@@ -82,11 +82,10 @@ class FSTestFstat(unittest2.TestCase):
 
     def setUp(self):
         self.loop = pyuv.Loop.default_loop()
-        self.file = open(TEST_FILE, 'w')
-        self.file.write('test')
+        with open(TEST_FILE, 'w') as f:
+            f.write('test')
 
     def tearDown(self):
-        self.file.close()
         os.remove(TEST_FILE)
 
     def fstat_cb(self, loop, path, stat_data, errorno):
@@ -94,12 +93,16 @@ class FSTestFstat(unittest2.TestCase):
 
     def test_fstat(self):
         self.errorno = None
-        pyuv.fs.fstat(self.loop, self.file.fileno(), self.fstat_cb)
+        fd = pyuv.fs.open(self.loop, TEST_FILE, os.O_RDWR, stat.S_IREAD|stat.S_IWRITE)
+        pyuv.fs.fstat(self.loop, fd, self.fstat_cb)
         self.loop.run()
+        pyuv.fs.close(self.loop, fd)
         self.assertEqual(self.errorno, None)
 
     def test_fstat_sync(self):
-        self.stat_data = pyuv.fs.fstat(self.loop, self.file.fileno())
+        fd = pyuv.fs.open(self.loop, TEST_FILE, os.O_RDWR, stat.S_IREAD|stat.S_IWRITE)
+        self.stat_data = pyuv.fs.fstat(self.loop, fd)
+        pyuv.fs.close(self.loop, fd)
         self.assertNotEqual(self.stat_data, None)
 
 
