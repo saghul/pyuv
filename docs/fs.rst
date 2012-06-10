@@ -14,6 +14,11 @@
     synchronous and asyncronous modes. If you want to run it synchronous don't
     pass any callable as the `callback` argument, else it will run asynchronously.
 
+.. note::
+    All functions that take a file descriptor argument must get the file descriptor
+    resulting of a pyuv.fs.open call on Windows, else the operation will fail. This
+    limitation doesn't apply to Unix systems.
+
 
 .. py:function:: pyuv.fs.stat(loop, path, [callback])
 
