@@ -440,11 +440,10 @@ class FSTestFchown(unittest2.TestCase):
 
     def setUp(self):
         self.loop = pyuv.Loop.default_loop()
-        self.file = open(TEST_FILE, 'w')
-        self.file.write('test')
+        with open(TEST_FILE, 'w') as f:
+            f.write('test')
 
     def tearDown(self):
-        self.file.close()
         os.remove(TEST_FILE)
 
     def fchown_cb(self, loop, path, errorno):
@@ -452,12 +451,16 @@ class FSTestFchown(unittest2.TestCase):
 
     def test_fchown(self):
         self.errorno = None
-        pyuv.fs.fchown(self.loop, self.file.fileno(), -1, -1, self.fchown_cb)
+        fd = pyuv.fs.open(self.loop, TEST_FILE, os.O_RDWR, stat.S_IREAD | stat.S_IWRITE)
+        pyuv.fs.fchown(self.loop, fd, -1, -1, self.fchown_cb)
         self.loop.run()
+        pyuv.fs.close(self.loop, fd)
         self.assertEqual(self.errorno, None)
 
     def test_fchown_sync(self):
-        pyuv.fs.fchown(self.loop, self.file.fileno(), -1, -1)
+        fd = pyuv.fs.open(self.loop, TEST_FILE, os.O_RDWR, stat.S_IREAD | stat.S_IWRITE)
+        pyuv.fs.fchown(self.loop, fd, -1, -1)
+        pyuv.fs.close(self.loop, fd)
 
 
 class FSTestOpen(unittest2.TestCase):
