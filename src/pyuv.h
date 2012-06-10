@@ -301,13 +301,7 @@ PyUVModule_AddObject(PyObject *module, const char *name, PyObject *value)
 
 /* borrowed from pyev */
 #ifdef PYUV_WINDOWS
-
-#define PYUV_MAXSTDIO 2048
-
-/* Convert a Windows handle into a usable file descriptor */
-#define PYUV_WIN32_HANDLE_TO_FD(handle) _open_osfhandle (handle, 0)
-#define PYUV_FD_TO_WIN32_HANDLE(fd) _get_osfhandle (fd)
-
+    #define PYUV_MAXSTDIO 2048
 #endif
 
 #endif
