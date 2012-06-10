@@ -40,7 +40,8 @@
 
             - ``UV_PROCESS_SETUID``: set child UID
             - ``UV_PROCESS_SETGID``: set child GID
-            - ``UV_PROCESS_WINDOWS_VERBATIM_ARGUMENTS``: enclose arguments in double quotes on Windows
+            - ``UV_PROCESS_WINDOWS_VERBATIM_ARGUMENTS``: pass arguments veerbatim, that is, not encosed
+              in double quotes (Windows)
             - ``UV_PROCESS_DETACHED``: detach child process from parent
 
         :param list stdio: Sequence containing ``StdIO`` containers which will be used to pass stdio
