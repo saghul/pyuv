@@ -16,9 +16,9 @@ does it mean for a handle to be 'active'? Depends on the handle type:
  * Process: active until the child process dies
  * Idle, Prepare, Check, Poll: active once they are started
  * FSEvent: active since it's run until it's closed (it has no stop method)
- * Async: always active until closed, but doesn't reference the loop
+ * Async: always active, keeps a reference to the loop at all times
 
-All handles have the `ref()` and `unref()` functions available in order to modify the default behavior.
+All handles have the `ref()` and `unref()` methods available in order to modify the default behavior.
 These functions operate at the handle level (that is, the *handle* is referenced, not the loop) so if a
 handle is ref'd it will maintain the loop alive even if not active.
 
