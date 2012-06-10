@@ -1,3 +1,12 @@
+Version 0.7.2
+=============
+ - Fixed theoretical crash if buffer is NULL
+ - Simplified Poll handle API
+ - Added support for creating symlinks with junction points on Windows
+ - Fixed some failing tests on Windows
+ - Raised libuv revision to 5c30443
+ - Updated documentation
+
 Version 0.7.1
 =============
  - Fixed crash when Loop.walk returned a Python object being deallocated
