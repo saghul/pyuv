@@ -3,7 +3,7 @@ import os
 import shutil
 import stat
 
-from common import platform_skip, unittest2
+from common import unittest2
 import pyuv
 
 
@@ -55,14 +55,13 @@ class FSTestStat(unittest2.TestCase):
         self.assertEqual(self.errorno, pyuv.errno.UV_ENOENT)
 
 
-@platform_skip(["win32"])
 class FSTestLstat(unittest2.TestCase):
 
     def setUp(self):
         self.loop = pyuv.Loop.default_loop()
         with open(TEST_FILE, 'w') as f:
             f.write('test')
-        os.symlink(TEST_FILE, TEST_LINK)
+        pyuv.fs.symlink(self.loop, TEST_FILE, TEST_LINK, 0)
 
     def tearDown(self):
         os.remove(TEST_FILE)
@@ -353,7 +352,6 @@ class FSTestLink(unittest2.TestCase):
         self.assertEqual(os.stat(TEST_FILE).st_ino, os.stat(TEST_LINK).st_ino)
 
 
-@platform_skip(["win32"])
 class FSTestSymlink(unittest2.TestCase):
 
     def setUp(self):
@@ -383,14 +381,13 @@ class FSTestSymlink(unittest2.TestCase):
         self.assertTrue(os.stat(TEST_LINK).st_mode & stat.S_IFLNK)
 
 
-@platform_skip(["win32"])
 class FSTestReadlink(unittest2.TestCase):
 
     def setUp(self):
         self.loop = pyuv.Loop.default_loop()
         with open(TEST_FILE, 'w') as f:
             f.write('test')
-        os.symlink(TEST_FILE, TEST_LINK)
+        pyuv.fs.symlink(self.loop, TEST_FILE, TEST_LINK, 0)
 
     def tearDown(self):
         os.remove(TEST_FILE)
