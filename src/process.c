@@ -491,6 +491,15 @@ Process_tp_init(Process *self, PyObject *args, PyObject *kwargs)
 
 
 static PyObject *
+Process_func_disable_stdio_inheritance(PyObject *cls)
+{
+    UNUSED_ARG(cls);
+    uv_disable_stdio_inheritance();
+    Py_RETURN_NONE;
+}
+
+
+static PyObject *
 Process_tp_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
 {
     Process *self = (Process *)HandleType.tp_new(type, args, kwargs);
@@ -525,6 +534,7 @@ static PyMethodDef
 Process_tp_methods[] = {
     { "spawn", (PyCFunction)Process_func_spawn, METH_VARARGS|METH_KEYWORDS, "Spawn the child process." },
     { "kill", (PyCFunction)Process_func_kill, METH_VARARGS, "Kill this process with the specified signal number." },
+    { "disable_stdio_inheritance", (PyCFunction)Process_func_disable_stdio_inheritance, METH_NOARGS|METH_CLASS, "Disables inheritance for file descriptors / handles that this process inherited from its parent." },
     { NULL }
 };
 
