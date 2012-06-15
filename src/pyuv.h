@@ -237,6 +237,14 @@ typedef struct {
 
 static PyTypeObject FSEventType;
 
+/* FSPoll */
+typedef struct {
+    Handle handle;
+    PyObject *callback;
+} FSPoll;
+
+static PyTypeObject FSPollType;
+
 /* DNSResolver */
 typedef struct {
     PyObject_HEAD

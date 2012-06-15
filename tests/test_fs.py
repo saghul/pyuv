@@ -902,6 +902,54 @@ class FSEventTest(unittest2.TestCase):
         self.assertTrue(self.events & pyuv.fs.UV_CHANGE)
 
 
+class FSPollTest(unittest2.TestCase):
+
+    def setUp(self):
+        self.loop = pyuv.Loop.default_loop()
+
+    def tearDown(self):
+        try:
+            os.remove(TEST_FILE)
+        except OSError:
+            pass
+
+    def _touch_file(self):
+        with open(TEST_FILE, 'w+') as f:
+            self.count += 1
+            for i in range(self.count+1):
+                f.write('*')
+
+    def on_timer(self, timer):
+        self._touch_file()
+
+    def on_fspoll(self, handle, error):
+        if self.poll_cb_called == 0:
+            self.assertEqual(error, pyuv.errno.UV_ENOENT)
+            self._touch_file()
+        elif self.poll_cb_called == 1:
+            self.timer.start(self.on_timer, 0.02, 0.0)
+        elif self.poll_cb_called == 2:
+            self.timer.start(self.on_timer, 0.2, 0.0)
+        elif self.poll_cb_called == 3:
+            os.remove(TEST_FILE)
+        elif self.poll_cb_called == 4:
+            self.assertEqual(error, pyuv.errno.UV_ENOENT)
+            self.fs_poll.close()
+            self.timer.close()
+        else:
+            self.fail('This should not happen')
+        self.poll_cb_called += 1
+
+    def test_fspoll1(self):
+        self.count = 0
+        self.poll_cb_called = 0
+        self.timer = pyuv.Timer(self.loop)
+        self.fs_poll = pyuv.fs.FSPoll(self.loop)
+        self.fs_poll.start(TEST_FILE, self.on_fspoll, 0.1)
+        self.loop.run()
+        self.assertEqual(self.poll_cb_called, 5)
+
+
 if __name__ == '__main__':
     unittest2.main(verbosity=2)
 
