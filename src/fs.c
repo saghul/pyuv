@@ -2769,7 +2769,6 @@ on_fsevent_callback(uv_fs_event_t *handle, const char *filename, int events, int
     PyObject *result, *py_filename, *py_events, *errorno;
 
     ASSERT(handle);
-    ASSERT(status == 0);
 
     self = (FSEvent *)handle->data;
     ASSERT(self);
