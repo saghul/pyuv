@@ -2793,9 +2793,9 @@ on_fsevent_callback(uv_fs_event_t *handle, const char *filename, int events, int
 
     py_events = PyInt_FromLong((long)events);
 
-    result = PyObject_CallFunctionObjArgs(self->on_fsevent_cb, self, py_filename, py_events, errorno, NULL);
+    result = PyObject_CallFunctionObjArgs(self->callback, self, py_filename, py_events, errorno, NULL);
     if (result == NULL) {
-	PyErr_WriteUnraisable(self->on_fsevent_cb);
+	PyErr_WriteUnraisable(self->callback);
     }
     Py_XDECREF(result);
     Py_DECREF(py_events);
@@ -2849,9 +2849,9 @@ FSEvent_func_start(FSEvent *self, PyObject *args, PyObject *kwargs)
         return NULL;
     }
 
-    tmp = self->on_fsevent_cb;
+    tmp = self->callback;
     Py_INCREF(callback);
-    self->on_fsevent_cb = callback;
+    self->callback = callback;
     Py_XDECREF(tmp);
 
     Py_RETURN_NONE;
@@ -2910,7 +2910,7 @@ FSEvent_tp_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
 static int
 FSEvent_tp_traverse(FSEvent *self, visitproc visit, void *arg)
 {
-    Py_VISIT(self->on_fsevent_cb);
+    Py_VISIT(self->callback);
     HandleType.tp_traverse((PyObject *)self, visit, arg);
     return 0;
 }
@@ -2919,7 +2919,7 @@ FSEvent_tp_traverse(FSEvent *self, visitproc visit, void *arg)
 static int
 FSEvent_tp_clear(FSEvent *self)
 {
-    Py_CLEAR(self->on_fsevent_cb);
+    Py_CLEAR(self->callback);
     HandleType.tp_clear((PyObject *)self);
     return 0;
 }

@@ -226,13 +226,8 @@ static PyTypeObject ProcessType;
 
 /* FSEvent */
 typedef struct {
-    PyObject_HEAD
-    PyObject *weakreflist;
-    Loop *loop;
-    PyObject *on_fsevent_cb;
-    PyObject *on_close_cb;
-    PyObject *data;
-    uv_fs_event_t *uv_handle;
+    Handle handle;
+    PyObject *callback;
 } FSEvent;
 
 static PyTypeObject FSEventType;
