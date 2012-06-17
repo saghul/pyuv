@@ -59,42 +59,8 @@ format_time(time_t sec, unsigned long nsec)
 
 
 static void
-process_stat(uv_fs_t* req, PyObject **path, PyObject **stat_data, PyObject **errorno) {
-    struct stat *st;
+stat_to_pyobj(uv_statbuf_t *st, PyObject **stat_data) {
     unsigned long ansec, mnsec, cnsec, bnsec;
-
-    ASSERT(req);
-    ASSERT(req->fs_type == UV_FS_STAT || req->fs_type == UV_FS_LSTAT || req->fs_type == UV_FS_FSTAT);
-
-    st = (struct stat *)(req->ptr);
-
-    if (req->path != NULL) {
-        *path = PYUVString_FromString(req->path);
-    } else {
-        *path = Py_None;
-        Py_INCREF(Py_None);
-    }
-
-    if (req->result < 0) {
-        *errorno = PyInt_FromLong((long)req->errorno);
-        *stat_data = Py_None;
-        Py_INCREF(Py_None);
-        return;
-    } else {
-        *errorno = Py_None;
-        Py_INCREF(Py_None);
-    }
-
-    *stat_data = PyStructSequence_New(&StatResultType);
-    if (!stat_data) {
-        PyErr_NoMemory();
-        PyErr_WriteUnraisable(Py_None);
-        Py_DECREF(*path);
-        Py_DECREF(*errorno);
-        *path = NULL;
-        *errorno = NULL;
-        return;
-    }
 
     PyStructSequence_SET_ITEM(*stat_data, 0, PyInt_FromLong((long)st->st_mode));
 #ifdef HAVE_LARGEFILE_SUPPORT
@@ -174,6 +140,47 @@ process_stat(uv_fs_t* req, PyObject **path, PyObject **stat_data, PyObject **err
     Py_INCREF(Py_None);
     PyStructSequence_SET_ITEM(*stat_data, 15, Py_None);
 #endif
+
+}
+
+
+static void
+process_stat(uv_fs_t* req, PyObject **path, PyObject **stat_data, PyObject **errorno) {
+    uv_statbuf_t *st;
+
+    ASSERT(req);
+    ASSERT(req->fs_type == UV_FS_STAT || req->fs_type == UV_FS_LSTAT || req->fs_type == UV_FS_FSTAT);
+
+    st = req->ptr;
+
+    if (req->path != NULL) {
+        *path = PYUVString_FromString(req->path);
+    } else {
+        *path = Py_None;
+        Py_INCREF(Py_None);
+    }
+
+    if (req->result < 0) {
+        *errorno = PyInt_FromLong((long)req->errorno);
+        *stat_data = Py_None;
+        Py_INCREF(Py_None);
+        return;
+    } else {
+        *errorno = Py_None;
+        Py_INCREF(Py_None);
+    }
+
+    *stat_data = PyStructSequence_New(&StatResultType);
+    if (!stat_data) {
+        PyErr_NoMemory();
+        PyErr_WriteUnraisable(Py_None);
+        Py_DECREF(*path);
+        Py_DECREF(*errorno);
+        *path = NULL;
+        *errorno = NULL;
+        return;
+    }
+    stat_to_pyobj(st, stat_data);
 
 }
 
@@ -2985,11 +2992,11 @@ static PyObject* PyExc_FSPollError;
 
 
 static void
-on_fspoll_callback(uv_fs_poll_t *handle, int status)
+on_fspoll_callback(uv_fs_poll_t *handle, int status, uv_statbuf_t *prev, uv_statbuf_t *curr)
 {
     PyGILState_STATE gstate = PyGILState_Ensure();
     FSPoll *self;
-    PyObject *result, *errorno;
+    PyObject *result, *errorno, *prev_stat_data, *curr_stat_data;
 
     ASSERT(handle);
 
@@ -3001,12 +3008,34 @@ on_fspoll_callback(uv_fs_poll_t *handle, int status)
     if (status < 0) {
         uv_err_t err = uv_last_error(UV_HANDLE_LOOP(self));
         errorno = PyInt_FromLong((long)err.code);
+        prev_stat_data = Py_None;
+        curr_stat_data = Py_None;
+        Py_INCREF(Py_None);
+        Py_INCREF(Py_None);
     } else {
         errorno = Py_None;
         Py_INCREF(Py_None);
+        prev_stat_data = PyStructSequence_New(&StatResultType);
+        if (!prev_stat_data) {
+            PyErr_NoMemory();
+            PyErr_WriteUnraisable(Py_None);
+            prev_stat_data = Py_None;
+            Py_INCREF(Py_None);
+        } else {
+            stat_to_pyobj(prev, &prev_stat_data);
+        }
+        curr_stat_data = PyStructSequence_New(&StatResultType);
+        if (!curr_stat_data) {
+            PyErr_NoMemory();
+            PyErr_WriteUnraisable(Py_None);
+            curr_stat_data = Py_None;
+            Py_INCREF(Py_None);
+        } else {
+            stat_to_pyobj(curr, &curr_stat_data);
+        }
     }
 
-    result = PyObject_CallFunctionObjArgs(self->callback, self, errorno, NULL);
+    result = PyObject_CallFunctionObjArgs(self->callback, self, prev_stat_data, curr_stat_data, errorno, NULL);
     if (result == NULL) {
         PyErr_WriteUnraisable(self->callback);
     }

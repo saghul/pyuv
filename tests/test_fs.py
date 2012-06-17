@@ -922,7 +922,7 @@ class FSPollTest(unittest2.TestCase):
     def on_timer(self, timer):
         self._touch_file()
 
-    def on_fspoll(self, handle, error):
+    def on_fspoll(self, handle, prev_stat, curr_stat, error):
         if self.poll_cb_called == 0:
             self.assertEqual(error, pyuv.errno.UV_ENOENT)
             self._touch_file()
