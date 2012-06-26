@@ -439,12 +439,6 @@
 
         :py:class:`Loop` object where this handle runs.
 
-    .. py:attribute:: path
-
-        *Read only*
-
-        Path being monitored.
-
     .. py:attribute:: active
 
         *Read only*
