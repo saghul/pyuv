@@ -18,6 +18,19 @@
     stdout) with ``Pipe`` handles within an event loop.
 
 
+    .. py:classmethod:: disable_stdio_inheritance
+
+        Disables inheritance for file descriptors / handles that this process
+        inherited from its parent. The effect is that child processes spawned by
+        this proces don't accidently inherit these handles.
+
+        It is recommended to call this function as early in your program as possible,
+        before the inherited file descriptors can be closed or duplicated.
+
+        Note that this function works on a best-effort basis: there is no guarantee
+        that libuv can discover all file descriptors that were inherited. In general
+        it does a better job on Windows than it does on unix.
+
     .. py:method:: spawn(signal)
 
         :param string file: File to be executed.

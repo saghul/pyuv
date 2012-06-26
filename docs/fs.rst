@@ -402,9 +402,66 @@
         Indicates if this handle is closing or already closed.
 
 
+
+.. py:class:: pyuv.fs.FSPoll(loop)
+
+    :type loop: :py:class:`Loop`
+    :param loop: loop object where this handle runs (accessible through :py:attr:`FSPoll.loop`).
+
+    ``FSPoll`` handles monitor a given path for changes by using stat syscalls.
+
+    .. py:method:: start(path, callback, interval)
+
+        :param string path: Path to monitor for changes.
+
+        :param callable callback: Function that will be called when the given path changes any of its
+            attributes.
+
+        :param float interval: How often to poll for events (in seconds).
+
+        Start the ``FSPoll`` handle.
+
+        Callback signature: ``callback(fspoll_handle, prev_stat, curr_stat, error)``.
+
+    .. py:method:: close([callback])
+
+        :param callable callback: Function that will be called after the ``FSPoll``
+            handle is closed.
+
+        Close the ``FSPoll`` handle. After a handle has been closed no other
+        operations can be performed on it.
+
+        Callback signature: ``callback(fspoll_handle)``.
+
+    .. py:attribute:: loop
+
+        *Read only*
+
+        :py:class:`Loop` object where this handle runs.
+
+    .. py:attribute:: path
+
+        *Read only*
+
+        Path being monitored.
+
+    .. py:attribute:: active
+
+        *Read only*
+
+        Indicates if this handle is active.
+
+    .. py:attribute:: closed
+
+        *Read only*
+
+        Indicates if this handle is closing or already closed.
+
+
 Module constants
 
 .. py:data:: pyuv.fs.UV_FS_SYMLINK_DIR
+.. py:data:: pyuv.fs.UV_FS_SYMLINK_JUNCTION
 .. py:data:: pyuv.fs.UV_RENAME
 .. py:data:: pyuv.fs.UV_CHANGE
 .. py:data:: pyuv.fs.UV_FS_EVENT_WATCH_ENTRY
