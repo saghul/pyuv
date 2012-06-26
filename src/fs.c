@@ -3109,6 +3109,18 @@ FSPoll_func_stop(FSPoll *self)
 }
 
 
+static PyObject *
+FSPoll_path_get(FSEvent *self, void *closure)
+{
+    UNUSED_ARG(closure);
+
+    if (!UV_HANDLE(self)) {
+        Py_RETURN_NONE;
+    }
+    return PYUVString_FromString(((uv_fs_poll_t *)UV_HANDLE(self))->path);
+}
+
+
 static int
 FSPoll_tp_init(FSPoll *self, PyObject *args, PyObject *kwargs)
 {
@@ -3190,6 +3202,12 @@ FSPoll_tp_methods[] = {
 };
 
 
+static PyGetSetDef FSPoll_tp_getsets[] = {
+    {"path", (getter)FSPoll_path_get, NULL, "Path being monitored.", NULL},
+    {NULL}
+};
+
+
 static PyTypeObject FSPollType = {
     PyVarObject_HEAD_INIT(NULL, 0)
     "pyuv.fs.FSPoll",                                               /*tp_name*/
@@ -3220,7 +3238,7 @@ static PyTypeObject FSPollType = {
     0,                                                              /*tp_iternext*/
     FSPoll_tp_methods,                                              /*tp_methods*/
     0,                                                              /*tp_members*/
-    0,                                                              /*tp_getsets*/
+    FSPoll_tp_getsets,                                              /*tp_getsets*/
     0,                                                              /*tp_base*/
     0,                                                              /*tp_dict*/
     0,                                                              /*tp_descr_get*/
