@@ -2992,7 +2992,7 @@ static PyObject* PyExc_FSPollError;
 
 
 static void
-on_fspoll_callback(uv_fs_poll_t *handle, int status, uv_statbuf_t *prev, uv_statbuf_t *curr)
+on_fspoll_callback(uv_fs_poll_t *handle, int status, const uv_statbuf_t *prev, const uv_statbuf_t *curr)
 {
     PyGILState_STATE gstate = PyGILState_Ensure();
     FSPoll *self;
@@ -3022,7 +3022,7 @@ on_fspoll_callback(uv_fs_poll_t *handle, int status, uv_statbuf_t *prev, uv_stat
             prev_stat_data = Py_None;
             Py_INCREF(Py_None);
         } else {
-            stat_to_pyobj(prev, &prev_stat_data);
+            stat_to_pyobj((uv_statbuf_t *)prev, &prev_stat_data);
         }
         curr_stat_data = PyStructSequence_New(&StatResultType);
         if (!curr_stat_data) {
@@ -3031,7 +3031,7 @@ on_fspoll_callback(uv_fs_poll_t *handle, int status, uv_statbuf_t *prev, uv_stat
             curr_stat_data = Py_None;
             Py_INCREF(Py_None);
         } else {
-            stat_to_pyobj(curr, &curr_stat_data);
+            stat_to_pyobj((uv_statbuf_t *)curr, &curr_stat_data);
         }
     }
 
