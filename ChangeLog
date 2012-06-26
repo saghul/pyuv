@@ -1,3 +1,13 @@
+Version 0.8.0
+=============
+ - Added FSPoll handle
+ - Added disable_stdio_inheritance class method to Process
+ - Fixed FSEvent structure to properly inherit from Handle
+ - Fixed fs tests consistency
+ - Simplified file descriptor handling on fs module (Windows)
+ - Raised libuv revision to 5a0f341 (v0.8 branch)
+ - Updated documentation
+
 Version 0.7.2
 =============
  - Fixed theoretical crash if buffer is NULL
