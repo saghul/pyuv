@@ -235,10 +235,12 @@ setup_args(void)
 
 
 static PyObject *
-Util_func_set_process_title(PyObject *self, PyObject *args)
+Util_func_set_process_title(PyObject *obj, PyObject *args)
 {
     char *title;
     uv_err_t err;
+
+    UNUSED_ARG(obj);
 
     if (!PyArg_ParseTuple(args, "s:set_process_title", &title)) {
         return NULL;
@@ -263,10 +265,12 @@ Util_func_set_process_title(PyObject *self, PyObject *args)
 
 
 static PyObject *
-Util_func_get_process_title(PyObject *self)
+Util_func_get_process_title(PyObject *obj)
 {
     char buffer[512];
     uv_err_t err;
+
+    UNUSED_ARG(obj);
 
     if (!setup_args_called) {
         setup_args();
