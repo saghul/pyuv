@@ -33,24 +33,6 @@ static PyStructSequence_Desc dns_nameinfo_result_desc = {
     2
 };
 
-static PyTypeObject DNSAddrinfoResultType;
-
-static PyStructSequence_Field dns_addrinfo_result_fields[] = {
-    {"family", ""},
-    {"socktype", ""},
-    {"proto", ""},
-    {"canonname", ""},
-    {"sockaddr", ""},
-    {NULL}
-};
-
-static PyStructSequence_Desc dns_addrinfo_result_desc = {
-    "dns_addrinfo_result",
-    NULL,
-    dns_addrinfo_result_fields,
-    5
-};
-
 static PyTypeObject DNSQueryMXResultType;
 
 static PyStructSequence_Field dns_query_mx_result_fields[] = {
@@ -303,89 +285,6 @@ makesockaddr(struct sockaddr *addr, int addrlen)
         /* If we don't know the address family, don't raise an exception -- return it as a tuple. */
         return Py_BuildValue("is#", addr->sa_family, addr->sa_data, sizeof(addr->sa_data));
     }
-}
-
-
-static void
-getaddrinfo_cb(uv_getaddrinfo_t* handle, int status, struct addrinfo* res)
-{
-    PyGILState_STATE gstate = PyGILState_Ensure();
-    struct addrinfo *ptr;
-    ares_cb_data_t *data;
-    uv_err_t err;
-    DNSResolver *self;
-    PyObject *callback, *addr, *item, *errorno, *dns_result, *result;
-
-    ASSERT(handle);
-
-    data = (ares_cb_data_t*)(handle->data);
-    self = data->resolver;
-    callback = data->cb;
-
-    ASSERT(self);
-    /* Object could go out of scope in the callback, increase refcount to avoid it */
-    Py_INCREF(self);
-
-    if (status != UV_OK) {
-        err = uv_last_error(UV_LOOP(self));
-        errorno = PyInt_FromLong((long)err.code);
-        dns_result = Py_None;
-        Py_INCREF(Py_None);
-        goto callback;
-    }
-
-    dns_result = PyList_New(0);
-    if (!dns_result) {
-        PyErr_NoMemory();
-        PyErr_WriteUnraisable(Py_None);
-        errorno = PyInt_FromLong((long)UV_ENOMEM);
-        dns_result = Py_None;
-        Py_INCREF(Py_None);
-        goto callback;
-    }
-
-    for (ptr = res; ptr; ptr = ptr->ai_next) {
-        addr = makesockaddr(ptr->ai_addr, ptr->ai_addrlen);
-        if (!addr) {
-            PyErr_NoMemory();
-            PyErr_WriteUnraisable(callback);
-            break;
-        }
-
-        item = PyStructSequence_New(&DNSAddrinfoResultType);
-        if (!item) {
-            PyErr_NoMemory();
-            PyErr_WriteUnraisable(callback);
-            break;
-        }
-        PyStructSequence_SET_ITEM(item, 0, PyInt_FromLong((long)ptr->ai_family));
-        PyStructSequence_SET_ITEM(item, 1, PyInt_FromLong((long)ptr->ai_socktype));
-        PyStructSequence_SET_ITEM(item, 2, PyInt_FromLong((long)ptr->ai_protocol));
-        PyStructSequence_SET_ITEM(item, 3, PYUVString_FromString(ptr->ai_canonname ? ptr->ai_canonname : ""));
-        PyStructSequence_SET_ITEM(item, 4, addr);
-
-        PyList_Append(dns_result, item);
-        Py_DECREF(item);
-    }
-    errorno = Py_None;
-    Py_INCREF(Py_None);
-
-callback:
-    result = PyObject_CallFunctionObjArgs(callback, self, dns_result, errorno, NULL);
-    if (result == NULL) {
-        PyErr_WriteUnraisable(callback);
-    }
-    Py_XDECREF(result);
-    Py_DECREF(dns_result);
-    Py_DECREF(errorno);
-
-    Py_DECREF(callback);
-    uv_freeaddrinfo(res);
-    PyMem_Free(handle);
-    PyMem_Free(data);
-
-    Py_DECREF(self);
-    PyGILState_Release(gstate);
 }
 
 
@@ -1129,80 +1028,6 @@ DNSResolver_func_getnameinfo(DNSResolver *self, PyObject *args, PyObject *kwargs
 
 
 static PyObject *
-DNSResolver_func_getaddrinfo(DNSResolver *self, PyObject *args, PyObject *kwargs)
-{
-    char *name;
-    char port_str[6];
-    int port, family, socktype, protocol, flags, r;
-    struct addrinfo hints;
-    ares_cb_data_t *cb_data = NULL;
-    uv_getaddrinfo_t* handle = NULL;
-    PyObject *callback;
-
-    static char *kwlist[] = {"callback", "name", "port", "family", "socktype", "protocol", "flags", NULL};
-
-    port = socktype = protocol = flags = 0;
-    family = AF_UNSPEC;
-
-    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "sO|iiiii:getaddrinfo", kwlist, &name, &callback, &port, &family, &socktype, &protocol, &flags)) {
-        return NULL;
-    }
-
-    if (!PyCallable_Check(callback)) {
-        PyErr_SetString(PyExc_TypeError, "a callable is required");
-        return NULL;
-    }
-
-    if (port < 0 || port > 65536) {
-        PyErr_SetString(PyExc_ValueError, "port must be between 0 and 65536");
-        return NULL;
-    }
-    snprintf(port_str, sizeof(port_str), "%d", port);
-
-    handle = PyMem_Malloc(sizeof(uv_getaddrinfo_t));
-    if (!handle) {
-        PyErr_NoMemory();
-        goto error;
-    }
-
-    cb_data = (ares_cb_data_t*) PyMem_Malloc(sizeof *cb_data);
-    if (!cb_data) {
-        PyErr_NoMemory();
-        goto error;
-    }
-
-    Py_INCREF(callback);
-    cb_data->resolver = self;
-    cb_data->cb = callback;
-    handle->data = (void *)cb_data;
-
-    memset(&hints, 0, sizeof(hints));
-    hints.ai_family = family;
-    hints.ai_socktype = socktype;
-    hints.ai_protocol = protocol;
-    hints.ai_flags = flags;
-
-    r = uv_getaddrinfo(UV_LOOP(self), handle, &getaddrinfo_cb, name, port_str, &hints);
-    if (r != 0) {
-        RAISE_UV_EXCEPTION(UV_LOOP(self), PyExc_DNSError);
-        goto error;
-    }
-
-    Py_RETURN_NONE;
-
-error:
-    if (handle) {
-        PyMem_Free(handle);
-    }
-    if (cb_data) {
-        Py_DECREF(callback);
-        PyMem_Free(cb_data);
-    }
-    return NULL;
-}
-
-
-static PyObject *
 DNSResolver_func_query(DNSResolver *self, PyObject *args)
 {
     char *name;
@@ -1508,7 +1333,6 @@ DNSResolver_tp_methods[] = {
     { "gethostbyname", (PyCFunction)DNSResolver_func_gethostbyname, METH_VARARGS|METH_KEYWORDS, "Gethostbyname" },
     { "gethostbyaddr", (PyCFunction)DNSResolver_func_gethostbyaddr, METH_VARARGS|METH_KEYWORDS, "Gethostbyaddr" },
     { "getnameinfo", (PyCFunction)DNSResolver_func_getnameinfo, METH_VARARGS|METH_KEYWORDS, "Getnameinfo" },
-    { "getaddrinfo", (PyCFunction)DNSResolver_func_getaddrinfo, METH_VARARGS|METH_KEYWORDS, "Getaddrinfo" },
     { "query", (PyCFunction)DNSResolver_func_query, METH_VARARGS, "Run a DNS query of the specified type" },
     { NULL }
 };

@@ -2,6 +2,30 @@
 static PyObject* PyExc_UVError;
 
 
+typedef struct {
+    Loop *loop;
+    PyObject *cb;
+} getaddrinfo_cb_data_t;
+
+static PyTypeObject DNSAddrinfoResultType;
+
+static PyStructSequence_Field dns_addrinfo_result_fields[] = {
+    {"family", ""},
+    {"socktype", ""},
+    {"proto", ""},
+    {"canonname", ""},
+    {"sockaddr", ""},
+    {NULL}
+};
+
+static PyStructSequence_Desc dns_addrinfo_result_desc = {
+    "getaddrinfo_result",
+    NULL,
+    dns_addrinfo_result_fields,
+    5
+};
+
+
 static PyObject *
 Util_func_hrtime(PyObject *obj)
 {
@@ -262,6 +286,160 @@ Util_func_get_process_title(PyObject *self)
 }
 
 
+static void
+getaddrinfo_cb(uv_getaddrinfo_t* req, int status, struct addrinfo* res)
+{
+    PyGILState_STATE gstate = PyGILState_Ensure();
+    struct addrinfo *ptr;
+    uv_err_t err;
+    getaddrinfo_cb_data_t *cb_data;
+    Loop *loop;
+    PyObject *callback, *addr, *item, *errorno, *dns_result, *result;
+
+    ASSERT(req);
+    cb_data = (getaddrinfo_cb_data_t *)req->data;
+    ASSERT(cb_data);
+    loop = cb_data->loop;
+    callback = cb_data->cb;
+    ASSERT(loop);
+    ASSERT(callback);
+
+    if (status != 0) {
+        err = uv_last_error(loop->uv_loop);
+        errorno = PyInt_FromLong((long)err.code);
+        dns_result = Py_None;
+        Py_INCREF(Py_None);
+        goto callback;
+    }
+
+    dns_result = PyList_New(0);
+    if (!dns_result) {
+        PyErr_NoMemory();
+        PyErr_WriteUnraisable(Py_None);
+        errorno = PyInt_FromLong((long)UV_ENOMEM);
+        dns_result = Py_None;
+        Py_INCREF(Py_None);
+        goto callback;
+    }
+
+    for (ptr = res; ptr; ptr = ptr->ai_next) {
+        addr = makesockaddr(ptr->ai_addr, ptr->ai_addrlen);
+        if (!addr) {
+            PyErr_NoMemory();
+            PyErr_WriteUnraisable(callback);
+            break;
+        }
+
+        item = PyStructSequence_New(&DNSAddrinfoResultType);
+        if (!item) {
+            PyErr_NoMemory();
+            PyErr_WriteUnraisable(callback);
+            break;
+        }
+        PyStructSequence_SET_ITEM(item, 0, PyInt_FromLong((long)ptr->ai_family));
+        PyStructSequence_SET_ITEM(item, 1, PyInt_FromLong((long)ptr->ai_socktype));
+        PyStructSequence_SET_ITEM(item, 2, PyInt_FromLong((long)ptr->ai_protocol));
+        PyStructSequence_SET_ITEM(item, 3, PYUVString_FromString(ptr->ai_canonname ? ptr->ai_canonname : ""));
+        PyStructSequence_SET_ITEM(item, 4, addr);
+
+        PyList_Append(dns_result, item);
+        Py_DECREF(item);
+    }
+    errorno = Py_None;
+    Py_INCREF(Py_None);
+
+callback:
+    result = PyObject_CallFunctionObjArgs(callback, dns_result, errorno, NULL);
+    if (result == NULL) {
+        PyErr_WriteUnraisable(callback);
+    }
+    Py_XDECREF(result);
+    Py_DECREF(dns_result);
+    Py_DECREF(errorno);
+
+    Py_DECREF(loop);
+    Py_DECREF(callback);
+    uv_freeaddrinfo(res);
+    PyMem_Free(req);
+    PyMem_Free(cb_data);
+
+    PyGILState_Release(gstate);
+}
+
+static PyObject *
+Util_func_getaddrinfo(PyObject *obj, PyObject *args, PyObject *kwargs)
+{
+    char *name;
+    char port_str[6];
+    int port, family, socktype, protocol, flags, r;
+    struct addrinfo hints;
+    getaddrinfo_cb_data_t *cb_data = NULL;
+    uv_getaddrinfo_t* req = NULL;
+    Loop *loop;
+    PyObject *callback;
+
+    UNUSED_ARG(obj);
+
+    static char *kwlist[] = {"loop", "callback", "name", "port", "family", "socktype", "protocol", "flags", NULL};
+
+    port = socktype = protocol = flags = 0;
+    family = AF_UNSPEC;
+
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!sO|iiiii:getaddrinfo", kwlist, &LoopType, &loop, &name, &callback, &port, &family, &socktype, &protocol, &flags)) {
+        return NULL;
+    }
+
+    if (!PyCallable_Check(callback)) {
+        PyErr_SetString(PyExc_TypeError, "a callable is required");
+        return NULL;
+    }
+
+    if (port < 0 || port > 65536) {
+        PyErr_SetString(PyExc_ValueError, "port must be between 0 and 65536");
+        return NULL;
+    }
+    snprintf(port_str, sizeof(port_str), "%d", port);
+
+    req = PyMem_Malloc(sizeof(uv_getaddrinfo_t));
+    if (!req) {
+        PyErr_NoMemory();
+        goto error;
+    }
+
+    cb_data = PyMem_Malloc(sizeof(getaddrinfo_cb_data_t));
+    if (!cb_data) {
+        PyErr_NoMemory();
+        goto error;
+    }
+
+    Py_INCREF(loop);
+    Py_INCREF(callback);
+    cb_data->loop = loop;
+    cb_data->cb = callback;
+    req->data = (void *)cb_data;
+
+    memset(&hints, 0, sizeof(hints));
+    hints.ai_family = family;
+    hints.ai_socktype = socktype;
+    hints.ai_protocol = protocol;
+    hints.ai_flags = flags;
+
+    r = uv_getaddrinfo(loop->uv_loop, req, &getaddrinfo_cb, name, port_str, &hints);
+    if (r != 0) {
+        RAISE_UV_EXCEPTION(loop->uv_loop, PyExc_UVError);
+        goto error;
+    }
+
+    Py_RETURN_NONE;
+
+error:
+    if (req) {
+        PyMem_Free(req);
+    }
+    return NULL;
+}
+
+
 static PyMethodDef
 Util_methods[] = {
     { "hrtime", (PyCFunction)Util_func_hrtime, METH_NOARGS, "High resolution time." },
@@ -274,6 +452,7 @@ Util_methods[] = {
     { "cpu_info", (PyCFunction)Util_func_cpu_info, METH_NOARGS, "Gets system CPU information." },
     { "set_process_title", (PyCFunction)Util_func_set_process_title, METH_VARARGS, "Sets current process title." },
     { "get_process_title", (PyCFunction)Util_func_get_process_title, METH_NOARGS, "Gets current process title." },
+    { "getaddrinfo", (PyCFunction)Util_func_getaddrinfo, METH_VARARGS|METH_KEYWORDS, "Getaddrinfo" },
     { NULL }
 };
 

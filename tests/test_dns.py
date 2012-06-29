@@ -15,13 +15,6 @@ class DNSTest(unittest2.TestCase):
         self.resolver = None
         self.loop = None
 
-    def getaddrinfo_cb(self, resolver, result, errorno):
-        self.assertEqual(errorno, None)
-
-    def test_getaddrinfo(self):
-        self.resolver.getaddrinfo('localhost', self.getaddrinfo_cb, 80, socket.AF_INET)
-        self.loop.run()
-
     def gethostbyaddr_cb(self, resolver, result, errorno):
         self.assertEqual(errorno, None)
 
