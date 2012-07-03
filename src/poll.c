@@ -93,25 +93,6 @@ Poll_func_stop(Poll *self)
 }
 
 
-static PyObject *
-Poll_slow_get(Poll *self, void *closure)
-{
-    UNUSED_ARG(closure);
-    RAISE_IF_HANDLE_CLOSED(self, PyExc_HandleClosedError, NULL);
-#ifdef PYUV_WINDOWS
-    #define UV_HANDLE_POLL_SLOW  0x02000000 /* copied from src/win/internal.h */
-    if (!(UV_HANDLE(self)->flags & UV_HANDLE_POLL_SLOW)) {
-        Py_RETURN_FALSE;
-    } else {
-        Py_RETURN_TRUE;
-    }
-    #undef UV_HANDLE_POLL_SLOW
-#else
-    Py_RETURN_FALSE;
-#endif
-}
-
-
 static int
 Poll_tp_init(Poll *self, PyObject *args, PyObject *kwargs)
 {
@@ -196,12 +177,6 @@ Poll_tp_methods[] = {
 };
 
 
-static PyGetSetDef Poll_tp_getsets[] = {
-    {"slow", (getter)Poll_slow_get, 0, "Indicates if the handle is running in slow mode (Windows)", NULL},
-    {NULL}
-};
-
-
 static PyTypeObject PollType = {
     PyVarObject_HEAD_INIT(NULL, 0)
     "pyuv.Poll",                                                    /*tp_name*/
@@ -232,7 +207,7 @@ static PyTypeObject PollType = {
     0,                                                              /*tp_iternext*/
     Poll_tp_methods,                                                /*tp_methods*/
     0,                                                              /*tp_members*/
-    Poll_tp_getsets,                                                /*tp_getsets*/
+    0,                                                              /*tp_getsets*/
     0,                                                              /*tp_base*/
     0,                                                              /*tp_dict*/
     0,                                                              /*tp_descr_get*/
