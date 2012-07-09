@@ -15,7 +15,6 @@
 #include "tty.c"
 #include "udp.c"
 #include "poll.c"
-#include "dns.c"
 #include "fs.c"
 #include "threadpool.c"
 #include "process.c"
@@ -62,7 +61,6 @@ init_pyuv(void)
     PyObject *pyuv;
     PyObject *errno_module;
     PyObject *error_module;
-    PyObject *dns;
     PyObject *fs;
     PyObject *util;
 
@@ -95,13 +93,6 @@ init_pyuv(void)
         goto fail;
     }
     PyUVModule_AddObject(pyuv, "error", error_module);
-
-    /* DNS module */
-    dns = init_dns();
-    if (dns == NULL) {
-        goto fail;
-    }
-    PyUVModule_AddObject(pyuv, "dns", dns);
 
     /* FS module */
     fs = init_fs();
@@ -152,18 +143,8 @@ init_pyuv(void)
     /* PyStructSequence types */
     if (LoopCountersResultType.tp_name == 0)
         PyStructSequence_InitType(&LoopCountersResultType, &loop_counters_result_desc);
-    if (DNSHostResultType.tp_name == 0)
-        PyStructSequence_InitType(&DNSHostResultType, &dns_host_result_desc);
-    if (DNSNameinfoResultType.tp_name == 0)
-        PyStructSequence_InitType(&DNSNameinfoResultType, &dns_nameinfo_result_desc);
     if (AddrinfoResultType.tp_name == 0)
         PyStructSequence_InitType(&AddrinfoResultType, &addrinfo_result_desc);
-    if (DNSQueryMXResultType.tp_name == 0)
-        PyStructSequence_InitType(&DNSQueryMXResultType, &dns_query_mx_result_desc);
-    if (DNSQuerySRVResultType.tp_name == 0)
-        PyStructSequence_InitType(&DNSQuerySRVResultType, &dns_query_srv_result_desc);
-    if (DNSQueryNAPTRResultType.tp_name == 0)
-        PyStructSequence_InitType(&DNSQueryNAPTRResultType, &dns_query_naptr_result_desc);
     if (StatResultType.tp_name == 0)
         PyStructSequence_InitType(&StatResultType, &stat_result_desc);
 

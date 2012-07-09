@@ -240,15 +240,6 @@ typedef struct {
 
 static PyTypeObject FSPollType;
 
-/* DNSResolver */
-typedef struct {
-    PyObject_HEAD
-    Loop *loop;
-    ares_channel channel;
-} DNSResolver;
-
-static PyTypeObject DNSResolverType;
-
 /* ThreadPool */
 typedef struct {
     PyObject_HEAD
