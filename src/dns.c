@@ -253,41 +253,6 @@ callback:
 }
 
 
-/* Modified from Python Modules/socketmodule.c */
-static PyObject *
-makesockaddr(struct sockaddr *addr, int addrlen)
-{
-    struct sockaddr_in *addr4;
-    struct sockaddr_in6 *addr6;
-    char ip[INET6_ADDRSTRLEN];
-
-    if (addrlen == 0) {
-        /* No address */
-        Py_RETURN_NONE;
-    }
-
-    switch (addr->sa_family) {
-    case AF_INET:
-    {
-        addr4 = (struct sockaddr_in*)addr;
-        uv_ip4_name(addr4, ip, INET_ADDRSTRLEN);
-        return Py_BuildValue("si", ip, ntohs(addr4->sin_port));
-    }
-
-    case AF_INET6:
-    {
-        addr6 = (struct sockaddr_in6*)addr;
-        uv_ip6_name(addr6, ip, INET6_ADDRSTRLEN);
-        return Py_BuildValue("siii", ip, ntohs(addr6->sin6_port), addr6->sin6_flowinfo, addr6->sin6_scope_id);
-    }
-
-    default:
-        /* If we don't know the address family, don't raise an exception -- return it as a tuple. */
-        return Py_BuildValue("is#", addr->sa_family, addr->sa_data, sizeof(addr->sa_data));
-    }
-}
-
-
 static void
 query_a_cb(void *arg, int status,int timeouts, unsigned char *answer_buf, int answer_len)
 {

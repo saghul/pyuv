@@ -156,8 +156,8 @@ init_pyuv(void)
         PyStructSequence_InitType(&DNSHostResultType, &dns_host_result_desc);
     if (DNSNameinfoResultType.tp_name == 0)
         PyStructSequence_InitType(&DNSNameinfoResultType, &dns_nameinfo_result_desc);
-    if (DNSAddrinfoResultType.tp_name == 0)
-        PyStructSequence_InitType(&DNSAddrinfoResultType, &dns_addrinfo_result_desc);
+    if (AddrinfoResultType.tp_name == 0)
+        PyStructSequence_InitType(&AddrinfoResultType, &addrinfo_result_desc);
     if (DNSQueryMXResultType.tp_name == 0)
         PyStructSequence_InitType(&DNSQueryMXResultType, &dns_query_mx_result_desc);
     if (DNSQuerySRVResultType.tp_name == 0)
