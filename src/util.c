@@ -2,11 +2,6 @@
 static PyObject* PyExc_UVError;
 
 
-typedef struct {
-    Loop *loop;
-    PyObject *cb;
-} getaddrinfo_cb_data_t;
-
 static PyTypeObject AddrinfoResultType;
 
 static PyStructSequence_Field addrinfo_result_fields[] = {
@@ -330,17 +325,12 @@ getaddrinfo_cb(uv_getaddrinfo_t* req, int status, struct addrinfo* res)
     PyGILState_STATE gstate = PyGILState_Ensure();
     struct addrinfo *ptr;
     uv_err_t err;
-    getaddrinfo_cb_data_t *cb_data;
     Loop *loop;
     PyObject *callback, *addr, *item, *errorno, *dns_result, *result;
 
     ASSERT(req);
-    cb_data = (getaddrinfo_cb_data_t *)req->data;
-    ASSERT(cb_data);
-    loop = cb_data->loop;
-    callback = cb_data->cb;
-    ASSERT(loop);
-    ASSERT(callback);
+    callback = (PyObject *)req->data;
+    loop = (Loop *)req->loop->data;
 
     if (status != 0) {
         err = uv_last_error(loop->uv_loop);
@@ -399,7 +389,6 @@ callback:
     Py_DECREF(callback);
     uv_freeaddrinfo(res);
     PyMem_Free(req);
-    PyMem_Free(cb_data);
 
     PyGILState_Release(gstate);
 }
@@ -411,7 +400,6 @@ Util_func_getaddrinfo(PyObject *obj, PyObject *args, PyObject *kwargs)
     char port_str[6];
     int port, family, socktype, protocol, flags, r;
     struct addrinfo hints;
-    getaddrinfo_cb_data_t *cb_data = NULL;
     uv_getaddrinfo_t* req = NULL;
     Loop *loop;
     PyObject *callback;
@@ -444,17 +432,9 @@ Util_func_getaddrinfo(PyObject *obj, PyObject *args, PyObject *kwargs)
         goto error;
     }
 
-    cb_data = PyMem_Malloc(sizeof(getaddrinfo_cb_data_t));
-    if (!cb_data) {
-        PyErr_NoMemory();
-        goto error;
-    }
-
     Py_INCREF(loop);
     Py_INCREF(callback);
-    cb_data->loop = loop;
-    cb_data->cb = callback;
-    req->data = (void *)cb_data;
+    req->data = (void *)callback;
 
     memset(&hints, 0, sizeof(hints));
     hints.ai_family = family;
