@@ -25,7 +25,7 @@ Features:
  * UDP support
  * Timers
  * Child process spawning
- * Asynchronous DNS
+ * Asynchronous DNS resolution (getaddrinfo)
  * Asynchronous file system APIs
  * Thread pool scheduling
  * High resolution time
