@@ -91,8 +91,8 @@ TCP_func_bind(TCP *self, PyObject *args)
         return NULL;
     }
 
-    if (bind_port < 0 || bind_port > 65536) {
-        PyErr_SetString(PyExc_ValueError, "port must be between 0 and 65536");
+    if (bind_port < 0 || bind_port > 65535) {
+        PyErr_SetString(PyExc_ValueError, "port must be between 0 and 65535");
         return NULL;
     }
 
@@ -209,8 +209,8 @@ TCP_func_connect(TCP *self, PyObject *args)
         return NULL;
     }
 
-    if (connect_port < 0 || connect_port > 65536) {
-        PyErr_SetString(PyExc_ValueError, "port must be between 0 and 65536");
+    if (connect_port < 0 || connect_port > 65535) {
+        PyErr_SetString(PyExc_ValueError, "port must be between 0 and 65535");
         return NULL;
     }
 
