@@ -161,8 +161,8 @@ UDP_func_bind(UDP *self, PyObject *args)
         return NULL;
     }
 
-    if (bind_port < 0 || bind_port > 65536) {
-        PyErr_SetString(PyExc_ValueError, "port must be between 0 and 65536");
+    if (bind_port < 0 || bind_port > 65535) {
+        PyErr_SetString(PyExc_ValueError, "port must be between 0 and 65535");
         return NULL;
     }
 
@@ -273,8 +273,8 @@ UDP_func_send(UDP *self, PyObject *args)
         return NULL;
     }
 
-    if (dest_port < 0 || dest_port > 65536) {
-        PyErr_SetString(PyExc_ValueError, "port must be between 0 and 65536");
+    if (dest_port < 0 || dest_port > 65535) {
+        PyErr_SetString(PyExc_ValueError, "port must be between 0 and 65535");
         return NULL;
     }
 
@@ -387,8 +387,8 @@ UDP_func_sendlines(UDP *self, PyObject *args)
         return NULL;
     }
 
-    if (dest_port < 0 || dest_port > 65536) {
-        PyErr_SetString(PyExc_ValueError, "port must be between 0 and 65536");
+    if (dest_port < 0 || dest_port > 65535) {
+        PyErr_SetString(PyExc_ValueError, "port must be between 0 and 65535");
         return NULL;
     }
 
