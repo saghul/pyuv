@@ -420,8 +420,8 @@ Util_func_getaddrinfo(PyObject *obj, PyObject *args, PyObject *kwargs)
         return NULL;
     }
 
-    if (port < 0 || port > 65536) {
-        PyErr_SetString(PyExc_ValueError, "port must be between 0 and 65536");
+    if (port < 0 || port > 65535) {
+        PyErr_SetString(PyExc_ValueError, "port must be between 0 and 65535");
         return NULL;
     }
     snprintf(port_str, sizeof(port_str), "%d", port);
