@@ -39,14 +39,12 @@ static void
 on_pipe_client_connection(uv_connect_t *req, int status)
 {
     PyGILState_STATE gstate = PyGILState_Ensure();
-    stream_req_data_t* req_data;
     Pipe *self;
     PyObject *callback, *result, *py_errorno;
     ASSERT(req);
 
-    req_data = (stream_req_data_t *)req->data;
     self = (Pipe *)req->handle->data;
-    callback = req_data->callback;
+    callback = (PyObject *)req->data;
 
     ASSERT(self);
     /* Object could go out of scope in the callback, increase refcount to avoid it */
@@ -68,7 +66,6 @@ on_pipe_client_connection(uv_connect_t *req, int status)
     Py_DECREF(py_errorno);
 
     Py_DECREF(callback);
-    PyMem_Free(req_data);
     PyMem_Free(req);
 
     Py_DECREF(self);
@@ -216,7 +213,6 @@ Pipe_func_connect(Pipe *self, PyObject *args)
 {
     char *name;
     uv_connect_t *connect_req = NULL;
-    stream_req_data_t *req_data = NULL;
     PyObject *callback;
 
     RAISE_IF_HANDLE_CLOSED(self, PyExc_HandleClosedError, NULL);
@@ -230,33 +226,24 @@ Pipe_func_connect(Pipe *self, PyObject *args)
         return NULL;
     }
 
+    Py_INCREF(callback);
+
     connect_req = (uv_connect_t *)PyMem_Malloc(sizeof(uv_connect_t));
     if (!connect_req) {
         PyErr_NoMemory();
         goto error;
     }
 
-    req_data = (stream_req_data_t*) PyMem_Malloc(sizeof(stream_req_data_t));
-    if (!req_data) {
-        PyErr_NoMemory();
-        goto error;
-    }
-
-    Py_INCREF(callback);
-    req_data->callback = callback;
-    connect_req->data = (void *)req_data;
+    connect_req->data = (void *)callback;
 
     uv_pipe_connect(connect_req, (uv_pipe_t *)UV_HANDLE(self), name, on_pipe_client_connection);
 
     Py_RETURN_NONE;
 
 error:
+    Py_DECREF(callback);
     if (connect_req) {
         PyMem_Free(connect_req);
-    }
-    if (req_data) {
-        Py_DECREF(callback);
-        PyMem_Free(req_data);
     }
     return NULL;
 }
@@ -334,15 +321,9 @@ Pipe_func_start_read2(Pipe *self, PyObject *args)
 static PyObject *
 Pipe_func_write2(Pipe *self, PyObject *args)
 {
-    int i, r, buf_count;
     Py_buffer pbuf;
     PyObject *callback, *send_handle;
-    uv_buf_t *bufs = NULL;
-    uv_write_t *wr = NULL;
-    stream_req_data_t *req_data = NULL;
-    stream_write_data_t *write_data = NULL;
 
-    buf_count = 0;
     callback = Py_None;
 
     RAISE_IF_HANDLE_CLOSED(self, PyExc_HandleClosedError, NULL);
@@ -362,69 +343,7 @@ Pipe_func_write2(Pipe *self, PyObject *args)
         return NULL;
     }
 
-    wr = (uv_write_t *)PyMem_Malloc(sizeof(uv_write_t));
-    if (!wr) {
-        PyErr_NoMemory();
-        goto error;
-    }
-
-    req_data = (stream_req_data_t*) PyMem_Malloc(sizeof(stream_req_data_t));
-    if (!req_data) {
-        PyErr_NoMemory();
-        goto error;
-    }
-
-    write_data = (stream_write_data_t *) PyMem_Malloc(sizeof(stream_write_data_t));
-    if (!write_data) {
-        PyErr_NoMemory();
-        goto error;
-    }
-
-    Py_INCREF(callback);
-    req_data->callback = callback;
-    wr->data = (void *)req_data;
-
-    bufs = (uv_buf_t *) PyMem_Malloc(sizeof(uv_buf_t));
-    if (!bufs) {
-        PyErr_NoMemory();
-        goto error;
-    }
-
-    bufs[0] = uv_buf_init(pbuf.buf, pbuf.len);
-    buf_count = 1;
-
-    write_data->bufs = bufs;
-    write_data->buf_count = buf_count;
-    write_data->view = pbuf;
-    req_data->data = write_data;
-
-    r = uv_write2(wr, (uv_stream_t *)UV_HANDLE(self), bufs, buf_count, (uv_stream_t *)UV_HANDLE(send_handle), on_stream_write);
-    if (r != 0) {
-        RAISE_UV_EXCEPTION(UV_HANDLE_LOOP(self), PyExc_PipeError);
-        goto error;
-    }
-
-    Py_RETURN_NONE;
-
-error:
-    PyBuffer_Release(&pbuf);
-    if (bufs) {
-        for (i = 0; i < buf_count; i++) {
-            PyMem_Free(bufs[i].base);
-        }
-        PyMem_Free(bufs);
-    }
-    if (write_data) {
-        PyMem_Free(write_data);
-    }
-    if (req_data) {
-        Py_DECREF(callback);
-        PyMem_Free(req_data);
-    }
-    if (wr) {
-        PyMem_Free(wr);
-    }
-    return NULL;
+    return pyuv_stream_write((Stream *)self, pbuf, callback, send_handle);
 }
 
 
