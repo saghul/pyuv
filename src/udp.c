@@ -136,6 +136,7 @@ on_udp_send(uv_udp_send_t* req, int status)
         for (i = 0; i < send_data->buf_count; i++) {
             PyMem_Free(send_data->bufs[i].base);
         }
+        PyMem_Free(req_data->bufs);
     }
     PyMem_Free(send_data);
     Py_DECREF(callback);
