@@ -3,15 +3,11 @@ static PyObject* PyExc_UDPError;
 
 
 typedef struct {
+    PyObject *callback;
     uv_buf_t *bufs;
     int buf_count;
     Py_buffer view;
 } udp_send_data_t;
-
-typedef struct {
-    PyObject *callback;
-    udp_send_data_t *data;
-} udp_req_data_t;
 
 
 static uv_buf_t
@@ -97,15 +93,13 @@ on_udp_send(uv_udp_send_t* req, int status)
 {
     PyGILState_STATE gstate = PyGILState_Ensure();
     int i;
-    udp_req_data_t* req_data;
-    udp_send_data_t* send_data;
+    udp_send_data_t* req_data;
     UDP *self;
     PyObject *callback, *result, *py_errorno;
 
     ASSERT(req);
 
-    req_data = (udp_req_data_t *)req->data;
-    send_data = req_data->data;
+    req_data = (udp_send_data_t *)req->data;
 
     self = (UDP *)req->handle->data;
     callback = req_data->callback;
@@ -130,14 +124,13 @@ on_udp_send(uv_udp_send_t* req, int status)
         Py_DECREF(py_errorno);
     }
 
-    if (send_data->buf_count == 1) {
-        PyBuffer_Release(&send_data->view);
+    if (req_data->buf_count == 1) {
+        PyBuffer_Release(&req_data->view);
     } else {
-        for (i = 0; i < send_data->buf_count; i++) {
-            PyMem_Free(send_data->bufs[i].base);
+        for (i = 0; i < req_data->buf_count; i++) {
+            PyMem_Free(req_data->bufs[i].base);
         }
     }
-    PyMem_Free(send_data);
     Py_DECREF(callback);
     PyMem_Free(req_data);
     PyMem_Free(req);
@@ -247,18 +240,16 @@ UDP_func_stop_recv(UDP *self)
 static PyObject *
 UDP_func_send(UDP *self, PyObject *args)
 {
-    int r, buf_count, dest_port, address_type;
+    int r, dest_port, address_type;
     char *dest_ip;
     struct in_addr addr4;
     struct in6_addr addr6;
+    uv_buf_t buf;
     Py_buffer pbuf;
     PyObject *callback;
-    uv_buf_t *bufs = NULL;
     uv_udp_send_t *wr = NULL;
-    udp_req_data_t *req_data = NULL;
-    udp_send_data_t *write_data = NULL;
+    udp_send_data_t *req_data = NULL;
 
-    buf_count = 0;
     callback = Py_None;
 
     RAISE_IF_HANDLE_CLOSED(self, PyExc_HandleClosedError, NULL);
@@ -287,46 +278,32 @@ UDP_func_send(UDP *self, PyObject *args)
         return NULL;
     }
 
+    Py_INCREF(callback);
+
     wr = (uv_udp_send_t *)PyMem_Malloc(sizeof(uv_udp_send_t));
     if (!wr) {
         PyErr_NoMemory();
         goto error;
     }
 
-    req_data = (udp_req_data_t*) PyMem_Malloc(sizeof(udp_req_data_t));
+    req_data = (udp_send_data_t*) PyMem_Malloc(sizeof(udp_send_data_t));
     if (!req_data) {
         PyErr_NoMemory();
         goto error;
     }
 
-    write_data = (udp_send_data_t *) PyMem_Malloc(sizeof(udp_send_data_t));
-    if (!write_data) {
-        PyErr_NoMemory();
-        goto error;
-    }
-
-    Py_INCREF(callback);
+    buf = uv_buf_init(pbuf.buf, pbuf.len);
     req_data->callback = callback;
+    req_data->bufs = &buf;
+    req_data->buf_count = 1;
+    req_data->view = pbuf;
+
     wr->data = (void *)req_data;
 
-    bufs = (uv_buf_t *) PyMem_Malloc(sizeof(uv_buf_t));
-    if (!bufs) {
-        PyErr_NoMemory();
-        goto error;
-    }
-
-    bufs[0] = uv_buf_init(pbuf.buf, pbuf.len);
-    buf_count = 1;
-
-    write_data->bufs = bufs;
-    write_data->buf_count = buf_count;
-    write_data->view = pbuf;
-    req_data->data = write_data;
-
     if (address_type == AF_INET) {
-        r = uv_udp_send(wr, (uv_udp_t *)UV_HANDLE(self), bufs, buf_count, uv_ip4_addr(dest_ip, dest_port), (uv_udp_send_cb)on_udp_send);
+        r = uv_udp_send(wr, (uv_udp_t *)UV_HANDLE(self), &buf, 1, uv_ip4_addr(dest_ip, dest_port), (uv_udp_send_cb)on_udp_send);
     } else {
-        r = uv_udp_send6(wr, (uv_udp_t *)UV_HANDLE(self), bufs, buf_count, uv_ip6_addr(dest_ip, dest_port), (uv_udp_send_cb)on_udp_send);
+        r = uv_udp_send6(wr, (uv_udp_t *)UV_HANDLE(self), &buf, 1, uv_ip6_addr(dest_ip, dest_port), (uv_udp_send_cb)on_udp_send);
     }
     if (r != 0) {
         RAISE_UV_EXCEPTION(UV_HANDLE_LOOP(self), PyExc_UDPError);
@@ -337,14 +314,8 @@ UDP_func_send(UDP *self, PyObject *args)
 
 error:
     PyBuffer_Release(&pbuf);
-    if (bufs) {
-        PyMem_Free(bufs);
-    }
-    if (write_data) {
-        PyMem_Free(write_data);
-    }
+    Py_DECREF(callback);
     if (req_data) {
-        Py_DECREF(callback);
         PyMem_Free(req_data);
     }
     if (wr) {
@@ -368,8 +339,7 @@ UDP_func_sendlines(UDP *self, PyObject *args)
     uv_buf_t tmpbuf;
     uv_buf_t *bufs, *new_bufs;
     uv_udp_send_t *wr = NULL;
-    udp_req_data_t *req_data = NULL;
-    udp_send_data_t *write_data = NULL;
+    udp_send_data_t *req_data = NULL;
 
     buf_count = 0;
     bufs = new_bufs = NULL;
@@ -401,25 +371,20 @@ UDP_func_sendlines(UDP *self, PyObject *args)
         return NULL;
     }
 
+    Py_INCREF(callback);
+
     wr = (uv_udp_send_t *)PyMem_Malloc(sizeof(uv_udp_send_t));
     if (!wr) {
         PyErr_NoMemory();
         goto error;
     }
 
-    req_data = (udp_req_data_t*) PyMem_Malloc(sizeof(udp_req_data_t));
+    req_data = (udp_send_data_t*) PyMem_Malloc(sizeof(udp_send_data_t));
     if (!req_data) {
         PyErr_NoMemory();
         goto error;
     }
 
-    write_data = (udp_send_data_t *) PyMem_Malloc(sizeof(udp_send_data_t));
-    if (!write_data) {
-        PyErr_NoMemory();
-        goto error;
-    }
-
-    Py_INCREF(callback);
     req_data->callback = callback;
     wr->data = (void *)req_data;
 
@@ -518,9 +483,8 @@ UDP_func_sendlines(UDP *self, PyObject *args)
     }
     bufs = new_bufs;
 
-    write_data->bufs = bufs;
-    write_data->buf_count = buf_count;
-    req_data->data = write_data;
+    req_data->bufs = bufs;
+    req_data->buf_count = buf_count;
 
     if (address_type == AF_INET) {
         r = uv_udp_send(wr, (uv_udp_t *)UV_HANDLE(self), bufs, buf_count, uv_ip4_addr(dest_ip, dest_port), (uv_udp_send_cb)on_udp_send);
@@ -535,17 +499,14 @@ UDP_func_sendlines(UDP *self, PyObject *args)
     Py_RETURN_NONE;
 
 error:
+    Py_DECREF(callback);
     if (bufs) {
         for (i = 0; i < buf_count; i++) {
             PyMem_Free(bufs[i].base);
         }
         PyMem_Free(bufs);
     }
-    if (write_data) {
-        PyMem_Free(write_data);
-    }
     if (req_data) {
-        Py_DECREF(callback);
         PyMem_Free(req_data);
     }
     if (wr) {
