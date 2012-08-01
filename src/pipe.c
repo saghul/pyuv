@@ -1,7 +1,4 @@
 
-static PyObject* PyExc_PipeError;
-
-
 static void
 on_pipe_connection(uv_stream_t* server, int status)
 {

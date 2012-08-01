@@ -1,7 +1,4 @@
 
-static PyObject* PyExc_StreamError;
-
-
 typedef struct {
     PyObject *callback;
     uv_buf_t *bufs;

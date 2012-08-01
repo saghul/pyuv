@@ -1,7 +1,4 @@
 
-static PyObject* PyExc_UVError;
-
-
 static PyTypeObject AddrinfoResultType;
 
 static PyStructSequence_Field addrinfo_result_fields[] = {

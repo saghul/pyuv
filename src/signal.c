@@ -5,9 +5,6 @@
  * That will cause standard registered signal handlers to be called by Python.
  */
 
-static PyObject* PyExc_SignalError;
-
-
 static void
 on_signal_callback(uv_prepare_t *handle, int status)
 {

@@ -29,8 +29,6 @@ static PyStructSequence_Desc stat_result_desc = {
 };
 
 
-static PyObject* PyExc_FSError;
-
 typedef struct {
     Loop *loop;
     PyObject *callback;
@@ -2454,8 +2452,6 @@ FS_methods[] = {
 
 
 /* FSEvent handle */
-static PyObject* PyExc_FSEventError;
-
 
 static void
 on_fsevent_callback(uv_fs_event_t *handle, const char *filename, int events, int status)
@@ -2676,8 +2672,6 @@ static PyTypeObject FSEventType = {
 
 
 /* FSPoll handle */
-static PyObject* PyExc_FSPollError;
-
 
 static void
 on_fspoll_callback(uv_fs_poll_t *handle, int status, const uv_statbuf_t *prev, const uv_statbuf_t *curr)

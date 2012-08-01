@@ -1,7 +1,4 @@
 
-static PyObject* PyExc_TimerError;
-
-
 static void
 on_timer_callback(uv_timer_t *timer, int status)
 {

@@ -1,7 +1,4 @@
 
-static PyObject* PyExc_TCPError;
-
-
 static void
 on_tcp_connection(uv_stream_t* server, int status)
 {

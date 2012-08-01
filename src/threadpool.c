@@ -1,6 +1,4 @@
 
-static PyObject* PyExc_ThreadPoolError;
-
 typedef struct {
     PyObject *work_cb;
     PyObject *after_work_cb;

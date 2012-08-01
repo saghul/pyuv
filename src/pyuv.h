@@ -249,6 +249,32 @@ typedef struct {
 static PyTypeObject ThreadPoolType;
 
 
+/* Exception definitions */
+static PyObject* PyExc_AsyncError;
+static PyObject* PyExc_CheckError;
+static PyObject* PyExc_FSError;
+static PyObject* PyExc_FSEventError;
+static PyObject* PyExc_FSPollError;
+static PyObject* PyExc_HandleError;
+static PyObject* PyExc_HandleClosedError;
+static PyObject* PyExc_IdleError;
+static PyObject* PyExc_PipeError;
+static PyObject* PyExc_PollError;
+static PyObject* PyExc_PrepareError;
+static PyObject* PyExc_ProcessError;
+static PyObject* PyExc_SignalError;
+static PyObject* PyExc_StreamError;
+static PyObject* PyExc_TCPError;
+static PyObject* PyExc_ThreadPoolError;
+static PyObject* PyExc_TimerError;
+static PyObject* PyExc_TTYError;
+static PyObject* PyExc_UDPError;
+static PyObject* PyExc_UVError;
+
+
+
+
+
 /* Some helper stuff */
 
 /* Temporary hack: libuv should provide uv_inet_pton and uv_inet_ntop. */

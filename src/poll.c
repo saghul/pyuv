@@ -1,7 +1,4 @@
 
-static PyObject* PyExc_PollError;
-
-
 static void
 on_poll_callback(uv_poll_t *handle, int status, int events)
 {

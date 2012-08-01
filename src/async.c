@@ -1,7 +1,4 @@
 
-static PyObject* PyExc_AsyncError;
-
-
 static void
 on_async_callback(uv_async_t *async, int status)
 {

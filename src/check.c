@@ -1,7 +1,4 @@
 
-static PyObject* PyExc_CheckError;
-
-
 static void
 on_check_callback(uv_check_t *handle, int status)
 {

@@ -1,7 +1,4 @@
 
-static PyObject* PyExc_IdleError;
-
-
 static void
 on_idle_callback(uv_idle_t *handle, int status)
 {
