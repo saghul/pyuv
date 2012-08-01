@@ -249,7 +249,7 @@ typedef struct {
 static PyTypeObject ThreadPoolType;
 
 
-/* Exception definitions */
+/* Exceptions */
 static PyObject* PyExc_AsyncError;
 static PyObject* PyExc_CheckError;
 static PyObject* PyExc_FSError;
@@ -272,7 +272,86 @@ static PyObject* PyExc_UDPError;
 static PyObject* PyExc_UVError;
 
 
+/* PyStructSequence types */
 
+/* used by getaddrinfo */
+static PyTypeObject AddrinfoResultType;
+
+static PyStructSequence_Field addrinfo_result_fields[] = {
+    {"family", ""},
+    {"socktype", ""},
+    {"proto", ""},
+    {"canonname", ""},
+    {"sockaddr", ""},
+    {NULL}
+};
+
+static PyStructSequence_Desc addrinfo_result_desc = {
+    "addrinfo_result",
+    NULL,
+    addrinfo_result_fields,
+    5
+};
+
+/* used by Loop.counters */
+static PyTypeObject LoopCountersResultType;
+
+static PyStructSequence_Field loop_counters_result_fields[] = {
+    {"eio_init", ""},
+    {"req_init", ""},
+    {"handle_init", ""},
+    {"stream_init", ""},
+    {"tcp_init", ""},
+    {"udp_init", ""},
+    {"pipe_init", ""},
+    {"tty_init", ""},
+    {"poll_init", ""},
+    {"prepare_init", ""},
+    {"check_init", ""},
+    {"idle_init", ""},
+    {"async_init", ""},
+    {"timer_init", ""},
+    {"process_init", ""},
+    {"fs_event_init", ""},
+    {NULL}
+};
+
+static PyStructSequence_Desc loop_counters_result_desc = {
+    "loop_counters_result",
+    NULL,
+    loop_counters_result_fields,
+    16
+};
+
+/* used by fs stat functions */
+static PyTypeObject StatResultType;
+
+static PyStructSequence_Field stat_result_fields[] = {
+    {"st_mode",        "protection bits"},
+    {"st_ino",         "inode"},
+    {"st_dev",         "device"},
+    {"st_nlink",       "number of hard links"},
+    {"st_uid",         "user ID of owner"},
+    {"st_gid",         "group ID of owner"},
+    {"st_size",        "total size, in bytes"},
+    {"st_atime",       "time of last access"},
+    {"st_mtime",       "time of last modification"},
+    {"st_ctime",       "time of last change"},
+    {"st_blksize",     "blocksize for filesystem I/O"},
+    {"st_blocks",      "number of blocks allocated"},
+    {"st_rdev",        "device type (if inode device)"},
+    {"st_flags",       "user defined flags for file"},
+    {"st_gen",         "generation number"},
+    {"st_birthtime",   "time of creation"},
+    {NULL}
+};
+
+static PyStructSequence_Desc stat_result_desc = {
+    "stat_result",
+    NULL,
+    stat_result_fields,
+    16
+};
 
 
 /* Some helper stuff */

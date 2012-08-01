@@ -2,36 +2,6 @@
 static Loop *default_loop = NULL;
 
 
-static PyTypeObject LoopCountersResultType;
-
-static PyStructSequence_Field loop_counters_result_fields[] = {
-    {"eio_init", ""},
-    {"req_init", ""},
-    {"handle_init", ""},
-    {"stream_init", ""},
-    {"tcp_init", ""},
-    {"udp_init", ""},
-    {"pipe_init", ""},
-    {"tty_init", ""},
-    {"poll_init", ""},
-    {"prepare_init", ""},
-    {"check_init", ""},
-    {"idle_init", ""},
-    {"async_init", ""},
-    {"timer_init", ""},
-    {"process_init", ""},
-    {"fs_event_init", ""},
-    {NULL}
-};
-
-static PyStructSequence_Desc loop_counters_result_desc = {
-    "loop_counters_result",
-    NULL,
-    loop_counters_result_fields,
-    16
-};
-
-
 static void
 _loop_cleanup(void)
 {

@@ -1,34 +1,4 @@
 
-static PyTypeObject StatResultType;
-
-static PyStructSequence_Field stat_result_fields[] = {
-    {"st_mode",        "protection bits"},
-    {"st_ino",         "inode"},
-    {"st_dev",         "device"},
-    {"st_nlink",       "number of hard links"},
-    {"st_uid",         "user ID of owner"},
-    {"st_gid",         "group ID of owner"},
-    {"st_size",        "total size, in bytes"},
-    {"st_atime",       "time of last access"},
-    {"st_mtime",       "time of last modification"},
-    {"st_ctime",       "time of last change"},
-    {"st_blksize",     "blocksize for filesystem I/O"},
-    {"st_blocks",      "number of blocks allocated"},
-    {"st_rdev",        "device type (if inode device)"},
-    {"st_flags",       "user defined flags for file"},
-    {"st_gen",         "generation number"},
-    {"st_birthtime",   "time of creation"},
-    {NULL}
-};
-
-static PyStructSequence_Desc stat_result_desc = {
-    "stat_result",
-    NULL,
-    stat_result_fields,
-    16
-};
-
-
 typedef struct {
     Loop *loop;
     PyObject *callback;

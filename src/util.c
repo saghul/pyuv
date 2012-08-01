@@ -1,23 +1,4 @@
 
-static PyTypeObject AddrinfoResultType;
-
-static PyStructSequence_Field addrinfo_result_fields[] = {
-    {"family", ""},
-    {"socktype", ""},
-    {"proto", ""},
-    {"canonname", ""},
-    {"sockaddr", ""},
-    {NULL}
-};
-
-static PyStructSequence_Desc addrinfo_result_desc = {
-    "addrinfo_result",
-    NULL,
-    addrinfo_result_fields,
-    5
-};
-
-
 static PyObject *
 Util_func_hrtime(PyObject *obj)
 {

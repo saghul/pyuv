@@ -141,10 +141,10 @@ init_pyuv(void)
     PyUVModule_AddType(pyuv, "ThreadPool", &ThreadPoolType);
 
     /* PyStructSequence types */
-    if (LoopCountersResultType.tp_name == 0)
-        PyStructSequence_InitType(&LoopCountersResultType, &loop_counters_result_desc);
     if (AddrinfoResultType.tp_name == 0)
         PyStructSequence_InitType(&AddrinfoResultType, &addrinfo_result_desc);
+    if (LoopCountersResultType.tp_name == 0)
+        PyStructSequence_InitType(&LoopCountersResultType, &loop_counters_result_desc);
     if (StatResultType.tp_name == 0)
         PyStructSequence_InitType(&StatResultType, &stat_result_desc);
 
