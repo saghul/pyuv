@@ -185,22 +185,25 @@ Loop_counters_get(Loop *self, void *closure)
 
     pos = 0;
 
-    PyStructSequence_SET_ITEM(counters, pos++, get_counter_value(uv_counters->eio_init));
-    PyStructSequence_SET_ITEM(counters, pos++, get_counter_value(uv_counters->req_init));
-    PyStructSequence_SET_ITEM(counters, pos++, get_counter_value(uv_counters->handle_init));
-    PyStructSequence_SET_ITEM(counters, pos++, get_counter_value(uv_counters->stream_init));
-    PyStructSequence_SET_ITEM(counters, pos++, get_counter_value(uv_counters->tcp_init));
-    PyStructSequence_SET_ITEM(counters, pos++, get_counter_value(uv_counters->udp_init));
-    PyStructSequence_SET_ITEM(counters, pos++, get_counter_value(uv_counters->pipe_init));
-    PyStructSequence_SET_ITEM(counters, pos++, get_counter_value(uv_counters->tty_init));
-    PyStructSequence_SET_ITEM(counters, pos++, get_counter_value(uv_counters->poll_init));
-    PyStructSequence_SET_ITEM(counters, pos++, get_counter_value(uv_counters->prepare_init));
-    PyStructSequence_SET_ITEM(counters, pos++, get_counter_value(uv_counters->check_init));
-    PyStructSequence_SET_ITEM(counters, pos++, get_counter_value(uv_counters->idle_init));
-    PyStructSequence_SET_ITEM(counters, pos++, get_counter_value(uv_counters->async_init));
-    PyStructSequence_SET_ITEM(counters, pos++, get_counter_value(uv_counters->timer_init));
-    PyStructSequence_SET_ITEM(counters, pos++, get_counter_value(uv_counters->process_init));
-    PyStructSequence_SET_ITEM(counters, pos++, get_counter_value(uv_counters->fs_event_init));
+#define XX(item) PyStructSequence_SET_ITEM(counters, pos++, get_counter_value(uv_counters->item));
+    XX(async_init)
+    XX(check_init)
+    XX(eio_init)
+    XX(fs_event_init)
+    XX(fs_poll_init)
+    XX(handle_init)
+    XX(idle_init)
+    XX(pipe_init)
+    XX(poll_init)
+    XX(prepare_init)
+    XX(process_init)
+    XX(req_init)
+    XX(stream_init)
+    XX(tcp_init)
+    XX(timer_init)
+    XX(tty_init)
+    XX(udp_init)
+#undef XX
 
     return counters;
 

@@ -297,22 +297,23 @@ static PyStructSequence_Desc addrinfo_result_desc = {
 static PyTypeObject LoopCountersResultType;
 
 static PyStructSequence_Field loop_counters_result_fields[] = {
+    {"async_init", ""},
+    {"check_init", ""},
     {"eio_init", ""},
-    {"req_init", ""},
+    {"fs_event_init", ""},
+    {"fs_poll_init", ""},
     {"handle_init", ""},
-    {"stream_init", ""},
-    {"tcp_init", ""},
-    {"udp_init", ""},
+    {"idle_init", ""},
     {"pipe_init", ""},
-    {"tty_init", ""},
     {"poll_init", ""},
     {"prepare_init", ""},
-    {"check_init", ""},
-    {"idle_init", ""},
-    {"async_init", ""},
-    {"timer_init", ""},
     {"process_init", ""},
-    {"fs_event_init", ""},
+    {"req_init", ""},
+    {"stream_init", ""},
+    {"tcp_init", ""},
+    {"timer_init", ""},
+    {"tty_init", ""},
+    {"udp_init", ""},
     {NULL}
 };
 
