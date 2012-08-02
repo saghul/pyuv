@@ -327,22 +327,15 @@ static PyObject *
 UDP_func_sendlines(UDP *self, PyObject *args)
 {
     int i, r, buf_count, dest_port, address_type;
-    char *data_str, *tmp, *dest_ip;
-    const char *default_encoding;
+    char *dest_ip;
     struct in_addr addr4;
     struct in6_addr addr6;
-    Py_buffer pbuf;
-    Py_ssize_t data_len, n;
-    PyObject *callback, *seq, *iter, *item, *encoded;
-    uv_buf_t tmpbuf;
-    uv_buf_t *bufs, *new_bufs;
+    PyObject *callback, *seq;
+    uv_buf_t *bufs;
     uv_udp_send_t *wr = NULL;
     udp_send_data_t *req_data = NULL;
 
-    buf_count = 0;
-    bufs = new_bufs = NULL;
     callback = Py_None;
-    default_encoding = PyUnicode_GetDefaultEncoding();
 
     RAISE_IF_HANDLE_CLOSED(self, PyExc_HandleClosedError, NULL);
 
@@ -371,6 +364,12 @@ UDP_func_sendlines(UDP *self, PyObject *args)
 
     Py_INCREF(callback);
 
+    r = pyseq2uvbuf(seq, &bufs, &buf_count);
+    if (r != 0) {
+        /* error is already set */
+        goto error;
+    }
+
     wr = (uv_udp_send_t *)PyMem_Malloc(sizeof(uv_udp_send_t));
     if (!wr) {
         PyErr_NoMemory();
@@ -384,105 +383,9 @@ UDP_func_sendlines(UDP *self, PyObject *args)
     }
 
     req_data->callback = callback;
-    wr->data = (void *)req_data;
-
-    iter = PyObject_GetIter(seq);
-    if (iter == NULL) {
-        goto error;
-    }
-
-    n = iter_guess_size(iter, 8);   /* if we can't get the size hint, preallocate 8 slots */
-    bufs = (uv_buf_t *) PyMem_Malloc(sizeof(uv_buf_t) * n);
-    if (!bufs) {
-        Py_DECREF(iter);
-        PyErr_NoMemory();
-        goto error;
-    }
-
-    i = 0;
-    while (1) {
-        item = PyIter_Next(iter);
-        if (item == NULL) {
-            if (PyErr_Occurred()) {
-                Py_DECREF(iter);
-                goto error;
-            } else {
-                /* StopIteration */
-                break;
-            }
-        }
-
-        if (PyUnicode_Check(item)) {
-            encoded = PyUnicode_AsEncodedString(item, default_encoding, "strict");
-            if (encoded == NULL) {
-                Py_DECREF(item);
-                Py_DECREF(iter);
-                goto error;
-            }
-            data_str = PyString_AS_STRING(encoded);
-            data_len = PyString_GET_SIZE(encoded);
-            tmp = (char *) PyMem_Malloc(data_len);
-            if (!tmp) {
-                Py_DECREF(item);
-                Py_DECREF(iter);
-                PyErr_NoMemory();
-                goto error;
-            }
-            memcpy(tmp, data_str, data_len);
-            tmpbuf = uv_buf_init(tmp, data_len);
-        } else {
-            if (PyObject_GetBuffer(item, &pbuf, PyBUF_CONTIG_RO) < 0) {
-                Py_DECREF(item);
-                Py_DECREF(iter);
-                goto error;
-            }
-            data_str = pbuf.buf;
-            data_len = pbuf.len;
-            tmp = (char *) PyMem_Malloc(data_len);
-            if (!tmp) {
-                Py_DECREF(item);
-                Py_DECREF(iter);
-                PyBuffer_Release(&pbuf);
-                PyErr_NoMemory();
-                goto error;
-            }
-            memcpy(tmp, data_str, data_len);
-            tmpbuf = uv_buf_init(tmp, data_len);
-            PyBuffer_Release(&pbuf);
-        }
-
-        /* Check if we allocated enough space */
-        if (buf_count+1 < n) {
-            /* we have enough size */
-        } else {
-            /* preallocate 8 more slots */
-            n += 8;
-            new_bufs = (uv_buf_t *) PyMem_Realloc(bufs, sizeof(uv_buf_t) * n);
-            if (!new_bufs) {
-                Py_DECREF(item);
-                Py_DECREF(iter);
-                PyErr_NoMemory();
-                goto error;
-            }
-            bufs = new_bufs;
-        }
-        bufs[i] = tmpbuf;
-        i++;
-        buf_count++;
-        Py_DECREF(item);
-    }
-    Py_DECREF(iter);
-
-    /* we may have over allocated space, shrink it to the minimum required */
-    new_bufs = (uv_buf_t *) PyMem_Realloc(bufs, sizeof(uv_buf_t) * buf_count);
-    if (!new_bufs) {
-        PyErr_NoMemory();
-        goto error;
-    }
-    bufs = new_bufs;
-
     req_data->bufs = bufs;
     req_data->buf_count = buf_count;
+    wr->data = (void *)req_data;
 
     if (address_type == AF_INET) {
         r = uv_udp_send(wr, (uv_udp_t *)UV_HANDLE(self), bufs, buf_count, uv_ip4_addr(dest_ip, dest_port), (uv_udp_send_cb)on_udp_send);
