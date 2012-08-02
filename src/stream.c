@@ -247,7 +247,7 @@ Stream_func_stop_read(Stream *self)
 }
 
 
-static PyObject *
+static INLINE PyObject *
 pyuv_stream_write(Stream *self, Py_buffer pbuf, PyObject *callback, PyObject *send_handle)
 {
     int r;

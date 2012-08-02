@@ -51,6 +51,12 @@ typedef int Bool;
     #define PYUV_WINDOWS
 #endif
 
+#ifdef _MSC_VER
+    #define INLINE __inline
+#else
+    #define INLINE inline
+#endif
+
 /* borrowed from pyev */
 #ifdef PYUV_WINDOWS
     #define PYUV_MAXSTDIO 2048
@@ -405,7 +411,7 @@ PyUVModule_AddObject(PyObject *module, const char *name, PyObject *value)
 
 
 /* convert a Python sequence of strings into uv_buf_t array */
-static Py_ssize_t
+static INLINE Py_ssize_t
 iter_guess_size(PyObject *o, Py_ssize_t defaultvalue)
 {
     PyObject *ro;
@@ -423,7 +429,7 @@ iter_guess_size(PyObject *o, Py_ssize_t defaultvalue)
     return rv;
 }
 
-static int
+static INLINE int
 pyseq2uvbuf(PyObject *seq, uv_buf_t **rbufs, int *buf_count)
 {
     int i, count;
