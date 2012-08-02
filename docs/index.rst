@@ -40,6 +40,10 @@ Features:
 .. seealso::
     `libuv's source code <http://github.com/joyent/libuv>`_
 
+.. seealso::
+    `uvbook, a book on libuv <http://nikhilm.github.com/uvbook/>`_
+
+
 Contents
 ########
 
