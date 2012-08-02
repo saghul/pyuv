@@ -300,7 +300,7 @@ class FSTestFchmod(unittest2.TestCase):
     def setUp(self):
         self.loop = pyuv.Loop.default_loop()
         with open(TEST_FILE, 'w') as f:
-		    f.write('test')
+	    f.write('test')
 
     def tearDown(self):
         os.remove(TEST_FILE)
