@@ -1,7 +1,4 @@
 
-static PyObject* PyExc_PrepareError;
-
-
 static void
 on_prepare_callback(uv_prepare_t *handle, int status)
 {

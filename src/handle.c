@@ -1,8 +1,4 @@
 
-static PyObject* PyExc_HandleError;
-static PyObject* PyExc_HandleClosedError;
-
-
 static void
 on_handle_close(uv_handle_t *handle)
 {

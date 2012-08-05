@@ -2,36 +2,6 @@
 static Loop *default_loop = NULL;
 
 
-static PyTypeObject LoopCountersResultType;
-
-static PyStructSequence_Field loop_counters_result_fields[] = {
-    {"eio_init", ""},
-    {"req_init", ""},
-    {"handle_init", ""},
-    {"stream_init", ""},
-    {"tcp_init", ""},
-    {"udp_init", ""},
-    {"pipe_init", ""},
-    {"tty_init", ""},
-    {"poll_init", ""},
-    {"prepare_init", ""},
-    {"check_init", ""},
-    {"idle_init", ""},
-    {"async_init", ""},
-    {"timer_init", ""},
-    {"process_init", ""},
-    {"fs_event_init", ""},
-    {NULL}
-};
-
-static PyStructSequence_Desc loop_counters_result_desc = {
-    "loop_counters_result",
-    NULL,
-    loop_counters_result_fields,
-    16
-};
-
-
 static void
 _loop_cleanup(void)
 {
@@ -54,6 +24,7 @@ new_loop(PyTypeObject *type, PyObject *args, PyObject *kwargs, int is_default)
                 return NULL;
             }
             default_loop->uv_loop = uv_default_loop();
+            default_loop->uv_loop->data = (void *)default_loop;
             default_loop->is_default = 1;
             default_loop->weakreflist = NULL;
             Py_AtExit(_loop_cleanup);
@@ -66,6 +37,7 @@ new_loop(PyTypeObject *type, PyObject *args, PyObject *kwargs, int is_default)
             return NULL;
         }
         self->uv_loop = uv_loop_new();
+        self->uv_loop->data = (void *)self;
         self->is_default = 0;
         self->weakreflist = NULL;
         return (PyObject *)self;
@@ -213,22 +185,25 @@ Loop_counters_get(Loop *self, void *closure)
 
     pos = 0;
 
-    PyStructSequence_SET_ITEM(counters, pos++, get_counter_value(uv_counters->eio_init));
-    PyStructSequence_SET_ITEM(counters, pos++, get_counter_value(uv_counters->req_init));
-    PyStructSequence_SET_ITEM(counters, pos++, get_counter_value(uv_counters->handle_init));
-    PyStructSequence_SET_ITEM(counters, pos++, get_counter_value(uv_counters->stream_init));
-    PyStructSequence_SET_ITEM(counters, pos++, get_counter_value(uv_counters->tcp_init));
-    PyStructSequence_SET_ITEM(counters, pos++, get_counter_value(uv_counters->udp_init));
-    PyStructSequence_SET_ITEM(counters, pos++, get_counter_value(uv_counters->pipe_init));
-    PyStructSequence_SET_ITEM(counters, pos++, get_counter_value(uv_counters->tty_init));
-    PyStructSequence_SET_ITEM(counters, pos++, get_counter_value(uv_counters->poll_init));
-    PyStructSequence_SET_ITEM(counters, pos++, get_counter_value(uv_counters->prepare_init));
-    PyStructSequence_SET_ITEM(counters, pos++, get_counter_value(uv_counters->check_init));
-    PyStructSequence_SET_ITEM(counters, pos++, get_counter_value(uv_counters->idle_init));
-    PyStructSequence_SET_ITEM(counters, pos++, get_counter_value(uv_counters->async_init));
-    PyStructSequence_SET_ITEM(counters, pos++, get_counter_value(uv_counters->timer_init));
-    PyStructSequence_SET_ITEM(counters, pos++, get_counter_value(uv_counters->process_init));
-    PyStructSequence_SET_ITEM(counters, pos++, get_counter_value(uv_counters->fs_event_init));
+#define XX(item) PyStructSequence_SET_ITEM(counters, pos++, get_counter_value(uv_counters->item));
+    XX(async_init)
+    XX(check_init)
+    XX(eio_init)
+    XX(fs_event_init)
+    XX(fs_poll_init)
+    XX(handle_init)
+    XX(idle_init)
+    XX(pipe_init)
+    XX(poll_init)
+    XX(prepare_init)
+    XX(process_init)
+    XX(req_init)
+    XX(stream_init)
+    XX(tcp_init)
+    XX(timer_init)
+    XX(tty_init)
+    XX(udp_init)
+#undef XX
 
     return counters;
 
@@ -262,6 +237,7 @@ static void
 Loop_tp_dealloc(Loop *self)
 {
     if (self->uv_loop) {
+        self->uv_loop->data = NULL;
         uv_loop_delete(self->uv_loop);
     }
     if (self->weakreflist != NULL) {

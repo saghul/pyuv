@@ -25,7 +25,7 @@ Features:
  * UDP support
  * Timers
  * Child process spawning
- * Asynchronous DNS
+ * Asynchronous DNS resolution (getaddrinfo)
  * Asynchronous file system APIs
  * Thread pool scheduling
  * High resolution time
@@ -39,6 +39,10 @@ Features:
 
 .. seealso::
     `libuv's source code <http://github.com/joyent/libuv>`_
+
+.. seealso::
+    `uvbook, a book on libuv <http://nikhilm.github.com/uvbook/>`_
+
 
 Contents
 ########

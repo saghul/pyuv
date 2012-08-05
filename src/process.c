@@ -178,9 +178,6 @@ static PyTypeObject StdIOType = {
 
 /* Process handle */
 
-static PyObject* PyExc_ProcessError;
-
-
 static void
 on_process_exit(uv_process_t *process, int exit_status, int term_signal)
 {

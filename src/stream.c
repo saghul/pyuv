@@ -1,17 +1,10 @@
 
-static PyObject* PyExc_StreamError;
-
-
 typedef struct {
+    PyObject *callback;
     uv_buf_t *bufs;
     int buf_count;
     Py_buffer view;
 } stream_write_data_t;
-
-typedef struct {
-    PyObject *callback;
-    stream_write_data_t *data;
-} stream_req_data_t;
 
 
 static uv_buf_t
@@ -29,14 +22,12 @@ static void
 on_stream_shutdown(uv_shutdown_t* req, int status)
 {
     PyGILState_STATE gstate = PyGILState_Ensure();
-    stream_req_data_t* req_data;
     uv_err_t err;
     Stream *self;
     PyObject *callback, *result, *py_errorno;
 
-    req_data = (stream_req_data_t *)req->data;
     self = (Stream *)req->handle->data;
-    callback = req_data->callback;
+    callback = (PyObject *)req->data;
 
     ASSERT(self);
     /* Object could go out of scope in the callback, increase refcount to avoid it */
@@ -59,7 +50,6 @@ on_stream_shutdown(uv_shutdown_t* req, int status)
     }
 
     Py_DECREF(callback);
-    PyMem_Free(req_data);
     PyMem_Free(req);
 
     Py_DECREF(self);
@@ -115,16 +105,14 @@ on_stream_write(uv_write_t* req, int status)
 {
     PyGILState_STATE gstate = PyGILState_Ensure();
     int i;
-    stream_req_data_t* req_data;
-    stream_write_data_t* write_data;
+    stream_write_data_t* req_data;
     Stream *self;
     PyObject *callback, *result, *py_errorno;
     uv_err_t err;
 
     ASSERT(req);
 
-    req_data = (stream_req_data_t *)req->data;
-    write_data = req_data->data;
+    req_data = (stream_write_data_t *)req->data;
     self = (Stream *)req->handle->data;
     callback = req_data->callback;
 
@@ -148,15 +136,14 @@ on_stream_write(uv_write_t* req, int status)
         Py_DECREF(py_errorno);
     }
 
-    if (write_data->buf_count == 1) {
-        PyBuffer_Release(&write_data->view);
+    if (req_data->buf_count == 1) {
+        PyBuffer_Release(&req_data->view);
     } else {
-        for (i = 0; i < write_data->buf_count; i++) {
-            PyMem_Free(write_data->bufs[i].base);
+        for (i = 0; i < req_data->buf_count; i++) {
+            PyMem_Free(req_data->bufs[i].base);
         }
+        PyMem_Free(req_data->bufs);
     }
-    PyMem_Free(write_data->bufs);
-    PyMem_Free(write_data);
     Py_DECREF(callback);
     PyMem_Free(req_data);
     PyMem_Free(req);
@@ -171,7 +158,6 @@ Stream_func_shutdown(Stream *self, PyObject *args)
 {
     int r;
     uv_shutdown_t *req = NULL;
-    stream_req_data_t *req_data = NULL;
     PyObject *callback = Py_None;
 
     RAISE_IF_HANDLE_CLOSED(self, PyExc_HandleClosedError, NULL);
@@ -180,21 +166,15 @@ Stream_func_shutdown(Stream *self, PyObject *args)
         return NULL;
     }
 
+    Py_INCREF(callback);
+
     req = (uv_shutdown_t*) PyMem_Malloc(sizeof(uv_shutdown_t));
     if (!req) {
         PyErr_NoMemory();
         goto error;
     }
 
-    req_data = (stream_req_data_t*) PyMem_Malloc(sizeof(stream_req_data_t));
-    if (!req_data) {
-        PyErr_NoMemory();
-        goto error;
-    }
-
-    Py_INCREF(callback);
-    req_data->callback = callback;
-    req->data = (void *)req_data;
+    req->data = (void *)callback;
 
     r = uv_shutdown(req, (uv_stream_t *)UV_HANDLE(self), on_stream_shutdown);
     if (r != 0) {
@@ -205,10 +185,7 @@ Stream_func_shutdown(Stream *self, PyObject *args)
     Py_RETURN_NONE;
 
 error:
-    if (req_data) {
-        Py_DECREF(callback);
-        PyMem_Free(req_data);
-    }
+    Py_DECREF(callback);
     if (req) {
         PyMem_Free(req);
     }
@@ -270,19 +247,67 @@ Stream_func_stop_read(Stream *self)
 }
 
 
+static INLINE PyObject *
+pyuv_stream_write(Stream *self, Py_buffer pbuf, PyObject *callback, PyObject *send_handle)
+{
+    int r;
+    uv_buf_t buf;
+    uv_write_t *wr = NULL;
+    stream_write_data_t *req_data = NULL;
+
+    Py_INCREF(callback);
+
+    wr = (uv_write_t *)PyMem_Malloc(sizeof(uv_write_t));
+    if (!wr) {
+        PyErr_NoMemory();
+        goto error;
+    }
+
+    req_data = (stream_write_data_t*) PyMem_Malloc(sizeof(stream_write_data_t));
+    if (!req_data) {
+        PyErr_NoMemory();
+        goto error;
+    }
+
+    buf = uv_buf_init(pbuf.buf, pbuf.len);
+
+    req_data->callback = callback;
+    req_data->bufs = &buf;
+    req_data->buf_count = 1;
+    req_data->view = pbuf;
+
+    wr->data = (void *)req_data;
+
+    if (send_handle) {
+        r = uv_write2(wr, (uv_stream_t *)UV_HANDLE(self), &buf, 1, (uv_stream_t *)UV_HANDLE(send_handle), on_stream_write);
+    } else {
+        r = uv_write(wr, (uv_stream_t *)UV_HANDLE(self), &buf, 1, on_stream_write);
+    }
+    if (r != 0) {
+        RAISE_UV_EXCEPTION(UV_HANDLE_LOOP(self), PyExc_StreamError);
+        goto error;
+    }
+
+    Py_RETURN_NONE;
+
+error:
+    PyBuffer_Release(&pbuf);
+    Py_DECREF(callback);
+    if (req_data) {
+        PyMem_Free(req_data);
+    }
+    if (wr) {
+        PyMem_Free(wr);
+    }
+    return NULL;
+}
+
+
 static PyObject *
 Stream_func_write(Stream *self, PyObject *args)
 {
-    int r, buf_count;
     Py_buffer pbuf;
-    PyObject *callback;
-    uv_buf_t *bufs = NULL;
-    uv_write_t *wr = NULL;
-    stream_req_data_t *req_data = NULL;
-    stream_write_data_t *write_data = NULL;
-
-    buf_count = 0;
-    callback = Py_None;
+    PyObject *callback = Py_None;
 
     RAISE_IF_HANDLE_CLOSED(self, PyExc_HandleClosedError, NULL);
 
@@ -296,106 +321,20 @@ Stream_func_write(Stream *self, PyObject *args)
         return NULL;
     }
 
-    wr = (uv_write_t *)PyMem_Malloc(sizeof(uv_write_t));
-    if (!wr) {
-        PyErr_NoMemory();
-        goto error;
-    }
-
-    req_data = (stream_req_data_t*) PyMem_Malloc(sizeof(stream_req_data_t));
-    if (!req_data) {
-        PyErr_NoMemory();
-        goto error;
-    }
-
-    write_data = (stream_write_data_t *) PyMem_Malloc(sizeof(stream_write_data_t));
-    if (!write_data) {
-        PyErr_NoMemory();
-        goto error;
-    }
-
-    Py_INCREF(callback);
-    req_data->callback = callback;
-    wr->data = (void *)req_data;
-
-    bufs = (uv_buf_t *) PyMem_Malloc(sizeof(uv_buf_t));
-    if (!bufs) {
-        PyErr_NoMemory();
-        goto error;
-    }
-
-    bufs[0] = uv_buf_init(pbuf.buf, pbuf.len);
-    buf_count = 1;
-
-    write_data->bufs = bufs;
-    write_data->buf_count = buf_count;
-    write_data->view = pbuf;
-    req_data->data = write_data;
-
-    r = uv_write(wr, (uv_stream_t *)UV_HANDLE(self), bufs, buf_count, on_stream_write);
-    if (r != 0) {
-        RAISE_UV_EXCEPTION(UV_HANDLE_LOOP(self), PyExc_StreamError);
-        goto error;
-    }
-
-    Py_RETURN_NONE;
-
-error:
-    PyBuffer_Release(&pbuf);
-    if (bufs) {
-        PyMem_Free(bufs);
-    }
-    if (write_data) {
-        PyMem_Free(write_data);
-    }
-    if (req_data) {
-        Py_DECREF(callback);
-        PyMem_Free(req_data);
-    }
-    if (wr) {
-        PyMem_Free(wr);
-    }
-    return NULL;
+    return pyuv_stream_write(self, pbuf, callback, NULL);
 }
 
-
-static Py_ssize_t
-iter_guess_size(PyObject *o, Py_ssize_t defaultvalue)
-{
-    PyObject *ro;
-    Py_ssize_t rv;
-
-    /* try o.__length_hint__() */
-    ro = PyObject_CallMethod(o, "__length_hint__", NULL);
-    if (ro == NULL) {
-        /* whatever the error is, clear it and return the default */
-        PyErr_Clear();
-        return defaultvalue;
-    }
-    rv = PyLong_Check(ro) ? PyLong_AsSsize_t(ro) : defaultvalue;
-    Py_DECREF(ro);
-    return rv;
-}
 
 static PyObject *
 Stream_func_writelines(Stream *self, PyObject *args)
 {
     int i, r, buf_count;
-    char *data_str, *tmp;
-    const char *default_encoding;
-    Py_buffer pbuf;
-    Py_ssize_t data_len, n;
-    PyObject *callback, *seq, *iter, *item, *encoded;
-    uv_buf_t tmpbuf;
-    uv_buf_t *bufs, *new_bufs;
+    PyObject *callback, *seq;
+    uv_buf_t *bufs;
     uv_write_t *wr = NULL;
-    stream_req_data_t *req_data = NULL;
-    stream_write_data_t *write_data = NULL;
+    stream_write_data_t *req_data = NULL;
 
-    buf_count = 0;
-    bufs = new_bufs = NULL;
     callback = Py_None;
-    default_encoding = PyUnicode_GetDefaultEncoding();
 
     RAISE_IF_HANDLE_CLOSED(self, PyExc_HandleClosedError, NULL);
 
@@ -408,126 +347,30 @@ Stream_func_writelines(Stream *self, PyObject *args)
         return NULL;
     }
 
+    Py_INCREF(callback);
+
+    r = pyseq2uvbuf(seq, &bufs, &buf_count);
+    if (r != 0) {
+        /* error is already set */
+        goto error;
+    }
+
     wr = (uv_write_t *)PyMem_Malloc(sizeof(uv_write_t));
     if (!wr) {
         PyErr_NoMemory();
         goto error;
     }
 
-    req_data = (stream_req_data_t*) PyMem_Malloc(sizeof(stream_req_data_t));
+    req_data = (stream_write_data_t*) PyMem_Malloc(sizeof(stream_write_data_t));
     if (!req_data) {
         PyErr_NoMemory();
         goto error;
     }
 
-    write_data = (stream_write_data_t *) PyMem_Malloc(sizeof(stream_write_data_t));
-    if (!write_data) {
-        PyErr_NoMemory();
-        goto error;
-    }
-
-    Py_INCREF(callback);
     req_data->callback = callback;
+    req_data->bufs = bufs;
+    req_data->buf_count = buf_count;
     wr->data = (void *)req_data;
-
-    iter = PyObject_GetIter(seq);
-    if (iter == NULL) {
-        goto error;
-    }
-
-    n = iter_guess_size(iter, 8);   /* if we can't get the size hint, preallocate 8 slots */
-    bufs = (uv_buf_t *) PyMem_Malloc(sizeof(uv_buf_t) * n);
-    if (!bufs) {
-        Py_DECREF(iter);
-        PyErr_NoMemory();
-        goto error;
-    }
-
-    i = 0;
-    while (1) {
-        item = PyIter_Next(iter);
-        if (item == NULL) {
-            if (PyErr_Occurred()) {
-                Py_DECREF(iter);
-                goto error;
-            } else {
-                /* StopIteration */
-                break;
-            }
-        }
-
-        if (PyUnicode_Check(item)) {
-            encoded = PyUnicode_AsEncodedString(item, default_encoding, "strict");
-            if (encoded == NULL) {
-                Py_DECREF(item);
-                Py_DECREF(iter);
-                goto error;
-            }
-            data_str = PyString_AS_STRING(encoded);
-            data_len = PyString_GET_SIZE(encoded);
-            tmp = (char *) PyMem_Malloc(data_len);
-            if (!tmp) {
-                Py_DECREF(item);
-                Py_DECREF(iter);
-                PyErr_NoMemory();
-                goto error;
-            }
-            memcpy(tmp, data_str, data_len);
-            tmpbuf = uv_buf_init(tmp, data_len);
-        } else {
-            if (PyObject_GetBuffer(item, &pbuf, PyBUF_CONTIG_RO) < 0) {
-                Py_DECREF(item);
-                Py_DECREF(iter);
-                goto error;
-            }
-            data_str = pbuf.buf;
-            data_len = pbuf.len;
-            tmp = (char *) PyMem_Malloc(data_len);
-            if (!tmp) {
-                Py_DECREF(item);
-                Py_DECREF(iter);
-                PyBuffer_Release(&pbuf);
-                PyErr_NoMemory();
-                goto error;
-            }
-            memcpy(tmp, data_str, data_len);
-            tmpbuf = uv_buf_init(tmp, data_len);
-            PyBuffer_Release(&pbuf);
-        }
-
-        /* Check if we allocated enough space */
-        if (buf_count+1 < n) {
-            /* we have enough size */
-        } else {
-            /* preallocate 8 more slots */
-            n += 8;
-            new_bufs = (uv_buf_t *) PyMem_Realloc(bufs, sizeof(uv_buf_t) * n);
-            if (!new_bufs) {
-                Py_DECREF(item);
-                Py_DECREF(iter);
-                PyErr_NoMemory();
-                goto error;
-            }
-            bufs = new_bufs;
-        }
-        bufs[i] = tmpbuf;
-        i++;
-        buf_count++;
-        Py_DECREF(item);
-    }
-    Py_DECREF(iter);
-
-    /* we may have over allocated space, shrink it to the minimum required */
-    new_bufs = (uv_buf_t *) PyMem_Realloc(bufs, sizeof(uv_buf_t) * buf_count);
-    if (!new_bufs) {
-        PyErr_NoMemory();
-        goto error;
-    }
-    bufs = new_bufs;
-
-    write_data->bufs = bufs;
-    write_data->buf_count = buf_count;
-    req_data->data = write_data;
 
     r = uv_write(wr, (uv_stream_t *)UV_HANDLE(self), bufs, buf_count, on_stream_write);
     if (r != 0) {
@@ -538,17 +381,14 @@ Stream_func_writelines(Stream *self, PyObject *args)
     Py_RETURN_NONE;
 
 error:
+    Py_DECREF(callback);
     if (bufs) {
         for (i = 0; i < buf_count; i++) {
             PyMem_Free(bufs[i].base);
         }
         PyMem_Free(bufs);
     }
-    if (write_data) {
-        PyMem_Free(write_data);
-    }
     if (req_data) {
-        Py_DECREF(callback);
         PyMem_Free(req_data);
     }
     if (wr) {

@@ -1,7 +1,4 @@
 
-static PyObject* PyExc_TCPError;
-
-
 static void
 on_tcp_connection(uv_stream_t* server, int status)
 {
@@ -40,14 +37,12 @@ static void
 on_tcp_client_connection(uv_connect_t *req, int status)
 {
     PyGILState_STATE gstate = PyGILState_Ensure();
-    stream_req_data_t* req_data;
     TCP *self;
     PyObject *callback, *result, *py_errorno;
 
     ASSERT(req);
-    req_data = (stream_req_data_t *)req->data;
     self = (TCP *)req->handle->data;
-    callback = req_data->callback;
+    callback = (PyObject *)req->data;
 
     ASSERT(self);
     /* Object could go out of scope in the callback, increase refcount to avoid it */
@@ -69,7 +64,6 @@ on_tcp_client_connection(uv_connect_t *req, int status)
     Py_DECREF(py_errorno);
 
     Py_DECREF(callback);
-    PyMem_Free(req_data);
     PyMem_Free(req);
 
     Py_DECREF(self);
@@ -91,8 +85,8 @@ TCP_func_bind(TCP *self, PyObject *args)
         return NULL;
     }
 
-    if (bind_port < 0 || bind_port > 65536) {
-        PyErr_SetString(PyExc_ValueError, "port must be between 0 and 65536");
+    if (bind_port < 0 || bind_port > 65535) {
+        PyErr_SetString(PyExc_ValueError, "port must be between 0 and 65535");
         return NULL;
     }
 
@@ -195,7 +189,6 @@ TCP_func_connect(TCP *self, PyObject *args)
     struct in_addr addr4;
     struct in6_addr addr6;
     uv_connect_t *connect_req = NULL;
-    stream_req_data_t *req_data = NULL;
     PyObject *callback;
 
     RAISE_IF_HANDLE_CLOSED(self, PyExc_HandleClosedError, NULL);
@@ -209,8 +202,8 @@ TCP_func_connect(TCP *self, PyObject *args)
         return NULL;
     }
 
-    if (connect_port < 0 || connect_port > 65536) {
-        PyErr_SetString(PyExc_ValueError, "port must be between 0 and 65536");
+    if (connect_port < 0 || connect_port > 65535) {
+        PyErr_SetString(PyExc_ValueError, "port must be between 0 and 65535");
         return NULL;
     }
 
@@ -223,21 +216,15 @@ TCP_func_connect(TCP *self, PyObject *args)
         return NULL;
     }
 
+    Py_INCREF(callback);
+
     connect_req = (uv_connect_t *)PyMem_Malloc(sizeof(uv_connect_t));
     if (!connect_req) {
         PyErr_NoMemory();
         goto error;
     }
 
-    req_data = (stream_req_data_t*) PyMem_Malloc(sizeof(stream_req_data_t));
-    if (!req_data) {
-        PyErr_NoMemory();
-        goto error;
-    }
-
-    Py_INCREF(callback);
-    req_data->callback = callback;
-    connect_req->data = (void *)req_data;
+    connect_req->data = (void *)callback;
 
     if (address_type == AF_INET) {
         r = uv_tcp_connect(connect_req, (uv_tcp_t *)UV_HANDLE(self), uv_ip4_addr(connect_ip, connect_port), on_tcp_client_connection);
@@ -253,12 +240,9 @@ TCP_func_connect(TCP *self, PyObject *args)
     Py_RETURN_NONE;
 
 error:
+    Py_DECREF(callback);
     if (connect_req) {
         PyMem_Free(connect_req);
-    }
-    if (req_data) {
-        Py_DECREF(callback);
-        PyMem_Free(req_data);
     }
     return NULL;
 }

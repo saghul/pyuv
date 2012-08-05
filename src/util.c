@@ -1,31 +1,4 @@
 
-static PyObject* PyExc_UVError;
-
-
-typedef struct {
-    Loop *loop;
-    PyObject *cb;
-} getaddrinfo_cb_data_t;
-
-static PyTypeObject DNSAddrinfoResultType;
-
-static PyStructSequence_Field dns_addrinfo_result_fields[] = {
-    {"family", ""},
-    {"socktype", ""},
-    {"proto", ""},
-    {"canonname", ""},
-    {"sockaddr", ""},
-    {NULL}
-};
-
-static PyStructSequence_Desc dns_addrinfo_result_desc = {
-    "getaddrinfo_result",
-    NULL,
-    dns_addrinfo_result_fields,
-    5
-};
-
-
 static PyObject *
 Util_func_hrtime(PyObject *obj)
 {
@@ -290,23 +263,52 @@ Util_func_get_process_title(PyObject *obj)
 }
 
 
+/* Modified from Python Modules/socketmodule.c */
+static PyObject *
+makesockaddr(struct sockaddr *addr, int addrlen)
+{
+    struct sockaddr_in *addr4;
+    struct sockaddr_in6 *addr6;
+    char ip[INET6_ADDRSTRLEN];
+
+    if (addrlen == 0) {
+        /* No address */
+        Py_RETURN_NONE;
+    }
+
+    switch (addr->sa_family) {
+    case AF_INET:
+    {
+        addr4 = (struct sockaddr_in*)addr;
+        uv_ip4_name(addr4, ip, INET_ADDRSTRLEN);
+        return Py_BuildValue("si", ip, ntohs(addr4->sin_port));
+    }
+
+    case AF_INET6:
+    {
+        addr6 = (struct sockaddr_in6*)addr;
+        uv_ip6_name(addr6, ip, INET6_ADDRSTRLEN);
+        return Py_BuildValue("siii", ip, ntohs(addr6->sin6_port), addr6->sin6_flowinfo, addr6->sin6_scope_id);
+    }
+
+    default:
+        /* If we don't know the address family, don't raise an exception -- return it as a tuple. */
+        return Py_BuildValue("is#", addr->sa_family, addr->sa_data, sizeof(addr->sa_data));
+    }
+}
+
 static void
 getaddrinfo_cb(uv_getaddrinfo_t* req, int status, struct addrinfo* res)
 {
     PyGILState_STATE gstate = PyGILState_Ensure();
     struct addrinfo *ptr;
     uv_err_t err;
-    getaddrinfo_cb_data_t *cb_data;
     Loop *loop;
     PyObject *callback, *addr, *item, *errorno, *dns_result, *result;
 
     ASSERT(req);
-    cb_data = (getaddrinfo_cb_data_t *)req->data;
-    ASSERT(cb_data);
-    loop = cb_data->loop;
-    callback = cb_data->cb;
-    ASSERT(loop);
-    ASSERT(callback);
+    callback = (PyObject *)req->data;
+    loop = (Loop *)req->loop->data;
 
     if (status != 0) {
         err = uv_last_error(loop->uv_loop);
@@ -334,7 +336,7 @@ getaddrinfo_cb(uv_getaddrinfo_t* req, int status, struct addrinfo* res)
             break;
         }
 
-        item = PyStructSequence_New(&DNSAddrinfoResultType);
+        item = PyStructSequence_New(&AddrinfoResultType);
         if (!item) {
             PyErr_NoMemory();
             PyErr_WriteUnraisable(callback);
@@ -365,7 +367,6 @@ callback:
     Py_DECREF(callback);
     uv_freeaddrinfo(res);
     PyMem_Free(req);
-    PyMem_Free(cb_data);
 
     PyGILState_Release(gstate);
 }
@@ -377,7 +378,6 @@ Util_func_getaddrinfo(PyObject *obj, PyObject *args, PyObject *kwargs)
     char port_str[6];
     int port, family, socktype, protocol, flags, r;
     struct addrinfo hints;
-    getaddrinfo_cb_data_t *cb_data = NULL;
     uv_getaddrinfo_t* req = NULL;
     Loop *loop;
     PyObject *callback;
@@ -398,8 +398,8 @@ Util_func_getaddrinfo(PyObject *obj, PyObject *args, PyObject *kwargs)
         return NULL;
     }
 
-    if (port < 0 || port > 65536) {
-        PyErr_SetString(PyExc_ValueError, "port must be between 0 and 65536");
+    if (port < 0 || port > 65535) {
+        PyErr_SetString(PyExc_ValueError, "port must be between 0 and 65535");
         return NULL;
     }
     snprintf(port_str, sizeof(port_str), "%d", port);
@@ -410,17 +410,9 @@ Util_func_getaddrinfo(PyObject *obj, PyObject *args, PyObject *kwargs)
         goto error;
     }
 
-    cb_data = PyMem_Malloc(sizeof(getaddrinfo_cb_data_t));
-    if (!cb_data) {
-        PyErr_NoMemory();
-        goto error;
-    }
-
     Py_INCREF(loop);
     Py_INCREF(callback);
-    cb_data->loop = loop;
-    cb_data->cb = callback;
-    req->data = (void *)cb_data;
+    req->data = (void *)callback;
 
     memset(&hints, 0, sizeof(hints));
     hints.ai_family = family;

@@ -4,9 +4,9 @@ pyuv: Python interface to libuv
 ===============================
 
 pyuv is a Python module which provides an interface to libuv.
-libuv (http://github.com/joyent/libuv) is a high performance
+`libuv <http://github.com/joyent/libuv>`_ is a high performance
 asynchronous networking library, used as the platform layer for
-NodeJS (http://nodejs.org).
+`NodeJS <http://nodejs.org>`_.
 
 libuv is written and maintained by Joyent Inc. and contributors.
 It’s built on top of libev and libeio on Unix and IOCP on Windows systems
@@ -19,7 +19,7 @@ pyuv's features:
 - UDP support (including multicast)
 - Timers
 - Child process spawning
-- Asynchronous DNS resolver
+- Asynchronous DNS resolution (getaddrinfo)
 - Asynchronous file system APIs
 - High resolution time
 - System memory information
@@ -27,7 +27,7 @@ pyuv's features:
 - Network interfaces information
 - Thread pool scheduling
 - ANSI escape code controlled TTY
-- File system events (inotify style)
+- File system events (inotify style and stat based)
 - IPC and TCP socket sharing between processes
 - Arbitrary file descriptor polling
 

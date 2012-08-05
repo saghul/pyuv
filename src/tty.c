@@ -1,7 +1,4 @@
 
-static PyObject* PyExc_TTYError;
-
-
 static PyObject *
 TTY_func_set_mode(TTY *self, PyObject *args)
 {
