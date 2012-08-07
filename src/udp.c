@@ -143,8 +143,6 @@ UDP_func_bind(UDP *self, PyObject *args)
 {
     int r, bind_port, address_type;
     char *bind_ip;
-    struct in_addr addr4;
-    struct in6_addr addr6;
 
     RAISE_IF_HANDLE_CLOSED(self, PyExc_HandleClosedError, NULL);
 
@@ -157,11 +155,7 @@ UDP_func_bind(UDP *self, PyObject *args)
         return NULL;
     }
 
-    if (uv_inet_pton(AF_INET, bind_ip, &addr4) == 1) {
-        address_type = AF_INET;
-    } else if (uv_inet_pton(AF_INET6, bind_ip, &addr6) == 1) {
-        address_type = AF_INET6;
-    } else {
+    if (pyuv_guess_ip_family(bind_ip, &address_type)) {
         PyErr_SetString(PyExc_ValueError, "invalid IP address");
         return NULL;
     }
@@ -240,8 +234,6 @@ UDP_func_send(UDP *self, PyObject *args)
 {
     int r, dest_port, address_type;
     char *dest_ip;
-    struct in_addr addr4;
-    struct in6_addr addr6;
     uv_buf_t buf;
     Py_buffer pbuf;
     PyObject *callback;
@@ -267,11 +259,7 @@ UDP_func_send(UDP *self, PyObject *args)
         return NULL;
     }
 
-    if (uv_inet_pton(AF_INET, dest_ip, &addr4) == 1) {
-        address_type = AF_INET;
-    } else if (uv_inet_pton(AF_INET6, dest_ip, &addr6) == 1) {
-        address_type = AF_INET6;
-    } else {
+    if (pyuv_guess_ip_family(dest_ip, &address_type)) {
         PyErr_SetString(PyExc_ValueError, "invalid IP address");
         return NULL;
     }
@@ -328,8 +316,6 @@ UDP_func_sendlines(UDP *self, PyObject *args)
 {
     int i, r, buf_count, dest_port, address_type;
     char *dest_ip;
-    struct in_addr addr4;
-    struct in6_addr addr6;
     PyObject *callback, *seq;
     uv_buf_t *bufs;
     uv_udp_send_t *wr = NULL;
@@ -353,11 +339,7 @@ UDP_func_sendlines(UDP *self, PyObject *args)
         return NULL;
     }
 
-    if (uv_inet_pton(AF_INET, dest_ip, &addr4) == 1) {
-        address_type = AF_INET;
-    } else if (uv_inet_pton(AF_INET6, dest_ip, &addr6) == 1) {
-        address_type = AF_INET6;
-    } else {
+    if (pyuv_guess_ip_family(dest_ip, &address_type)) {
         PyErr_SetString(PyExc_ValueError, "invalid IP address");
         return NULL;
     }

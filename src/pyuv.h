@@ -368,18 +368,6 @@ static PyStructSequence_Desc stat_result_desc = {
 
 /* Some helper stuff */
 
-/* Temporary hack: libuv should provide uv_inet_pton and uv_inet_ntop. */
-#ifdef PYUV_WINDOWS
-    #include <inet_net_pton.h>
-    #include <inet_ntop.h>
-    #define uv_inet_pton ares_inet_pton
-    #define uv_inet_ntop ares_inet_ntop
-#else /* __POSIX__ */
-    #include <arpa/inet.h>
-    #define uv_inet_pton inet_pton
-    #define uv_inet_ntop inet_ntop
-#endif
-
 
 /* Add a type to a module */
 static int
@@ -552,6 +540,30 @@ error:
     *rbufs = NULL;
     *buf_count = 0;
     return -1;
+}
+
+
+/* guess IP address family */
+static INLINE int
+pyuv_guess_ip_family(char *ip, int *address_type)
+{
+    struct in_addr addr4;
+    struct in6_addr addr6;
+    uv_err_t err;
+
+    err = uv_inet_pton(AF_INET, ip, &addr4);
+    if (err.code == UV_OK) {
+        *address_type = AF_INET;
+        return 0;
+    } else {
+        err = uv_inet_pton(AF_INET6, ip, &addr6);
+        if (err.code == UV_OK) {
+            *address_type = AF_INET6;
+            return 0;
+        } else {
+            return 1;
+        }
+    }
 }
 
 
