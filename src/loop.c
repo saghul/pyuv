@@ -156,61 +156,6 @@ Loop_default_get(Loop *self, void *closure)
 
 
 static PyObject *
-get_counter_value(uint64_t value)
-{
-    PyObject *val;
-#if SIZEOF_TIME_T > SIZEOF_LONG
-    val = PyLong_FromLongLong((PY_LONG_LONG)value);
-#else
-    val = PyInt_FromLong((long)value);
-#endif
-    return val;
-}
-
-static PyObject *
-Loop_counters_get(Loop *self, void *closure)
-{
-    int pos;
-    uv_counters_t* uv_counters;
-    PyObject *counters;
-
-    UNUSED_ARG(closure);
-    uv_counters = &self->uv_loop->counters;
-
-    counters =  PyStructSequence_New(&LoopCountersResultType);
-    if (!counters) {
-        PyErr_NoMemory();
-        return NULL;
-    }
-
-    pos = 0;
-
-#define XX(item) PyStructSequence_SET_ITEM(counters, pos++, get_counter_value(uv_counters->item));
-    XX(async_init)
-    XX(check_init)
-    XX(eio_init)
-    XX(fs_event_init)
-    XX(fs_poll_init)
-    XX(handle_init)
-    XX(idle_init)
-    XX(pipe_init)
-    XX(poll_init)
-    XX(prepare_init)
-    XX(process_init)
-    XX(req_init)
-    XX(stream_init)
-    XX(tcp_init)
-    XX(timer_init)
-    XX(tty_init)
-    XX(udp_init)
-#undef XX
-
-    return counters;
-
-}
-
-
-static PyObject *
 Loop_tp_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
 {
     return new_loop(type, args, kwargs, 0);
@@ -303,7 +248,6 @@ static PyGetSetDef Loop_tp_getsets[] = {
     {"__dict__", (getter)Loop_dict_get, (setter)Loop_dict_set, NULL},
     {"active_handles", (getter)Loop_active_handles_get, NULL, "Number of active handles in this loop", NULL},
     {"default", (getter)Loop_default_get, NULL, "Is this the default loop?", NULL},
-    {"counters", (getter)Loop_counters_get, NULL, "Loop counters", NULL},
     {NULL}
 };
 

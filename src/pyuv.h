@@ -304,36 +304,6 @@ static PyStructSequence_Desc addrinfo_result_desc = {
     5
 };
 
-/* used by Loop.counters */
-static PyTypeObject LoopCountersResultType;
-
-static PyStructSequence_Field loop_counters_result_fields[] = {
-    {"async_init", ""},
-    {"check_init", ""},
-    {"eio_init", ""},
-    {"fs_event_init", ""},
-    {"fs_poll_init", ""},
-    {"handle_init", ""},
-    {"idle_init", ""},
-    {"pipe_init", ""},
-    {"poll_init", ""},
-    {"prepare_init", ""},
-    {"process_init", ""},
-    {"req_init", ""},
-    {"stream_init", ""},
-    {"tcp_init", ""},
-    {"timer_init", ""},
-    {"tty_init", ""},
-    {"udp_init", ""},
-    {NULL}
-};
-
-static PyStructSequence_Desc loop_counters_result_desc = {
-    "loop_counters_result",
-    NULL,
-    loop_counters_result_fields,
-    16
-};
 
 /* used by fs stat functions */
 static PyTypeObject StatResultType;
