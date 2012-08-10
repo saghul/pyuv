@@ -58,10 +58,3 @@
 
         Number of currently active handles.
 
-    .. py:attribute:: counters
-
-        *Read only*
-
-        Named tuple containing the loop counters. Loop counters maintain a count on the
-        number of different handles, requests, etc that were ever run by the loop.
-
