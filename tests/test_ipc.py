@@ -6,11 +6,6 @@ import pyuv
 
 TEST_PORT = 1234
 
-if sys.version_info > (3, 0):
-    EXECUTABLE = sys.executable.encode()
-else:
-    EXECUTABLE = sys.executable
-
 if sys.platform == 'win32':
     TEST_PIPE = '\\\\.\\pipe\\test-pipe'
 else:
@@ -67,7 +62,7 @@ class IPCTest(unittest2.TestCase):
         stdio = [pyuv.StdIO(stream=self.channel, flags=pyuv.UV_CREATE_PIPE|pyuv.UV_READABLE_PIPE|pyuv.UV_WRITABLE_PIPE)]
         proc = pyuv.Process(self.loop)
         if sys.platform == 'win32':
-            proc.spawn(file="cmd.exe", args=[b"/c", EXECUTABLE+ b" proc_ipc.py", b"listen_before_write"], exit_callback=self.proc_exit_cb, stdio=stdio)
+            proc.spawn(file="cmd.exe", args=[b"/c", b" proc_ipc.py", b"listen_before_write"], exit_callback=self.proc_exit_cb, stdio=stdio)
         else:
             proc.spawn(file=sys.executable , args=[b"proc_ipc.py", b"listen_before_write"], exit_callback=self.proc_exit_cb, stdio=stdio)
         self.channel.start_read2(self.on_channel_read)
@@ -81,7 +76,7 @@ class IPCTest(unittest2.TestCase):
         stdio = [pyuv.StdIO(stream=self.channel, flags=pyuv.UV_CREATE_PIPE|pyuv.UV_READABLE_PIPE|pyuv.UV_WRITABLE_PIPE)]
         proc = pyuv.Process(self.loop)
         if sys.platform == 'win32':
-            proc.spawn(file="cmd.exe", args=[b"/c", EXECUTABLE+ b" proc_ipc.py", b"listen_after_write"], exit_callback=self.proc_exit_cb, stdio=stdio)
+            proc.spawn(file="cmd.exe", args=[b"/c", b" proc_ipc.py", b"listen_after_write"], exit_callback=self.proc_exit_cb, stdio=stdio)
         else:
             proc.spawn(file=sys.executable, args=[b"proc_ipc.py", b"listen_after_write"], exit_callback=self.proc_exit_cb, stdio=stdio)
         self.channel.start_read2(self.on_channel_read)
@@ -113,7 +108,7 @@ class IPCSendRecvTest(unittest2.TestCase):
         stdio = [pyuv.StdIO(stream=self.channel, flags=pyuv.UV_CREATE_PIPE|pyuv.UV_READABLE_PIPE|pyuv.UV_WRITABLE_PIPE)]
         proc = pyuv.Process(self.loop)
         if sys.platform == 'win32':
-            proc.spawn(file="cmd.exe", args=[b"/c", EXECUTABLE+ b" proc_ipc_echo.py"], exit_callback=self.proc_exit_cb, stdio=stdio)
+            proc.spawn(file="cmd.exe", args=[b"/c", b" proc_ipc_echo.py"], exit_callback=self.proc_exit_cb, stdio=stdio)
         else:
             proc.spawn(file=sys.executable, args=[b"proc_ipc_echo.py"], exit_callback=self.proc_exit_cb, stdio=stdio)
         self.channel.write2(b".", self.send_pipe)
