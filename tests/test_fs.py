@@ -537,13 +537,13 @@ class FSTestRead(unittest2.TestCase):
         pyuv.fs.read(self.loop, self.fd, 4, -1, self.read_cb)
         self.loop.run()
         self.assertEqual(self.errorno, None)
-        self.assertEqual(self.data, 'test')
+        self.assertEqual(self.data, b'test')
 
     def test_read_sync(self):
         fd = pyuv.fs.open(self.loop, TEST_FILE, os.O_RDONLY, stat.S_IREAD)
         self.data = pyuv.fs.read(self.loop, fd, 4, -1)
         pyuv.fs.close(self.loop, fd)
-        self.assertEqual(self.data, 'test')
+        self.assertEqual(self.data, b'test')
 
 
 class FSTestWrite(unittest2.TestCase):
