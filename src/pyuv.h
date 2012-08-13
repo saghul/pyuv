@@ -166,6 +166,7 @@ static PyTypeObject CheckType;
 /* Signal */
 typedef struct {
     Handle handle;
+    PyObject *callback;
 } Signal;
 
 static PyTypeObject SignalType;

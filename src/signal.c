@@ -1,42 +1,58 @@
 
-/*
- * This is not a true signal handler but it does the job. It uses a Prepare handle, which
- * gets executed one per loop iteration, before blocking for I/O, to call PyErr_CheckSignals.
- * That will cause standard registered signal handlers to be called by Python.
- */
-
 static void
-on_signal_callback(uv_prepare_t *handle, int status)
+on_signal_callback(uv_signal_t *handle, int signum)
 {
     PyGILState_STATE gstate = PyGILState_Ensure();
     Signal *self;
+    PyObject *result;
 
     ASSERT(handle);
-    ASSERT(status == 0);
 
     self = (Signal *)handle->data;
     ASSERT(self);
+    /* Object could go out of scope in the callback, increase refcount to avoid it */
+    Py_INCREF(self);
 
-    if (PyErr_CheckSignals() < 0 && PyErr_Occurred()) {
-        PyErr_Print();
+    result = PyObject_CallFunctionObjArgs(self->callback, self, PyInt_FromLong((long)signum), NULL);
+    if (result == NULL) {
+        PyErr_WriteUnraisable(self->callback);
     }
+    Py_XDECREF(result);
 
+    Py_DECREF(self);
     PyGILState_Release(gstate);
 }
 
 
 static PyObject *
-Signal_func_start(Signal *self)
+Signal_func_start(Signal *self, PyObject *args)
 {
-    int r;
+    int r, signum;
+    PyObject *tmp, *callback;
+
+    tmp = NULL;
 
     RAISE_IF_HANDLE_CLOSED(self, PyExc_HandleClosedError, NULL);
 
-    r = uv_prepare_start((uv_prepare_t *)UV_HANDLE(self), on_signal_callback);
+    if (!PyArg_ParseTuple(args, "Oi:start", &callback, &signum)) {
+        return NULL;
+    }
+
+    if (!PyCallable_Check(callback)) {
+        PyErr_SetString(PyExc_TypeError, "a callable is required");
+        return NULL;
+    }
+
+    r = uv_signal_start((uv_signal_t *)UV_HANDLE(self), (uv_signal_cb)on_signal_callback, signum);
     if (r != 0) {
         RAISE_UV_EXCEPTION(UV_HANDLE_LOOP(self), PyExc_SignalError);
         return NULL;
     }
+
+    tmp = self->callback;
+    Py_INCREF(callback);
+    self->callback = callback;
+    Py_XDECREF(tmp);
 
     Py_RETURN_NONE;
 }
@@ -49,7 +65,7 @@ Signal_func_stop(Signal *self)
 
     RAISE_IF_HANDLE_CLOSED(self, PyExc_HandleClosedError, NULL);
 
-    r = uv_prepare_stop((uv_prepare_t *)UV_HANDLE(self));
+    r = uv_signal_stop((uv_signal_t *)UV_HANDLE(self));
     if (r != 0) {
         RAISE_UV_EXCEPTION(UV_HANDLE_LOOP(self), PyExc_SignalError);
         return NULL;
@@ -63,7 +79,7 @@ static int
 Signal_tp_init(Signal *self, PyObject *args, PyObject *kwargs)
 {
     int r;
-    uv_prepare_t *uv_prepare = NULL;
+    uv_signal_t *uv_signal = NULL;
     Loop *loop;
     PyObject *tmp = NULL;
 
@@ -83,21 +99,21 @@ Signal_tp_init(Signal *self, PyObject *args, PyObject *kwargs)
     ((Handle *)self)->loop = loop;
     Py_XDECREF(tmp);
 
-    uv_prepare = PyMem_Malloc(sizeof(uv_prepare_t));
-    if (!uv_prepare) {
+    uv_signal = PyMem_Malloc(sizeof(uv_signal_t));
+    if (!uv_signal) {
         PyErr_NoMemory();
         Py_DECREF(loop);
         return -1;
     }
 
-    r = uv_prepare_init(UV_HANDLE_LOOP(self), uv_prepare);
+    r = uv_signal_init(UV_HANDLE_LOOP(self), uv_signal);
     if (r != 0) {
         RAISE_UV_EXCEPTION(UV_HANDLE_LOOP(self), PyExc_SignalError);
         Py_DECREF(loop);
         return -1;
     }
-    uv_prepare->data = (void *)self;
-    UV_HANDLE(self) = (uv_handle_t *)uv_prepare;
+    uv_signal->data = (void *)self;
+    UV_HANDLE(self) = (uv_handle_t *)uv_signal;
 
     return 0;
 }
@@ -117,6 +133,7 @@ Signal_tp_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
 static int
 Signal_tp_traverse(Signal *self, visitproc visit, void *arg)
 {
+    Py_VISIT(self->callback);
     HandleType.tp_traverse((PyObject *)self, visit, arg);
     return 0;
 }
@@ -125,6 +142,7 @@ Signal_tp_traverse(Signal *self, visitproc visit, void *arg)
 static int
 Signal_tp_clear(Signal *self)
 {
+    Py_CLEAR(self->callback);
     HandleType.tp_clear((PyObject *)self);
     return 0;
 }
@@ -132,8 +150,8 @@ Signal_tp_clear(Signal *self)
 
 static PyMethodDef
 Signal_tp_methods[] = {
-    { "start", (PyCFunction)Signal_func_start, METH_NOARGS, "Start the Signal." },
-    { "stop", (PyCFunction)Signal_func_stop, METH_NOARGS, "Stop the Signal." },
+    { "start", (PyCFunction)Signal_func_start, METH_VARARGS, "Start the Signal handle." },
+    { "stop", (PyCFunction)Signal_func_stop, METH_NOARGS, "Stop the Signal handle." },
     { NULL }
 };
 

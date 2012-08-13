@@ -10,7 +10,8 @@ import pyuv
 @platform_skip(["win32"])
 class SignalTest(unittest2.TestCase):
 
-    def signal_cb(self, sig, frame):
+    def signal_cb(self, handle, signum):
+        self.assertEqual(signum, signal.SIGUSR1)
         self.signal_cb_called += 1
         self.async.send()
 
@@ -20,18 +21,18 @@ class SignalTest(unittest2.TestCase):
         self.signal_h.close()
 
     def test_signal1(self):
-        signal.signal(signal.SIGUSR1, self.signal_cb)
         self.async_cb_called = 0
         self.signal_cb_called = 0
         self.loop = pyuv.Loop.default_loop()
         self.async = pyuv.Async(self.loop, self.async_cb)
         self.signal_h = pyuv.Signal(self.loop)
-        self.signal_h.start()
+        self.signal_h.start(self.signal_cb, signal.SIGUSR1)
         thread = threading.Thread(target=self.loop.run)
         thread.start()
         os.kill(os.getpid(), signal.SIGUSR1)
         thread.join()
         self.assertEqual(self.async_cb_called, 1)
+        self.assertEqual(self.signal_cb_called, 1)
 
 
 if __name__ == '__main__':
