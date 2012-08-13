@@ -81,21 +81,20 @@ class Server(object):
         self.sock.setblocking(0)
         self.address = self.sock.getsockname()
         self.loop = pyuv.Loop.default_loop()
-        self.signal_watcher = pyuv.Signal(self.loop)
         self.poll_watcher = pyuv.Poll(self.loop, self.sock.fileno())
         self.async = pyuv.Async(self.loop, self.async_cb)
         self.conns = weakref.WeakValueDictionary()
-        for sig in STOPSIGNALS:
-            signal.signal(sig, self.signal_cb)
+        self.signal_watchers = set()
 
     def handle_error(self, msg, level=logging.ERROR, exc_info=True):
         logging.log(level, "{0}: {1} --> stopping".format(self, msg), exc_info=exc_info)
         self.stop()
 
-    def signal_cb(self, sig, frame):
+    def signal_cb(self, handle, signum):
         self.async.send()
 
     def async_cb(self, handle):
+        handle.close()
         self.stop()
 
     def io_cb(self, watcher, revents, error):
@@ -116,14 +115,19 @@ class Server(object):
     def start(self):
         self.sock.listen(socket.SOMAXCONN)
         self.poll_watcher.start(pyuv.UV_READABLE, self.io_cb)
-        self.signal_watcher.start()
+        for sig in STOPSIGNALS:
+            handle = pyuv.Signal(self.loop)
+            handle.start(self.signal_cb, sig)
+            self.signal_watchers.add(handle)
         logging.debug("{0}: started on {0.address}".format(self))
         self.loop.run()
         logging.debug("{0}: stopped".format(self))
 
     def stop(self):
         self.poll_watcher.stop()
-        self.signal_watcher.stop()
+        for watcher in self.signal_watchers:
+            watcher.stop()
+        self.signal_watchers.clear()
         self.sock.close()
         for conn in self.conns.values():
             conn.close()
