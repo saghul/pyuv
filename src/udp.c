@@ -53,7 +53,7 @@ on_udp_read(uv_udp_t* handle, int nread, uv_buf_t buf, struct sockaddr* addr, un
             uv_ip6_name(&addr6, ip, INET6_ADDRSTRLEN);
             address_tuple = Py_BuildValue("(si)", ip, ntohs(addr6.sin6_port));
         }
-        data = PyString_FromStringAndSize(buf.base, nread);
+        data = PyBytes_FromStringAndSize(buf.base, nread);
         py_errorno = Py_None;
         Py_INCREF(Py_None);
     } else if (nread < 0) {

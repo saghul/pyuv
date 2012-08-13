@@ -37,7 +37,11 @@ Errno_func_strerror(PyObject *obj, PyObject *args)
     }
 
     err.code = errorno;
+#ifdef PYUV_PYTHON3
+    return PyUnicode_FromString(uv_strerror(err));
+#else
     return PyString_FromString(uv_strerror(err));
+#endif
 }
 
 
