@@ -48,7 +48,6 @@ class UtilTest(unittest2.TestCase):
 
     def test_getaddrinfo(self):
         def getaddrinfo_cb(result, errorno):
-            print result
             self.assertEqual(errorno, None)
         loop = pyuv.Loop.default_loop()
         pyuv.util.getaddrinfo(loop, 'localhost', getaddrinfo_cb, 80, socket.AF_INET)
