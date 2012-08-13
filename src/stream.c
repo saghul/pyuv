@@ -82,7 +82,7 @@ on_stream_read(uv_stream_t* handle, int nread, uv_buf_t buf)
     Py_INCREF(self);
 
     if (nread >= 0) {
-        data = PyString_FromStringAndSize(buf.base, nread);
+        data = PyBytes_FromStringAndSize(buf.base, nread);
         py_errorno = Py_None;
         Py_INCREF(Py_None);
     } else if (nread < 0) {

@@ -7,19 +7,13 @@
 #include "Python.h"
 #include "structmember.h"
 #include "structseq.h"
+#include "bytesobject.h"
 
 /* Python3 */
 #if PY_MAJOR_VERSION >= 3
     #define PYUV_PYTHON3
     #define PyInt_FromSsize_t PyLong_FromSsize_t
     #define PyInt_FromLong PyLong_FromLong
-    #define PyString_FromString PyBytes_FromString
-    #define PyString_AsString PyBytes_AsString
-    #define PyString_FromStringAndSize PyBytes_FromStringAndSize
-    #define PyString_Check PyBytes_Check
-    #define PyString_Size PyBytes_Size
-    #define PyString_AS_STRING PyBytes_AS_STRING
-    #define PyString_GET_SIZE PyBytes_GET_SIZE
     /* helpers, to avoid too many ifdefs */
     #define PYUVString_FromString PyUnicode_FromString
     #define PYUVString_FromStringAndSize PyUnicode_FromStringAndSize

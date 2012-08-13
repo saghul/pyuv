@@ -107,14 +107,14 @@ Util_func_interface_addresses(PyObject *obj)
             item = PyDict_New();
             if (!item)
                 continue;
-            PyDict_SetItemString(item, "name", PyString_FromString(interfaces[i].name));
+            PyDict_SetItemString(item, "name", PyBytes_FromString(interfaces[i].name));
             PyDict_SetItemString(item, "is_internal", PyBool_FromLong((long)interfaces[i].is_internal));
             if (interfaces[i].address.address4.sin_family == AF_INET) {
                 uv_ip4_name(&interfaces[i].address.address4, ip, INET_ADDRSTRLEN);
-                PyDict_SetItemString(item, "address", PyString_FromString(ip));
+                PyDict_SetItemString(item, "address", PyBytes_FromString(ip));
             } else if (interfaces[i].address.address4.sin_family == AF_INET6) {
                 uv_ip6_name(&interfaces[i].address.address6, ip, INET6_ADDRSTRLEN);
-                PyDict_SetItemString(item, "address", PyString_FromString(ip));
+                PyDict_SetItemString(item, "address", PyBytes_FromString(ip));
             }
             if (PyList_Append(result, item))
                 continue;
@@ -156,7 +156,7 @@ Util_func_cpu_info(PyObject *obj)
             times = PyDict_New();
             if (!item || !times)
                 continue;
-            PyDict_SetItemString(item, "model", PyString_FromString(cpus[i].model));
+            PyDict_SetItemString(item, "model", PyBytes_FromString(cpus[i].model));
             PyDict_SetItemString(item, "speed", PyInt_FromLong((long)cpus[i].speed));
             PyDict_SetItemString(item, "times", times);
             if (PyList_Append(result, item))
@@ -254,7 +254,7 @@ Util_func_get_process_title(PyObject *obj)
 
     err = uv_get_process_title(buffer, sizeof(buffer));
     if (err.code == UV_OK) {
-        return PyString_FromString(buffer);
+        return PyBytes_FromString(buffer);
     } else {
         PyObject *exc_data = Py_BuildValue("(is)", err.code, uv_strerror(err));
         if (exc_data != NULL) {

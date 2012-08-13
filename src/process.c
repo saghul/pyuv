@@ -217,12 +217,12 @@ on_process_exit(uv_process_t *process, int exit_status, int term_signal)
 static PyObject *
 Process_func_spawn(Process *self, PyObject *args, PyObject *kwargs)
 {
-    int r, flags, stdio_count;
+    int r, flags, len, stdio_count;
     unsigned int uid, gid;
     char *cwd, *cwd2, *file, *file2, *arg_str, *tmp_str, *key_str, *value_str;
     char **ptr, **process_args, **process_env;
     Py_ssize_t i, n, pos;
-    PyObject *key, *value, *item, *tmp, *callback, *arguments, *env, *stdio;
+    PyObject *key, *value, *item, *tmp, *callback, *arguments, *env, *stdio, *ret;
     uv_process_t *uv_process;
     uv_process_options_t options;
     uv_stdio_container_t *stdio_container;
@@ -259,16 +259,6 @@ Process_func_spawn(Process *self, PyObject *args, PyObject *kwargs)
         return NULL;
     }
 
-    tmp = (PyObject *)self->on_exit_cb;
-    Py_INCREF(callback);
-    self->on_exit_cb = callback;
-    Py_XDECREF(tmp);
-
-    tmp = self->stdio;
-    Py_XINCREF(stdio);
-    self->stdio = stdio;
-    Py_XDECREF(tmp);
-
     memset(&options, 0, sizeof(uv_process_options_t));
 
     options.uid = uid;
@@ -279,7 +269,8 @@ Process_func_spawn(Process *self, PyObject *args, PyObject *kwargs)
     file2 = (char *) PyMem_Malloc(strlen(file) + 1);
     if (!file2) {
         PyErr_NoMemory();
-        goto error;
+        ret = NULL;
+        goto cleanup;
     }
     strcpy(file2, file);
     options.file = file2;
@@ -289,31 +280,38 @@ Process_func_spawn(Process *self, PyObject *args, PyObject *kwargs)
         process_args = (char **)PyMem_Malloc(sizeof(char *) * (n + 2));
         if (!process_args) {
             PyErr_NoMemory();
-            goto error;
+            PyMem_Free(file2);
+            ret = NULL;
+            goto cleanup;
         }
         process_args[0] = file2;
-        for (i = 0;i < n; i++) {
+        i = 0;
+        while (i < n) {
             item = PySequence_GetItem(arguments, i);
-            if (!item || !PyString_Check(item)) {
+            if (!item || !PyArg_Parse(item, "s;args contains a non-string value", &arg_str)) {
                 Py_XDECREF(item);
-                continue;
+                ret = NULL;
+                goto cleanup;
             }
-            arg_str = PyString_AsString(item);
             tmp_str = (char *) PyMem_Malloc(strlen(arg_str) + 1);
             if (!tmp_str) {
                 Py_DECREF(item);
-                continue;
+                ret = NULL;
+                goto cleanup;
             }
             strcpy(tmp_str, arg_str);
             process_args[i+1] = tmp_str;
             Py_DECREF(item);
+            i++;
         }
         process_args[i+1] = NULL;
     } else {
         process_args = (char **)PyMem_Malloc(sizeof(char *) * 2);
         if (!process_args) {
             PyErr_NoMemory();
-            goto error;
+            PyMem_Free(file2);
+            ret = NULL;
+            goto cleanup;
         }
         process_args[0] = file2;
         process_args[1] = NULL;
@@ -324,7 +322,8 @@ Process_func_spawn(Process *self, PyObject *args, PyObject *kwargs)
         cwd2 = (char *) PyMem_Malloc(strlen(cwd) + 1);
         if (!cwd2) {
             PyErr_NoMemory();
-            goto error;
+            ret = NULL;
+            goto cleanup;
         }
         strcpy(cwd2, cwd);
         options.cwd = cwd2;
@@ -334,19 +333,26 @@ Process_func_spawn(Process *self, PyObject *args, PyObject *kwargs)
         n = PyDict_Size(env);
         if (n > 0) {
             process_env = (char **)PyMem_Malloc(sizeof(char *) * (n + 1));
+            if (!process_env) {
+                PyErr_NoMemory();
+                ret = NULL;
+                goto cleanup;
+            }
             i = 0;
             pos = 0;
             while (PyDict_Next(env, &pos, &key, &value)) {
-                if (!PyString_Check(key) || !PyString_Check(value))
-                    continue;
-                key_str = PyString_AsString(key);
-                value_str = PyString_AsString(value);
-                tmp_str = (char *) PyMem_Malloc(strlen(key_str) + 1 + strlen(value_str) + 1);
-                if (!tmp_str)
-                    continue;
-                sprintf(tmp_str, "%.*s=%.*s",
-                        (int)strlen(key_str), key_str,
-                        (int)strlen(value_str), value_str);
+                if (!PyArg_Parse(key, "s;env contains a non-string key", &key_str) || !PyArg_Parse(value, "s;env contains a non-string value", &value_str)) {
+                    ret = NULL;
+                    goto cleanup;
+                }
+                len = strlen(key_str) + strlen(value_str) + 2;
+                tmp_str = (char *) PyMem_Malloc(len);
+                if (!tmp_str) {
+                    PyErr_NoMemory();
+                    ret = NULL;
+                    goto cleanup;
+                }
+                PyOS_snprintf(tmp_str, len, "%s=%s", key_str, value_str);
                 process_env[i] = tmp_str;
                 i++;
             }
@@ -360,14 +366,17 @@ Process_func_spawn(Process *self, PyObject *args, PyObject *kwargs)
         stdio_container = (uv_stdio_container_t *)PyMem_Malloc(sizeof(uv_stdio_container_t) * n);
         if (!stdio_container) {
             PyErr_NoMemory();
-            goto error;
+            ret = NULL;
+            goto cleanup;
         }
         item = NULL;
         for (i = 0;i < n; i++) {
             item = PySequence_GetItem(stdio, i);
             if (!item || !PyObject_TypeCheck(item, &StdIOType)) {
                 Py_XDECREF(item);
-                continue;
+                PyErr_SetString(PyExc_TypeError, "a StdIO instance is required");
+                ret = NULL;
+                goto cleanup;
             }
             stdio_count++;
             stdio_container[i].flags = ((StdIO *)item)->flags;
@@ -385,13 +394,34 @@ Process_func_spawn(Process *self, PyObject *args, PyObject *kwargs)
     uv_process = PyMem_Malloc(sizeof(uv_process_t));
     if (!uv_process) {
         PyErr_NoMemory();
-        goto error;
+        ret = NULL;
+        goto cleanup;
     }
     uv_process->data = (void *)self;
     UV_HANDLE(self) = (uv_handle_t *)uv_process;
 
     r = uv_spawn(UV_HANDLE_LOOP(self), uv_process, options);
+    if (r != 0) {
+        RAISE_UV_EXCEPTION(UV_HANDLE_LOOP(self), PyExc_ProcessError);
+        PyMem_Free(uv_process);
+        UV_HANDLE(self) = NULL;
+        ret = NULL;
+        goto cleanup;
+    }
 
+    tmp = (PyObject *)self->on_exit_cb;
+    Py_INCREF(callback);
+    self->on_exit_cb = callback;
+    Py_XDECREF(tmp);
+
+    tmp = self->stdio;
+    Py_XINCREF(stdio);
+    self->stdio = stdio;
+    Py_XDECREF(tmp);
+
+    ret = Py_None;
+
+cleanup:
     if (options.args) {
         for (ptr = options.args; *ptr != NULL; ptr++) {
             PyMem_Free(*ptr);
@@ -411,20 +441,8 @@ Process_func_spawn(Process *self, PyObject *args, PyObject *kwargs)
         PyMem_Free(options.stdio);
     }
 
-    if (r != 0) {
-        RAISE_UV_EXCEPTION(UV_HANDLE_LOOP(self), PyExc_ProcessError);
-        PyMem_Free(uv_process);
-        UV_HANDLE(self) = NULL;
-        goto error;
-    }
-
-    Py_RETURN_NONE;
-
-error:
-    Py_DECREF(self->on_exit_cb);
-    Py_XDECREF(self->stdio);
-    return NULL;
-
+    Py_XINCREF(ret);
+    return ret;
 }
 
 
