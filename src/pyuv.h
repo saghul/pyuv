@@ -14,13 +14,6 @@
     #define PYUV_PYTHON3
     #define PyInt_FromSsize_t PyLong_FromSsize_t
     #define PyInt_FromLong PyLong_FromLong
-    /* helpers, to avoid too many ifdefs */
-    #define PYUVString_FromString PyUnicode_FromString
-    #define PYUVString_FromStringAndSize PyUnicode_FromStringAndSize
-#else
-    /* helpers, to avoid too many ifdefs */
-    #define PYUVString_FromString PyString_FromString
-    #define PYUVString_FromStringAndSize PyString_FromStringAndSize
 #endif
 
 /* libuv */
