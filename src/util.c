@@ -378,22 +378,36 @@ callback:
 static PyObject *
 Util_func_getaddrinfo(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
-    char *name;
+    char *host_str;
     char port_str[6];
     int port, family, socktype, protocol, flags, r;
     struct addrinfo hints;
     uv_getaddrinfo_t* req = NULL;
     Loop *loop;
-    PyObject *callback;
+    PyObject *callback, *host, *idna;
 
     UNUSED_ARG(obj);
 
-    static char *kwlist[] = {"loop", "callback", "name", "port", "family", "socktype", "protocol", "flags", NULL};
+    static char *kwlist[] = {"loop", "callback", "host", "port", "family", "socktype", "protocol", "flags", NULL};
 
     port = socktype = protocol = flags = 0;
     family = AF_UNSPEC;
 
-    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!sO|iiiii:getaddrinfo", kwlist, &LoopType, &loop, &name, &callback, &port, &family, &socktype, &protocol, &flags)) {
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!OO|iiiii:getaddrinfo", kwlist, &LoopType, &loop, &host, &callback, &port, &family, &socktype, &protocol, &flags)) {
+        return NULL;
+    }
+
+    if (host == Py_None) {
+        host_str = NULL;
+    } else if (PyUnicode_Check(host)) {
+        idna = PyObject_CallMethod(host, "encode", "s", "idna");
+        if (!idna)
+            return NULL;
+        host_str = PyBytes_AS_STRING(idna);
+    } else if (PyBytes_Check(host)) {
+        host_str = PyBytes_AsString(host);
+    } else {
+        PyErr_SetString(PyExc_TypeError, "getaddrinfo() argument 2 must be string or None");
         return NULL;
     }
 
@@ -424,7 +438,7 @@ Util_func_getaddrinfo(PyObject *obj, PyObject *args, PyObject *kwargs)
     hints.ai_protocol = protocol;
     hints.ai_flags = flags;
 
-    r = uv_getaddrinfo(loop->uv_loop, req, &getaddrinfo_cb, name, port_str, &hints);
+    r = uv_getaddrinfo(loop->uv_loop, req, &getaddrinfo_cb, host_str, port_str, &hints);
     if (r != 0) {
         RAISE_UV_EXCEPTION(loop->uv_loop, PyExc_UVError);
         goto error;
