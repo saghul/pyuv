@@ -345,11 +345,7 @@ getaddrinfo_cb(uv_getaddrinfo_t* req, int status, struct addrinfo* res)
         PyStructSequence_SET_ITEM(item, 0, PyInt_FromLong((long)ptr->ai_family));
         PyStructSequence_SET_ITEM(item, 1, PyInt_FromLong((long)ptr->ai_socktype));
         PyStructSequence_SET_ITEM(item, 2, PyInt_FromLong((long)ptr->ai_protocol));
-#ifdef PYUV_PYTHON3
-        PyStructSequence_SET_ITEM(item, 3, PyUnicode_FromString(ptr->ai_canonname ? ptr->ai_canonname : ""));
-#else
-        PyStructSequence_SET_ITEM(item, 3, PyString_FromString(ptr->ai_canonname ? ptr->ai_canonname : ""));
-#endif
+        PyStructSequence_SET_ITEM(item, 3, Py_BuildValue("s", ptr->ai_canonname ? ptr->ai_canonname : ""));
         PyStructSequence_SET_ITEM(item, 4, addr);
 
         PyList_Append(dns_result, item);

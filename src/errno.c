@@ -4,11 +4,7 @@
 static void
 inscode(PyObject *module_dict, PyObject *other_dict, const char *name, int code)
 {
-#ifdef PYUV_PYTHON3
-    PyObject *error_name = PyUnicode_FromString(name);
-#else
-    PyObject *error_name = PyString_FromString(name);
-#endif
+    PyObject *error_name = Py_BuildValue("s", name);
     PyObject *error_code = PyInt_FromLong((long) code);
 
     /* Don't bother checking for errors; they'll be caught at the end
@@ -37,11 +33,7 @@ Errno_func_strerror(PyObject *obj, PyObject *args)
     }
 
     err.code = errorno;
-#ifdef PYUV_PYTHON3
-    return PyUnicode_FromString(uv_strerror(err));
-#else
-    return PyString_FromString(uv_strerror(err));
-#endif
+    return Py_BuildValue("s", uv_strerror(err));
 }
 
 
