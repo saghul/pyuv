@@ -150,7 +150,6 @@ static void
 Handle_tp_dealloc(Handle *self)
 {
     if (self->uv_handle) {
-        self->uv_handle->data = NULL;
         uv_close(self->uv_handle, on_handle_dealloc_close);
     }
     if (self->weakreflist != NULL) {

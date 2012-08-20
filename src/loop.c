@@ -91,10 +91,10 @@ Loop_func_update_time(Loop *self)
 static void
 walk_cb(uv_handle_t* handle, void* arg)
 {
+    PyObject *result;
     PyObject *callback = (PyObject *)arg;
-    PyObject *result, *obj;
-    if (handle->data != NULL) {
-        obj = (PyObject *)handle->data;
+    PyObject *obj = (PyObject *)handle->data;
+    if (obj && Py_REFCNT(obj) > 0) {
         Py_INCREF(obj);
         result = PyObject_CallFunctionObjArgs(callback, obj, NULL);
         if (result == NULL) {
