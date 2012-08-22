@@ -1,3 +1,9 @@
+Version 0.8.1
+=============
+ - Fixed checking port number boundaries
+ - Fixed small memory leak
+ - Fixed unicode handling
+
 Version 0.8.0
 =============
  - Added FSPoll handle
