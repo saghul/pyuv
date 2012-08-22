@@ -352,6 +352,11 @@ UDP_func_sendlines(UDP *self, PyObject *args)
         goto error;
     }
 
+    if (buf_count == 0) {
+        PyErr_SetString(PyExc_ValueError, "Sequence is empty");
+        goto error;
+    }
+
     wr = (uv_udp_send_t *)PyMem_Malloc(sizeof(uv_udp_send_t));
     if (!wr) {
         PyErr_NoMemory();
