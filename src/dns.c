@@ -157,7 +157,7 @@ host_cb(void *arg, int status, int timeouts, struct hostent *hostent)
 
     for (ptr = hostent->h_aliases; *ptr != NULL; ptr++) {
         if (*ptr != hostent->h_name && strcmp(*ptr, hostent->h_name)) {
-            tmp = PYUVString_FromString(*ptr);
+            tmp = Py_BuildValue("s", *ptr);
             if (tmp == NULL) {
                 break;
             }
@@ -168,10 +168,10 @@ host_cb(void *arg, int status, int timeouts, struct hostent *hostent)
     for (ptr = hostent->h_addr_list; *ptr != NULL; ptr++) {
         if (hostent->h_addrtype == AF_INET) {
             uv_inet_ntop(AF_INET, *ptr, ip, INET_ADDRSTRLEN);
-            tmp = PYUVString_FromString(ip);
+            tmp = Py_BuildValue("s", ip);
         } else if (hostent->h_addrtype == AF_INET6) {
             uv_inet_ntop(AF_INET6, *ptr, ip, INET6_ADDRSTRLEN);
-            tmp = PYUVString_FromString(ip);
+            tmp = Py_BuildValue("s", ip);
         } else {
             continue;
         }
@@ -181,7 +181,7 @@ host_cb(void *arg, int status, int timeouts, struct hostent *hostent)
         PyList_Append(dns_addrlist, tmp);
         Py_DECREF(tmp);
     }
-    dns_name = PYUVString_FromString(hostent->h_name);
+    dns_name = Py_BuildValue("s", hostent->h_name);
 
     PyStructSequence_SET_ITEM(dns_result, 0, dns_name);
     PyStructSequence_SET_ITEM(dns_result, 1, dns_aliases);
@@ -241,9 +241,9 @@ nameinfo_cb(void *arg, int status, int timeouts, char *node, char *service)
         goto callback;
     }
 
-    dns_node = PYUVString_FromString(node);
+    dns_node = Py_BuildValue("s", node);
     if (service) {
-        dns_service = PYUVString_FromString(service);
+        dns_service = Py_BuildValue("s", service);
     } else {
         dns_service = Py_None;
         Py_INCREF(Py_None);
@@ -361,7 +361,7 @@ getaddrinfo_cb(uv_getaddrinfo_t* handle, int status, struct addrinfo* res)
         PyStructSequence_SET_ITEM(item, 0, PyInt_FromLong((long)ptr->ai_family));
         PyStructSequence_SET_ITEM(item, 1, PyInt_FromLong((long)ptr->ai_socktype));
         PyStructSequence_SET_ITEM(item, 2, PyInt_FromLong((long)ptr->ai_protocol));
-        PyStructSequence_SET_ITEM(item, 3, PYUVString_FromString(ptr->ai_canonname ? ptr->ai_canonname : ""));
+        PyStructSequence_SET_ITEM(item, 3, Py_BuildValue("s", ptr->ai_canonname ? ptr->ai_canonname : ""));
         PyStructSequence_SET_ITEM(item, 4, addr);
 
         PyList_Append(dns_result, item);
@@ -438,7 +438,7 @@ query_a_cb(void *arg, int status,int timeouts, unsigned char *answer_buf, int an
 
     for (ptr = hostent->h_addr_list; *ptr != NULL; ptr++) {
         uv_inet_ntop(hostent->h_addrtype, *ptr, ip, sizeof(ip));
-        tmp = PYUVString_FromString(ip);
+        tmp = Py_BuildValue("s", ip);
         if (tmp == NULL) {
             break;
         }
@@ -515,7 +515,7 @@ query_aaaa_cb(void *arg, int status,int timeouts, unsigned char *answer_buf, int
 
     for (ptr = hostent->h_addr_list; *ptr != NULL; ptr++) {
         uv_inet_ntop(hostent->h_addrtype, *ptr, ip, sizeof(ip));
-        tmp = PYUVString_FromString(ip);
+        tmp = Py_BuildValue("s", ip);
         if (tmp == NULL) {
             break;
         }
@@ -588,7 +588,7 @@ query_cname_cb(void *arg, int status,int timeouts, unsigned char *answer_buf, in
         goto callback;
     }
 
-    tmp = PYUVString_FromString(hostent->h_name);
+    tmp = Py_BuildValue("s", hostent->h_name);
     PyList_Append(dns_result, tmp);
     Py_DECREF(tmp);
     ares_free_hostent(hostent);
@@ -662,7 +662,7 @@ query_mx_cb(void *arg, int status,int timeouts, unsigned char *answer_buf, int a
         if (tmp == NULL) {
             break;
         }
-        PyStructSequence_SET_ITEM(tmp, 0, PYUVString_FromString(mx_ptr->host));
+        PyStructSequence_SET_ITEM(tmp, 0, Py_BuildValue("s", mx_ptr->host));
         PyStructSequence_SET_ITEM(tmp, 1, PyInt_FromLong((long)mx_ptr->priority));
         PyList_Append(dns_result, tmp);
         Py_DECREF(tmp);
@@ -735,7 +735,7 @@ query_ns_cb(void *arg, int status,int timeouts, unsigned char *answer_buf, int a
     }
 
     for (ptr = hostent->h_aliases; *ptr != NULL; ptr++) {
-        tmp = PYUVString_FromString(*ptr);
+        tmp = Py_BuildValue("s", *ptr);
         if (tmp == NULL) {
             break;
         }
@@ -809,7 +809,7 @@ query_txt_cb(void *arg, int status,int timeouts, unsigned char *answer_buf, int 
     }
 
     for (txt_ptr = txt_reply; txt_ptr != NULL; txt_ptr = txt_ptr->next) {
-        tmp = PYUVString_FromString((const char *)txt_ptr->txt);
+        tmp = Py_BuildValue("s", (const char *)txt_ptr->txt);
         if (tmp == NULL) {
             break;
         }
@@ -887,7 +887,7 @@ query_srv_cb(void *arg, int status,int timeouts, unsigned char *answer_buf, int 
         if (tmp == NULL) {
             break;
         }
-        PyStructSequence_SET_ITEM(tmp, 0, PYUVString_FromString(srv_ptr->host));
+        PyStructSequence_SET_ITEM(tmp, 0, Py_BuildValue("s", srv_ptr->host));
         PyStructSequence_SET_ITEM(tmp, 1, PyInt_FromLong((long)srv_ptr->port));
         PyStructSequence_SET_ITEM(tmp, 2, PyInt_FromLong((long)srv_ptr->priority));
         PyStructSequence_SET_ITEM(tmp, 3, PyInt_FromLong((long)srv_ptr->weight));
@@ -967,10 +967,10 @@ query_naptr_cb(void *arg, int status,int timeouts, unsigned char *answer_buf, in
         }
         PyStructSequence_SET_ITEM(tmp, 0, PyInt_FromLong((long)naptr_ptr->order));
         PyStructSequence_SET_ITEM(tmp, 1, PyInt_FromLong((long)naptr_ptr->preference));
-        PyStructSequence_SET_ITEM(tmp, 2, PYUVString_FromString((char *)naptr_ptr->flags));
-        PyStructSequence_SET_ITEM(tmp, 3, PYUVString_FromString((char *)naptr_ptr->service));
-        PyStructSequence_SET_ITEM(tmp, 4, PYUVString_FromString((char *)naptr_ptr->regexp));
-        PyStructSequence_SET_ITEM(tmp, 5, PYUVString_FromString(naptr_ptr->replacement));
+        PyStructSequence_SET_ITEM(tmp, 2, Py_BuildValue("s", (char *)naptr_ptr->flags));
+        PyStructSequence_SET_ITEM(tmp, 3, Py_BuildValue("s", (char *)naptr_ptr->service));
+        PyStructSequence_SET_ITEM(tmp, 4, Py_BuildValue("s", (char *)naptr_ptr->regexp));
+        PyStructSequence_SET_ITEM(tmp, 5, Py_BuildValue("s", naptr_ptr->replacement));
         PyList_Append(dns_result, tmp);
         Py_DECREF(tmp);
     }
@@ -1324,7 +1324,7 @@ set_dns_servers(DNSResolver *self, PyObject *value)
             goto servers_set_end;
         }
 
-        server = PyString_AsString(item);
+        server = PyBytes_AsString(item);
         if (!server) {
             ret = -1;
             goto servers_set_end;
@@ -1390,10 +1390,10 @@ DNSResolver_servers_get(DNSResolver *self, void *closure)
     for (server = servers; server != NULL; server = server->next) {
         if (server->family == AF_INET) {
             uv_inet_ntop(AF_INET, &(server->addr.addr4), ip, INET_ADDRSTRLEN);
-            tmp = PYUVString_FromString(ip);
+            tmp = Py_BuildValue("s", ip);
         } else {
             uv_inet_ntop(AF_INET6, &(server->addr.addr6), ip, INET6_ADDRSTRLEN);
-            tmp = PYUVString_FromString(ip);
+            tmp = Py_BuildValue("s", ip);
         }
         if (tmp == NULL) {
             break;

@@ -48,7 +48,7 @@ Errno_func_ares_strerror(PyObject *obj, PyObject *args)
         return NULL;
     }
 
-    return PyString_FromString(ares_strerror(errorno));
+    return Py_BuildValue("s", ares_strerror(errorno));
 }
 
 

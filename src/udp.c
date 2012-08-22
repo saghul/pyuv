@@ -136,7 +136,7 @@ on_udp_send(uv_udp_send_t* req, int status)
         for (i = 0; i < send_data->buf_count; i++) {
             PyMem_Free(send_data->bufs[i].base);
         }
-        PyMem_Free(req_data->bufs);
+        PyMem_Free(send_data->bufs);
     }
     PyMem_Free(send_data);
     Py_DECREF(callback);
@@ -457,8 +457,8 @@ UDP_func_sendlines(UDP *self, PyObject *args)
                 Py_DECREF(iter);
                 goto error;
             }
-            data_str = PyString_AS_STRING(encoded);
-            data_len = PyString_GET_SIZE(encoded);
+            data_str = PyBytes_AS_STRING(encoded);
+            data_len = PyBytes_GET_SIZE(encoded);
             tmp = (char *) PyMem_Malloc(data_len);
             if (!tmp) {
                 Py_DECREF(item);

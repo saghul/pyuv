@@ -463,8 +463,8 @@ Stream_func_writelines(Stream *self, PyObject *args)
                 Py_DECREF(iter);
                 goto error;
             }
-            data_str = PyString_AS_STRING(encoded);
-            data_len = PyString_GET_SIZE(encoded);
+            data_str = PyBytes_AS_STRING(encoded);
+            data_len = PyBytes_GET_SIZE(encoded);
             tmp = (char *) PyMem_Malloc(data_len);
             if (!tmp) {
                 Py_DECREF(item);
