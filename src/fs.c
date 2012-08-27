@@ -1,8 +1,10 @@
 
 typedef struct {
     PyObject *callback;
-    Py_buffer view;
-    char *buf;
+    union {
+        Py_buffer view;
+        char *buf;
+    } data;
 } fs_rwreq_data_t;
 
 
@@ -689,7 +691,7 @@ process_read(uv_fs_t* req, PyObject **path, PyObject **read_data, PyObject **err
     } else {
         *errorno = Py_None;
         Py_INCREF(Py_None);
-        *read_data = PyBytes_FromStringAndSize(req_data->buf, req->result);
+        *read_data = PyBytes_FromStringAndSize(req_data->data.buf, req->result);
     }
 }
 
@@ -716,7 +718,7 @@ read_cb(uv_fs_t* req) {
     uv_fs_req_cleanup(req);
     Py_DECREF(loop);
     Py_DECREF(req_data->callback);
-    PyMem_Free(req_data->buf);
+    PyMem_Free(req_data->data.buf);
     PyMem_Free(req_data);
     PyMem_Free(req);
 
@@ -772,7 +774,7 @@ write_cb(uv_fs_t* req) {
     uv_fs_req_cleanup(req);
     Py_DECREF(loop);
     Py_DECREF(req_data->callback);
-    PyBuffer_Release(&req_data->view);
+    PyBuffer_Release(&req_data->data.view);
     PyMem_Free(req_data);
     PyMem_Free(req);
 
@@ -1899,7 +1901,7 @@ FS_func_read(PyObject *obj, PyObject *args, PyObject *kwargs)
     memset(buf, 0, length);
 
     req_data->callback = callback;
-    req_data->buf = buf;
+    req_data->data.buf = buf;
 
     fs_req->data = (void *)req_data;
     r = uv_fs_read(loop->uv_loop, fs_req, fd, buf, length, offset, (callback != NULL) ? read_cb : NULL);
@@ -1978,7 +1980,7 @@ FS_func_write(PyObject *obj, PyObject *args, PyObject *kwargs)
     }
 
     req_data->callback = callback;
-    req_data->view = pbuf;
+    req_data->data.view = pbuf;
 
     fs_req->data = (void *)req_data;
     r = uv_fs_write(loop->uv_loop, fs_req, fd, pbuf.buf, pbuf.len, offset, (callback != NULL) ? write_cb : NULL);

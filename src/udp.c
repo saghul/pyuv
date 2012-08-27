@@ -1,9 +1,11 @@
 
 typedef struct {
     PyObject *callback;
-    uv_buf_t *bufs;
     int buf_count;
-    Py_buffer view;
+    union {
+        uv_buf_t *bufs;
+        Py_buffer view;
+    } data;
 } udp_send_data_t;
 
 
@@ -122,12 +124,12 @@ on_udp_send(uv_udp_send_t* req, int status)
     }
 
     if (req_data->buf_count == 1) {
-        PyBuffer_Release(&req_data->view);
+        PyBuffer_Release(&req_data->data.view);
     } else {
         for (i = 0; i < req_data->buf_count; i++) {
-            PyMem_Free(req_data->bufs[i].base);
+            PyMem_Free(req_data->data.bufs[i].base);
         }
-        PyMem_Free(req_data->bufs);
+        PyMem_Free(req_data->data.bufs);
     }
     Py_DECREF(callback);
     PyMem_Free(req_data);
@@ -280,9 +282,8 @@ UDP_func_send(UDP *self, PyObject *args)
 
     buf = uv_buf_init(pbuf.buf, pbuf.len);
     req_data->callback = callback;
-    req_data->bufs = &buf;
     req_data->buf_count = 1;
-    req_data->view = pbuf;
+    req_data->data.view = pbuf;
 
     wr->data = (void *)req_data;
 
@@ -370,8 +371,8 @@ UDP_func_sendlines(UDP *self, PyObject *args)
     }
 
     req_data->callback = callback;
-    req_data->bufs = bufs;
     req_data->buf_count = buf_count;
+    req_data->data.bufs = bufs;
     wr->data = (void *)req_data;
 
     if (address_type == AF_INET) {
