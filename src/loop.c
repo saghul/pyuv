@@ -25,7 +25,7 @@ new_loop(PyTypeObject *type, PyObject *args, PyObject *kwargs, int is_default)
             }
             default_loop->uv_loop = uv_default_loop();
             default_loop->uv_loop->data = (void *)default_loop;
-            default_loop->is_default = 1;
+            default_loop->is_default = True;
             default_loop->weakreflist = NULL;
             default_loop->excepthook_cb = NULL;
             Py_AtExit(_loop_cleanup);
@@ -39,7 +39,7 @@ new_loop(PyTypeObject *type, PyObject *args, PyObject *kwargs, int is_default)
         }
         self->uv_loop = uv_loop_new();
         self->uv_loop->data = (void *)self;
-        self->is_default = 0;
+        self->is_default = False;
         self->weakreflist = NULL;
         self->excepthook_cb = NULL;
         return (PyObject *)self;
