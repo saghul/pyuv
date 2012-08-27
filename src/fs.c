@@ -1,6 +1,5 @@
 
 typedef struct {
-    Loop *loop;
     PyObject *callback;
     Py_buffer view;
     char *buf;
