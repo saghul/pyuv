@@ -198,7 +198,7 @@ on_process_exit(uv_process_t *process, int exit_status, int term_signal)
     if (self->on_exit_cb != Py_None) {
         result = PyObject_CallFunctionObjArgs(self->on_exit_cb, self, py_exit_status, py_term_signal, NULL);
         if (result == NULL) {
-            PyErr_WriteUnraisable(self->on_exit_cb);
+            handle_uncaught_exception(((Handle *)self)->loop);
         }
         Py_XDECREF(result);
         Py_DECREF(py_exit_status);

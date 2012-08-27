@@ -15,7 +15,7 @@ on_signal_callback(uv_signal_t *handle, int signum)
 
     result = PyObject_CallFunctionObjArgs(self->callback, self, PyInt_FromLong((long)signum), NULL);
     if (result == NULL) {
-        PyErr_WriteUnraisable(self->callback);
+        handle_uncaught_exception(((Handle *)self)->loop);
     }
     Py_XDECREF(result);
 

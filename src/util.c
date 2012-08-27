@@ -320,8 +320,6 @@ getaddrinfo_cb(uv_getaddrinfo_t* req, int status, struct addrinfo* res)
 
     dns_result = PyList_New(0);
     if (!dns_result) {
-        PyErr_NoMemory();
-        PyErr_WriteUnraisable(Py_None);
         errorno = PyInt_FromLong((long)UV_ENOMEM);
         dns_result = Py_None;
         Py_INCREF(Py_None);
@@ -331,15 +329,13 @@ getaddrinfo_cb(uv_getaddrinfo_t* req, int status, struct addrinfo* res)
     for (ptr = res; ptr; ptr = ptr->ai_next) {
         addr = makesockaddr(ptr->ai_addr, ptr->ai_addrlen);
         if (!addr) {
-            PyErr_NoMemory();
-            PyErr_WriteUnraisable(callback);
+            PyErr_Clear();
             break;
         }
 
         item = PyStructSequence_New(&AddrinfoResultType);
         if (!item) {
-            PyErr_NoMemory();
-            PyErr_WriteUnraisable(callback);
+            PyErr_Clear();
             break;
         }
         PyStructSequence_SET_ITEM(item, 0, PyInt_FromLong((long)ptr->ai_family));
@@ -357,7 +353,7 @@ getaddrinfo_cb(uv_getaddrinfo_t* req, int status, struct addrinfo* res)
 callback:
     result = PyObject_CallFunctionObjArgs(callback, dns_result, errorno, NULL);
     if (result == NULL) {
-        PyErr_WriteUnraisable(callback);
+        handle_uncaught_exception(loop);
     }
     Py_XDECREF(result);
     Py_DECREF(dns_result);

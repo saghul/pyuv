@@ -43,7 +43,7 @@ on_stream_shutdown(uv_shutdown_t* req, int status)
         }
         result = PyObject_CallFunctionObjArgs(callback, self, py_errorno, NULL);
         if (result == NULL) {
-            PyErr_WriteUnraisable(callback);
+            handle_uncaught_exception(((Handle *)self)->loop);
         }
         Py_XDECREF(result);
         Py_DECREF(py_errorno);
@@ -84,7 +84,7 @@ on_stream_read(uv_stream_t* handle, int nread, uv_buf_t buf)
 
     result = PyObject_CallFunctionObjArgs(self->on_read_cb, self, data, py_errorno, NULL);
     if (result == NULL) {
-        PyErr_WriteUnraisable(self->on_read_cb);
+        handle_uncaught_exception(((Handle *)self)->loop);
     }
     Py_XDECREF(result);
     Py_DECREF(data);
@@ -130,7 +130,7 @@ on_stream_write(uv_write_t* req, int status)
         }
         result = PyObject_CallFunctionObjArgs(callback, self, py_errorno, NULL);
         if (result == NULL) {
-            PyErr_WriteUnraisable(callback);
+            handle_uncaught_exception(((Handle *)self)->loop);
         }
         Py_XDECREF(result);
         Py_DECREF(py_errorno);

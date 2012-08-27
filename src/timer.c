@@ -16,7 +16,7 @@ on_timer_callback(uv_timer_t *timer, int status)
 
     result = PyObject_CallFunctionObjArgs(self->callback, self, NULL);
     if (result == NULL) {
-        PyErr_WriteUnraisable(self->callback);
+        handle_uncaught_exception(((Handle *)self)->loop);
     }
     Py_XDECREF(result);
 

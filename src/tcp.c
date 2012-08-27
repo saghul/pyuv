@@ -23,7 +23,7 @@ on_tcp_connection(uv_stream_t* server, int status)
 
     result = PyObject_CallFunctionObjArgs(self->on_new_connection_cb, self, py_errorno, NULL);
     if (result == NULL) {
-        PyErr_WriteUnraisable(self->on_new_connection_cb);
+        handle_uncaught_exception(((Handle *)self)->loop);
     }
     Py_XDECREF(result);
     Py_DECREF(py_errorno);
@@ -58,7 +58,7 @@ on_tcp_client_connection(uv_connect_t *req, int status)
 
     result = PyObject_CallFunctionObjArgs(callback, self, py_errorno, NULL);
     if (result == NULL) {
-        PyErr_WriteUnraisable(callback);
+        handle_uncaught_exception(((Handle *)self)->loop);
     }
     Py_XDECREF(result);
     Py_DECREF(py_errorno);

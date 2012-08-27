@@ -67,7 +67,7 @@ on_udp_read(uv_udp_t* handle, int nread, uv_buf_t buf, struct sockaddr* addr, un
 
     result = PyObject_CallFunctionObjArgs(self->on_read_cb, self, address_tuple, data, py_errorno, NULL);
     if (result == NULL) {
-        PyErr_WriteUnraisable(self->on_read_cb);
+        handle_uncaught_exception(((Handle *)self)->loop);
     }
     Py_XDECREF(result);
     Py_DECREF(address_tuple);
@@ -115,7 +115,7 @@ on_udp_send(uv_udp_send_t* req, int status)
         }
         result = PyObject_CallFunctionObjArgs(callback, self, py_errorno, NULL);
         if (result == NULL) {
-            PyErr_WriteUnraisable(callback);
+            handle_uncaught_exception(((Handle *)self)->loop);
         }
         Py_XDECREF(result);
         Py_DECREF(py_errorno);

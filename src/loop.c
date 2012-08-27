@@ -27,6 +27,7 @@ new_loop(PyTypeObject *type, PyObject *args, PyObject *kwargs, int is_default)
             default_loop->uv_loop->data = (void *)default_loop;
             default_loop->is_default = 1;
             default_loop->weakreflist = NULL;
+            default_loop->excepthook_cb = NULL;
             Py_AtExit(_loop_cleanup);
         }
         Py_INCREF(default_loop);
@@ -40,6 +41,7 @@ new_loop(PyTypeObject *type, PyObject *args, PyObject *kwargs, int is_default)
         self->uv_loop->data = (void *)self;
         self->is_default = 0;
         self->weakreflist = NULL;
+        self->excepthook_cb = NULL;
         return (PyObject *)self;
     }
 }
@@ -52,7 +54,7 @@ Loop_func_run(Loop *self)
     uv_run(self->uv_loop);
     Py_END_ALLOW_THREADS
     if (PyErr_Occurred()) {
-        PyErr_WriteUnraisable(Py_None);
+        handle_uncaught_exception(self);
     }
     Py_RETURN_NONE;
 }
@@ -67,7 +69,7 @@ Loop_func_run_once(Loop *self)
     r = uv_run_once(self->uv_loop);
     Py_END_ALLOW_THREADS
     if (PyErr_Occurred()) {
-        PyErr_WriteUnraisable(Py_None);
+        handle_uncaught_exception(self);
     }
     return PyBool_FromLong((long)r);
 }
@@ -98,7 +100,8 @@ walk_cb(uv_handle_t* handle, void* arg)
         Py_INCREF(obj);
         result = PyObject_CallFunctionObjArgs(callback, obj, NULL);
         if (result == NULL) {
-            PyErr_WriteUnraisable(callback);
+            /* TODO: check this... */
+            handle_uncaught_exception(((Handle *)obj)->loop);
         }
         Py_DECREF(obj);
         Py_XDECREF(result);
@@ -232,6 +235,37 @@ Loop_dict_set(Loop *self, PyObject* val, void* c)
 }
 
 
+static PyObject*
+Loop_excepthook_get(Loop *self, void* c)
+{
+    UNUSED_ARG(c);
+    return self->excepthook_cb;
+}
+
+
+static int
+Loop_excepthook_set(Loop *self, PyObject* val, void* c)
+{
+    PyObject* tmp;
+
+    UNUSED_ARG(c);
+
+    if (val == NULL) {
+        PyErr_SetString(PyExc_TypeError, "excepthook may not be deleted");
+        return -1;
+    }
+    if (val != Py_None && !PyCallable_Check(val)) {
+        PyErr_SetString(PyExc_TypeError, "a callable or None is required");
+        return -1;
+    }
+    tmp = self->excepthook_cb;
+    Py_INCREF(val);
+    self->excepthook_cb = val;
+    Py_XDECREF(tmp);
+    return 0;
+}
+
+
 static PyMethodDef
 Loop_tp_methods[] = {
     { "run", (PyCFunction)Loop_func_run, METH_NOARGS, "Run the event loop." },
@@ -248,6 +282,7 @@ static PyGetSetDef Loop_tp_getsets[] = {
     {"__dict__", (getter)Loop_dict_get, (setter)Loop_dict_set, NULL},
     {"active_handles", (getter)Loop_active_handles_get, NULL, "Number of active handles in this loop", NULL},
     {"default", (getter)Loop_default_get, NULL, "Is this the default loop?", NULL},
+    {"excepthook", (getter)Loop_excepthook_get, (setter)Loop_excepthook_set, "Loop uncaught exception handler", NULL},
     {NULL}
 };
 

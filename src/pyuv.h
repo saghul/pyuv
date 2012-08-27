@@ -90,6 +90,7 @@ typedef int Bool;
 /* Loop */
 typedef struct {
     PyObject_HEAD
+    PyObject *excepthook_cb;
     PyObject *weakreflist;
     PyObject *dict;
     uv_loop_t *uv_loop;
@@ -524,6 +525,71 @@ pyuv_guess_ip_family(char *ip, int *address_type)
     }
 }
 
+
+/* handle uncausht exception in a callback */
+static INLINE void
+handle_uncaught_exception(Loop *loop)
+{
+    PyObject *type, *val, *tb, *result;
+
+    ASSERT(loop);
+    ASSERT(PyErr_Occurred());
+
+    PyErr_Fetch(&type, &val, &tb);
+    PyErr_NormalizeException(&type, &val, &tb);
+    if (!val) {
+        val = Py_None;
+        Py_INCREF(Py_None);
+    }
+    if (!tb) {
+        tb = Py_None;
+        Py_INCREF(Py_None);
+    }
+
+    if (loop->excepthook_cb != NULL && loop->excepthook_cb != Py_None) {
+        result = PyObject_CallFunctionObjArgs(loop->excepthook_cb, type, val, tb, NULL);
+        Py_XDECREF(result);
+    } else {
+        PyErr_Display(type, val, tb);
+    }
+
+    Py_DECREF(type);
+    Py_DECREF(val);
+    Py_DECREF(tb);
+
+    /* just in case*/
+    PyErr_Clear();
+}
+
+
+/* print uncausht exception */
+static INLINE void
+print_uncaught_exception(void)
+{
+    PyObject *type, *val, *tb;
+
+    ASSERT(PyErr_Occurred());
+
+    PyErr_Fetch(&type, &val, &tb);
+    PyErr_NormalizeException(&type, &val, &tb);
+    if (!val) {
+        val = Py_None;
+        Py_INCREF(Py_None);
+    }
+    if (!tb) {
+        tb = Py_None;
+        Py_INCREF(Py_None);
+    }
+
+    PyErr_Display(type, val, tb);
+
+    Py_DECREF(type);
+    Py_DECREF(val);
+    Py_DECREF(tb);
+
+    /* just in case*/
+    PyErr_Clear();
+}
 
 #endif
 

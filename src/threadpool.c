@@ -26,7 +26,7 @@ threadpool_work_cb(uv_work_t *req)
         PyErr_NormalizeException(&err_type, &err_value, &err_tb);
         error = PyTuple_New(3);
         if (!error) {
-            PyErr_WriteUnraisable(data->work_cb);
+            PyErr_Clear();
             error = Py_None;
             Py_INCREF(Py_None);
         } else {
@@ -73,7 +73,7 @@ threadpool_after_work_cb(uv_work_t *req)
     if (data->after_work_cb) {
         result = PyObject_CallFunctionObjArgs(data->after_work_cb, data->result, data->error, NULL);
         if (result == NULL) {
-            PyErr_WriteUnraisable(data->after_work_cb);
+            print_uncaught_exception();
         }
         Py_XDECREF(result);
     }

@@ -27,7 +27,7 @@ on_poll_callback(uv_poll_t *handle, int status, int events)
 
     result = PyObject_CallFunctionObjArgs(self->callback, self, py_events, py_errorno,NULL);
     if (result == NULL) {
-        PyErr_WriteUnraisable(self->callback);
+        handle_uncaught_exception(((Handle *)self)->loop);
     }
     Py_XDECREF(result);
 

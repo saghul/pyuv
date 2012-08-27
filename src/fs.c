@@ -141,8 +141,7 @@ process_stat(uv_fs_t* req, PyObject **path, PyObject **stat_data, PyObject **err
 
     *stat_data = PyStructSequence_New(&StatResultType);
     if (!stat_data) {
-        PyErr_NoMemory();
-        PyErr_WriteUnraisable(Py_None);
+        PyErr_Clear();
         Py_DECREF(*path);
         Py_DECREF(*errorno);
         *path = NULL;
@@ -167,7 +166,7 @@ stat_cb(uv_fs_t* req) {
     if (path && stat_data && errorno) {
         result = PyObject_CallFunctionObjArgs(callback, loop, path, stat_data, errorno, NULL);
         if (result == NULL) {
-            PyErr_WriteUnraisable(callback);
+            handle_uncaught_exception(loop);
         }
         Py_XDECREF(result);
         Py_DECREF(stat_data);
@@ -212,7 +211,7 @@ unlink_cb(uv_fs_t* req) {
 
     result = PyObject_CallFunctionObjArgs(callback, loop, path, errorno, NULL);
     if (result == NULL) {
-        PyErr_WriteUnraisable(callback);
+        handle_uncaught_exception(loop);
     }
     Py_XDECREF(result);
     Py_DECREF(path);
@@ -255,7 +254,7 @@ mkdir_cb(uv_fs_t* req) {
 
     result = PyObject_CallFunctionObjArgs(callback, loop, path, errorno, NULL);
     if (result == NULL) {
-        PyErr_WriteUnraisable(callback);
+        handle_uncaught_exception(loop);
     }
     Py_XDECREF(result);
     Py_DECREF(path);
@@ -298,7 +297,7 @@ rmdir_cb(uv_fs_t* req) {
 
     result = PyObject_CallFunctionObjArgs(callback, loop, path, errorno, NULL);
     if (result == NULL) {
-        PyErr_WriteUnraisable(callback);
+        handle_uncaught_exception(loop);
     }
     Py_XDECREF(result);
     Py_DECREF(path);
@@ -341,7 +340,7 @@ rename_cb(uv_fs_t* req) {
 
     result = PyObject_CallFunctionObjArgs(callback, loop, path, errorno, NULL);
     if (result == NULL) {
-        PyErr_WriteUnraisable(callback);
+        handle_uncaught_exception(loop);
     }
     Py_XDECREF(result);
     Py_DECREF(path);
@@ -384,7 +383,7 @@ chmod_cb(uv_fs_t* req) {
 
     result = PyObject_CallFunctionObjArgs(callback, loop, path, errorno, NULL);
     if (result == NULL) {
-        PyErr_WriteUnraisable(callback);
+        handle_uncaught_exception(loop);
     }
     Py_XDECREF(result);
     Py_DECREF(path);
@@ -427,7 +426,7 @@ link_cb(uv_fs_t* req) {
 
     result = PyObject_CallFunctionObjArgs(callback, loop, path, errorno, NULL);
     if (result == NULL) {
-        PyErr_WriteUnraisable(callback);
+        handle_uncaught_exception(loop);
     }
     Py_XDECREF(result);
     Py_DECREF(path);
@@ -470,7 +469,7 @@ symlink_cb(uv_fs_t* req) {
 
     result = PyObject_CallFunctionObjArgs(callback, loop, path, errorno, NULL);
     if (result == NULL) {
-        PyErr_WriteUnraisable(callback);
+        handle_uncaught_exception(loop);
     }
     Py_XDECREF(result);
     Py_DECREF(path);
@@ -514,7 +513,7 @@ readlink_cb(uv_fs_t* req) {
 
     result = PyObject_CallFunctionObjArgs(callback, loop, path, errorno, NULL);
     if (result == NULL) {
-        PyErr_WriteUnraisable(callback);
+        handle_uncaught_exception(loop);
     }
     Py_XDECREF(result);
     Py_DECREF(path);
@@ -557,7 +556,7 @@ chown_cb(uv_fs_t* req) {
 
     result = PyObject_CallFunctionObjArgs(callback, loop, path, errorno, NULL);
     if (result == NULL) {
-        PyErr_WriteUnraisable(callback);
+        handle_uncaught_exception(loop);
     }
     Py_XDECREF(result);
     Py_DECREF(path);
@@ -608,7 +607,7 @@ open_cb(uv_fs_t* req) {
 
     result = PyObject_CallFunctionObjArgs(callback, loop, path, fd, errorno, NULL);
     if (result == NULL) {
-        PyErr_WriteUnraisable(callback);
+        handle_uncaught_exception(loop);
     }
     Py_XDECREF(result);
     Py_DECREF(fd);
@@ -652,7 +651,7 @@ close_cb(uv_fs_t* req) {
 
     result = PyObject_CallFunctionObjArgs(callback, loop, path, errorno, NULL);
     if (result == NULL) {
-        PyErr_WriteUnraisable(callback);
+        handle_uncaught_exception(loop);
     }
     Py_XDECREF(result);
     Py_DECREF(path);
@@ -708,7 +707,7 @@ read_cb(uv_fs_t* req) {
 
     result = PyObject_CallFunctionObjArgs(req_data->callback, loop, path, read_data, errorno, NULL);
     if (result == NULL) {
-        PyErr_WriteUnraisable(req_data->callback);
+        handle_uncaught_exception(loop);
     }
     Py_XDECREF(result);
     Py_DECREF(read_data);
@@ -764,7 +763,7 @@ write_cb(uv_fs_t* req) {
 
     result = PyObject_CallFunctionObjArgs(req_data->callback, loop, path, bytes_written, errorno, NULL);
     if (result == NULL) {
-        PyErr_WriteUnraisable(req_data->callback);
+        handle_uncaught_exception(loop);
     }
     Py_XDECREF(result);
     Py_DECREF(bytes_written);
@@ -810,7 +809,7 @@ fsync_cb(uv_fs_t* req) {
 
     result = PyObject_CallFunctionObjArgs(callback, loop, path, errorno, NULL);
     if (result == NULL) {
-        PyErr_WriteUnraisable(callback);
+        handle_uncaught_exception(loop);
     }
     Py_XDECREF(result);
     Py_DECREF(path);
@@ -853,7 +852,7 @@ ftruncate_cb(uv_fs_t* req) {
 
     result = PyObject_CallFunctionObjArgs(callback, loop, path, errorno, NULL);
     if (result == NULL) {
-        PyErr_WriteUnraisable(callback);
+        handle_uncaught_exception(loop);
     }
     Py_XDECREF(result);
     Py_DECREF(path);
@@ -894,8 +893,7 @@ process_readdir(uv_fs_t* req, PyObject **path, PyObject **files, PyObject **erro
         Py_INCREF(Py_None);
         *files = PyList_New(0);
         if (!files) {
-            PyErr_NoMemory();
-            PyErr_WriteUnraisable(Py_None);
+            PyErr_Clear();
             *files = Py_None;
             Py_INCREF(Py_None);
         } else {
@@ -924,7 +922,7 @@ readdir_cb(uv_fs_t* req) {
 
     result = PyObject_CallFunctionObjArgs(callback, loop, path, files, errorno, NULL);
     if (result == NULL) {
-        PyErr_WriteUnraisable(callback);
+        handle_uncaught_exception(loop);
     }
     Py_XDECREF(result);
     Py_DECREF(files);
@@ -975,7 +973,7 @@ sendfile_cb(uv_fs_t* req) {
 
     result = PyObject_CallFunctionObjArgs(callback, loop, path, bytes_written, errorno, NULL);
     if (result == NULL) {
-        PyErr_WriteUnraisable(callback);
+        handle_uncaught_exception(loop);
     }
     Py_XDECREF(result);
     Py_DECREF(bytes_written);
@@ -1018,7 +1016,7 @@ utime_cb(uv_fs_t* req) {
 
     result = PyObject_CallFunctionObjArgs(callback, loop, path, errorno, NULL);
     if (result == NULL) {
-        PyErr_WriteUnraisable(callback);
+        handle_uncaught_exception(loop);
     }
     Py_XDECREF(result);
     Py_DECREF(path);
@@ -2456,7 +2454,7 @@ on_fsevent_callback(uv_fs_event_t *handle, const char *filename, int events, int
 
     result = PyObject_CallFunctionObjArgs(self->callback, self, py_filename, py_events, errorno, NULL);
     if (result == NULL) {
-	PyErr_WriteUnraisable(self->callback);
+        handle_uncaught_exception(((Handle *)self)->loop);
     }
     Py_XDECREF(result);
     Py_DECREF(py_events);
@@ -2669,8 +2667,7 @@ on_fspoll_callback(uv_fs_poll_t *handle, int status, const uv_statbuf_t *prev, c
         Py_INCREF(Py_None);
         prev_stat_data = PyStructSequence_New(&StatResultType);
         if (!prev_stat_data) {
-            PyErr_NoMemory();
-            PyErr_WriteUnraisable(Py_None);
+            PyErr_Clear();
             prev_stat_data = Py_None;
             Py_INCREF(Py_None);
         } else {
@@ -2678,8 +2675,7 @@ on_fspoll_callback(uv_fs_poll_t *handle, int status, const uv_statbuf_t *prev, c
         }
         curr_stat_data = PyStructSequence_New(&StatResultType);
         if (!curr_stat_data) {
-            PyErr_NoMemory();
-            PyErr_WriteUnraisable(Py_None);
+            PyErr_Clear();
             curr_stat_data = Py_None;
             Py_INCREF(Py_None);
         } else {
@@ -2689,7 +2685,7 @@ on_fspoll_callback(uv_fs_poll_t *handle, int status, const uv_statbuf_t *prev, c
 
     result = PyObject_CallFunctionObjArgs(self->callback, self, prev_stat_data, curr_stat_data, errorno, NULL);
     if (result == NULL) {
-        PyErr_WriteUnraisable(self->callback);
+        handle_uncaught_exception(((Handle *)self)->loop);
     }
     Py_XDECREF(result);
 
