@@ -2438,11 +2438,7 @@ on_fsevent_callback(uv_fs_event_t *handle, const char *filename, int events, int
     Py_INCREF(self);
 
     if (filename) {
-#ifdef PYUV_PYTHON3
-        py_filename = PyUnicode_FromString(filename);
-#else
-        py_filename = PyString_FromString(filename);
-#endif
+        py_filename = Py_BuildValue("s", filename);
     } else {
         py_filename = Py_None;
         Py_INCREF(Py_None);
