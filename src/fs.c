@@ -3,7 +3,7 @@ typedef struct {
     PyObject *callback;
     union {
         Py_buffer view;
-        char *buf;
+        PyObject *buf;
     } data;
 } fs_rwreq_data_t;
 
@@ -672,6 +672,7 @@ static void
 process_read(uv_fs_t* req, PyObject **path, PyObject **read_data, PyObject **errorno)
 {
     fs_rwreq_data_t *req_data;
+    PyObject *buf;
 
     ASSERT(req);
     ASSERT(req->fs_type == UV_FS_READ);
@@ -692,7 +693,11 @@ process_read(uv_fs_t* req, PyObject **path, PyObject **read_data, PyObject **err
     } else {
         *errorno = Py_None;
         Py_INCREF(Py_None);
-        *read_data = PyBytes_FromStringAndSize(req_data->data.buf, req->result);
+        buf = req_data->data.buf;
+        if (PyBytes_GET_SIZE(buf) != req->result) {
+            _PyBytes_Resize(&buf, req->result);
+        }
+        *read_data = buf;
     }
 }
 
@@ -719,7 +724,6 @@ read_cb(uv_fs_t* req) {
     uv_fs_req_cleanup(req);
     Py_DECREF(loop);
     Py_DECREF(req_data->callback);
-    PyMem_Free(req_data->data.buf);
     PyMem_Free(req_data);
     PyMem_Free(req);
 
@@ -1856,15 +1860,15 @@ static PyObject *
 FS_func_read(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
     int r, fd, length, offset;
-    char *buf = NULL;
     uv_fs_t *fs_req = NULL;
     fs_rwreq_data_t *req_data = NULL;
     Loop *loop;
-    PyObject *callback, *py_path, *py_errorno, *read_data, *ret;
+    PyObject *buf, *callback, *py_path, *py_errorno, *read_data, *ret;
 
     static char *kwlist[] = {"loop", "fd", "length", "offset", "callback", NULL};
 
     UNUSED_ARG(obj);
+    buf = NULL;
     callback = NULL;
 
     if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!iii|O:read", kwlist, &LoopType, &loop, &fd, &length, &offset, &callback)) {
@@ -1893,21 +1897,21 @@ FS_func_read(PyObject *obj, PyObject *args, PyObject *kwargs)
         goto end;
     }
 
-    buf = PyMem_Malloc(length);
+    buf = PyBytes_FromStringAndSize((char *)NULL, length);
     if (!buf) {
         PyErr_NoMemory();
         ret = NULL;
         goto end;
     }
-    memset(buf, 0, length);
 
     req_data->callback = callback;
     req_data->data.buf = buf;
 
     fs_req->data = (void *)req_data;
-    r = uv_fs_read(loop->uv_loop, fs_req, fd, buf, length, offset, (callback != NULL) ? read_cb : NULL);
+    r = uv_fs_read(loop->uv_loop, fs_req, fd, PyBytes_AS_STRING(buf), length, offset, (callback != NULL) ? read_cb : NULL);
     if (r < 0) {
         RAISE_UV_EXCEPTION(loop->uv_loop, PyExc_FSError);
+        Py_DECREF(buf);
         ret = NULL;
         goto end;
     }
@@ -1930,9 +1934,6 @@ end:
     }
     if (req_data) {
         PyMem_Free(req_data);
-    }
-    if (buf) {
-        PyMem_Free(buf);
     }
     return ret;
 }
