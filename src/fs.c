@@ -141,12 +141,15 @@ process_stat(uv_fs_t* req, PyObject **path, PyObject **stat_data, PyObject **err
     }
 
     *stat_data = PyStructSequence_New(&StatResultType);
-    if (!stat_data) {
+    if (!*stat_data) {
         PyErr_Clear();
         Py_DECREF(*path);
         Py_DECREF(*errorno);
-        *path = NULL;
-        *errorno = NULL;
+        *path = Py_None;
+        Py_INCREF(Py_None);
+        *errorno = PyInt_FromLong((long)UV_ENOMEM);
+        *stat_data = Py_None;
+        Py_INCREF(Py_None);
         return;
     }
     stat_to_pyobj(st, stat_data);
@@ -164,16 +167,14 @@ stat_cb(uv_fs_t* req) {
     callback = (PyObject *)req->data;
     loop = (Loop *)req->loop->data;
 
-    if (path && stat_data && errorno) {
-        result = PyObject_CallFunctionObjArgs(callback, loop, path, stat_data, errorno, NULL);
-        if (result == NULL) {
-            handle_uncaught_exception(loop);
-        }
-        Py_XDECREF(result);
-        Py_DECREF(stat_data);
-        Py_DECREF(path);
-        Py_DECREF(errorno);
+    result = PyObject_CallFunctionObjArgs(callback, loop, path, stat_data, errorno, NULL);
+    if (result == NULL) {
+        handle_uncaught_exception(loop);
     }
+    Py_XDECREF(result);
+    Py_DECREF(stat_data);
+    Py_DECREF(path);
+    Py_DECREF(errorno);
 
     Py_DECREF(loop);
     Py_DECREF(callback);
