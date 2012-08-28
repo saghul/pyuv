@@ -42,7 +42,8 @@ def async_exit(async):
     signal_h.close()
     server.close()
 
-def signal_cb(sig, frame):
+def signal_cb(handle, signum):
+    global async
     async.send()
 
 
@@ -58,15 +59,9 @@ server.bind(("0.0.0.0", 1234))
 server.listen(on_connection)
 
 signal_h = pyuv.Signal(loop)
-signal_h.start()
+signal_h.start(signal_cb, signal.SIGINT)
 
-t = threading.Thread(target=loop.run)
-t.start()
-
-signal.signal(signal.SIGINT, signal_cb)
-signal.pause()
-
-t.join()
+loop.run()
 
 print("Stopped!")
 
