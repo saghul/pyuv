@@ -25,9 +25,9 @@
 
         :param callable after_work_callback: Function that will be called in the caller thread after
             the given function has run in the thread pool.
-        
+
             Callback signature: ``after_work_callback(result, exception)``.
-            
+
         Run the given function in a thread from the `ThreadPool`.
 
     .. py:classmethod:: set_parallel_threads(numthreads)
@@ -35,4 +35,8 @@
         :param int numthreads: number of threads.
 
         Set the amount of parallel threads that the pool may have.
+
+        .. note::
+            This function is not part of libuv's official API and may be changed.
+
 
