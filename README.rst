@@ -1,4 +1,3 @@
-
 ===============================
 pyuv: Python interface to libuv
 ===============================
@@ -71,16 +70,16 @@ There are several ways of running the test ruite:
 
 - Running individual tests:
 
- Go inside the tests/ directory and run the test, for example: `python test_tcp.py`
+  Go inside the tests/ directory and run the test, for example: ``python test_tcp.py``
 
 - Run the test with the current Python interpreter:
 
- From the toplevel directory, run: `nosetests -v -w tests/`
+  From the toplevel directory, run: ``nosetests -v -w tests/``
 
 - Use Tox to run the test suite in several virtualenvs with several interpreters
 
- From the toplevel directory, run: `tox -e py26,py27,py32` this will run the test suite
- on Python 2.6, 2.7 and 3.2 (you'll need to have them installed beforehand)
+  From the toplevel directory, run: ``tox -e py26,py27,py32`` this will run the test suite
+  on Python 2.6, 2.7 and 3.2 (you'll need to have them installed beforehand)
 
 
 Author
