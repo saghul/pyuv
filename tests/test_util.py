@@ -1,5 +1,6 @@
 
 import socket
+import sys
 
 from common import platform_skip, unittest2
 import pyuv
@@ -41,6 +42,9 @@ class UtilTest(unittest2.TestCase):
 
     @platform_skip(['darwin'])
     def test_process_title(self):
+        if sys.version_info >= (3, 0):
+            self.skipTest("test disabled on Python 3")
+            return
         title = 'my process'
         pyuv.util.set_process_title(title)
         r = pyuv.util.get_process_title()
