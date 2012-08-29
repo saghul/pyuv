@@ -1,7 +1,5 @@
 
-- Better docstrings
-- Support compiling with Visual Studio
-- Find out why some tests fail on Windows
-    - Multicast
-    - IPC, sharing a TCP handle
+- Better docstrings!
+
+Issue tracker: https://github.com/saghul/pyuv/issues
 
