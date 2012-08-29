@@ -6,6 +6,9 @@ import stat
 from common import unittest2
 import pyuv
 
+# Make stat return integers
+os.stat_float_times(False)
+
 
 BAD_FILE = 'test_file_bad'
 TEST_FILE = 'test_file_1234'
