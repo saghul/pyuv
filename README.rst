@@ -31,6 +31,18 @@ pyuv's features:
 - Arbitrary file descriptor polling
 
 
+Versioning
+==========
+
+pyuv follows the versioning scheme used by Node and libuv, that is, odd numbered releases are
+considered *unstable* and even numbered releases *stable*. This doesn't necessarily mean that an
+odd numbered release is supposed to crash, but the API may change between stable releases.
+
+The so called *unstable* releases will not be released on PyPI, as that would confuse users. PyPI
+will always contain the latest *stable* build. All versions (both stable and unstable) are downloadable
+from `the GitHub tags page <https://github.com/saghul/pyuv/tags>`_.
+
+
 Documentation
 =============
 
