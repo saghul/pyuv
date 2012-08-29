@@ -2836,7 +2836,7 @@ FSPoll_tp_clear(FSPoll *self)
 
 static PyMethodDef
 FSPoll_tp_methods[] = {
-    { "start", (PyCFunction)FSPoll_func_start, METH_VARARGS, "Start the FSPoll handle." },
+    { "start", (PyCFunction)FSPoll_func_start, METH_VARARGS | METH_KEYWORDS, "Start the FSPoll handle." },
     { "stop", (PyCFunction)FSPoll_func_stop, METH_NOARGS, "Stop the FSPoll handle." },
     { NULL }
 };
