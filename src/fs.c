@@ -107,6 +107,7 @@ stat_to_pyobj(uv_statbuf_t *st, PyObject **stat_data) {
 #endif
     PyStructSequence_SET_ITEM(*stat_data, 15, format_time(st->st_birthtime, bnsec));
 #else
+    UNUSED_ARG(bnsec);
     Py_INCREF(Py_None);
     PyStructSequence_SET_ITEM(*stat_data, 15, Py_None);
 #endif
