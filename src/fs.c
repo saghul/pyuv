@@ -2921,6 +2921,10 @@ init_fs(void)
     PyUVModule_AddType(module, "FSEvent", &FSEventType);
     PyUVModule_AddType(module, "FSPoll", &FSPollType);
 
+    /* initialize PyStructSequence types */
+    if (StatResultType.tp_name == 0)
+        PyStructSequence_InitType(&StatResultType, &stat_result_desc);
+
     return module;
 }
 

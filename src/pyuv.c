@@ -140,15 +140,10 @@ init_pyuv(void)
     PyUVModule_AddType(pyuv, "Process", &ProcessType);
     PyUVModule_AddType(pyuv, "ThreadPool", &ThreadPoolType);
 
-    /* PyStructSequence types */
-    if (AddrinfoResultType.tp_name == 0)
-        PyStructSequence_InitType(&AddrinfoResultType, &addrinfo_result_desc);
-    if (StatResultType.tp_name == 0)
-        PyStructSequence_InitType(&StatResultType, &stat_result_desc);
-
     /* UDP constants */
     PyModule_AddIntMacro(pyuv, UV_JOIN_GROUP);
     PyModule_AddIntMacro(pyuv, UV_LEAVE_GROUP);
+
     /* Process constants */
     PyModule_AddIntMacro(pyuv, UV_PROCESS_SETUID);
     PyModule_AddIntMacro(pyuv, UV_PROCESS_SETGID);
@@ -160,6 +155,7 @@ init_pyuv(void)
     PyModule_AddIntMacro(pyuv, UV_WRITABLE_PIPE);
     PyModule_AddIntMacro(pyuv, UV_INHERIT_FD);
     PyModule_AddIntMacro(pyuv, UV_INHERIT_STREAM);
+
     /* Poll constants */
     PyModule_AddIntMacro(pyuv, UV_READABLE);
     PyModule_AddIntMacro(pyuv, UV_WRITABLE);

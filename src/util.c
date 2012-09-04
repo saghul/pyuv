@@ -487,6 +487,8 @@ init_util(void)
     }
 
     /* initialize PyStructSequence types */
+    if (AddrinfoResultType.tp_name == 0)
+        PyStructSequence_InitType(&AddrinfoResultType, &addrinfo_result_desc);
     if (CPUInfoResultType.tp_name == 0)
         PyStructSequence_InitType(&CPUInfoResultType, &cpu_info_result_desc);
     if (CPUInfoTimesResultType.tp_name == 0)
