@@ -94,28 +94,27 @@ Util_func_interface_addresses(PyObject *obj)
 
     err = uv_interface_addresses(&interfaces, &count);
     if (err.code == UV_OK) {
-        result = PyList_New(0);
+        result = PyList_New(count);
         if (!result) {
             uv_free_interface_addresses(interfaces, count);
-            PyErr_NoMemory();
             return NULL;
         }
         for (i = 0; i < count; i++) {
-            item = PyDict_New();
-            if (!item)
-                continue;
-            PyDict_SetItemString(item, "name", PyBytes_FromString(interfaces[i].name));
-            PyDict_SetItemString(item, "is_internal", PyBool_FromLong((long)interfaces[i].is_internal));
+            item = PyStructSequence_New(&InterfaceAddressesResultType);
+            if (!item) {
+                Py_DECREF(result);
+                uv_free_interface_addresses(interfaces, count);
+                return NULL;
+            }
+            PyStructSequence_SET_ITEM(item, 0, Py_BuildValue("s", interfaces[i].name));
+            PyStructSequence_SET_ITEM(item, 1, PyBool_FromLong((long)interfaces[i].is_internal));
             if (interfaces[i].address.address4.sin_family == AF_INET) {
                 uv_ip4_name(&interfaces[i].address.address4, ip, INET_ADDRSTRLEN);
-                PyDict_SetItemString(item, "address", PyBytes_FromString(ip));
             } else if (interfaces[i].address.address4.sin_family == AF_INET6) {
                 uv_ip6_name(&interfaces[i].address.address6, ip, INET6_ADDRSTRLEN);
-                PyDict_SetItemString(item, "address", PyBytes_FromString(ip));
             }
-            if (PyList_Append(result, item))
-                continue;
-            Py_DECREF(item);
+            PyStructSequence_SET_ITEM(item, 2, Py_BuildValue("s", ip));
+            PyList_SET_ITEM(result, i, item);
         }
         uv_free_interface_addresses(interfaces, count);
         return result;
@@ -484,6 +483,10 @@ init_util(void)
     if (module == NULL) {
         return NULL;
     }
+
+    /* initialize PyStructSequence types */
+    if (InterfaceAddressesResultType.tp_name == 0)
+        PyStructSequence_InitType(&InterfaceAddressesResultType, &interface_addresses_result_desc);
 
     return module;
 }
