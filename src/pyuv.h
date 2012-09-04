@@ -343,6 +343,44 @@ static PyStructSequence_Desc interface_addresses_result_desc = {
 };
 
 
+/* used by cpu_info */
+static PyTypeObject CPUInfoResultType;
+
+static PyStructSequence_Field cpu_info_result_fields[] = {
+    {"model", ""},
+    {"speed", ""},
+    {"times", ""},
+    {NULL}
+};
+
+static PyStructSequence_Desc cpu_info_result_desc = {
+    "cpu_info_result",
+    NULL,
+    cpu_info_result_fields,
+    3
+};
+
+
+/* used by cpu_info */
+static PyTypeObject CPUInfoTimesResultType;
+
+static PyStructSequence_Field cpu_info_times_result_fields[] = {
+    {"sys", ""},
+    {"user", ""},
+    {"idle", ""},
+    {"irq", ""},
+    {"nice", ""},
+    {NULL}
+};
+
+static PyStructSequence_Desc cpu_info_times_result_desc = {
+    "cpu_info_times_result",
+    NULL,
+    cpu_info_times_result_fields,
+    5
+};
+
+
 /* Some helper stuff */
 
 

@@ -141,28 +141,30 @@ Util_func_cpu_info(PyObject *obj)
 
     err = uv_cpu_info(&cpus, &count);
     if (err.code == UV_OK) {
-        result = PyList_New(0);
+        result = PyList_New(count);
         if (!result) {
             uv_free_cpu_info(cpus, count);
-            PyErr_NoMemory();
             return NULL;
         }
         for (i = 0; i < count; i++) {
-            item = PyDict_New();
-            times = PyDict_New();
-            if (!item || !times)
-                continue;
-            PyDict_SetItemString(item, "model", PyBytes_FromString(cpus[i].model));
-            PyDict_SetItemString(item, "speed", PyInt_FromLong((long)cpus[i].speed));
-            PyDict_SetItemString(item, "times", times);
-            if (PyList_Append(result, item))
-                continue;
-            Py_DECREF(item);
-            PyDict_SetItemString(times, "sys", PyLong_FromUnsignedLongLong((unsigned PY_LONG_LONG)cpus[i].cpu_times.sys));
-            PyDict_SetItemString(times, "user", PyLong_FromUnsignedLongLong((unsigned PY_LONG_LONG)cpus[i].cpu_times.user));
-            PyDict_SetItemString(times, "idle", PyLong_FromUnsignedLongLong((unsigned PY_LONG_LONG)cpus[i].cpu_times.idle));
-            PyDict_SetItemString(times, "irq", PyLong_FromUnsignedLongLong((unsigned PY_LONG_LONG)cpus[i].cpu_times.irq));
-            PyDict_SetItemString(times, "nice", PyLong_FromUnsignedLongLong((unsigned PY_LONG_LONG)cpus[i].cpu_times.nice));
+            item = PyStructSequence_New(&CPUInfoResultType);
+            times = PyStructSequence_New(&CPUInfoTimesResultType);
+            if (!item || !times) {
+                Py_XDECREF(item);
+                Py_XDECREF(times);
+                Py_DECREF(result);
+                uv_free_cpu_info(cpus, count);
+                return NULL;
+            }
+            PyStructSequence_SET_ITEM(item, 0, Py_BuildValue("s", cpus[i].model));
+            PyStructSequence_SET_ITEM(item, 1, PyInt_FromLong((long)cpus[i].speed));
+            PyStructSequence_SET_ITEM(item, 2, times);
+            PyList_SET_ITEM(result, i, item);
+            PyStructSequence_SET_ITEM(times, 0, PyLong_FromUnsignedLongLong((unsigned PY_LONG_LONG)cpus[i].cpu_times.sys));
+            PyStructSequence_SET_ITEM(times, 1, PyLong_FromUnsignedLongLong((unsigned PY_LONG_LONG)cpus[i].cpu_times.user));
+            PyStructSequence_SET_ITEM(times, 2, PyLong_FromUnsignedLongLong((unsigned PY_LONG_LONG)cpus[i].cpu_times.idle));
+            PyStructSequence_SET_ITEM(times, 3, PyLong_FromUnsignedLongLong((unsigned PY_LONG_LONG)cpus[i].cpu_times.irq));
+            PyStructSequence_SET_ITEM(times, 4, PyLong_FromUnsignedLongLong((unsigned PY_LONG_LONG)cpus[i].cpu_times.nice));
         }
         uv_free_cpu_info(cpus, count);
         return result;
@@ -485,6 +487,10 @@ init_util(void)
     }
 
     /* initialize PyStructSequence types */
+    if (CPUInfoResultType.tp_name == 0)
+        PyStructSequence_InitType(&CPUInfoResultType, &cpu_info_result_desc);
+    if (CPUInfoTimesResultType.tp_name == 0)
+        PyStructSequence_InitType(&CPUInfoTimesResultType, &cpu_info_times_result_desc);
     if (InterfaceAddressesResultType.tp_name == 0)
         PyStructSequence_InitType(&InterfaceAddressesResultType, &interface_addresses_result_desc);
 
