@@ -1,3 +1,23 @@
+Version 0.9.0
+=============
+ - Added a true signal watcher
+ - Added ability to handle uncaught exceptions (Loop.excepthook)
+ - Moved getaddrinfo to util module
+ - Removed builtin c-ares resolver
+ - Removed Poll.slow property
+ - Removed Loop.counters
+ - Allow None to be passed as hostname in getaddrinfo
+ - Encode hostname with idna if appropriate in getaddrinfo
+ - Fixed handling error case on fs.stat functions
+ - Various performance optimizations
+ - Raised libuv revision to 3bbe8f9 (master)
+
+Version 0.8.1
+=============
+ - Fixed checking port number boundaries
+ - Fixed small memory leak
+ - Fixed unicode handling
+
 Version 0.8.0
 =============
  - Added FSPoll handle
