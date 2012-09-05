@@ -52,9 +52,13 @@
 
         Callback signature: ``callback(handle)``.
 
-    .. py:attribute:: active_handles
+    .. py:method:: excepthook(type, value, traceback)
 
-        *Read only*
+        This function prints out a given traceback and exception to sys.stderr.
 
-        Number of currently active handles.
+        When an exception is raised and uncaught, the interpreter calls loop.excepthook with three
+        arguments, the exception class, exception instance, and a traceback object. The handling of
+        such top-level exceptions can be customized by assigning another three-argument function to
+        loop.excepthook.
+
 

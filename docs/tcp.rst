@@ -137,7 +137,6 @@
 
         :param boolean enable: Enable / disable simultaneous accepts.
 
-        This setting applies to Windows only.
         Enable / disable simultaneous asynchronous accept requests that are queued
         by the operating system when listening for new tcp connections. This setting
         is used to tune a tcp server for the desired performance. Having simultaneous
