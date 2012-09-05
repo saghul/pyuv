@@ -139,14 +139,6 @@ Loop_func_default_loop(PyObject *cls)
 
 
 static PyObject *
-Loop_active_handles_get(Loop *self, void *closure)
-{
-    UNUSED_ARG(closure);
-    return PyInt_FromLong((long)self->uv_loop->active_handles);
-}
-
-
-static PyObject *
 Loop_default_get(Loop *self, void *closure)
 {
     UNUSED_ARG(closure);
@@ -280,7 +272,6 @@ Loop_tp_methods[] = {
 
 static PyGetSetDef Loop_tp_getsets[] = {
     {"__dict__", (getter)Loop_dict_get, (setter)Loop_dict_set, NULL},
-    {"active_handles", (getter)Loop_active_handles_get, NULL, "Number of active handles in this loop", NULL},
     {"default", (getter)Loop_default_get, NULL, "Is this the default loop?", NULL},
     {"excepthook", (getter)Loop_excepthook_get, (setter)Loop_excepthook_set, "Loop uncaught exception handler", NULL},
     {NULL}
