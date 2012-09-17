@@ -26,6 +26,12 @@
         both when acting as a client and as a server. It sets the local IP address and port
         from which the data will be sent.
 
+    .. py:method:: open(fd)
+
+        :param int fd: File descriptor to be opened.
+
+        Open the given file descriptor (or SOCKET in Windows) as a ``UDP`` handle.
+
     .. py:method:: close([callback])
 
         :param callable callback: Callback to be called after the handle has been closed.

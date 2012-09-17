@@ -57,6 +57,12 @@
 
         Callback signature: ``callback(tcp_handle, error)``.
 
+    .. py:method:: open(fd)
+
+        :param int fd: File descriptor to be opened.
+
+        Open the given file descriptor (or SOCKET in Windows) as a ``TCP`` handle.
+
     .. py:method:: getsockname
 
         Return tuple containing IP address and port of the local socket.
