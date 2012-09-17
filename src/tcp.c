@@ -382,6 +382,23 @@ TCP_func_simultaneous_accepts(TCP *self, PyObject *args)
 }
 
 
+static PyObject *
+TCP_func_open(TCP *self, PyObject *args)
+{
+    long fd;
+
+    RAISE_IF_HANDLE_CLOSED(self, PyExc_HandleClosedError, NULL);
+
+    if (!PyArg_ParseTuple(args, "l:open", &fd)) {
+        return NULL;
+    }
+
+    uv_tcp_open((uv_tcp_t *)UV_HANDLE(self), (uv_os_sock_t)fd);
+
+    Py_RETURN_NONE;
+}
+
+
 static int
 TCP_tp_init(TCP *self, PyObject *args, PyObject *kwargs)
 {
@@ -465,6 +482,7 @@ TCP_tp_methods[] = {
     { "getpeername", (PyCFunction)TCP_func_getpeername, METH_NOARGS, "Get remote socket information." },
     { "nodelay", (PyCFunction)TCP_func_nodelay, METH_VARARGS, "Enable/disable Nagle's algorithm." },
     { "keepalive", (PyCFunction)TCP_func_keepalive, METH_VARARGS, "Enable/disable TCP keep-alive." },
+    { "open", (PyCFunction)TCP_func_open, METH_VARARGS, "Open the specified file descriptor and manage it as a TCP handle." },
     { "simultaneous_accepts", (PyCFunction)TCP_func_simultaneous_accepts, METH_VARARGS, "Enable/disable simultaneous asynchronous accept requests that are queued by the operating system when listening for new tcp connections." },
     { NULL }
 };

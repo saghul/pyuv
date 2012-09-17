@@ -1,4 +1,5 @@
 
+import socket
 import sys
 
 from common import unittest2
@@ -32,6 +33,14 @@ class TCPErrorTest(unittest2.TestCase):
         self.assertFalse(client.readable)
         self.assertFalse(client.writable)
         client.close()
+        loop.run()
+
+    def test_open(self):
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        loop = pyuv.Loop.default_loop()
+        client = pyuv.TCP(loop)
+        client.open(sock.fileno())
+        client.connect(("127.0.0.1", TEST_PORT), self.on_client_connect_error)
         loop.run()
 
 

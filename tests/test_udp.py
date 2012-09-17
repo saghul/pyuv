@@ -2,6 +2,7 @@
 from common import unittest2, platform_skip
 import common
 import pyuv
+import socket
 
 
 TEST_PORT = 12345
@@ -281,6 +282,19 @@ class UDPTestBigDatagram(unittest2.TestCase):
         self.handle.send(("127.0.0.1", TEST_PORT), data, self.send_cb)
         self.loop.run()
         self.assertEqual(self.errorno, pyuv.errno.UV_EMSGSIZE)
+
+
+class UDPTestOpen(unittest2.TestCase):
+
+    def test_udp_open(self):
+        sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        loop = pyuv.Loop.default_loop()
+        handle = pyuv.UDP(loop)
+        try:
+            handle.bind(("1.2.3.4", TEST_PORT))
+        except pyuv.error.UDPError as e:
+            self.assertEqual(e.args[0], pyuv.errno.UV_EADDRNOTAVAIL)
+        loop.run()
 
 
 if __name__ == '__main__':
