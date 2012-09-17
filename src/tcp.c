@@ -354,15 +354,6 @@ TCP_func_keepalive(TCP *self, PyObject *args)
 static PyObject *
 TCP_func_simultaneous_accepts(TCP *self, PyObject *args)
 {
-    /*
-    * This setting applies to Windows only.
-    * Enable/disable simultaneous asynchronous accept requests that are
-    * queued by the operating system when listening for new tcp connections.
-    * This setting is used to tune a tcp server for the desired performance.
-    * Having simultaneous accepts can significantly improve the rate of
-    * accepting connections (which is why it is enabled by default).
-    */
-
     int r;
     PyObject *enable;
 
