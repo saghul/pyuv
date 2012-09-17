@@ -290,6 +290,7 @@ class UDPTestOpen(unittest2.TestCase):
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         loop = pyuv.Loop.default_loop()
         handle = pyuv.UDP(loop)
+        handle.open(sock.fileno())
         try:
             handle.bind(("1.2.3.4", TEST_PORT))
         except pyuv.error.UDPError as e:
