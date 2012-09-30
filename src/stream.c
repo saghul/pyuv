@@ -12,11 +12,10 @@ typedef struct {
 static uv_buf_t
 on_stream_alloc(uv_stream_t* handle, size_t suggested_size)
 {
-    PyGILState_STATE gstate = PyGILState_Ensure();
-    uv_buf_t buf = uv_buf_init(PyMem_Malloc(suggested_size), suggested_size);
+    static char slab[65536];
+    ASSERT(suggested_size <= sizeof(slab));
     UNUSED_ARG(handle);
-    PyGILState_Release(gstate);
-    return buf;
+    return uv_buf_init(slab, sizeof(slab));
 }
 
 
@@ -91,11 +90,6 @@ on_stream_read(uv_stream_t* handle, int nread, uv_buf_t buf)
     Py_XDECREF(result);
     Py_DECREF(data);
     Py_DECREF(py_errorno);
-
-    /* In case of error libuv may not call alloc_cb */
-    if (buf.base != NULL) {
-        PyMem_Free(buf.base);
-    }
 
     Py_DECREF(self);
     PyGILState_Release(gstate);
