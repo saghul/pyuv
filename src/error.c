@@ -31,6 +31,7 @@ init_error(void)
     PyExc_IdleError = PyErr_NewException("pyuv.error.IdleError", PyExc_HandleError, NULL);
     PyExc_CheckError = PyErr_NewException("pyuv.error.CheckError", PyExc_HandleError, NULL);
     PyExc_SignalError = PyErr_NewException("pyuv.error.SignalError", PyExc_HandleError, NULL);
+    PyExc_SignalCheckerError = PyErr_NewException("pyuv.error.SignalCheckerError", PyExc_HandleError, NULL);
     PyExc_StreamError = PyErr_NewException("pyuv.error.StreamError", PyExc_HandleError, NULL);
     PyExc_TCPError = PyErr_NewException("pyuv.error.TCPError", PyExc_StreamError, NULL);
     PyExc_PipeError = PyErr_NewException("pyuv.error.PipeError", PyExc_StreamError, NULL);
@@ -51,6 +52,7 @@ init_error(void)
     PyUVModule_AddType(module, "IdleError", (PyTypeObject *)PyExc_IdleError);
     PyUVModule_AddType(module, "CheckError", (PyTypeObject *)PyExc_CheckError);
     PyUVModule_AddType(module, "SignalError", (PyTypeObject *)PyExc_SignalError);
+    PyUVModule_AddType(module, "SignalCheckerError", (PyTypeObject *)PyExc_SignalCheckerError);
     PyUVModule_AddType(module, "StreamError", (PyTypeObject *)PyExc_StreamError);
     PyUVModule_AddType(module, "TCPError", (PyTypeObject *)PyExc_TCPError);
     PyUVModule_AddType(module, "PipeError", (PyTypeObject *)PyExc_PipeError);
