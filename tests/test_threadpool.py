@@ -72,29 +72,6 @@ class ThreadPoolMultiLoopTest(unittest2.TestCase):
         self.assertEqual(self.pool_cb_called, 3)
 
 
-class ThreadPoolThreadCount(unittest2.TestCase):
-
-    def setUp(self):
-        self.loop = pyuv.Loop.default_loop()
-        self.pool = pyuv.ThreadPool(self.loop)
-
-    def run_in_pool(self):
-        time.sleep(0.1)
-
-    def test_threadpool_thread_count(self):
-        self.pool.set_parallel_threads(10)
-        self.pool.queue_work(self.run_in_pool)
-        self.pool.queue_work(self.run_in_pool)
-        self.pool.queue_work(self.run_in_pool)
-        self.pool.queue_work(self.run_in_pool)
-        self.pool.queue_work(self.run_in_pool)
-        self.pool.queue_work(self.run_in_pool)
-        self.pool.queue_work(self.run_in_pool)
-        self.pool.queue_work(self.run_in_pool)
-        self.pool.queue_work(self.run_in_pool)
-        self.loop.run()
-
-
 if __name__ == '__main__':
     unittest2.main(verbosity=2)
 

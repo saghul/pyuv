@@ -157,31 +157,6 @@ error:
 }
 
 
-static PyObject *
-ThreadPool_func_set_parallel_threads(PyObject *cls, PyObject *args)
-{
-    int nthreads;
-
-    UNUSED_ARG(cls);
-
-    if (!PyArg_ParseTuple(args, "i:set_parallel_threads", &nthreads)) {
-        return NULL;
-    }
-
-    if (nthreads <= 0) {
-        PyErr_SetString(PyExc_ValueError, "value must be higher than 0.");
-        return NULL;
-    }
-
-#ifndef PYUV_WINDOWS
-    eio_set_min_parallel(nthreads);
-    eio_set_max_parallel(nthreads);
-#endif
-
-    Py_RETURN_NONE;
-}
-
-
 static int
 ThreadPool_tp_init(ThreadPool *self, PyObject *args, PyObject *kwargs)
 {
@@ -239,7 +214,6 @@ ThreadPool_tp_dealloc(ThreadPool *self)
 static PyMethodDef
 ThreadPool_tp_methods[] = {
     { "queue_work", (PyCFunction)ThreadPool_func_queue_work, METH_VARARGS, "Queue the given function to be run in the thread pool." },
-    { "set_parallel_threads", (PyCFunction)ThreadPool_func_set_parallel_threads, METH_CLASS|METH_VARARGS, "Set the maximum number of allowed threads in the pool." },
     { NULL }
 };
 

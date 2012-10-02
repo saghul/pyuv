@@ -30,13 +30,4 @@
 
         Run the given function in a thread from the `ThreadPool`.
 
-    .. py:classmethod:: set_parallel_threads(numthreads)
-
-        :param int numthreads: number of threads.
-
-        Set the amount of parallel threads that the pool may have.
-
-        .. note::
-            This function is not part of libuv's official API and may be changed.
-
 
