@@ -37,7 +37,7 @@ def exec_process(cmdline, silent=True, input=None, **kwargs):
             sys.stdout.write(stdout)
             sys.stderr.write(stderr)
     except OSError as e:
-        if e.errno == 2:
+        if e.errno == errno.ENOENT:
             raise DistutilsError('"%s" is not present on this system' % cmdline[0])
         else:
             raise
