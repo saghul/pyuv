@@ -115,7 +115,6 @@ init_pyuv(void)
     IdleType.tp_base = &HandleType;
     CheckType.tp_base = &HandleType;
     SignalType.tp_base = &HandleType;
-    SignalCheckerType.tp_base = &HandleType;
     UDPType.tp_base = &HandleType;
     PollType.tp_base = &HandleType;
     ProcessType.tp_base = &HandleType;
@@ -132,7 +131,6 @@ init_pyuv(void)
     PyUVModule_AddType(pyuv, "Idle", &IdleType);
     PyUVModule_AddType(pyuv, "Check", &CheckType);
     PyUVModule_AddType(pyuv, "Signal", &SignalType);
-    PyUVModule_AddType(pyuv, "SignalChecker", &SignalCheckerType);
     PyUVModule_AddType(pyuv, "TCP", &TCPType);
     PyUVModule_AddType(pyuv, "Pipe", &PipeType);
     PyUVModule_AddType(pyuv, "TTY", &TTYType);
@@ -141,6 +139,7 @@ init_pyuv(void)
     PyUVModule_AddType(pyuv, "StdIO", &StdIOType);
     PyUVModule_AddType(pyuv, "Process", &ProcessType);
     PyUVModule_AddType(pyuv, "ThreadPool", &ThreadPoolType);
+    PyUVModule_AddType(pyuv, "SignalChecker", &SignalCheckerType);
 
     /* UDP constants */
     PyModule_AddIntMacro(pyuv, UV_JOIN_GROUP);

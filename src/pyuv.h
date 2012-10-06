@@ -161,7 +161,10 @@ static PyTypeObject SignalType;
 
 /* SignalChecker */
 typedef struct {
-    Handle handle;
+    PyObject_HEAD
+    Loop *loop;
+    uv_prepare_t *prepare_handle;
+    uv_check_t *check_handle;
 } SignalChecker;
 
 static PyTypeObject SignalCheckerType;
