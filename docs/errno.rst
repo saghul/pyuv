@@ -11,6 +11,9 @@
 
 This module contains the defined error constants from libuv and c-ares.
 
+**IMPORTANT:** The errno codes in pyuv don't necessarily match those in the
+Python `errno` module.
+
 .. py:attribute:: pyuv.errno.errorcode
 
     Mapping (code, string) with libuv error codes.

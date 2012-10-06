@@ -9,12 +9,15 @@
 ======================================
 
 
-.. py:class:: Pipe(loop)
+.. py:class:: Pipe(loop, ipc)
 
     :type loop: :py:class:`Loop`
     :param loop: loop object where this handle runs (accessible through :py:attr:`Pipe.loop`).
 
-    The ``Pipe`` handle provides asynchronous named pipe functionallity both as a client and server.
+    :param boolean ipc: Indicate if this ``Pipe`` will be used for IPC connection.
+
+    The ``Pipe`` handle provides asynchronous named pipe functionallity both as a client and server,
+    supporting cross-process communication and handle sharing.
 
     .. py:method:: bind(name)
 
@@ -35,6 +38,12 @@
         Start listening for new connections.
 
         Callback signature: ``callback(pipe_handle, error)``.
+
+    .. py:method:: open(fd)
+
+        :param int fd: File descriptor to be opened.
+
+        Open the given file descriptor (or HANDLE in Windows) as a ``Pipe``.
 
     .. py:method:: accept(client)
 
