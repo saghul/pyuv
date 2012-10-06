@@ -4,6 +4,7 @@ python:
   - "2.7"
   - "3.1"
   - "3.2"
+  - "3.3"
 install:
   - if [[ $TRAVIS_PYTHON_VERSION == '2.6' ]]; then pip install --use-mirrors unittest2; fi
   - python setup.py install
