@@ -321,10 +321,6 @@ SignalChecker_func_close(SignalChecker *self, PyObject *args)
 {
     RAISE_IF_SIGNAL_CHECKER_CLOSED(self);
 
-    Py_DECREF(self->loop);
-    self->loop = (Loop *)Py_None;
-    Py_INCREF(Py_None);
-
     uv_close((uv_handle_t *)self->prepare_handle, on_handle_dealloc_close);
     uv_close((uv_handle_t *)self->check_handle, on_handle_dealloc_close);
 
