@@ -13,7 +13,7 @@ on_handle_close(uv_handle_t *handle)
     if (self->on_close_cb) {
         result = PyObject_CallFunctionObjArgs(self->on_close_cb, self, NULL);
         if (result == NULL) {
-            handle_uncaught_exception(self->loop);
+            print_uncaught_exception();
         }
         Py_XDECREF(result);
     }
@@ -79,6 +79,10 @@ Handle_func_close(Handle *self, PyObject *args)
 
     Py_XINCREF(callback);
     self->on_close_cb = callback;
+
+    Py_DECREF(self->loop);
+    self->loop = (Loop *)Py_None;
+    Py_INCREF(Py_None);
 
     /* Increase refcount so that object is not removed before the callback is called */
     Py_INCREF(self);
