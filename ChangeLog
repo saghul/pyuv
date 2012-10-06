@@ -1,3 +1,8 @@
+Version 0.8.2
+=============
+ - Raised libuv revision to 39ca621 (v0.8 branch)
+ - Updated documentation
+
 Version 0.8.1
 =============
  - Fixed checking port number boundaries
