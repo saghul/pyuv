@@ -14,7 +14,8 @@
     :type loop: :py:class:`Loop`
     :param loop: loop object where this handle runs (accessible through :py:attr:`SignalChecker.loop`).
 
-    The ``SignalChecker`` handle is implemented with a :py:class:`Prepare` handle.
+    The ``SignalChecker`` class is a helper object to allow signals registered with the `signal` module
+    to be caught. It's not a real handle, and it is implemented with a :py:class:`Prepare` and a `Check` handle.
     Before the event loop blocks for I/O it calls `PyErr_CheckSignals` so that signals
     registered with the standard library `signal` module are fired.
 
@@ -24,38 +25,32 @@
 
     .. py:method:: start()
 
-        Start the ``SignalChecker`` handle.
+        Start the ``SignalChecker``.
 
     .. py:method:: stop
 
-        Stop the ``SignalChecker`` handle.
+        Stop the ``SignalChecker``.
 
-    .. py:method:: close([callback])
+    .. py:method:: close()
 
-        :param callable callback: Function that will be called after the ``SignalChecker``
-            handle is closed.
-
-        Close the ``SignalChecker`` handle. After a handle has been closed no other
-        operations can be performed on it.
-
-        Callback signature: ``callback(signalchecker_handle)``.
+        Close the ``SignalChecker`` handles.
 
     .. py:attribute:: loop
 
         *Read only*
 
-        :py:class:`Loop` object where this handle runs.
+        :py:class:`Loop` object where the handles run.
 
     .. py:attribute:: active
 
         *Read only*
 
-        Indicates if this handle is active.
+        Indicates if the handles are active.
 
     .. py:attribute:: closed
 
         *Read only*
 
-        Indicates if this handle is closing or already closed.
+        Indicates if the handles are closing or already closed.
 
 
