@@ -4,7 +4,7 @@ from distutils.core import setup, Extension
 from setup_libuv import libuv_build_ext, libuv_sdist
 
 
-__version__ = "0.8.1"
+__version__ = "0.8.2"
 
 setup(name             = "pyuv",
       version          = __version__,
