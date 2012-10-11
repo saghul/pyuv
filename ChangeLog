@@ -1,3 +1,9 @@
+Version 0.8.3
+=============
+ - Raised libuv revision to 9a6f496 (v0.8 branch),
+   fixes compilation on Windows
+ - Fixed argument name in FSPoll.start
+
 Version 0.8.2
 =============
  - Raised libuv revision to 39ca621 (v0.8 branch)
