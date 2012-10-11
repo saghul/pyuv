@@ -50,7 +50,7 @@ class libuv_build_ext(build_ext):
     libuv_dir      = os.path.join('deps', 'libuv')
     libuv_repo     = 'https://github.com/joyent/libuv.git'
     libuv_branch   = 'master'
-    libuv_revision = '7833df1'
+    libuv_revision = '47b2cd3'
     libuv_patches  = []
 
     user_options = build_ext.user_options
@@ -96,16 +96,16 @@ class libuv_build_ext(build_ext):
             exec_process(['git', 'clone', '-b', self.libuv_branch, self.libuv_repo, self.libuv_dir])
             exec_process(['git', 'checkout', self.libuv_revision], cwd=self.libuv_dir)
         def patch_libuv():
-            log.info('Patching libuv...')
-            for patch_file in self.libuv_patches:
-                exec_process(['patch', '--forward', '-d', self.libuv_dir, '-p0', '-i', os.path.abspath(patch_file)])
+            if self.libuv_patches:
+                log.info('Patching libuv...')
+                for patch_file in self.libuv_patches:
+                    exec_process(['patch', '--forward', '-d', self.libuv_dir, '-p0', '-i', os.path.abspath(patch_file)])
         def build_libuv():
             cflags = '-fPIC'
             env = os.environ.copy()
             env['CFLAGS'] = ' '.join(x for x in (cflags, env.get('CFLAGS', None)) if x)
             log.info('Building libuv...')
-            exec_process(['make', 'uv.a'], cwd=self.libuv_dir, env=env)
-            shutil.move(os.path.join(self.libuv_dir, 'uv.a'), os.path.join(self.libuv_dir, 'libuv.a'))
+            exec_process(['make', 'libuv.a'], cwd=self.libuv_dir, env=env)
         if self.libuv_force_fetch:
             rmtree('deps')
         if not os.path.exists(self.libuv_dir):
@@ -136,8 +136,9 @@ class libuv_sdist(sdist):
         log.info('Downloading libuv...')
         exec_process(['git', 'clone', '-b', self.libuv_branch, self.libuv_repo, self.libuv_dir])
         exec_process(['git', 'checkout', self.libuv_revision], cwd=self.libuv_dir)
-        log.info('Patching libuv...')
-        for patch_file in self.libuv_patches:
-            exec_process(['patch', '--forward', '-d', self.libuv_dir, '-p0', '-i', os.path.abspath(patch_file)])
+        if self.libuv_patches:
+            log.info('Patching libuv...')
+            for patch_file in self.libuv_patches:
+                exec_process(['patch', '--forward', '-d', self.libuv_dir, '-p0', '-i', os.path.abspath(patch_file)])
         rmtree(os.path.join(self.libuv_dir, '.git'))
 
