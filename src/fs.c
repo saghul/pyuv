@@ -2706,7 +2706,7 @@ FSPoll_func_start(FSPoll *self, PyObject *args, PyObject *kwargs)
     double interval;
     PyObject *tmp, *callback;
 
-    static char *kwlist[] = {"path", "callback", "flags", NULL};
+    static char *kwlist[] = {"path", "callback", "interval", NULL};
 
     tmp = NULL;
 
