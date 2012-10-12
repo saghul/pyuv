@@ -84,11 +84,6 @@ TTY_tp_init(TTY *self, PyObject *args, PyObject *kwargs)
         return -1;
     }
 
-    if (fd != 0 && fd != 1 && fd != 2) {
-        PyErr_SetString(PyExc_TTYError, "Incorrect file descriptor specified");
-        return -1;
-    }
-
     tmp = (PyObject *)((Handle *)self)->loop;
     Py_INCREF(loop);
     ((Handle *)self)->loop = loop;
