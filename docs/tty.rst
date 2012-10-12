@@ -13,6 +13,7 @@
 
     :type loop: :py:class:`Loop`
     :param loop: loop object where this handle runs (accessible through :py:attr:`TTY.loop`).
+    :param int fd: File descriptor to be opened as a TTY.
 
     The ``TTY`` handle provides asynchronous stdin / stdout functionallity.
 
