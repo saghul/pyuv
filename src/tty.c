@@ -71,6 +71,7 @@ TTY_tp_init(TTY *self, PyObject *args, PyObject *kwargs)
     int fd, r;
     uv_tty_t *uv_tty;
     Loop *loop;
+    PyObject *readable;
     PyObject *tmp = NULL;
 
     UNUSED_ARG(kwargs);
@@ -80,7 +81,7 @@ TTY_tp_init(TTY *self, PyObject *args, PyObject *kwargs)
         return -1;
     }
 
-    if (!PyArg_ParseTuple(args, "O!i:__init__", &LoopType, &loop, &fd)) {
+    if (!PyArg_ParseTuple(args, "O!iO!:__init__", &LoopType, &loop, &fd, &PyBool_Type, &readable)) {
         return -1;
     }
 
@@ -96,7 +97,7 @@ TTY_tp_init(TTY *self, PyObject *args, PyObject *kwargs)
         return -1;
     }
 
-    r = uv_tty_init(UV_HANDLE_LOOP(self), uv_tty, fd, (fd == 0)?1:0);
+    r = uv_tty_init(UV_HANDLE_LOOP(self), uv_tty, fd, (readable == Py_True) ? 1 : 0);
     if (r != 0) {
         RAISE_UV_EXCEPTION(UV_HANDLE_LOOP(self), PyExc_TTYError);
         Py_DECREF(loop);

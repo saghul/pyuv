@@ -10,7 +10,7 @@ class TYTest(unittest2.TestCase):
 
     def test_tty1(self):
         loop = pyuv.Loop.default_loop()
-        tty = pyuv.TTY(loop, sys.stdin.fileno())
+        tty = pyuv.TTY(loop, sys.stdin.fileno(), True)
         w, h = tty.get_winsize()
         self.assertNotEqual((w, h), (None, None))
         self.assertTrue(pyuv.TTY.isatty(sys.stdin.fileno()))
