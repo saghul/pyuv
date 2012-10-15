@@ -45,7 +45,7 @@ Errno_methods[] = {
 
 
 #ifdef PYUV_PYTHON3
-static PyModuleDef pyuv_errorno_module = {
+static PyModuleDef pyuv_errno_module = {
     PyModuleDef_HEAD_INIT,
     "pyuv.errno",           /*m_name*/
     NULL,                   /*m_doc*/
@@ -61,7 +61,7 @@ init_errno(void)
     PyObject *module_dict;
     PyObject *errorcode_dict;
 #ifdef PYUV_PYTHON3
-    module = PyModule_Create(&pyuv_errorno_module);
+    module = PyModule_Create(&pyuv_errno_module);
 #else
     module = Py_InitModule("pyuv.errno", Errno_methods);
 #endif

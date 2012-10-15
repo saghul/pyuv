@@ -61,8 +61,8 @@ init_pyuv(void)
     PyObject *pyuv;
     PyObject *errno_module;
     PyObject *error_module;
-    PyObject *fs;
-    PyObject *util;
+    PyObject *fs_module;
+    PyObject *util_module;
 
     /* Initialize GIL */
     PyEval_InitThreads();
@@ -86,6 +86,10 @@ init_pyuv(void)
         goto fail;
     }
     PyUVModule_AddObject(pyuv, "errno", errno_module);
+#ifdef PYUV_PYTHON3
+    PyDict_SetItemString(PyImport_GetModuleDict(), pyuv_errno_module.m_name, errno_module);
+    Py_DECREF(errno_module);
+#endif
 
     /* Error module */
     error_module = init_error();
@@ -93,20 +97,32 @@ init_pyuv(void)
         goto fail;
     }
     PyUVModule_AddObject(pyuv, "error", error_module);
+#ifdef PYUV_PYTHON3
+    PyDict_SetItemString(PyImport_GetModuleDict(), pyuv_error_module.m_name, error_module);
+    Py_DECREF(error_module);
+#endif
 
     /* FS module */
-    fs = init_fs();
-    if (fs == NULL) {
+    fs_module = init_fs();
+    if (fs_module == NULL) {
         goto fail;
     }
-    PyUVModule_AddObject(pyuv, "fs", fs);
+    PyUVModule_AddObject(pyuv, "fs", fs_module);
+#ifdef PYUV_PYTHON3
+    PyDict_SetItemString(PyImport_GetModuleDict(), pyuv_fs_module.m_name, fs_module);
+    Py_DECREF(fs_module);
+#endif
 
     /* Util module */
-    util = init_util();
-    if (util == NULL) {
+    util_module = init_util();
+    if (util_module == NULL) {
         goto fail;
     }
-    PyUVModule_AddObject(pyuv, "util", util);
+    PyUVModule_AddObject(pyuv, "util", util_module);
+#ifdef PYUV_PYTHON3
+    PyDict_SetItemString(PyImport_GetModuleDict(), pyuv_util_module.m_name, util_module);
+    Py_DECREF(util_module);
+#endif
 
     /* Types */
     AsyncType.tp_base = &HandleType;
