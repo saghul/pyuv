@@ -1,3 +1,18 @@
+Version 0.9.1
+=============
+ - Added TCP.open and UDP.open methods
+ - Added a SignalChecker helper
+ - Added 'readable' attribute to TTY __init__
+ - Enabled Signal handles across multiple loops
+ - Simplified buffer allocation for streams and UDP
+ - Removed custom set_parallel_threads function
+ - Remove reference to loop object on handle close
+ - Allow any file descriptor to be opened as a TTY
+ - Fixed adding arbitrary python files to sdist
+ - Fixed importing from submodules in Python 3
+ - Raised libuv revision to 1e32cb0 (master)
+ - Updated documentation
+
 Version 0.9.0
 =============
  - Added a true signal watcher
