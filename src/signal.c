@@ -94,11 +94,6 @@ Signal_tp_init(Signal *self, PyObject *args, PyObject *kwargs)
         return -1;
     }
 
-    if (!loop->is_default) {
-        PyErr_SetString(PyExc_RuntimeError, "Signal handlers are only supported in the default loop for now");
-        return -1;
-    }
-
     tmp = (PyObject *)((Handle *)self)->loop;
     Py_INCREF(loop);
     ((Handle *)self)->loop = loop;
