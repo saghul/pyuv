@@ -52,8 +52,8 @@ typedef int Bool;
 #define ASSERT(x)                                                           \
     do {                                                                    \
         if (!(x)) {                                                         \
-            fprintf (stderr, "%s:%u: %s: Assertion `" #x "' failed.\n",     \
-                     __FILE__, __LINE__, __func__);                         \
+            fprintf (stderr, "%s:%u: Assertion `" #x "' failed.\n",         \
+                     __FILE__, __LINE__);                                   \
             abort();                                                        \
         }                                                                   \
     } while(0)                                                              \
