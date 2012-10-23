@@ -50,7 +50,7 @@ class libuv_build_ext(build_ext):
     libuv_dir      = os.path.join('deps', 'libuv')
     libuv_repo     = 'https://github.com/joyent/libuv.git'
     libuv_branch   = 'master'
-    libuv_revision = '1e32cb0'
+    libuv_revision = '61ecb34'
     libuv_patches  = []
 
     user_options = build_ext.user_options
@@ -69,27 +69,37 @@ class libuv_build_ext(build_ext):
     def build_extensions(self):
         if self.compiler.compiler_type == 'mingw32':
             # Dirty hack to avoid linking with more than one C runtime when using MinGW
+            # Note that this hack forces the compilation to use the old MSVCT
             self.compiler.dll_libraries = [lib for lib in self.compiler.dll_libraries if not lib.startswith('msvcr')]
         self.force = self.libuv_force_fetch or self.libuv_clean_compile
+        if self.compiler.compiler_type == 'msvc':
+            self.libuv_lib = os.path.join(self.libuv_dir, 'Release', 'lib', 'libuv.lib')
+        else:
+            self.libuv_lib = os.path.join(self.libuv_dir, 'libuv.a')
         self.get_libuv()
-        build_ext.build_extensions(self)
-
-    def finalize_options(self):
-        build_ext.finalize_options(self)
-        self.include_dirs.append(os.path.join(self.libuv_dir, 'include'))
-        self.library_dirs.append(self.libuv_dir)
-        self.libraries.append('uv')
+        # Set compiler options
+        if self.compiler.compiler_type == 'mingw32':
+            self.compiler.add_library_dir(self.libuv_dir)
+            self.compiler.add_library('uv')
+        else:
+            self.extensions[0].extra_objects = [self.libuv_lib]
+        self.compiler.add_include_dir(os.path.join(self.libuv_dir, 'include'))
         if sys.platform.startswith('linux'):
-            self.libraries.append('rt')
+            self.compiler.add_library('rt')
         elif sys.platform == 'darwin':
             self.extensions[0].extra_link_args = ['-framework', 'CoreServices']
         elif sys.platform == 'win32':
-            self.libraries.append('iphlpapi')
-            self.libraries.append('psapi')
-            self.libraries.append('ws2_32')
+            if self.compiler.compiler_type == 'msvc':
+                self.extensions[0].extra_link_args = ['/NODEFAULTLIB:libcmt', '/LTCG']
+                self.compiler.add_library('advapi32')
+            self.compiler.add_library('iphlpapi')
+            self.compiler.add_library('psapi')
+            self.compiler.add_library('ws2_32')
+        build_ext.build_extensions(self)
 
     def get_libuv(self):
         #self.debug_mode =  bool(self.debug) or hasattr(sys, 'gettotalrefcount')
+        win32_msvc = self.compiler.compiler_type=='msvc'
         def download_libuv():
             log.info('Downloading libuv...')
             makedirs(self.libuv_dir)
@@ -105,7 +115,10 @@ class libuv_build_ext(build_ext):
             env = os.environ.copy()
             env['CFLAGS'] = ' '.join(x for x in (cflags, env.get('CFLAGS', None)) if x)
             log.info('Building libuv...')
-            exec_process(['make', 'libuv.a'], cwd=self.libuv_dir, env=env)
+            if win32_msvc:
+                exec_process('cmd.exe /C vcbuild.bat release', cwd=self.libuv_dir, env=env, shell=True)
+            else:
+                exec_process(['make', 'libuv.a'], cwd=self.libuv_dir, env=env)
         if self.libuv_force_fetch:
             rmtree('deps')
         if not os.path.exists(self.libuv_dir):
@@ -114,8 +127,12 @@ class libuv_build_ext(build_ext):
             build_libuv()
         else:
             if self.libuv_clean_compile:
-                exec_process(['make', 'clean'], cwd=self.libuv_dir)
-            if not os.path.exists(os.path.join(self.libuv_dir, 'libuv.a')):
+                if win32_msvc:
+                    exec_process('cmd.exe /C vcbuild.bat clean', cwd=self.libuv_dir, shell=True)
+                    rmtree(os.path.join(self.libuv_dir, 'Release'))
+                else:
+                    exec_process(['make', 'clean'], cwd=self.libuv_dir)
+            if not os.path.exists(self.libuv_lib):
                 log.info('libuv needs to be compiled.')
                 build_libuv()
             else:
