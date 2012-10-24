@@ -122,6 +122,6 @@
     - UV_IGNORE: this container should be ignored.
     - UV_CREATE_PIPE: indicates a pipe should be created. UV_READABLE_PIPE and UV_WRITABLE_PIPE determine the direction of flow, from the child process' perspective. Both flags may be specified to create a duplex data stream.
     - UV_INHERIT_FD: inherit the given file descriptor in the child.
-    - UV_INHERIT_STREAN: inherit the file descriptor of the given stream in the child.
+    - UV_INHERIT_STREAM: inherit the file descriptor of the given stream in the child.
 
 
