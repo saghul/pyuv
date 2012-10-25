@@ -100,7 +100,6 @@ walk_cb(uv_handle_t* handle, void* arg)
         Py_INCREF(obj);
         result = PyObject_CallFunctionObjArgs(callback, obj, NULL);
         if (result == NULL) {
-            /* TODO: check this... */
             handle_uncaught_exception(((Handle *)obj)->loop);
         }
         Py_DECREF(obj);

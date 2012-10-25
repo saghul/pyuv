@@ -1,13 +1,4 @@
 
-/*
- * NOTE: Since libuv uses pipes to communicate processes and pipes
- * are buffered, things will not go so well. Replacing the comunication
- * mechanism with a pty could do the job, perhaps. References:
- *
- * http://stackoverflow.com/questions/4057985/disabling-stdout-buffering-of-a-forked-process
- * http://stackoverflow.com/questions/2055918/forcing-a-program-to-flush-its-standard-output-when-redirected
- */
-
 /* Container for standard IO */
 static int
 StdIO_tp_init(StdIO *self, PyObject *args, PyObject *kwargs)
