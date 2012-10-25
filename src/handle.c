@@ -25,7 +25,7 @@ on_handle_close(uv_handle_t *handle)
     Py_XDECREF(self->on_close_cb);
     self->on_close_cb = NULL;
 
-    /* Refcount was increased in func_close */
+    /* Refcount was increased in the caller function */
     Py_DECREF(self);
 
     PyGILState_Release(gstate);

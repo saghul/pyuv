@@ -44,8 +44,6 @@ on_pipe_client_connection(uv_connect_t *req, int status)
     callback = (PyObject *)req->data;
 
     ASSERT(self);
-    /* Object could go out of scope in the callback, increase refcount to avoid it */
-    Py_INCREF(self);
 
     if (status != 0) {
         uv_err_t err = uv_last_error(UV_HANDLE_LOOP(self));
@@ -65,7 +63,9 @@ on_pipe_client_connection(uv_connect_t *req, int status)
     Py_DECREF(callback);
     PyMem_Free(req);
 
+    /* Refcount was increased in the caller function */
     Py_DECREF(self);
+
     PyGILState_Release(gstate);
 }
 
@@ -229,6 +229,9 @@ Pipe_func_connect(Pipe *self, PyObject *args)
     connect_req->data = (void *)callback;
 
     uv_pipe_connect(connect_req, (uv_pipe_t *)UV_HANDLE(self), name, on_pipe_client_connection);
+
+    /* Increase refcount so that object is not removed before the callback is called */
+    Py_INCREF(self);
 
     Py_RETURN_NONE;
 

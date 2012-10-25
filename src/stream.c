@@ -31,8 +31,6 @@ on_stream_shutdown(uv_shutdown_t* req, int status)
     callback = (PyObject *)req->data;
 
     ASSERT(self);
-    /* Object could go out of scope in the callback, increase refcount to avoid it */
-    Py_INCREF(self);
 
     if (callback != Py_None) {
         if (status < 0) {
@@ -53,7 +51,9 @@ on_stream_shutdown(uv_shutdown_t* req, int status)
     Py_DECREF(callback);
     PyMem_Free(req);
 
+    /* Refcount was increased in the caller function */
     Py_DECREF(self);
+
     PyGILState_Release(gstate);
 }
 
@@ -113,8 +113,6 @@ on_stream_write(uv_write_t* req, int status)
     callback = req_data->callback;
 
     ASSERT(self);
-    /* Object could go out of scope in the callback, increase refcount to avoid it */
-    Py_INCREF(self);
 
     if (callback != Py_None) {
         if (status < 0) {
@@ -144,7 +142,9 @@ on_stream_write(uv_write_t* req, int status)
     PyMem_Free(req_data);
     PyMem_Free(req);
 
+    /* Refcount was increased in the caller function */
     Py_DECREF(self);
+
     PyGILState_Release(gstate);
 }
 
@@ -177,6 +177,9 @@ Stream_func_shutdown(Stream *self, PyObject *args)
         RAISE_UV_EXCEPTION(UV_HANDLE_LOOP(self), PyExc_StreamError);
         goto error;
     }
+
+    /* Increase refcount so that object is not removed before the callback is called */
+    Py_INCREF(self);
 
     Py_RETURN_NONE;
 
@@ -283,6 +286,9 @@ pyuv_stream_write(Stream *self, Py_buffer pbuf, PyObject *callback, PyObject *se
         goto error;
     }
 
+    /* Increase refcount so that object is not removed before the callback is called */
+    Py_INCREF(self);
+
     Py_RETURN_NONE;
 
 error:
@@ -377,6 +383,9 @@ Stream_func_writelines(Stream *self, PyObject *args)
         RAISE_UV_EXCEPTION(UV_HANDLE_LOOP(self), PyExc_StreamError);
         goto error;
     }
+
+    /* Increase refcount so that object is not removed before the callback is called */
+    Py_INCREF(self);
 
     Py_RETURN_NONE;
 

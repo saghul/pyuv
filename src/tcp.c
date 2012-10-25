@@ -45,8 +45,6 @@ on_tcp_client_connection(uv_connect_t *req, int status)
     callback = (PyObject *)req->data;
 
     ASSERT(self);
-    /* Object could go out of scope in the callback, increase refcount to avoid it */
-    Py_INCREF(self);
 
     if (status != 0) {
         uv_err_t err = uv_last_error(UV_HANDLE_LOOP(self));
@@ -66,7 +64,9 @@ on_tcp_client_connection(uv_connect_t *req, int status)
     Py_DECREF(callback);
     PyMem_Free(req);
 
+    /* Refcount was increased in the caller function */
     Py_DECREF(self);
+
     PyGILState_Release(gstate);
 }
 
@@ -224,6 +224,9 @@ TCP_func_connect(TCP *self, PyObject *args)
         RAISE_UV_EXCEPTION(UV_HANDLE_LOOP(self), PyExc_TCPError);
         goto error;
     }
+
+    /* Increase refcount so that object is not removed before the callback is called */
+    Py_INCREF(self);
 
     Py_RETURN_NONE;
 
