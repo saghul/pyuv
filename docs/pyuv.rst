@@ -40,5 +40,6 @@ Objects
     fs
     error
     errno
+    thread
     util
 

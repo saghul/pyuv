@@ -21,6 +21,7 @@
 #include "threadpool.c"
 #include "process.c"
 #include "util.c"
+#include "thread.c"
 
 #define LIBUV_VERSION UV_VERSION_MAJOR.UV_VERSION_MINOR-LIBUV_REVISION
 
@@ -63,6 +64,7 @@ init_pyuv(void)
     PyObject *error_module;
     PyObject *fs_module;
     PyObject *util_module;
+    PyObject *thread_module;
 
     /* Initialize GIL */
     PyEval_InitThreads();
@@ -122,6 +124,17 @@ init_pyuv(void)
 #ifdef PYUV_PYTHON3
     PyDict_SetItemString(PyImport_GetModuleDict(), pyuv_util_module.m_name, util_module);
     Py_DECREF(util_module);
+#endif
+
+    /* Thread module */
+    thread_module = init_thread();
+    if (thread_module == NULL) {
+        goto fail;
+    }
+    PyUVModule_AddObject(pyuv, "thread", thread_module);
+#ifdef PYUV_PYTHON3
+    PyDict_SetItemString(PyImport_GetModuleDict(), pyuv_thread_module.m_name, thread_module);
+    Py_DECREF(thread_module);
 #endif
 
     /* Types */
