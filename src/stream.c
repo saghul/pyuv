@@ -1,6 +1,7 @@
 
 typedef struct {
     PyObject *callback;
+    PyObject *send_handle;
     Py_buffer *views;
     int view_count;
 } stream_write_data_t;
@@ -99,7 +100,7 @@ on_stream_write(uv_write_t* req, int status)
     int i;
     stream_write_data_t* req_data;
     Stream *self;
-    PyObject *callback, *result, *py_errorno;
+    PyObject *callback, *send_handle, *result, *py_errorno;
     uv_err_t err;
 
     ASSERT(req);
@@ -107,6 +108,7 @@ on_stream_write(uv_write_t* req, int status)
     req_data = (stream_write_data_t *)req->data;
     self = (Stream *)req->handle->data;
     callback = req_data->callback;
+    send_handle = req_data->send_handle;
 
     ASSERT(self);
 
@@ -127,6 +129,7 @@ on_stream_write(uv_write_t* req, int status)
     }
 
     Py_DECREF(callback);
+    Py_XDECREF(send_handle);
     for (i = 0; i < req_data->view_count; i++) {
         PyBuffer_Release(&req_data->views[i]);
     }
@@ -246,6 +249,7 @@ pyuv_stream_write(Stream *self, Py_buffer *views, uv_buf_t *bufs, int buf_count,
     stream_write_data_t *req_data = NULL;
 
     Py_INCREF(callback);
+    Py_XINCREF(send_handle);
 
     wr = (uv_write_t *)PyMem_Malloc(sizeof(uv_write_t));
     if (!wr) {
@@ -260,6 +264,7 @@ pyuv_stream_write(Stream *self, Py_buffer *views, uv_buf_t *bufs, int buf_count,
     }
 
     req_data->callback = callback;
+    req_data->send_handle = send_handle;
     req_data->views = views;
     req_data->view_count = buf_count;
 
@@ -283,6 +288,7 @@ pyuv_stream_write(Stream *self, Py_buffer *views, uv_buf_t *bufs, int buf_count,
 
 error:
     Py_DECREF(callback);
+    Py_XDECREF(send_handle);
     for (i = 0; i < buf_count; i++) {
         PyBuffer_Release(&views[i]);
     }
