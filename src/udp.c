@@ -9,8 +9,7 @@ typedef struct {
 static uv_buf_t
 on_udp_alloc(uv_udp_t* handle, size_t suggested_size)
 {
-    static char slab[65536];
-    ASSERT(suggested_size <= sizeof(slab));
+    static char slab[PYUV_SLAB_SIZE];
     UNUSED_ARG(handle);
     return uv_buf_init(slab, sizeof(slab));
 }

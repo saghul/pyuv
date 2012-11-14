@@ -84,6 +84,8 @@ typedef int Bool;
         }                                                                           \
     } while(0)                                                                      \
 
+#define PYUV_SLAB_SIZE 65536
+
 
 /* Python types definitions */
 
