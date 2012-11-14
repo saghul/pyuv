@@ -432,6 +432,7 @@ pyseq2uvbuf(PyObject *seq, Py_buffer **rviews, uv_buf_t **rbufs, int *rbuf_count
     Py_buffer *views = NULL;
     PyObject *data_fast = NULL;
 
+    i = 0;
     *rviews = NULL;
     *rbufs = NULL;
     *rbuf_count = 0;
