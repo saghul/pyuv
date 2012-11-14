@@ -316,29 +316,42 @@ Pipe_func_start_read2(Pipe *self, PyObject *args)
 static PyObject *
 Pipe_func_write2(Pipe *self, PyObject *args)
 {
-    Py_buffer pbuf;
+    uv_buf_t buf;
+    Py_buffer *view;
     PyObject *callback, *send_handle;
 
     callback = Py_None;
 
     RAISE_IF_HANDLE_CLOSED(self, PyExc_HandleClosedError, NULL);
 
-    if (!PyArg_ParseTuple(args, "s*O|O:write2", &pbuf, &send_handle, &callback)) {
+    if ((view = PyMem_New(Py_buffer, 1)) == NULL) {
+        PyErr_NoMemory();
+        return NULL;
+    }
+
+#ifdef PYUV_PYTHON3
+    if (!PyArg_ParseTuple(args, "y*O|O:write", view, &send_handle, &callback)) {
+#else
+    if (!PyArg_ParseTuple(args, "s*O|O:write", view, &send_handle, &callback)) {
+#endif
         return NULL;
     }
 
     if (UV_HANDLE(send_handle)->type != UV_TCP && UV_HANDLE(send_handle)->type != UV_NAMED_PIPE) {
         PyErr_SetString(PyExc_TypeError, "Only TCP and Pipe objects are supported for write2");
+        PyBuffer_Release(view);
         return NULL;
     }
 
     if (callback != Py_None && !PyCallable_Check(callback)) {
-        PyBuffer_Release(&pbuf);
+        PyBuffer_Release(view);
         PyErr_SetString(PyExc_TypeError, "a callable or None is required");
         return NULL;
     }
 
-    return pyuv_stream_write((Stream *)self, pbuf, callback, send_handle);
+    buf = uv_buf_init(view->buf, view->len);
+
+    return pyuv_stream_write((Stream *)self, view, &buf, 1, callback, send_handle);
 }
 
 

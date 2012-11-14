@@ -1,11 +1,8 @@
 
 typedef struct {
     PyObject *callback;
-    int buf_count;
-    union {
-        uv_buf_t *bufs;
-        Py_buffer view;
-    } data;
+    Py_buffer *views;
+    int view_count;
 } stream_write_data_t;
 
 
@@ -130,15 +127,11 @@ on_stream_write(uv_write_t* req, int status)
         Py_DECREF(py_errorno);
     }
 
-    if (req_data->buf_count == 1) {
-        PyBuffer_Release(&req_data->data.view);
-    } else {
-        for (i = 0; i < req_data->buf_count; i++) {
-            PyMem_Free(req_data->data.bufs[i].base);
-        }
-        PyMem_Free(req_data->data.bufs);
-    }
     Py_DECREF(callback);
+    for (i = 0; i < req_data->view_count; i++) {
+        PyBuffer_Release(&req_data->views[i]);
+    }
+    PyMem_Free(req_data->views);
     PyMem_Free(req_data);
     PyMem_Free(req);
 
@@ -247,10 +240,9 @@ Stream_func_stop_read(Stream *self)
 
 
 static INLINE PyObject *
-pyuv_stream_write(Stream *self, Py_buffer pbuf, PyObject *callback, PyObject *send_handle)
+pyuv_stream_write(Stream *self, Py_buffer *views, uv_buf_t *bufs, int buf_count, PyObject *callback, PyObject *send_handle)
 {
-    int r;
-    uv_buf_t buf;
+    int i, r;
     uv_write_t *wr = NULL;
     stream_write_data_t *req_data = NULL;
 
@@ -268,19 +260,18 @@ pyuv_stream_write(Stream *self, Py_buffer pbuf, PyObject *callback, PyObject *se
         goto error;
     }
 
-    buf = uv_buf_init(pbuf.buf, pbuf.len);
-
     req_data->callback = callback;
-    req_data->buf_count = 1;
-    req_data->data.view = pbuf;
+    req_data->views = views;
+    req_data->view_count = buf_count;
 
     wr->data = (void *)req_data;
 
     if (send_handle) {
-        r = uv_write2(wr, (uv_stream_t *)UV_HANDLE(self), &buf, 1, (uv_stream_t *)UV_HANDLE(send_handle), on_stream_write);
+        r = uv_write2(wr, (uv_stream_t *)UV_HANDLE(self), bufs, buf_count, (uv_stream_t *)UV_HANDLE(send_handle), on_stream_write);
     } else {
-        r = uv_write(wr, (uv_stream_t *)UV_HANDLE(self), &buf, 1, on_stream_write);
+        r = uv_write(wr, (uv_stream_t *)UV_HANDLE(self), bufs, buf_count, on_stream_write);
     }
+
     if (r != 0) {
         RAISE_UV_EXCEPTION(UV_HANDLE_LOOP(self), PyExc_StreamError);
         goto error;
@@ -292,14 +283,12 @@ pyuv_stream_write(Stream *self, Py_buffer pbuf, PyObject *callback, PyObject *se
     Py_RETURN_NONE;
 
 error:
-    PyBuffer_Release(&pbuf);
     Py_DECREF(callback);
-    if (req_data) {
-        PyMem_Free(req_data);
+    for (i = 0; i < buf_count; i++) {
+        PyBuffer_Release(&views[i]);
     }
-    if (wr) {
-        PyMem_Free(wr);
-    }
+    PyMem_Free(req_data);
+    PyMem_Free(wr);
     return NULL;
 }
 
@@ -307,33 +296,44 @@ error:
 static PyObject *
 Stream_func_write(Stream *self, PyObject *args)
 {
-    Py_buffer pbuf;
+    uv_buf_t buf;
+    Py_buffer *view;
     PyObject *callback = Py_None;
 
     RAISE_IF_HANDLE_CLOSED(self, PyExc_HandleClosedError, NULL);
 
-    if (!PyArg_ParseTuple(args, "s*|O:write", &pbuf, &callback)) {
+    if ((view = PyMem_New(Py_buffer, 1)) == NULL) {
+        PyErr_NoMemory();
+        return NULL;
+    }
+
+#ifdef PYUV_PYTHON3
+    if (!PyArg_ParseTuple(args, "y*|O:write", view, &callback)) {
+#else
+    if (!PyArg_ParseTuple(args, "s*|O:write", view, &callback)) {
+#endif
         return NULL;
     }
 
     if (callback != Py_None && !PyCallable_Check(callback)) {
-        PyBuffer_Release(&pbuf);
+        PyBuffer_Release(view);
         PyErr_SetString(PyExc_TypeError, "a callable or None is required");
         return NULL;
     }
 
-    return pyuv_stream_write(self, pbuf, callback, NULL);
+    buf = uv_buf_init(view->buf, view->len);
+
+    return pyuv_stream_write(self, view, &buf, 1, callback, NULL);
 }
 
 
 static PyObject *
 Stream_func_writelines(Stream *self, PyObject *args)
 {
-    int i, r, buf_count;
-    PyObject *callback, *seq;
+    int r, buf_count;
+    Py_buffer *views;
+    PyObject *callback, *seq, *ret;
     uv_buf_t *bufs;
-    uv_write_t *wr = NULL;
-    stream_write_data_t *req_data = NULL;
 
     callback = Py_None;
 
@@ -348,62 +348,18 @@ Stream_func_writelines(Stream *self, PyObject *args)
         return NULL;
     }
 
-    Py_INCREF(callback);
-
-    r = pyseq2uvbuf(seq, &bufs, &buf_count);
+    r = pyseq2uvbuf(seq, &views, &bufs, &buf_count);
     if (r != 0) {
         /* error is already set */
-        goto error;
+        return NULL;
     }
 
-    if (buf_count == 0) {
-        PyErr_SetString(PyExc_ValueError, "Sequence is empty");
-        goto error;
-    }
+    ret = pyuv_stream_write(self, views, bufs, buf_count, callback, NULL);
 
-    wr = (uv_write_t *)PyMem_Malloc(sizeof(uv_write_t));
-    if (!wr) {
-        PyErr_NoMemory();
-        goto error;
-    }
+    /* uv_write copies the uv_buf_t structures, so we can free them now */
+    PyMem_Free(bufs);
 
-    req_data = (stream_write_data_t*) PyMem_Malloc(sizeof(stream_write_data_t));
-    if (!req_data) {
-        PyErr_NoMemory();
-        goto error;
-    }
-
-    req_data->callback = callback;
-    req_data->buf_count = buf_count;
-    req_data->data.bufs = bufs;
-    wr->data = (void *)req_data;
-
-    r = uv_write(wr, (uv_stream_t *)UV_HANDLE(self), bufs, buf_count, on_stream_write);
-    if (r != 0) {
-        RAISE_UV_EXCEPTION(UV_HANDLE_LOOP(self), PyExc_StreamError);
-        goto error;
-    }
-
-    /* Increase refcount so that object is not removed before the callback is called */
-    Py_INCREF(self);
-
-    Py_RETURN_NONE;
-
-error:
-    Py_DECREF(callback);
-    if (bufs) {
-        for (i = 0; i < buf_count; i++) {
-            PyMem_Free(bufs[i].base);
-        }
-        PyMem_Free(bufs);
-    }
-    if (req_data) {
-        PyMem_Free(req_data);
-    }
-    if (wr) {
-        PyMem_Free(wr);
-    }
-    return NULL;
+    return ret;
 }
 
 

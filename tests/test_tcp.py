@@ -1,3 +1,4 @@
+# coding=utf8
 
 import socket
 import sys
@@ -93,34 +94,26 @@ class TCPTestUnicode(unittest2.TestCase):
         self.loop = pyuv.Loop.default_loop()
         self.server = None
         self.client = None
-        self.client_connections = []
 
     def on_connection(self, server, error):
         self.assertEqual(error, None)
         client = pyuv.TCP(pyuv.Loop.default_loop())
         server.accept(client)
-        self.client_connections.append(client)
-        client.start_read(self.on_client_connection_read)
         if sys.version_info >= (3, 0):
-            data = 'PING'
+            data = 'PÏNG'
+            exc_type = TypeError
         else:
-            data = unicode('PING')
-        client.write(data)
-
-    def on_client_connection_read(self, client, data, error):
-        if data is None:
-            client.close()
-            self.client_connections.remove(client)
-            self.server.close()
-            return
+            data = unicode('PÏNG', 'utf-8')
+            exc_type = UnicodeEncodeError
+        self.assertRaises(exc_type, client.write, data)
+        client.close()
+        self.server.close()
 
     def on_client_connection(self, client, error):
         self.assertEqual(error, None)
         client.start_read(self.on_client_read)
 
     def on_client_read(self, client, data, error):
-        self.assertNotEqual(data, None)
-        self.assertEqual(data, b"PING")
         client.close()
 
     def test_tcp_unicode(self):
@@ -261,32 +254,25 @@ class TCPTestListUnicode(unittest2.TestCase):
         self.loop = pyuv.Loop.default_loop()
         self.server = None
         self.client = None
-        self.client_connections = []
 
     def on_connection(self, server, error):
         client = pyuv.TCP(pyuv.Loop.default_loop())
         server.accept(client)
-        self.client_connections.append(client)
-        client.start_read(self.on_client_connection_read)
         if sys.version_info >= (3, 0):
-            data = 'PING'
+            data = 'PÏNG'
+            exc_type = TypeError
         else:
-            data = unicode('PING')
-        client.writelines([data for x in range(100)])
-
-    def on_client_connection_read(self, client, data, error):
-        if data is None:
-            client.close()
-            self.client_connections.remove(client)
-            self.server.close()
-            return
+            data = unicode('PÏNG', 'utf-8')
+            exc_type = UnicodeEncodeError
+        self.assertRaises(exc_type, client.writelines, [data for x in range(100)])
+        client.close()
+        self.server.close()
 
     def on_client_connection(self, client, error):
         self.assertEquals(error, None)
         client.start_read(self.on_client_read)
 
     def on_client_read(self, client, data, error):
-        self.assertEquals(data, b"PING"*100)
         client.close()
 
     def test_tcp_list_unicode(self):

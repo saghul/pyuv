@@ -1,11 +1,8 @@
 
 typedef struct {
     PyObject *callback;
-    int buf_count;
-    union {
-        uv_buf_t *bufs;
-        Py_buffer view;
-    } data;
+    Py_buffer *views;
+    int view_count;
 } udp_send_data_t;
 
 
@@ -115,15 +112,11 @@ on_udp_send(uv_udp_send_t* req, int status)
         Py_DECREF(py_errorno);
     }
 
-    if (req_data->buf_count == 1) {
-        PyBuffer_Release(&req_data->data.view);
-    } else {
-        for (i = 0; i < req_data->buf_count; i++) {
-            PyMem_Free(req_data->data.bufs[i].base);
-        }
-        PyMem_Free(req_data->data.bufs);
-    }
     Py_DECREF(callback);
+    for (i = 0; i < req_data->view_count; i++) {
+        PyBuffer_Release(&req_data->views[i]);
+    }
+    PyMem_Free(req_data->views);
     PyMem_Free(req_data);
     PyMem_Free(req);
 
@@ -231,31 +224,40 @@ UDP_func_send(UDP *self, PyObject *args)
     int r, dest_port, address_type;
     char *dest_ip;
     uv_buf_t buf;
-    Py_buffer pbuf;
-    PyObject *callback;
+    Py_buffer *view;
+    PyObject *callback = Py_None;
     uv_udp_send_t *wr = NULL;
     udp_send_data_t *req_data = NULL;
 
-    callback = Py_None;
-
     RAISE_IF_HANDLE_CLOSED(self, PyExc_HandleClosedError, NULL);
 
-    if (!PyArg_ParseTuple(args, "(si)s*|O:send", &dest_ip, &dest_port, &pbuf, &callback)) {
+    if ((view = PyMem_New(Py_buffer, 1)) == NULL) {
+        PyErr_NoMemory();
+        return NULL;
+    }
+
+#ifdef PYUV_PYTHON3
+    if (!PyArg_ParseTuple(args, "(si)y*|O:send", &dest_ip, &dest_port, view, &callback)) {
+#else
+    if (!PyArg_ParseTuple(args, "(si)s*|O:send", &dest_ip, &dest_port, view, &callback)) {
+#endif
         return NULL;
     }
 
     if (callback != Py_None && !PyCallable_Check(callback)) {
-        PyBuffer_Release(&pbuf);
+        PyBuffer_Release(view);
         PyErr_SetString(PyExc_TypeError, "a callable or None is required");
         return NULL;
     }
 
     if (dest_port < 0 || dest_port > 65535) {
+        PyBuffer_Release(view);
         PyErr_SetString(PyExc_ValueError, "port must be between 0 and 65535");
         return NULL;
     }
 
     if (pyuv_guess_ip_family(dest_ip, &address_type)) {
+        PyBuffer_Release(view);
         PyErr_SetString(PyExc_ValueError, "invalid IP address");
         return NULL;
     }
@@ -274,10 +276,10 @@ UDP_func_send(UDP *self, PyObject *args)
         goto error;
     }
 
-    buf = uv_buf_init(pbuf.buf, pbuf.len);
+    buf = uv_buf_init(view->buf, view->len);
     req_data->callback = callback;
-    req_data->buf_count = 1;
-    req_data->data.view = pbuf;
+    req_data->view_count = 1;
+    req_data->views = view;
 
     wr->data = (void *)req_data;
 
@@ -297,14 +299,10 @@ UDP_func_send(UDP *self, PyObject *args)
     Py_RETURN_NONE;
 
 error:
-    PyBuffer_Release(&pbuf);
+    PyBuffer_Release(view);
     Py_DECREF(callback);
-    if (req_data) {
-        PyMem_Free(req_data);
-    }
-    if (wr) {
-        PyMem_Free(wr);
-    }
+    PyMem_Free(req_data);
+    PyMem_Free(wr);
     return NULL;
 }
 
@@ -315,6 +313,7 @@ UDP_func_sendlines(UDP *self, PyObject *args)
     int i, r, buf_count, dest_port, address_type;
     char *dest_ip;
     PyObject *callback, *seq;
+    Py_buffer *views;
     uv_buf_t *bufs;
     uv_udp_send_t *wr = NULL;
     udp_send_data_t *req_data = NULL;
@@ -342,18 +341,13 @@ UDP_func_sendlines(UDP *self, PyObject *args)
         return NULL;
     }
 
-    Py_INCREF(callback);
-
-    r = pyseq2uvbuf(seq, &bufs, &buf_count);
+    r = pyseq2uvbuf(seq, &views, &bufs, &buf_count);
     if (r != 0) {
         /* error is already set */
-        goto error;
+        return NULL;
     }
 
-    if (buf_count == 0) {
-        PyErr_SetString(PyExc_ValueError, "Sequence is empty");
-        goto error;
-    }
+    Py_INCREF(callback);
 
     wr = (uv_udp_send_t *)PyMem_Malloc(sizeof(uv_udp_send_t));
     if (!wr) {
@@ -368,8 +362,8 @@ UDP_func_sendlines(UDP *self, PyObject *args)
     }
 
     req_data->callback = callback;
-    req_data->buf_count = buf_count;
-    req_data->data.bufs = bufs;
+    req_data->view_count = buf_count;
+    req_data->views = views;
     wr->data = (void *)req_data;
 
     if (address_type == AF_INET) {
@@ -377,6 +371,11 @@ UDP_func_sendlines(UDP *self, PyObject *args)
     } else {
         r = uv_udp_send6(wr, (uv_udp_t *)UV_HANDLE(self), bufs, buf_count, uv_ip6_addr(dest_ip, dest_port), (uv_udp_send_cb)on_udp_send);
     }
+
+    /* uv_write copies the uv_buf_t structures, so we can free them now */
+    PyMem_Free(bufs);
+    bufs = NULL;
+
     if (r != 0) {
         RAISE_UV_EXCEPTION(UV_HANDLE_LOOP(self), PyExc_UDPError);
         goto error;
@@ -389,18 +388,13 @@ UDP_func_sendlines(UDP *self, PyObject *args)
 
 error:
     Py_DECREF(callback);
-    if (bufs) {
-        for (i = 0; i < buf_count; i++) {
-            PyMem_Free(bufs[i].base);
-        }
-        PyMem_Free(bufs);
+    for (i = 0; i < buf_count; i++) {
+        PyBuffer_Release(&views[i]);
     }
-    if (req_data) {
-        PyMem_Free(req_data);
-    }
-    if (wr) {
-        PyMem_Free(wr);
-    }
+    PyMem_Free(views);
+    PyMem_Free(bufs);
+    PyMem_Free(req_data);
+    PyMem_Free(wr);
     return NULL;
 }
 
