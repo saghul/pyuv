@@ -36,6 +36,7 @@ Features:
  * File system events
  * IPC and TCP socket sharing between processes
  * Arbitrary file descriptor polling
+ * Thread synchronization primitives
 
 .. seealso::
     `libuv's source code <http://github.com/joyent/libuv>`_

@@ -260,6 +260,46 @@ typedef struct {
 
 static PyTypeObject ThreadPoolType;
 
+/* Barrier */
+typedef struct {
+    PyObject_HEAD
+    uv_barrier_t *uv_barrier;
+} Barrier;
+
+static PyTypeObject BarrierType;
+
+/* Condition */
+typedef struct {
+    PyObject_HEAD
+    uv_cond_t *uv_condition;
+} Condition;
+
+static PyTypeObject ConditionType;
+
+/* Mutex */
+typedef struct {
+    PyObject_HEAD
+    uv_mutex_t *uv_mutex;
+} Mutex;
+
+static PyTypeObject MutexType;
+
+/* RWLock */
+typedef struct {
+    PyObject_HEAD
+    uv_rwlock_t *uv_rwlock;
+} RWLock;
+
+static PyTypeObject RWLockType;
+
+/* Semaphore */
+typedef struct {
+    PyObject_HEAD
+    uv_sem_t *uv_semaphore;
+} Semaphore;
+
+static PyTypeObject SemaphoreType;
+
 
 /* Exceptions */
 static PyObject* PyExc_AsyncError;
