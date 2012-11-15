@@ -1,6 +1,6 @@
-===============================
-pyuv: Python interface to libuv
-===============================
+================================
+pyuv: Python interface for libuv
+================================
 
 .. image:: https://secure.travis-ci.org/saghul/pyuv.png?branch=master
     :target: http://travis-ci.org/saghul/pyuv
@@ -32,6 +32,7 @@ pyuv's features:
 - File system events (inotify style and stat based)
 - IPC and TCP socket sharing between processes
 - Arbitrary file descriptor polling
+- Thread synchronization primitives
 
 
 Versioning
