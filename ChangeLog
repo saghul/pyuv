@@ -1,3 +1,12 @@
+Version 0.9.2
+=============
+ - Added support for compilation with Visual Studio
+ - Added thread module with several thread synchronization primitives
+ - Refactored write/writelines and send/sendlines, only
+   bytes (or sequences of bytes) objects can be used now
+ - Fixed refcounting issues
+ - Removed bogus assert that could be triggered on Windows
+
 Version 0.9.1
 =============
  - Added TCP.open and UDP.open methods
