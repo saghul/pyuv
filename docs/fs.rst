@@ -11,7 +11,7 @@
 
 .. note::
     All functions in the fs module except for the `FSEvent` class support both
-    synchronous and asyncronous modes. If you want to run it synchronous don't
+    synchronous and asynchronous modes. If you want to run it synchronous don't
     pass any callable as the `callback` argument, else it will run asynchronously.
 
 .. note::
@@ -99,7 +99,7 @@
 
 .. py:function:: pyuv.fs.chmod(loop, path, mode, [callback])
 
-    :param string path: File which persmissions will be changed.
+    :param string path: File which permissions will be changed.
 
     :param int mode: File permissions (ex. 0755)
 

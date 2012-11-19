@@ -16,7 +16,7 @@
 
     :param boolean ipc: Indicate if this ``Pipe`` will be used for IPC connection.
 
-    The ``Pipe`` handle provides asynchronous named pipe functionallity both as a client and server,
+    The ``Pipe`` handle provides asynchronous named pipe functionality both as a client and server,
     supporting cross-process communication and handle sharing.
 
     .. py:method:: bind(name)

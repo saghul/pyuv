@@ -14,7 +14,7 @@
     :type loop: :py:class:`Loop`
     :param loop: loop object where this handle runs (accessible through :py:attr:`Timer.loop`).
 
-    A ``Timer`` handle will run the suplied callback after the specified amount of seconds. 
+    A ``Timer`` handle will run the supplied callback after the specified amount of seconds. 
 
 
     .. py:method:: start(callback, timeout, repeat)

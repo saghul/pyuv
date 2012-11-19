@@ -20,7 +20,7 @@
     Calling event loop related functions from an outside thread is not safe in general.
     This is actually the only handle which is thread safe. The ``Async`` handle may
     be used to pass control from an outside thread to the event loop, as it will allow
-    the calling thread to schedulle a callback which will be called in the event loop
+    the calling thread to schedule a callback which will be called in the event loop
     thread.
 
 
