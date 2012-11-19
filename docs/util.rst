@@ -11,8 +11,8 @@
 
 .. py:function:: pyuv.util.hrtime
 
-    Get the high-resoution system time. It's given in nanoseconds, even if the
-    system doesn't support nanosecond precission.
+    Get the high-resolution system time. It's given in nanoseconds, even if the
+    system doesn't support nanosecond precision.
 
 .. py:function:: pyuv.util.get_free_memory
 

@@ -5,13 +5,13 @@
 Reference counting scheme
 *************************
 
-(This section is about the reference counting scheme used by libuv, it's not relaed in any
+(This section is about the reference counting scheme used by libuv, it's not related in any
 way to the reference counting model used by CPython)
 
 The event loop runs (when `Loop.run` is called) until there are no more active handles. What
 does it mean for a handle to be 'active'? Depends on the handle type:
 
- * Timers: acive when ticking
+ * Timers: active when ticking
  * Sockets (TCP, UDP, Pipe, TTY): active when reading, writing or listening
  * Process: active until the child process dies
  * Idle, Prepare, Check, Poll: active once they are started
