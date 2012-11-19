@@ -14,7 +14,7 @@
     :type loop: :py:class:`Loop`
     :param loop: loop object where this handle runs (accessible through :py:attr:`TCP.loop`).
 
-    The ``TCP`` handle provides asynchronous TCP functionallity both as a client and server.
+    The ``TCP`` handle provides asynchronous TCP functionality both as a client and server.
 
     .. py:method:: bind((ip, port))
 
