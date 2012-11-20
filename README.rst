@@ -67,7 +67,6 @@ Mac OSX:
 ::
 
     (XCode needs to be installed)
-    export CC="gcc -isysroot /Developer/SDKs/MacOSX10.6.sdk"
     export ARCHFLAGS="-arch x86_64"
     ./build_inplace
 
