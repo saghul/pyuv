@@ -88,6 +88,42 @@ class TCPTest(unittest2.TestCase):
         self.loop.run()
 
 
+class TCPTest2(unittest2.TestCase):
+
+    def setUp(self):
+        self.loop = pyuv.Loop.default_loop()
+        self.server = None
+        self.client = None
+        self.write_cb_count = 0
+
+    def on_connection(self, server, error):
+        self.assertEqual(error, None)
+        client = pyuv.TCP(pyuv.Loop.default_loop())
+        server.accept(client)
+        for x in range(1024):
+            client.write(b"PING"*1000, self.on_client_write)
+        client.close()
+        server.close()
+
+    def on_client_connection(self, client, error):
+        self.assertEqual(error, None)
+        self.assertTrue(client.readable)
+        self.assertTrue(client.writable)
+
+    def on_client_write(self, handle, error):
+        self.assertTrue(error in (None, pyuv.errno.UV_ECANCELED))
+        self.write_cb_count += 1
+
+    def test_tcp_write_cancel(self):
+        self.server = pyuv.TCP(self.loop)
+        self.server.bind(("0.0.0.0", TEST_PORT))
+        self.server.listen(self.on_connection)
+        self.client = pyuv.TCP(self.loop)
+        self.client.connect(("127.0.0.1", TEST_PORT), self.on_client_connection)
+        self.loop.run()
+        self.assertEqual(self.write_cb_count, 1024)
+
+
 class TCPTestUnicode(unittest2.TestCase):
 
     def setUp(self):

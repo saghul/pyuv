@@ -25,6 +25,10 @@ on_handle_close(uv_handle_t *handle)
     Py_XDECREF(self->on_close_cb);
     self->on_close_cb = NULL;
 
+    Py_DECREF(self->loop);
+    self->loop = (Loop *)Py_None;
+    Py_INCREF(Py_None);
+
     /* Refcount was increased in the caller function */
     Py_DECREF(self);
 
@@ -79,10 +83,6 @@ Handle_func_close(Handle *self, PyObject *args)
 
     Py_XINCREF(callback);
     self->on_close_cb = callback;
-
-    Py_DECREF(self->loop);
-    self->loop = (Loop *)Py_None;
-    Py_INCREF(Py_None);
 
     /* Increase refcount so that object is not removed before the callback is called */
     Py_INCREF(self);
