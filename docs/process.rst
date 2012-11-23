@@ -22,7 +22,7 @@
 
         Disables inheritance for file descriptors / handles that this process
         inherited from its parent. The effect is that child processes spawned by
-        this proces don't accidently inherit these handles.
+        this process don't accidentally inherit these handles.
 
         It is recommended to call this function as early in your program as possible,
         before the inherited file descriptors can be closed or duplicated.
@@ -53,7 +53,7 @@
 
             - ``UV_PROCESS_SETUID``: set child UID
             - ``UV_PROCESS_SETGID``: set child GID
-            - ``UV_PROCESS_WINDOWS_VERBATIM_ARGUMENTS``: pass arguments veerbatim, that is, not encosed
+            - ``UV_PROCESS_WINDOWS_VERBATIM_ARGUMENTS``: pass arguments verbatim, that is, not enclosed
               in double quotes (Windows)
             - ``UV_PROCESS_DETACHED``: detach child process from parent
 

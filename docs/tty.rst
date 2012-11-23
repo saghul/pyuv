@@ -16,7 +16,7 @@
     :param int fd: File descriptor to be opened as a TTY.
     :param bool readable: Specifies if the given fd is readable.
 
-    The ``TTY`` handle provides asynchronous stdin / stdout functionallity.
+    The ``TTY`` handle provides asynchronous stdin / stdout functionality.
 
     .. py:method:: shutdown([callback])
 

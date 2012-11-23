@@ -14,9 +14,9 @@
     :type loop: :py:class:`Loop`
     :param loop: loop object where this handle runs (accessible through :py:attr:`Poll.loop`).
 
-    :param int fd: File descriptor to be monitored for readibility or writability.
+    :param int fd: File descriptor to be monitored for readability or writability.
 
-    ``Poll`` handles can be used to monitor an arbitrary file descritor for readability or writability.
+    ``Poll`` handles can be used to monitor an arbitrary file descriptor for readability or writability.
         On Unix any file descriptor is supported but on Windows only sockets are supported.
 
         .. note::

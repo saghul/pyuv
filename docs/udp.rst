@@ -14,7 +14,7 @@
     :type loop: :py:class:`Loop`
     :param loop: loop object where this handle runs (accessible through :py:attr:`UDP.loop`).
 
-    The ``UDP`` handle provides asynchronous UDP functionallity both as a client and server.
+    The ``UDP`` handle provides asynchronous UDP functionality both as a client and server.
 
     .. py:method:: bind((ip, port))
 

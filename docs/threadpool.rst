@@ -16,7 +16,7 @@
 
     Many times there are blocking functions which we can't avoid to call. In order to make
     them *feel* asynchronous they can be run in a different thread. It will appear that they
-    don't block, but in reallity they do, but they don't hog the event loop because they run
+    don't block, but in reality they do, but they don't hog the event loop because they run
     on a different thread.
 
     .. py:method:: queue_work(work_callback, [after_work_callback])
