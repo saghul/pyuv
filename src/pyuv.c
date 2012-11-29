@@ -177,8 +177,9 @@ init_pyuv(void)
     /* Process constants */
     PyModule_AddIntMacro(pyuv, UV_PROCESS_SETUID);
     PyModule_AddIntMacro(pyuv, UV_PROCESS_SETGID);
-    PyModule_AddIntMacro(pyuv, UV_PROCESS_WINDOWS_VERBATIM_ARGUMENTS);
     PyModule_AddIntMacro(pyuv, UV_PROCESS_DETACHED);
+    PyModule_AddIntMacro(pyuv, UV_PROCESS_WINDOWS_HIDE);
+    PyModule_AddIntMacro(pyuv, UV_PROCESS_WINDOWS_VERBATIM_ARGUMENTS);
     PyModule_AddIntMacro(pyuv, UV_IGNORE);
     PyModule_AddIntMacro(pyuv, UV_CREATE_PIPE);
     PyModule_AddIntMacro(pyuv, UV_READABLE_PIPE);
