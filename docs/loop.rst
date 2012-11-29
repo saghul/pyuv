@@ -61,4 +61,11 @@
         such top-level exceptions can be customized by assigning another three-argument function to
         loop.excepthook.
 
+    .. py:method:: fileno
+
+        Returns the file descriptor of the polling backend.
+
+    .. py:method:: get_timeout
+
+        Returns the poll timeout.
 

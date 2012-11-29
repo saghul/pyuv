@@ -53,6 +53,8 @@
 
             - ``UV_PROCESS_SETUID``: set child UID
             - ``UV_PROCESS_SETGID``: set child GID
+            - ``UV_PROCESS_WINDOWS_HIDE``: hide the subprocess console window that would normally be created.
+              This option is only meaningful on Windows systems. On unix it is silently ignored.
             - ``UV_PROCESS_WINDOWS_VERBATIM_ARGUMENTS``: pass arguments verbatim, that is, not enclosed
               in double quotes (Windows)
             - ``UV_PROCESS_DETACHED``: detach child process from parent
