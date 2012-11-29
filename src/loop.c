@@ -130,6 +130,20 @@ Loop_func_walk(Loop *self, PyObject *args)
 
 
 static PyObject *
+Loop_func_fileno(Loop *self)
+{
+    return PyInt_FromLong((long)uv_backend_fd(self->uv_loop));
+}
+
+
+static PyObject *
+Loop_func_get_timeout(Loop *self)
+{
+    return PyFloat_FromDouble(uv_backend_timeout(self->uv_loop)/1000.0);
+}
+
+
+static PyObject *
 Loop_func_default_loop(PyObject *cls)
 {
     UNUSED_ARG(cls);
@@ -264,6 +278,8 @@ Loop_tp_methods[] = {
     { "now", (PyCFunction)Loop_func_now, METH_NOARGS, "Return event loop time, expressed in nanoseconds." },
     { "update_time", (PyCFunction)Loop_func_update_time, METH_NOARGS, "Update event loop's notion of time by querying the kernel." },
     { "walk", (PyCFunction)Loop_func_walk, METH_VARARGS, "Walk all handles in the loop." },
+    { "fileno", (PyCFunction)Loop_func_fileno, METH_NOARGS, "Get the loop backend file descriptor." },
+    { "get_timeout", (PyCFunction)Loop_func_get_timeout, METH_NOARGS, "Get the poll timeout, or -1 for no timeout." },
     { "default_loop", (PyCFunction)Loop_func_default_loop, METH_CLASS|METH_NOARGS, "Instantiate the default loop." },
     { NULL }
 };
