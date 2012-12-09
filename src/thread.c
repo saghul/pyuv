@@ -105,7 +105,7 @@ static PyTypeObject BarrierType = {
     0,                                                              /*tp_getattro*/
     0,                                                              /*tp_setattro*/
     0,                                                              /*tp_as_buffer*/
-    Py_TPFLAGS_DEFAULT | Py_TPFLAGS_HAVE_GC,                        /*tp_flags*/
+    Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE | Py_TPFLAGS_HAVE_GC,  /*tp_flags*/
     0,                                                              /*tp_doc*/
     (traverseproc)Barrier_tp_traverse,                              /*tp_traverse*/
     (inquiry)Barrier_tp_clear,                                      /*tp_clear*/
@@ -257,7 +257,7 @@ static PyTypeObject MutexType = {
     0,                                                              /*tp_getattro*/
     0,                                                              /*tp_setattro*/
     0,                                                              /*tp_as_buffer*/
-    Py_TPFLAGS_DEFAULT | Py_TPFLAGS_HAVE_GC,                        /*tp_flags*/
+    Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE | Py_TPFLAGS_HAVE_GC,  /*tp_flags*/
     0,                                                              /*tp_doc*/
     (traverseproc)Mutex_tp_traverse,                                /*tp_traverse*/
     (inquiry)Mutex_tp_clear,                                        /*tp_clear*/
@@ -445,7 +445,7 @@ static PyTypeObject RWLockType = {
     0,                                                              /*tp_getattro*/
     0,                                                              /*tp_setattro*/
     0,                                                              /*tp_as_buffer*/
-    Py_TPFLAGS_DEFAULT | Py_TPFLAGS_HAVE_GC,                        /*tp_flags*/
+    Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE | Py_TPFLAGS_HAVE_GC,  /*tp_flags*/
     0,                                                              /*tp_doc*/
     (traverseproc)RWLock_tp_traverse,                               /*tp_traverse*/
     (inquiry)RWLock_tp_clear,                                       /*tp_clear*/
@@ -625,7 +625,7 @@ static PyTypeObject ConditionType = {
     0,                                                              /*tp_getattro*/
     0,                                                              /*tp_setattro*/
     0,                                                              /*tp_as_buffer*/
-    Py_TPFLAGS_DEFAULT | Py_TPFLAGS_HAVE_GC,                        /*tp_flags*/
+    Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE | Py_TPFLAGS_HAVE_GC,  /*tp_flags*/
     0,                                                              /*tp_doc*/
     (traverseproc)Condition_tp_traverse,                            /*tp_traverse*/
     (inquiry)Condition_tp_clear,                                    /*tp_clear*/
@@ -781,7 +781,7 @@ static PyTypeObject SemaphoreType = {
     0,                                                              /*tp_getattro*/
     0,                                                              /*tp_setattro*/
     0,                                                              /*tp_as_buffer*/
-    Py_TPFLAGS_DEFAULT | Py_TPFLAGS_HAVE_GC,                        /*tp_flags*/
+    Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE | Py_TPFLAGS_HAVE_GC,  /*tp_flags*/
     0,                                                              /*tp_doc*/
     (traverseproc)Semaphore_tp_traverse,                            /*tp_traverse*/
     (inquiry)Semaphore_tp_clear,                                    /*tp_clear*/
