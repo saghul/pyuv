@@ -74,7 +74,7 @@ Microsoft Windows (with Visual Studio 2008):
 
 ::
 
-    (Subversion needs to be installed)
+    (Git needs to be installed)
     ./build_inplace
 
 Microsoft Windows (with MinGW, not recommended):
