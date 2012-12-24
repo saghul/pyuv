@@ -39,7 +39,7 @@ class ThreadPoolTest(unittest2.TestCase):
         1/0
 
     def after_work_cb2(self, result, error):
-        self.assertEqual(error[0], ZeroDivisionError)
+        self.assertEqual(result.exc_info[0], ZeroDivisionError)
 
     def test_threadpool2(self):
         self.pool.queue_work(self.raise_in_pool, self.after_work_cb2)

@@ -63,19 +63,41 @@ static void
 threadpool_after_work_cb(uv_work_t *req, int status)
 {
     PyGILState_STATE gstate = PyGILState_Ensure();
+    uv_err_t err;
     tpool_req_data_t *data;
-    PyObject *result;
+    PyObject *result, *work_result, *errorno;
 
     ASSERT(req);
 
     data = (tpool_req_data_t*)req->data;
 
     if (data->after_work_cb) {
-        result = PyObject_CallFunctionObjArgs(data->after_work_cb, data->result, data->error, NULL);
+        if (status < 0) {
+            err = uv_last_error(req->loop);
+            errorno = PyInt_FromLong((long)err.code);
+            work_result = Py_None;
+            Py_INCREF(Py_None);
+        } else {
+            errorno = Py_None;
+            Py_INCREF(Py_None);
+            work_result = PyStructSequence_New(&WorkResultType);
+            if (!work_result) {
+                PyErr_Clear();
+                work_result = Py_None;
+                Py_INCREF(Py_None);
+            } else {
+                PyStructSequence_SET_ITEM(work_result, 0, data->result);
+                PyStructSequence_SET_ITEM(work_result, 1, data->error);
+            }
+        }
+
+        result = PyObject_CallFunctionObjArgs(data->after_work_cb, work_result, errorno, NULL);
         if (result == NULL) {
             print_uncaught_exception();
         }
         Py_XDECREF(result);
+        Py_DECREF(work_result);
+        Py_DECREF(errorno);
     }
 
     Py_DECREF(data->work_cb);
