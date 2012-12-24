@@ -60,7 +60,7 @@ threadpool_work_cb(uv_work_t *req)
 
 
 static void
-threadpool_after_work_cb(uv_work_t *req)
+threadpool_after_work_cb(uv_work_t *req, int status)
 {
     PyGILState_STATE gstate = PyGILState_Ensure();
     tpool_req_data_t *data;

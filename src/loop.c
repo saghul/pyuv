@@ -66,7 +66,7 @@ Loop_func_run_once(Loop *self)
     int r;
 
     Py_BEGIN_ALLOW_THREADS
-    r = uv_run_once(self->uv_loop);
+    r = uv_run2(self->uv_loop, UV_RUN_ONCE);
     Py_END_ALLOW_THREADS
     if (PyErr_Occurred()) {
         handle_uncaught_exception(self);
