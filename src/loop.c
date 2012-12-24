@@ -48,30 +48,26 @@ new_loop(PyTypeObject *type, PyObject *args, PyObject *kwargs, int is_default)
 
 
 static PyObject *
-Loop_func_run(Loop *self)
+Loop_func_run(Loop *self, PyObject *args)
 {
+    int mode = UV_RUN_DEFAULT;
+
+    if (!PyArg_ParseTuple(args, "|i:run", &mode)) {
+        return NULL;
+    }
+
+    if (mode != UV_RUN_DEFAULT && mode != UV_RUN_ONCE && mode != UV_RUN_NOWAIT) {
+        PyErr_SetString(PyExc_ValueError, "invalid mode specified");
+        return NULL;
+    }
+
     Py_BEGIN_ALLOW_THREADS
-    uv_run(self->uv_loop);
+    uv_run2(self->uv_loop, mode);
     Py_END_ALLOW_THREADS
     if (PyErr_Occurred()) {
         handle_uncaught_exception(self);
     }
     Py_RETURN_NONE;
-}
-
-
-static PyObject *
-Loop_func_run_once(Loop *self)
-{
-    int r;
-
-    Py_BEGIN_ALLOW_THREADS
-    r = uv_run2(self->uv_loop, UV_RUN_ONCE);
-    Py_END_ALLOW_THREADS
-    if (PyErr_Occurred()) {
-        handle_uncaught_exception(self);
-    }
-    return PyBool_FromLong((long)r);
 }
 
 
@@ -273,8 +269,7 @@ Loop_excepthook_set(Loop *self, PyObject* val, void* c)
 
 static PyMethodDef
 Loop_tp_methods[] = {
-    { "run", (PyCFunction)Loop_func_run, METH_NOARGS, "Run the event loop." },
-    { "run_once", (PyCFunction)Loop_func_run_once, METH_NOARGS, "Run a single event loop iteration, waiting for events if necessary." },
+    { "run", (PyCFunction)Loop_func_run, METH_VARARGS, "Run the event loop." },
     { "now", (PyCFunction)Loop_func_now, METH_NOARGS, "Return event loop time, expressed in nanoseconds." },
     { "update_time", (PyCFunction)Loop_func_update_time, METH_NOARGS, "Update event loop's notion of time by querying the kernel." },
     { "walk", (PyCFunction)Loop_func_walk, METH_VARARGS, "Walk all handles in the loop." },

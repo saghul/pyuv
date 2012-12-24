@@ -170,6 +170,11 @@ init_pyuv(void)
     PyUVModule_AddType(pyuv, "ThreadPool", &ThreadPoolType);
     PyUVModule_AddType(pyuv, "SignalChecker", &SignalCheckerType);
 
+    /* Loop.run modes */
+    PyModule_AddIntMacro(pyuv, UV_RUN_DEFAULT);
+    PyModule_AddIntMacro(pyuv, UV_RUN_ONCE);
+    PyModule_AddIntMacro(pyuv, UV_RUN_NOWAIT);
+
     /* UDP constants */
     PyModule_AddIntMacro(pyuv, UV_JOIN_GROUP);
     PyModule_AddIntMacro(pyuv, UV_LEAVE_GROUP);

@@ -21,7 +21,7 @@ except AttributeError:
 class EmbedTest(unittest2.TestCase):
 
     def embed_cb(self, handle):
-        self.loop.run_once()
+        self.loop.run(pyuv.UV_RUN_ONCE)
         self.sem.post()
 
     def timer_cb(self, handle):
