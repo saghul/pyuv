@@ -13,7 +13,7 @@ on_handle_close(uv_handle_t *handle)
     if (self->on_close_cb) {
         result = PyObject_CallFunctionObjArgs(self->on_close_cb, self, NULL);
         if (result == NULL) {
-            print_uncaught_exception();
+            handle_uncaught_exception(self->loop);
         }
         Py_XDECREF(result);
     }
