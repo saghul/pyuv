@@ -24,7 +24,7 @@ class LoopRunTest(unittest2.TestCase):
             self.cb_called = 1
         loop = pyuv.Loop.default_loop()
         timer = pyuv.Timer(loop)
-        timer.start(timer_cb, 1, 1)
+        timer.start(timer_cb, 10, 10)
         loop.run(pyuv.UV_RUN_NOWAIT)
         self.assertEqual(self.cb_called, 0)
 
