@@ -450,23 +450,6 @@ static PyStructSequence_Desc cpu_info_times_result_desc = {
 };
 
 
-/* used by queue_work */
-static PyTypeObject WorkResultType;
-
-static PyStructSequence_Field work_result_fields[] = {
-    {"result", ""},
-    {"exc_info", ""},
-    {NULL}
-};
-
-static PyStructSequence_Desc work_result_desc = {
-    "work_result",
-    NULL,
-    work_result_fields,
-    2
-};
-
-
 /* Some helper stuff */
 
 

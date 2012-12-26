@@ -176,10 +176,6 @@ init_pyuv(void)
     PyUVModule_AddType(pyuv, "ThreadPool", &ThreadPoolType);
     PyUVModule_AddType(pyuv, "SignalChecker", &SignalCheckerType);
 
-    /* initialize PyStructSequence types */
-    if (WorkResultType.tp_name == 0)
-        PyStructSequence_InitType(&WorkResultType, &work_result_desc);
-
     /* Loop.run modes */
     PyModule_AddIntMacro(pyuv, UV_RUN_DEFAULT);
     PyModule_AddIntMacro(pyuv, UV_RUN_ONCE);

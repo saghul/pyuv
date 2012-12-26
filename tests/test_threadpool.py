@@ -1,10 +1,27 @@
 
 import functools
+import sys
 import threading
 import time
 
 from common import unittest2
 import pyuv
+
+
+class WorkItem(object):
+
+    def __init__(self, func, *args, **kw):
+        self._cb = functools.partial(func, *args, **kw)
+        self.result = None
+        self.exc_info = None
+
+    def __call__(self):
+        try:
+            self._cb()
+        except Exception:
+            self.exc_info = sys.exc_info()
+        finally:
+            self._cb = None
 
 
 class ThreadPoolTest(unittest2.TestCase):
@@ -19,7 +36,7 @@ class ThreadPoolTest(unittest2.TestCase):
         self.pool_cb_called += 1
         time.sleep(0.1)
 
-    def after_work_cb(self, result, error):
+    def after_work_cb(self, error):
         self.assertEqual(error, None)
         self.pool_after_work_cb_called += 1
 
@@ -38,11 +55,13 @@ class ThreadPoolTest(unittest2.TestCase):
     def raise_in_pool(self, *args, **kw):
         1/0
 
-    def after_work_cb2(self, result, error):
-        self.assertEqual(result.exc_info[0], ZeroDivisionError)
+    def after_work_cb2(self, error):
+        self.assertEqual(error, None)
+        self.assertEqual(self.work_item.exc_info[0], ZeroDivisionError)
 
-    def test_threadpool2(self):
-        self.pool.queue_work(self.raise_in_pool, self.after_work_cb2)
+    def test_threadpool_exc(self):
+        self.work_item = WorkItem(self.raise_in_pool)
+        self.pool.queue_work(self.work_item, self.after_work_cb2)
         self.loop.run()
 
 

@@ -2,8 +2,6 @@
 typedef struct {
     PyObject *work_cb;
     PyObject *after_work_cb;
-    PyObject *result;
-    PyObject *error;
 } tpool_req_data_t;
 
 
@@ -12,9 +10,7 @@ threadpool_work_cb(uv_work_t *req)
 {
     PyGILState_STATE gstate = PyGILState_Ensure();
     tpool_req_data_t *data;
-    PyObject *result, *error, *err_type, *err_value, *err_tb;
-
-    err_type = err_value = err_tb = NULL;
+    PyObject *result;
 
     ASSERT(req);
 
@@ -22,38 +18,8 @@ threadpool_work_cb(uv_work_t *req)
 
     result = PyObject_CallFunctionObjArgs(data->work_cb, NULL);
     if (result == NULL) {
-        PyErr_Fetch(&err_type, &err_value, &err_tb);
-        PyErr_NormalizeException(&err_type, &err_value, &err_tb);
-        error = PyTuple_New(3);
-        if (!error) {
-            PyErr_Clear();
-            error = Py_None;
-            Py_INCREF(Py_None);
-        } else {
-            if (!err_type) {
-                err_type = Py_None;
-                Py_INCREF(Py_None);
-            }
-            if (!err_value) {
-                err_value = Py_None;
-                Py_INCREF(Py_None);
-            }
-            if (!err_tb) {
-                err_tb = Py_None;
-                Py_INCREF(Py_None);
-            }
-            PyTuple_SET_ITEM(error, 0, err_type);
-            PyTuple_SET_ITEM(error, 1, err_value);
-            PyTuple_SET_ITEM(error, 2, err_tb);
-        }
-        result = Py_None;
-        Py_INCREF(Py_None);
-    } else {
-        error = Py_None;
-        Py_INCREF(Py_None);
+        print_uncaught_exception();
     }
-    data->result = result;
-    data->error = error;
 
     PyGILState_Release(gstate);
 }
@@ -65,45 +31,32 @@ threadpool_after_work_cb(uv_work_t *req, int status)
     PyGILState_STATE gstate = PyGILState_Ensure();
     uv_err_t err;
     tpool_req_data_t *data;
-    PyObject *result, *work_result, *errorno;
+    Loop *loop;
+    PyObject *result, *errorno;
 
     ASSERT(req);
-
+    loop = (Loop *)req->loop->data;
     data = (tpool_req_data_t*)req->data;
 
     if (data->after_work_cb) {
         if (status < 0) {
             err = uv_last_error(req->loop);
             errorno = PyInt_FromLong((long)err.code);
-            work_result = Py_None;
-            Py_INCREF(Py_None);
         } else {
             errorno = Py_None;
             Py_INCREF(Py_None);
-            work_result = PyStructSequence_New(&WorkResultType);
-            if (!work_result) {
-                PyErr_Clear();
-                work_result = Py_None;
-                Py_INCREF(Py_None);
-            } else {
-                PyStructSequence_SET_ITEM(work_result, 0, data->result);
-                PyStructSequence_SET_ITEM(work_result, 1, data->error);
-            }
         }
 
-        result = PyObject_CallFunctionObjArgs(data->after_work_cb, work_result, errorno, NULL);
+        result = PyObject_CallFunctionObjArgs(data->after_work_cb, errorno, NULL);
         if (result == NULL) {
-            print_uncaught_exception();
+            handle_uncaught_exception(loop);
         }
         Py_XDECREF(result);
-        Py_DECREF(work_result);
         Py_DECREF(errorno);
     }
 
     Py_DECREF(data->work_cb);
     Py_XDECREF(data->after_work_cb);
-    Py_DECREF(data->result);
-    Py_DECREF(data->error);
 
     PyMem_Free(req->data);
     PyMem_Free(req);
@@ -154,8 +107,6 @@ ThreadPool_func_queue_work(ThreadPool *self, PyObject *args)
 
     req_data->work_cb = work_cb;
     req_data->after_work_cb = after_work_cb;
-    req_data->result = NULL;
-    req_data->error = NULL;
 
     work_req->data = (void *)req_data;
     r = uv_queue_work(UV_LOOP(self), work_req, threadpool_work_cb, threadpool_after_work_cb);
@@ -167,12 +118,8 @@ ThreadPool_func_queue_work(ThreadPool *self, PyObject *args)
     Py_RETURN_NONE;
 
 error:
-    if (work_req) {
-        PyMem_Free(work_req);
-    }
-    if (req_data) {
-        PyMem_Free(req_data);
-    }
+    PyMem_Free(work_req);
+    PyMem_Free(req_data);
     Py_DECREF(work_cb);
     Py_XDECREF(after_work_cb);
     return NULL;
