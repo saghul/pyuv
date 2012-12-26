@@ -316,6 +316,15 @@ typedef struct {
 
 static PyTypeObject GAIRequestType;
 
+/* WorkRequest */
+typedef struct {
+    Request request;
+    PyObject *work_cb;
+    PyObject *done_cb;
+} WorkRequest;
+
+static PyTypeObject WorkRequestType;
+
 
 /* Exceptions */
 static PyObject* PyExc_AsyncError;
