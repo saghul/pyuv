@@ -5,6 +5,7 @@
 #include "error.c"
 #include "loop.c"
 #include "handle.c"
+#include "request.c"
 #include "async.c"
 #include "timer.c"
 #include "prepare.c"
@@ -152,6 +153,11 @@ init_pyuv(void)
     TCPType.tp_base = &StreamType;
     PipeType.tp_base = &StreamType;
     TTYType.tp_base = &StreamType;
+
+    GAIRequestType.tp_base = &RequestType;
+    if (PyType_Ready(&GAIRequestType) < 0) {
+        return NULL;
+    }
 
     PyUVModule_AddType(pyuv, "Loop", &LoopType);
     PyUVModule_AddType(pyuv, "Async", &AsyncType);

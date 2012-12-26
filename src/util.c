@@ -305,10 +305,11 @@ getaddrinfo_cb(uv_getaddrinfo_t* req, int status, struct addrinfo* res)
     struct addrinfo *ptr;
     uv_err_t err;
     Loop *loop;
-    PyObject *callback, *addr, *item, *errorno, *dns_result, *result;
+    GAIRequest *pyreq;
+    PyObject *addr, *item, *errorno, *dns_result, *result;
 
     ASSERT(req);
-    callback = (PyObject *)req->data;
+    pyreq = (GAIRequest *)req->data;
     loop = (Loop *)req->loop->data;
 
     if (status != 0) {
@@ -352,7 +353,7 @@ getaddrinfo_cb(uv_getaddrinfo_t* req, int status, struct addrinfo* res)
     Py_INCREF(Py_None);
 
 callback:
-    result = PyObject_CallFunctionObjArgs(callback, dns_result, errorno, NULL);
+    result = PyObject_CallFunctionObjArgs(pyreq->callback, dns_result, errorno, NULL);
     if (result == NULL) {
         handle_uncaught_exception(loop);
     }
@@ -361,7 +362,11 @@ callback:
     Py_DECREF(errorno);
 
     Py_DECREF(loop);
-    Py_DECREF(callback);
+    Py_DECREF(pyreq->callback);
+    pyreq->callback = NULL;
+    ((Request *)pyreq)->req = NULL;
+    Py_DECREF(pyreq);
+
     uv_freeaddrinfo(res);
     PyMem_Free(req);
 
@@ -375,13 +380,16 @@ Util_func_getaddrinfo(PyObject *obj, PyObject *args, PyObject *kwargs)
     char port_str[6];
     int port, family, socktype, protocol, flags, r;
     struct addrinfo hints;
-    uv_getaddrinfo_t* req = NULL;
+    uv_getaddrinfo_t* req;
     Loop *loop;
+    GAIRequest *pyreq;
     PyObject *callback, *host, *idna;
 
     static char *kwlist[] = {"loop", "callback", "host", "port", "family", "socktype", "protocol", "flags", NULL};
 
     UNUSED_ARG(obj);
+    req = NULL;
+    pyreq = NULL;
     port = socktype = protocol = flags = 0;
     family = AF_UNSPEC;
 
@@ -420,9 +428,18 @@ Util_func_getaddrinfo(PyObject *obj, PyObject *args, PyObject *kwargs)
         goto error;
     }
 
+    pyreq = (GAIRequest *)PyObject_CallObject((PyObject *)&GAIRequestType, NULL);
+    if (!pyreq) {
+        PyErr_NoMemory();
+        goto error;
+    }
+    Py_INCREF(pyreq);
+    ((Request *)pyreq)->req = (uv_req_t *)req;
+    pyreq->callback = callback;
+
     Py_INCREF(loop);
     Py_INCREF(callback);
-    req->data = (void *)callback;
+    req->data = (void *)pyreq;
 
     memset(&hints, 0, sizeof(hints));
     hints.ai_family = family;
@@ -433,15 +450,15 @@ Util_func_getaddrinfo(PyObject *obj, PyObject *args, PyObject *kwargs)
     r = uv_getaddrinfo(loop->uv_loop, req, &getaddrinfo_cb, host_str, port_str, &hints);
     if (r != 0) {
         RAISE_UV_EXCEPTION(loop->uv_loop, PyExc_UVError);
+        Py_DECREF(pyreq);
         goto error;
     }
 
-    Py_RETURN_NONE;
+    return (PyObject *)pyreq;
 
 error:
-    if (req) {
-        PyMem_Free(req);
-    }
+    PyMem_Free(req);
+    Py_XDECREF(pyreq);
     return NULL;
 }
 

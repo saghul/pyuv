@@ -300,6 +300,22 @@ typedef struct {
 
 static PyTypeObject SemaphoreType;
 
+/* Request */
+typedef struct {
+    PyObject_HEAD
+    uv_req_t *req;
+} Request;
+
+static PyTypeObject RequestType;
+
+/* GAIRequest */
+typedef struct {
+    Request request;
+    PyObject *callback;
+} GAIRequest;
+
+static PyTypeObject GAIRequestType;
+
 
 /* Exceptions */
 static PyObject* PyExc_AsyncError;
