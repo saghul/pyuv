@@ -19,7 +19,6 @@
 #include "udp.c"
 #include "poll.c"
 #include "fs.c"
-#include "threadpool.c"
 #include "process.c"
 #include "util.c"
 #include "thread.c"
@@ -177,7 +176,6 @@ init_pyuv(void)
     PyUVModule_AddType(pyuv, "Poll", &PollType);
     PyUVModule_AddType(pyuv, "StdIO", &StdIOType);
     PyUVModule_AddType(pyuv, "Process", &ProcessType);
-    PyUVModule_AddType(pyuv, "ThreadPool", &ThreadPoolType);
     PyUVModule_AddType(pyuv, "SignalChecker", &SignalCheckerType);
 
     /* Loop.run modes */

@@ -30,7 +30,6 @@ class ThreadPoolTest(unittest2.TestCase):
         self.pool_cb_called = 0
         self.pool_after_work_cb_called = 0
         self.loop = pyuv.Loop.default_loop()
-        self.pool = pyuv.ThreadPool(self.loop)
 
     def run_in_pool(self, *args, **kw):
         self.pool_cb_called += 1
@@ -41,13 +40,13 @@ class ThreadPoolTest(unittest2.TestCase):
         self.pool_after_work_cb_called += 1
 
     def test_threadpool1(self):
-        self.pool.queue_work(self.run_in_pool, self.after_work_cb)
+        self.loop.queue_work(self.run_in_pool, self.after_work_cb)
         args = (1, 2, 3)
         kw = {}
-        self.pool.queue_work(functools.partial(self.run_in_pool, *args, **kw), self.after_work_cb)
+        self.loop.queue_work(functools.partial(self.run_in_pool, *args, **kw), self.after_work_cb)
         args = ()
         kw = {'test': 1}
-        self.pool.queue_work(functools.partial(self.run_in_pool, *args, **kw), self.after_work_cb)
+        self.loop.queue_work(functools.partial(self.run_in_pool, *args, **kw), self.after_work_cb)
         self.loop.run()
         self.assertEqual(self.pool_cb_called, 3)
         self.assertEqual(self.pool_after_work_cb_called, 3)
@@ -61,7 +60,7 @@ class ThreadPoolTest(unittest2.TestCase):
 
     def test_threadpool_exc(self):
         self.work_item = WorkItem(self.raise_in_pool)
-        self.pool.queue_work(self.work_item, self.after_work_cb2)
+        self.loop.queue_work(self.work_item, self.after_work_cb2)
         self.loop.run()
 
 
@@ -78,8 +77,7 @@ class ThreadPoolMultiLoopTest(unittest2.TestCase):
 
     def run_loop(self):
         loop = pyuv.Loop()
-        pool = pyuv.ThreadPool(loop)
-        pool.queue_work(self.run_in_pool)
+        loop.queue_work(self.run_in_pool)
         loop.run()
 
     def test_threadpool_multiple_loops(self):

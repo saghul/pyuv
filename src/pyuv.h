@@ -252,14 +252,6 @@ typedef struct {
 
 static PyTypeObject FSPollType;
 
-/* ThreadPool */
-typedef struct {
-    PyObject_HEAD
-    Loop *loop;
-} ThreadPool;
-
-static PyTypeObject ThreadPoolType;
-
 /* Barrier */
 typedef struct {
     PyObject_HEAD
@@ -343,7 +335,6 @@ static PyObject* PyExc_SignalError;
 static PyObject* PyExc_SignalCheckerError;
 static PyObject* PyExc_StreamError;
 static PyObject* PyExc_TCPError;
-static PyObject* PyExc_ThreadPoolError;
 static PyObject* PyExc_TimerError;
 static PyObject* PyExc_TTYError;
 static PyObject* PyExc_UDPError;
