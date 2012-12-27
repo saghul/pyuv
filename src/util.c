@@ -433,7 +433,6 @@ Util_func_getaddrinfo(PyObject *obj, PyObject *args, PyObject *kwargs)
         PyErr_NoMemory();
         goto error;
     }
-    Py_INCREF(pyreq);
     ((Request *)pyreq)->req = (uv_req_t *)req;
     pyreq->callback = callback;
 
@@ -450,15 +449,15 @@ Util_func_getaddrinfo(PyObject *obj, PyObject *args, PyObject *kwargs)
     r = uv_getaddrinfo(loop->uv_loop, req, &getaddrinfo_cb, host_str, port_str, &hints);
     if (r != 0) {
         RAISE_UV_EXCEPTION(loop->uv_loop, PyExc_UVError);
-        Py_DECREF(pyreq);
         goto error;
     }
 
+    Py_INCREF(pyreq);
     return (PyObject *)pyreq;
 
 error:
-    PyMem_Free(req);
     Py_XDECREF(pyreq);
+    PyMem_Free(req);
     return NULL;
 }
 

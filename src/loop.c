@@ -238,7 +238,6 @@ Loop_func_queue_work(Loop *self, PyObject *args)
         PyErr_NoMemory();
         goto error;
     }
-    Py_INCREF(pyreq);
     ((Request *)pyreq)->req = (uv_req_t *)req;
     pyreq->work_cb = work_cb;
     pyreq->done_cb = done_cb;
@@ -250,19 +249,19 @@ Loop_func_queue_work(Loop *self, PyObject *args)
     r = uv_queue_work(self->uv_loop, req, threadpool_work_cb, threadpool_done_cb);
     if (r != 0) {
         RAISE_UV_EXCEPTION(self->uv_loop, PyExc_Exception);
-        Py_DECREF(pyreq);
         goto error;
     }
 
     Py_INCREF(self);
 
+    Py_INCREF(pyreq);
     return (PyObject *)pyreq;
 
 error:
-    PyMem_Free(req);
     Py_XDECREF(pyreq);
     Py_DECREF(work_cb);
     Py_XDECREF(done_cb);
+    PyMem_Free(req);
     return NULL;
 }
 
