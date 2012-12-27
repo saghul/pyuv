@@ -1658,6 +1658,8 @@ FS_func_link(PyObject *obj, PyObject *args, PyObject *kwargs)
     static char *kwlist[] = {"loop", "path", "new_path", "callback", NULL};
 
     UNUSED_ARG(obj);
+    req = NULL;
+    pyreq = NULL;
     callback = NULL;
 
     if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!ss|O:link", kwlist, &LoopType, &loop, &path, &new_path, &callback)) {
