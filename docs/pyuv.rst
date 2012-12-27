@@ -28,7 +28,6 @@ Objects
     pipe
     tty
     poll
-    threadpool
     process
     async
     prepare

@@ -20,15 +20,17 @@
         Create the *default* event loop. Most applications should use this event
         loop if only a single loop is needed.
 
-    .. py:method:: run
+    .. py:method:: run([mode])
 
-        Run the event loop. This method will block until there is no active
-        handle running on the loop.
+        :param int mode: Specifies the mode in which the loop will run.
+            It can take 3 different values:
 
-    .. py:method:: run_once
+            - ``UV_RUN_DEFAULT``: Default mode. Run the event loop until there are no
+              active handles or requests.
+            - ``UV_RUN_ONCE``: Run a single event loop iteration.
+            - ``UV_RUN_NOWAIT``: Run a single event loop iteration, but don't block for io.
 
-        Run a single loop iteration. Returns true if there are any pending events to process,
-        false otherwise.
+        Run the event loop.
 
     .. py:method:: now
     .. py:method:: update_time
@@ -51,6 +53,20 @@
         purposes.
 
         Callback signature: ``callback(handle)``.
+
+    .. py:method:: queue_work(work_callback, [done_callback])
+
+        :param callable work_callback: Function that will be called in the thread pool.
+
+        :param callable done_callback: Function that will be called in the caller thread after
+            the given function has run in the thread pool.
+
+            Callback signature: ``done_callback(errorno)``. Errorno indicates if the request
+            was cancelled (UV_ECANCELLED) or None, if it was actually executed.
+
+        Run the given function in a thread from the internal thread pool. A `WorkRequest` object is
+        returned, which has a `cancel()` method that can be called to avoid running the request, in case
+        it didn't already run.
 
     .. py:method:: excepthook(type, value, traceback)
 

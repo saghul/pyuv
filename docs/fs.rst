@@ -10,9 +10,12 @@
 
 
 .. note::
-    All functions in the fs module except for the `FSEvent` class support both
+    All functions in the fs module except for the `FSEvent` and `FSPoll` classes support both
     synchronous and asynchronous modes. If you want to run it synchronous don't
-    pass any callable as the `callback` argument, else it will run asynchronously.
+    pass any callable as the `callback` argument, else it will run asynchronously. If the async
+    form is used, then a `FSRequest` is returned when calling the functions, which has a
+    `cancel()` method that can be called in order to cancel the request, in case it hasn't run
+    yet.
 
 .. note::
     All functions that take a file descriptor argument must get the file descriptor

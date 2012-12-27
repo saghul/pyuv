@@ -48,8 +48,14 @@
 
     Set current process title.
 
-.. py:function:: pyuv.util.get_process_title()
+.. py:function:: pyuv.util.get_process_title
 
     Get current process title.
+
+.. py:function:: pyuv.util.getaddrinfo(...)
+
+    Asyncronous equivalent of `socket.getaddrinfo`. This function returns
+    a `GAIRequest` object which has a `cancel()` method that can be called
+    in order to cancel the request.
 
 
