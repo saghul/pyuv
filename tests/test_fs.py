@@ -710,43 +710,43 @@ class FSTestReaddir(unittest2.TestCase):
         self.assertEqual(self.errorno, pyuv.errno.UV_ENOENT)
 
 
-class FSTestSendfile(unittest2.TestCase):
-
-    def setUp(self):
-        self.loop = pyuv.Loop.default_loop()
-        with open(TEST_FILE, 'w') as f:
-            f.write("begin\n")
-            os.lseek(f.fileno(), 65536, os.SEEK_CUR)
-            f.write("end\n")
-            f.flush()
-
-    def tearDown(self):
-        os.remove(TEST_FILE)
-        os.remove(TEST_FILE2)
-
-    def sendfile_cb(self, loop, path, bytes_written, errorno):
-        self.bytes_written = bytes_written
-        self.errorno = errorno
-
-    def test_sendfile(self):
-        self.result = None
-        self.errorno = None
-        fd = pyuv.fs.open(self.loop, TEST_FILE, os.O_RDWR, stat.S_IREAD|stat.S_IWRITE)
-        fd2 = pyuv.fs.open(self.loop, TEST_FILE2, os.O_RDWR|os.O_CREAT, stat.S_IREAD|stat.S_IWRITE)
-        pyuv.fs.sendfile(self.loop, fd2, fd, 0, 131072, self.sendfile_cb)
-        self.loop.run()
-        pyuv.fs.close(self.loop, fd)
-        pyuv.fs.close(self.loop, fd2)
-        self.assertEqual(self.errorno, None)
-        self.assertEqual(open(TEST_FILE, 'r').read(), open(TEST_FILE2, 'r').read())
-
-    def test_sendfile_sync(self):
-        fd = pyuv.fs.open(self.loop, TEST_FILE, os.O_RDWR, stat.S_IREAD|stat.S_IWRITE)
-        fd2 = pyuv.fs.open(self.loop, TEST_FILE2, os.O_RDWR|os.O_CREAT, stat.S_IREAD|stat.S_IWRITE)
-        self.bytes_written = pyuv.fs.sendfile(self.loop, fd2, fd, 0, 131072)
-        pyuv.fs.close(self.loop, fd)
-        pyuv.fs.close(self.loop, fd2)
-        self.assertEqual(open(TEST_FILE, 'r').read(), open(TEST_FILE2, 'r').read())
+#class FSTestSendfile(unittest2.TestCase):
+#
+#    def setUp(self):
+#        self.loop = pyuv.Loop.default_loop()
+#        with open(TEST_FILE, 'w') as f:
+#            f.write("begin\n")
+#            os.lseek(f.fileno(), 65536, os.SEEK_CUR)
+#            f.write("end\n")
+#            f.flush()
+#
+#    def tearDown(self):
+#        os.remove(TEST_FILE)
+#        os.remove(TEST_FILE2)
+#
+#    def sendfile_cb(self, loop, path, bytes_written, errorno):
+#        self.bytes_written = bytes_written
+#        self.errorno = errorno
+#
+#    def test_sendfile(self):
+#        self.result = None
+#        self.errorno = None
+#        fd = pyuv.fs.open(self.loop, TEST_FILE, os.O_RDWR, stat.S_IREAD|stat.S_IWRITE)
+#        fd2 = pyuv.fs.open(self.loop, TEST_FILE2, os.O_RDWR|os.O_CREAT, stat.S_IREAD|stat.S_IWRITE)
+#        pyuv.fs.sendfile(self.loop, fd2, fd, 0, 131072, self.sendfile_cb)
+#        self.loop.run()
+#        pyuv.fs.close(self.loop, fd)
+#        pyuv.fs.close(self.loop, fd2)
+#        self.assertEqual(self.errorno, None)
+#        self.assertEqual(open(TEST_FILE, 'r').read(), open(TEST_FILE2, 'r').read())
+#
+#    def test_sendfile_sync(self):
+#        fd = pyuv.fs.open(self.loop, TEST_FILE, os.O_RDWR, stat.S_IREAD|stat.S_IWRITE)
+#        fd2 = pyuv.fs.open(self.loop, TEST_FILE2, os.O_RDWR|os.O_CREAT, stat.S_IREAD|stat.S_IWRITE)
+#        self.bytes_written = pyuv.fs.sendfile(self.loop, fd2, fd, 0, 131072)
+#        pyuv.fs.close(self.loop, fd)
+#        pyuv.fs.close(self.loop, fd2)
+#        self.assertEqual(open(TEST_FILE, 'r').read(), open(TEST_FILE2, 'r').read())
 
 
 class FSTestUtime(unittest2.TestCase):
