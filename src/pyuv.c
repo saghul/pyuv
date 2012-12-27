@@ -161,6 +161,10 @@ init_pyuv(void)
     if (PyType_Ready(&WorkRequestType) < 0) {
         return NULL;
     }
+    FSRequestType.tp_base = &RequestType;
+    if (PyType_Ready(&FSRequestType) < 0) {
+        return NULL;
+    }
 
     PyUVModule_AddType(pyuv, "Loop", &LoopType);
     PyUVModule_AddType(pyuv, "Async", &AsyncType);

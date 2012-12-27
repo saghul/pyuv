@@ -317,6 +317,14 @@ typedef struct {
 
 static PyTypeObject WorkRequestType;
 
+/* FSRequest */
+typedef struct {
+    Request request;
+    PyObject *callback;
+} FSRequest;
+
+static PyTypeObject FSRequestType;
+
 
 /* Exceptions */
 static PyObject* PyExc_AsyncError;
