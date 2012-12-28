@@ -587,61 +587,37 @@ handle_uncaught_exception(Loop *loop)
     ASSERT(loop);
     ASSERT(PyErr_Occurred());
 
-    PyErr_Fetch(&type, &val, &tb);
-    PyErr_NormalizeException(&type, &val, &tb);
-    if (!val) {
-        val = Py_None;
-        Py_INCREF(Py_None);
-    }
-    if (!tb) {
-        tb = Py_None;
-        Py_INCREF(Py_None);
-    }
-
     if (loop->excepthook_cb != NULL && loop->excepthook_cb != Py_None) {
+        PyErr_Fetch(&type, &val, &tb);
+        PyErr_NormalizeException(&type, &val, &tb);
+
+        if (!val) {
+            val = Py_None;
+            Py_INCREF(Py_None);
+        }
+        if (!tb) {
+            tb = Py_None;
+            Py_INCREF(Py_None);
+        }
+
         result = PyObject_CallFunctionObjArgs(loop->excepthook_cb, type, val, tb, NULL);
+        if (result == NULL) {
+            PyErr_Print();
+        }
         Py_XDECREF(result);
+
+        Py_DECREF(type);
+        Py_DECREF(val);
+        Py_DECREF(tb);
+
+        /* just in case*/
+        PyErr_Clear();
     } else {
-        PyErr_Display(type, val, tb);
+        PyErr_Print();
     }
 
-    Py_DECREF(type);
-    Py_DECREF(val);
-    Py_DECREF(tb);
-
-    /* just in case*/
-    PyErr_Clear();
 }
 
-
-/* print uncausht exception */
-static INLINE void
-print_uncaught_exception(void)
-{
-    PyObject *type, *val, *tb;
-
-    ASSERT(PyErr_Occurred());
-
-    PyErr_Fetch(&type, &val, &tb);
-    PyErr_NormalizeException(&type, &val, &tb);
-    if (!val) {
-        val = Py_None;
-        Py_INCREF(Py_None);
-    }
-    if (!tb) {
-        tb = Py_None;
-        Py_INCREF(Py_None);
-    }
-
-    PyErr_Display(type, val, tb);
-
-    Py_DECREF(type);
-    Py_DECREF(val);
-    Py_DECREF(tb);
-
-    /* just in case*/
-    PyErr_Clear();
-}
 
 #endif
 

@@ -151,8 +151,10 @@ threadpool_work_cb(uv_work_t *req)
 
     result = PyObject_CallFunctionObjArgs(pyreq->work_cb, NULL);
     if (result == NULL) {
-        print_uncaught_exception();
+        ASSERT(PyErr_Occurred());
+        PyErr_Print();
     }
+    Py_XDECREF(result);
 
     PyGILState_Release(gstate);
 }
