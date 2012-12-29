@@ -9,6 +9,34 @@ _loop_cleanup(void)
 }
 
 
+static int
+init_loop(Loop *loop, int is_default)
+{
+    uv_loop_t *uv_loop;
+
+    uv_loop = NULL;
+
+    if (is_default) {
+        uv_loop = uv_default_loop();
+    } else {
+        uv_loop = uv_loop_new();
+    }
+
+    if (!uv_loop) {
+        PyErr_NoMemory();
+        return -1;
+    }
+    uv_loop->data = (void *)loop;
+
+    loop->uv_loop = uv_loop;
+    loop->is_default = is_default;
+    loop->weakreflist = NULL;
+    loop->excepthook_cb = NULL;
+
+    return 0;
+}
+
+
 static PyObject *
 new_loop(PyTypeObject *type, PyObject *args, PyObject *kwargs, int is_default)
 {
@@ -23,11 +51,9 @@ new_loop(PyTypeObject *type, PyObject *args, PyObject *kwargs, int is_default)
             if (!default_loop) {
                 return NULL;
             }
-            default_loop->uv_loop = uv_default_loop();
-            default_loop->uv_loop->data = (void *)default_loop;
-            default_loop->is_default = True;
-            default_loop->weakreflist = NULL;
-            default_loop->excepthook_cb = NULL;
+            if (init_loop(default_loop, True) != 0) {
+                return NULL;
+            }
             Py_AtExit(_loop_cleanup);
         }
         Py_INCREF(default_loop);
@@ -37,11 +63,9 @@ new_loop(PyTypeObject *type, PyObject *args, PyObject *kwargs, int is_default)
         if (!self) {
             return NULL;
         }
-        self->uv_loop = uv_loop_new();
-        self->uv_loop->data = (void *)self;
-        self->is_default = False;
-        self->weakreflist = NULL;
-        self->excepthook_cb = NULL;
+        if (init_loop(self, False) != 0) {
+            return NULL;
+        }
         return (PyObject *)self;
     }
 }
