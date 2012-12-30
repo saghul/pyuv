@@ -161,16 +161,6 @@ typedef struct {
 
 static PyTypeObject SignalType;
 
-/* SignalChecker */
-typedef struct {
-    PyObject_HEAD
-    Loop *loop;
-    uv_prepare_t *prepare_handle;
-    uv_check_t *check_handle;
-} SignalChecker;
-
-static PyTypeObject SignalCheckerType;
-
 /* Stream */
 typedef struct {
     Handle handle;
@@ -340,7 +330,6 @@ static PyObject* PyExc_PollError;
 static PyObject* PyExc_PrepareError;
 static PyObject* PyExc_ProcessError;
 static PyObject* PyExc_SignalError;
-static PyObject* PyExc_SignalCheckerError;
 static PyObject* PyExc_StreamError;
 static PyObject* PyExc_TCPError;
 static PyObject* PyExc_TimerError;

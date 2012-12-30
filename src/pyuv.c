@@ -180,7 +180,6 @@ init_pyuv(void)
     PyUVModule_AddType(pyuv, "Poll", &PollType);
     PyUVModule_AddType(pyuv, "StdIO", &StdIOType);
     PyUVModule_AddType(pyuv, "Process", &ProcessType);
-    PyUVModule_AddType(pyuv, "SignalChecker", &SignalCheckerType);
 
     /* Loop.run modes */
     PyModule_AddIntMacro(pyuv, UV_RUN_DEFAULT);

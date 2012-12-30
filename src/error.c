@@ -41,7 +41,6 @@ init_error(void)
     PyExc_FSEventError = PyErr_NewException("pyuv.error.FSEventError", PyExc_HandleError, NULL);
     PyExc_FSPollError = PyErr_NewException("pyuv.error.FSPollError", PyExc_HandleError, NULL);
     PyExc_ProcessError = PyErr_NewException("pyuv.error.ProcessError", PyExc_HandleError, NULL);
-    PyExc_SignalCheckerError = PyErr_NewException("pyuv.error.SignalCheckerError", PyExc_UVError, NULL);
 
     PyUVModule_AddType(module, "UVError", (PyTypeObject *)PyExc_UVError);
     PyUVModule_AddType(module, "HandleError", (PyTypeObject *)PyExc_HandleError);
@@ -61,7 +60,6 @@ init_error(void)
     PyUVModule_AddType(module, "FSEventError", (PyTypeObject *)PyExc_FSEventError);
     PyUVModule_AddType(module, "FSPollError", (PyTypeObject *)PyExc_FSPollError);
     PyUVModule_AddType(module, "ProcessError", (PyTypeObject *)PyExc_ProcessError);
-    PyUVModule_AddType(module, "SignalCheckerError", (PyTypeObject *)PyExc_SignalCheckerError);
 
     return module;
 }
