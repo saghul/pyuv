@@ -34,7 +34,6 @@ Objects
     idle
     check
     signal
-    signalchecker
     dns
     fs
     error
