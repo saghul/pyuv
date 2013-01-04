@@ -161,6 +161,16 @@ typedef struct {
 
 static PyTypeObject SignalType;
 
+/* SignalChecker */
+typedef struct {
+    PyObject_HEAD
+    Loop *loop;
+    uv_poll_t *poll_handle;
+    uv_os_sock_t fd;
+} SignalChecker;
+
+static PyTypeObject SignalCheckerType;
+
 /* Stream */
 typedef struct {
     Handle handle;

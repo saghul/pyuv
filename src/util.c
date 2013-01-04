@@ -478,6 +478,249 @@ Util_methods[] = {
     { NULL }
 };
 
+
+#ifdef PYUV_WINDOWS
+    #define GOT_EINTR (WSAGetLastError() == WSAEINTR)
+    #define GOT_EAGAIN (WSAGetLastError() == WSAEWOULDBLOCK)
+#else
+    #define GOT_EINTR (errno == EINTR)
+    #define GOT_EAGAIN (errno == EAGAIN || errno == EWOULDBLOCK)
+#endif
+
+static int
+drain_poll_fd(uv_os_sock_t fd)
+{
+    static char buffer[1024];
+    int r;
+
+    do {
+        r = recv(fd, buffer, sizeof(buffer), 0);
+    } while (r == -1 && GOT_EINTR);
+
+    if (r != -1 || (r == -1 && GOT_EAGAIN)) {
+        return 0;
+    } else {
+        return -1;
+    }
+}
+
+#undef GOT_EINTR
+#undef GOT_EAGAIN
+
+static void
+check_signals(uv_poll_t *handle, int status, int events)
+{
+    PyGILState_STATE gstate = PyGILState_Ensure();
+    SignalChecker *self;
+
+    ASSERT(handle);
+    self = (SignalChecker *)handle->data;
+
+    Py_INCREF(self);
+
+    if (status == 0) {
+        ASSERT(events == UV_READABLE);
+    }
+
+    /* Drain the fd */
+    if (drain_poll_fd(self->fd) != 0) {
+        uv_poll_stop(handle);
+    }
+
+    /* Check for signals */
+    PyErr_CheckSignals();
+    if (PyErr_Occurred()) {
+        handle_uncaught_exception(self->loop);
+    }
+
+    Py_DECREF(self);
+
+    PyGILState_Release(gstate);
+}
+
+
+static PyObject *
+SignalChecker_func_start(SignalChecker *self)
+{
+    int r;
+
+    r = uv_poll_start(self->poll_handle, UV_READABLE, check_signals);
+    if (r != 0) {
+        RAISE_UV_EXCEPTION(UV_LOOP(self), PyExc_UVError);
+        return NULL;
+    }
+
+    Py_RETURN_NONE;
+}
+
+
+static PyObject *
+SignalChecker_func_stop(SignalChecker *self)
+{
+    int r;
+
+    r = uv_poll_stop(self->poll_handle);
+    if (r != 0) {
+        RAISE_UV_EXCEPTION(UV_LOOP(self), PyExc_UVError);
+        return NULL;
+    }
+
+    Py_RETURN_NONE;
+}
+
+
+static PyObject *
+SignalChecker_active_get(SignalChecker *self, void *closure)
+{
+    UNUSED_ARG(closure);
+    return PyBool_FromLong((long)uv_is_active((uv_handle_t *)self->poll_handle));
+}
+
+
+static int
+SignalChecker_tp_init(SignalChecker *self, PyObject *args, PyObject *kwargs)
+{
+    int r;
+    long fd;
+    uv_poll_t *uv_poll = NULL;
+    Loop *loop;
+    PyObject *tmp = NULL;
+
+    UNUSED_ARG(kwargs);
+
+    if (self->poll_handle) {
+        PyErr_SetString(PyExc_UVError, "Object already initialized");
+        return -1;
+    }
+
+    if (!PyArg_ParseTuple(args, "O!l:__init__", &LoopType, &loop, &fd)) {
+        return -1;
+    }
+
+    uv_poll = PyMem_Malloc(sizeof(uv_poll_t));
+    if (!uv_poll) {
+        PyErr_NoMemory();
+        return -1;
+    }
+
+    r = uv_poll_init_socket(loop->uv_loop, uv_poll, (uv_os_sock_t)fd);
+    if (r != 0) {
+        RAISE_UV_EXCEPTION(loop->uv_loop, PyExc_UVError);
+        return -1;
+    }
+
+    self->fd = (uv_os_sock_t)fd;
+    uv_unref((uv_handle_t *)uv_poll);
+    uv_poll->data = (void *)self;
+    self->poll_handle = uv_poll;
+
+    tmp = (PyObject *)self->loop;
+    Py_INCREF(loop);
+    self->loop = loop;
+    Py_XDECREF(tmp);
+    return 0;
+}
+
+
+static PyObject *
+SignalChecker_tp_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
+{
+    SignalChecker *self = (SignalChecker *)PyType_GenericNew(type, args, kwargs);
+    if (!self) {
+        return NULL;
+    }
+    self->poll_handle = NULL;
+    return (PyObject *)self;
+}
+
+
+static int
+SignalChecker_tp_traverse(SignalChecker *self, visitproc visit, void *arg)
+{
+    Py_VISIT(self->loop);
+    return 0;
+}
+
+
+static int
+SignalChecker_tp_clear(SignalChecker *self)
+{
+    Py_CLEAR(self->loop);
+    return 0;
+}
+
+
+static void
+SignalChecker_tp_dealloc(SignalChecker *self)
+{
+    uv_close((uv_handle_t *)self->poll_handle, on_handle_dealloc_close);
+    Py_TYPE(self)->tp_clear((PyObject *)self);
+    Py_TYPE(self)->tp_free((PyObject *)self);
+}
+
+
+static PyMethodDef
+SignalChecker_tp_methods[] = {
+    { "start", (PyCFunction)SignalChecker_func_start, METH_NOARGS, "Start the SignalChecker." },
+    { "stop", (PyCFunction)SignalChecker_func_stop, METH_NOARGS, "Stop the SignalChecker." },
+    { NULL }
+};
+
+
+static PyMemberDef SignalChecker_tp_members[] = {
+    {"loop", T_OBJECT_EX, offsetof(SignalChecker, loop), READONLY, "Loop where this handle runs."},
+    {NULL}
+};
+
+
+static PyGetSetDef SignalChecker_tp_getsets[] = {
+    {"active", (getter)SignalChecker_active_get, NULL, "Indicates if this handle is active.", NULL},
+    {NULL}
+};
+
+
+static PyTypeObject SignalCheckerType = {
+    PyVarObject_HEAD_INIT(NULL, 0)
+    "pyuv.util.SignalChecker",                                      /*tp_name*/
+    sizeof(SignalChecker),                                          /*tp_basicsize*/
+    0,                                                              /*tp_itemsize*/
+    (destructor)SignalChecker_tp_dealloc,                           /*tp_dealloc*/
+    0,                                                              /*tp_print*/
+    0,                                                              /*tp_getattr*/
+    0,                                                              /*tp_setattr*/
+    0,                                                              /*tp_compare*/
+    0,                                                              /*tp_repr*/
+    0,                                                              /*tp_as_number*/
+    0,                                                              /*tp_as_sequence*/
+    0,                                                              /*tp_as_mapping*/
+    0,                                                              /*tp_hash */
+    0,                                                              /*tp_call*/
+    0,                                                              /*tp_str*/
+    0,                                                              /*tp_getattro*/
+    0,                                                              /*tp_setattro*/
+    0,                                                              /*tp_as_buffer*/
+    Py_TPFLAGS_DEFAULT | Py_TPFLAGS_HAVE_GC,                        /*tp_flags*/
+    0,                                                              /*tp_doc*/
+    (traverseproc)SignalChecker_tp_traverse,                        /*tp_traverse*/
+    (inquiry)SignalChecker_tp_clear,                                /*tp_clear*/
+    0,                                                              /*tp_richcompare*/
+    0,                                                              /*tp_weaklistoffset*/
+    0,                                                              /*tp_iter*/
+    0,                                                              /*tp_iternext*/
+    SignalChecker_tp_methods,                                       /*tp_methods*/
+    SignalChecker_tp_members,                                       /*tp_members*/
+    SignalChecker_tp_getsets,                                       /*tp_getsets*/
+    0,                                                              /*tp_base*/
+    0,                                                              /*tp_dict*/
+    0,                                                              /*tp_descr_get*/
+    0,                                                              /*tp_descr_set*/
+    0,                                                              /*tp_dictoffset*/
+    (initproc)SignalChecker_tp_init,                                /*tp_init*/
+    0,                                                              /*tp_alloc*/
+    SignalChecker_tp_new,                                           /*tp_new*/
+};
+
+
 #ifdef PYUV_PYTHON3
 static PyModuleDef pyuv_util_module = {
     PyModuleDef_HEAD_INIT,
@@ -510,6 +753,8 @@ init_util(void)
         PyStructSequence_InitType(&CPUInfoTimesResultType, &cpu_info_times_result_desc);
     if (InterfaceAddressesResultType.tp_name == 0)
         PyStructSequence_InitType(&InterfaceAddressesResultType, &interface_addresses_result_desc);
+
+    PyUVModule_AddType(module, "SignalChecker", &SignalCheckerType);
 
     return module;
 }
