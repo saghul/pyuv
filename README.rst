@@ -53,6 +53,22 @@ Documentation
 http://readthedocs.org/docs/pyuv/
 
 
+Installing
+==========
+
+pyuv can be installed via pip as follows:
+
+::
+
+    pip install pyuv
+
+If you'd like to use the `development version <https://github.com/saghul/pyuv/zipball/master#egg=pyuv-dev>`_ use the following command:
+
+::
+
+    pip install pyuv==dev
+
+
 Building
 ========
 
