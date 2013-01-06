@@ -1,3 +1,16 @@
+Version 0.9.3
+=============
+ - Added mode parameter to Loop.run
+ - Added fileno and get_timeout methods to Loop
+ - Added ability to cancel threadpool, getaddrinfo and fs requests
+ - Removed ThreadPool and moved queue_work to Loop
+ - Refactored SignalChecker implementation
+ - Refactored excepthook implementation
+ - Avoid storing result and exception for threadpool operations
+ - Fixed unreferencing the loop too early after calling close
+ - Defined UV_PROCESS_WINDOWS_HIDE flag for Process handles
+ - Raised libuv revision to ba83510 (master)
+
 Version 0.9.2
 =============
  - Added support for compilation with Visual Studio
