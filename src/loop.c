@@ -74,7 +74,10 @@ new_loop(PyTypeObject *type, PyObject *args, PyObject *kwargs, int is_default)
 static PyObject *
 Loop_func_run(Loop *self, PyObject *args)
 {
-    int mode = UV_RUN_DEFAULT;
+    int r;
+    int mode;
+
+    mode = UV_RUN_DEFAULT;
 
     if (!PyArg_ParseTuple(args, "|i:run", &mode)) {
         return NULL;
@@ -86,12 +89,14 @@ Loop_func_run(Loop *self, PyObject *args)
     }
 
     Py_BEGIN_ALLOW_THREADS
-    uv_run2(self->uv_loop, mode);
+    r = uv_run2(self->uv_loop, mode);
     Py_END_ALLOW_THREADS
+
     if (PyErr_Occurred()) {
         handle_uncaught_exception(self);
     }
-    Py_RETURN_NONE;
+
+    return PyBool_FromLong((long)r);
 }
 
 
