@@ -41,12 +41,6 @@ class TestBasetype(unittest2.TestCase):
         loop = pyuv.Loop.default_loop()
         self._inheritance_test(pyuv.Pipe, loop)
 
-    def test_inherit_tty(self):
-        loop = pyuv.Loop.default_loop()
-        fd, fname = tempfile.mkstemp()
-        os.unlink(fname)
-        self._inheritance_test(pyuv.TTY, loop, fd, False)
-
     def test_inherit_process(self):
         loop = pyuv.Loop.default_loop()
         self._inheritance_test(pyuv.Process, loop)
