@@ -51,9 +51,6 @@ class TestBasetype(unittest2.TestCase):
         loop = pyuv.Loop.default_loop()
         self._inheritance_test(pyuv.Process, loop)
 
-    def test_inherit_stdio(self):
-        self._inheritance_test(pyuv.StdIO, fd=sys.stdin.fileno())
-
     def test_inherit_async(self):
         loop = pyuv.Loop.default_loop()
         callback = lambda handle: handle
@@ -74,11 +71,6 @@ class TestBasetype(unittest2.TestCase):
     def test_inherit_signal(self):
         loop = pyuv.Loop.default_loop()
         self._inheritance_test(pyuv.Signal, loop)
-
-    def test_inherit_signalchecker(self):
-        loop = pyuv.Loop.default_loop()
-        sock = socket.socket()
-        self._inheritance_test(pyuv.util.SignalChecker, loop, sock.fileno())
 
     def test_inherit_fs_fsevent(self):
         loop = pyuv.Loop.default_loop()
