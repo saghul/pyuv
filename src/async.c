@@ -16,7 +16,7 @@ on_async_callback(uv_async_t *async, int status)
 
     result = PyObject_CallFunctionObjArgs(self->callback, self, NULL);
     if (result == NULL) {
-        handle_uncaught_exception(((Handle *)self)->loop);
+        handle_uncaught_exception(HANDLE(self)->loop);
     }
     Py_XDECREF(result);
 
@@ -30,11 +30,12 @@ Async_func_send(Async *self)
 {
     int r;
 
+    RAISE_IF_HANDLE_NOT_INITIALIZED(self, NULL);
     RAISE_IF_HANDLE_CLOSED(self, PyExc_HandleClosedError, NULL);
 
     r = uv_async_send((uv_async_t *)UV_HANDLE(self));
     if (r != 0) {
-        RAISE_UV_EXCEPTION(UV_LOOP((Handle *)self), PyExc_AsyncError);
+        RAISE_UV_EXCEPTION(UV_HANDLE_LOOP(self), PyExc_AsyncError);
         return NULL;
     }
 
@@ -46,17 +47,13 @@ static int
 Async_tp_init(Async *self, PyObject *args, PyObject *kwargs)
 {
     int r;
-    uv_async_t *uv_async = NULL;
     Loop *loop;
     PyObject *callback;
     PyObject *tmp = NULL;
 
     UNUSED_ARG(kwargs);
 
-    if (UV_HANDLE(self)) {
-        PyErr_SetString(PyExc_AsyncError, "Object already initialized");
-        return -1;
-    }
+    RAISE_IF_HANDLE_INITIALIZED(self, -1);
 
     if (!PyArg_ParseTuple(args, "O!O:__init__", &LoopType, &loop, &callback)) {
         return -1;
@@ -67,22 +64,9 @@ Async_tp_init(Async *self, PyObject *args, PyObject *kwargs)
         return -1;
     }
 
-    tmp = (PyObject *)((Handle *)self)->loop;
-    Py_INCREF(loop);
-    ((Handle *)self)->loop = loop;
-    Py_XDECREF(tmp);
-
-    uv_async = PyMem_Malloc(sizeof(uv_async_t));
-    if (!uv_async) {
-        PyErr_NoMemory();
-        Py_DECREF(loop);
-        return -1;
-    }
-
-    r = uv_async_init(UV_HANDLE_LOOP(self), uv_async, on_async_callback);
+    r = uv_async_init(loop->uv_loop, (uv_async_t *)UV_HANDLE(self), on_async_callback);
     if (r != 0) {
-        RAISE_UV_EXCEPTION(UV_HANDLE_LOOP(self), PyExc_AsyncError);
-        Py_DECREF(loop);
+        RAISE_UV_EXCEPTION(loop->uv_loop, PyExc_AsyncError);
         return -1;
     }
 
@@ -91,8 +75,12 @@ Async_tp_init(Async *self, PyObject *args, PyObject *kwargs)
     self->callback = callback;
     Py_XDECREF(tmp);
 
-    uv_async->data = (void *)self;
-    UV_HANDLE(self) = (uv_handle_t *)uv_async;
+    tmp = (PyObject *)HANDLE(self)->loop;
+    Py_INCREF(loop);
+    HANDLE(self)->loop = loop;
+    Py_XDECREF(tmp);
+
+    HANDLE(self)->initialized = True;
 
     return 0;
 }
@@ -101,10 +89,23 @@ Async_tp_init(Async *self, PyObject *args, PyObject *kwargs)
 static PyObject *
 Async_tp_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
 {
-    Async *self = (Async *)HandleType.tp_new(type, args, kwargs);
-    if (!self) {
+    uv_async_t *uv_async;
+
+    uv_async = PyMem_Malloc(sizeof(uv_async_t));
+    if (!uv_async) {
+        PyErr_NoMemory();
         return NULL;
     }
+
+    Async *self = (Async *)HandleType.tp_new(type, args, kwargs);
+    if (!self) {
+        PyMem_Free(uv_async);
+        return NULL;
+    }
+
+    uv_async->data = (void *)self;
+    UV_HANDLE(self) = (uv_handle_t *)uv_async;
+
     return (PyObject *)self;
 }
 
@@ -174,6 +175,4 @@ static PyTypeObject AsyncType = {
     0,                                                              /*tp_alloc*/
     Async_tp_new,                                                   /*tp_new*/
 };
-
-
 

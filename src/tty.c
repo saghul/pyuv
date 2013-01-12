@@ -4,6 +4,7 @@ TTY_func_set_mode(TTY *self, PyObject *args)
 {
     int r, mode;
 
+    RAISE_IF_HANDLE_NOT_INITIALIZED(self, NULL);
     RAISE_IF_HANDLE_CLOSED(self, PyExc_HandleClosedError, NULL);
 
     if (!PyArg_ParseTuple(args, "i:set_mode", &mode)) {
@@ -53,6 +54,7 @@ TTY_func_get_winsize(TTY *self)
 {
     int r, width, height;
 
+    RAISE_IF_HANDLE_NOT_INITIALIZED(self, NULL);
     RAISE_IF_HANDLE_CLOSED(self, PyExc_HandleClosedError, NULL);
 
     r = uv_tty_get_winsize((uv_tty_t *)UV_HANDLE(self), &width, &height);
@@ -69,42 +71,30 @@ static int
 TTY_tp_init(TTY *self, PyObject *args, PyObject *kwargs)
 {
     int fd, r;
-    uv_tty_t *uv_tty;
     Loop *loop;
     PyObject *readable;
     PyObject *tmp = NULL;
 
     UNUSED_ARG(kwargs);
 
-    if (UV_HANDLE(self)) {
-        PyErr_SetString(PyExc_StreamError, "Object already initialized");
-        return -1;
-    }
+    RAISE_IF_HANDLE_INITIALIZED(self, -1);
 
     if (!PyArg_ParseTuple(args, "O!iO!:__init__", &LoopType, &loop, &fd, &PyBool_Type, &readable)) {
         return -1;
     }
 
-    tmp = (PyObject *)((Handle *)self)->loop;
+    r = uv_tty_init(loop->uv_loop, (uv_tty_t *)UV_HANDLE(self), fd, (readable == Py_True) ? 1 : 0);
+    if (r != 0) {
+        RAISE_UV_EXCEPTION(loop->uv_loop, PyExc_TTYError);
+        return -1;
+    }
+
+    tmp = (PyObject *)HANDLE(self)->loop;
     Py_INCREF(loop);
-    ((Handle *)self)->loop = loop;
+    HANDLE(self)->loop = loop;
     Py_XDECREF(tmp);
 
-    uv_tty = PyMem_Malloc(sizeof(uv_tty_t));
-    if (!uv_tty) {
-        PyErr_NoMemory();
-        Py_DECREF(loop);
-        return -1;
-    }
-
-    r = uv_tty_init(UV_HANDLE_LOOP(self), uv_tty, fd, (readable == Py_True) ? 1 : 0);
-    if (r != 0) {
-        RAISE_UV_EXCEPTION(UV_HANDLE_LOOP(self), PyExc_TTYError);
-        Py_DECREF(loop);
-        return -1;
-    }
-    uv_tty->data = (void *)self;
-    UV_HANDLE(self) = (uv_handle_t *)uv_tty;
+    HANDLE(self)->initialized = True;
 
     return 0;
 }
@@ -113,10 +103,23 @@ TTY_tp_init(TTY *self, PyObject *args, PyObject *kwargs)
 static PyObject *
 TTY_tp_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
 {
-    TTY *self = (TTY *)StreamType.tp_new(type, args, kwargs);
-    if (!self) {
+    uv_tty_t *uv_tty;
+
+    uv_tty = PyMem_Malloc(sizeof(uv_tty_t));
+    if (!uv_tty) {
+        PyErr_NoMemory();
         return NULL;
     }
+
+    TTY *self = (TTY *)StreamType.tp_new(type, args, kwargs);
+    if (!self) {
+        PyMem_Free(uv_tty);
+        return NULL;
+    }
+
+    uv_tty->data = (void *)self;
+    UV_HANDLE(self) = (uv_handle_t *)uv_tty;
+
     return (PyObject *)self;
 }
 
@@ -187,5 +190,4 @@ static PyTypeObject TTYType = {
     0,                                                             /*tp_alloc*/
     TTY_tp_new,                                                    /*tp_new*/
 };
-
 

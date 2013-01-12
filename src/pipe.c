@@ -22,7 +22,7 @@ on_pipe_connection(uv_stream_t* server, int status)
 
     result = PyObject_CallFunctionObjArgs(self->on_new_connection_cb, self, py_errorno, NULL);
     if (result == NULL) {
-        handle_uncaught_exception(((Handle *)self)->loop);
+        handle_uncaught_exception(HANDLE(self)->loop);
     }
     Py_XDECREF(result);
     Py_DECREF(py_errorno);
@@ -55,7 +55,7 @@ on_pipe_client_connection(uv_connect_t *req, int status)
 
     result = PyObject_CallFunctionObjArgs(callback, self, py_errorno, NULL);
     if (result == NULL) {
-        handle_uncaught_exception(((Handle *)self)->loop);
+        handle_uncaught_exception(HANDLE(self)->loop);
     }
     Py_XDECREF(result);
     Py_DECREF(py_errorno);
@@ -99,7 +99,7 @@ on_pipe_read2(uv_pipe_t* handle, int nread, uv_buf_t buf, uv_handle_type pending
 
     result = PyObject_CallFunctionObjArgs(self->on_read_cb, self, data, py_pending, py_errorno, NULL);
     if (result == NULL) {
-        handle_uncaught_exception(((Handle *)self)->loop);
+        handle_uncaught_exception(HANDLE(self)->loop);
     }
     Py_XDECREF(result);
     Py_DECREF(data);
@@ -117,6 +117,7 @@ Pipe_func_bind(Pipe *self, PyObject *args)
     int r;
     char *name;
 
+    RAISE_IF_HANDLE_NOT_INITIALIZED(self, NULL);
     RAISE_IF_HANDLE_CLOSED(self, PyExc_HandleClosedError, NULL);
 
     if (!PyArg_ParseTuple(args, "s:bind", &name)) {
@@ -142,6 +143,7 @@ Pipe_func_listen(Pipe *self, PyObject *args)
     backlog = 128;
     tmp = NULL;
 
+    RAISE_IF_HANDLE_NOT_INITIALIZED(self, NULL);
     RAISE_IF_HANDLE_CLOSED(self, PyExc_HandleClosedError, NULL);
 
     if (!PyArg_ParseTuple(args, "O|i:listen", &callback, &backlog)) {
@@ -179,6 +181,7 @@ Pipe_func_accept(Pipe *self, PyObject *args)
     int r;
     PyObject *client;
 
+    RAISE_IF_HANDLE_NOT_INITIALIZED(self, NULL);
     RAISE_IF_HANDLE_CLOSED(self, PyExc_HandleClosedError, NULL);
 
     if (!PyArg_ParseTuple(args, "O:accept", &client)) {
@@ -207,6 +210,7 @@ Pipe_func_connect(Pipe *self, PyObject *args)
     uv_connect_t *connect_req = NULL;
     PyObject *callback;
 
+    RAISE_IF_HANDLE_NOT_INITIALIZED(self, NULL);
     RAISE_IF_HANDLE_CLOSED(self, PyExc_HandleClosedError, NULL);
 
     if (!PyArg_ParseTuple(args, "sO:connect", &name, &callback)) {
@@ -249,6 +253,7 @@ Pipe_func_open(Pipe *self, PyObject *args)
 {
     int fd;
 
+    RAISE_IF_HANDLE_NOT_INITIALIZED(self, NULL);
     RAISE_IF_HANDLE_CLOSED(self, PyExc_HandleClosedError, NULL);
 
     if (!PyArg_ParseTuple(args, "i:open", &fd)) {
@@ -267,6 +272,7 @@ Pipe_func_pending_instances(Pipe *self, PyObject *args)
     /* This function applies to Windows only */
     int count;
 
+    RAISE_IF_HANDLE_NOT_INITIALIZED(self, NULL);
     RAISE_IF_HANDLE_CLOSED(self, PyExc_HandleClosedError, NULL);
 
     if (!PyArg_ParseTuple(args, "i:pending_instances", &count)) {
@@ -287,6 +293,7 @@ Pipe_func_start_read2(Pipe *self, PyObject *args)
 
     tmp = NULL;
 
+    RAISE_IF_HANDLE_NOT_INITIALIZED(self, NULL);
     RAISE_IF_HANDLE_CLOSED(self, PyExc_HandleClosedError, NULL);
 
     if (!PyArg_ParseTuple(args, "O:start_read2", &callback)) {
@@ -322,6 +329,7 @@ Pipe_func_write2(Pipe *self, PyObject *args)
 
     callback = Py_None;
 
+    RAISE_IF_HANDLE_NOT_INITIALIZED(self, NULL);
     RAISE_IF_HANDLE_CLOSED(self, PyExc_HandleClosedError, NULL);
 
     if ((view = PyMem_New(Py_buffer, 1)) == NULL) {
@@ -359,42 +367,30 @@ static int
 Pipe_tp_init(Pipe *self, PyObject *args, PyObject *kwargs)
 {
     int r;
-    uv_pipe_t *uv_pipe;
     Loop *loop;
     PyObject *tmp = NULL;
     PyObject *ipc = Py_False;
 
     UNUSED_ARG(kwargs);
 
-    if (UV_HANDLE(self)) {
-        PyErr_SetString(PyExc_PipeError, "Object already initialized");
-        return -1;
-    }
+    RAISE_IF_HANDLE_INITIALIZED(self, -1);
 
     if (!PyArg_ParseTuple(args, "O!|O!:__init__", &LoopType, &loop, &PyBool_Type, &ipc)) {
         return -1;
     }
 
-    tmp = (PyObject *)((Handle *)self)->loop;
+    r = uv_pipe_init(loop->uv_loop, (uv_pipe_t *)UV_HANDLE(self), (ipc == Py_True) ? 1 : 0);
+    if (r != 0) {
+        RAISE_UV_EXCEPTION(loop->uv_loop, PyExc_PipeError);
+        return -1;
+    }
+
+    tmp = (PyObject *)HANDLE(self)->loop;
     Py_INCREF(loop);
-    ((Handle *)self)->loop = loop;
+    HANDLE(self)->loop = loop;
     Py_XDECREF(tmp);
 
-    uv_pipe = PyMem_Malloc(sizeof(uv_pipe_t));
-    if (!uv_pipe) {
-        PyErr_NoMemory();
-        Py_DECREF(loop);
-        return -1;
-    }
-
-    r = uv_pipe_init(UV_HANDLE_LOOP(self), uv_pipe, (ipc == Py_True) ? 1 : 0);
-    if (r != 0) {
-        RAISE_UV_EXCEPTION(UV_HANDLE_LOOP(self), PyExc_PipeError);
-        Py_DECREF(loop);
-        return -1;
-    }
-    uv_pipe->data = (void *)self;
-    UV_HANDLE(self) = (uv_handle_t *)uv_pipe;
+    HANDLE(self)->initialized = True;
 
     return 0;
 }
@@ -403,10 +399,23 @@ Pipe_tp_init(Pipe *self, PyObject *args, PyObject *kwargs)
 static PyObject *
 Pipe_tp_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
 {
-    Pipe *self = (Pipe *)StreamType.tp_new(type, args, kwargs);
-    if (!self) {
+    uv_pipe_t *uv_pipe;
+
+    uv_pipe = PyMem_Malloc(sizeof(uv_pipe_t));
+    if (!uv_pipe) {
+        PyErr_NoMemory();
         return NULL;
     }
+
+    Pipe *self = (Pipe *)StreamType.tp_new(type, args, kwargs);
+    if (!self) {
+        PyMem_Free(uv_pipe);
+        return NULL;
+    }
+
+    uv_pipe->data = (void *)self;
+    UV_HANDLE(self) = (uv_handle_t *)uv_pipe;
+
     return (PyObject *)self;
 }
 

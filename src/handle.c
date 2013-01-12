@@ -1,4 +1,12 @@
 
+static INLINE void
+free_handle(uv_handle_t *handle)
+{
+    ASSERT(handle);
+    PyMem_Free(handle);
+}
+
+
 static void
 on_handle_close(uv_handle_t *handle)
 {
@@ -18,10 +26,6 @@ on_handle_close(uv_handle_t *handle)
         Py_XDECREF(result);
     }
 
-    self->uv_handle = NULL;
-    handle->data = NULL;
-    PyMem_Free(handle);
-
     Py_XDECREF(self->on_close_cb);
     self->on_close_cb = NULL;
 
@@ -40,9 +44,9 @@ static void
 on_handle_dealloc_close(uv_handle_t *handle)
 {
     PyGILState_STATE gstate = PyGILState_Ensure();
-    ASSERT(handle);
-    handle->data = NULL;
-    PyMem_Free(handle);
+
+    free_handle(handle);
+
     PyGILState_Release(gstate);
 }
 
@@ -50,6 +54,7 @@ on_handle_dealloc_close(uv_handle_t *handle)
 static PyObject *
 Handle_func_ref(Handle *self)
 {
+    RAISE_IF_HANDLE_NOT_INITIALIZED(self, NULL);
     RAISE_IF_HANDLE_CLOSED(self, PyExc_HandleClosedError, NULL);
     uv_ref(self->uv_handle);
     Py_RETURN_NONE;
@@ -59,6 +64,7 @@ Handle_func_ref(Handle *self)
 static PyObject *
 Handle_func_unref(Handle *self)
 {
+    RAISE_IF_HANDLE_NOT_INITIALIZED(self, NULL);
     RAISE_IF_HANDLE_CLOSED(self, PyExc_HandleClosedError, NULL);
     uv_unref(self->uv_handle);
     Py_RETURN_NONE;
@@ -70,6 +76,7 @@ Handle_func_close(Handle *self, PyObject *args)
 {
     PyObject *callback = NULL;
 
+    RAISE_IF_HANDLE_NOT_INITIALIZED(self, NULL);
     RAISE_IF_HANDLE_CLOSED(self, PyExc_HandleClosedError, NULL);
 
     if (!PyArg_ParseTuple(args, "|O:close", &callback)) {
@@ -97,11 +104,10 @@ static PyObject *
 Handle_active_get(Handle *self, void *closure)
 {
     UNUSED_ARG(closure);
-    if (!self->uv_handle) {
-        Py_RETURN_FALSE;
-    } else {
-        return PyBool_FromLong((long)uv_is_active(self->uv_handle));
-    }
+
+    RAISE_IF_HANDLE_NOT_INITIALIZED(self, NULL);
+
+    return PyBool_FromLong((long)uv_is_active(self->uv_handle));
 }
 
 
@@ -109,11 +115,10 @@ static PyObject *
 Handle_closed_get(Handle *self, void *closure)
 {
     UNUSED_ARG(closure);
-    if (!self->uv_handle) {
-        Py_RETURN_TRUE;
-    } else {
-        return PyBool_FromLong((long)uv_is_closing(self->uv_handle));
-    }
+
+    RAISE_IF_HANDLE_NOT_INITIALIZED(self, NULL);
+
+    return PyBool_FromLong((long)uv_is_closing(self->uv_handle));
 }
 
 
@@ -124,6 +129,7 @@ Handle_tp_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
     if (!self) {
         return NULL;
     }
+    self->initialized = False;
     self->uv_handle = NULL;
     self->weakreflist = NULL;
     return (PyObject *)self;
@@ -153,8 +159,14 @@ Handle_tp_clear(Handle *self)
 static void
 Handle_tp_dealloc(Handle *self)
 {
-    if (self->uv_handle) {
+    ASSERT(self->uv_handle);
+    self->uv_handle->data = NULL;
+    if (self->initialized && !uv_is_closing(self->uv_handle)) {
         uv_close(self->uv_handle, on_handle_dealloc_close);
+    } else {
+        /* Refcount is increased in close(), so it's guaranteed that if we arrived here and the user had called close(),
+         * the callback was already executed and it's safe to free the handle */
+        free_handle(self->uv_handle);
     }
     if (self->weakreflist != NULL) {
         PyObject_ClearWeakRefs((PyObject *)self);
