@@ -66,6 +66,22 @@ typedef int Bool;
 
 #define UV_HANDLE_LOOP(x) UV_LOOP((Handle *)x)
 
+#define RAISE_IF_INITIALIZED(obj, retval)                                           \
+    do {                                                                            \
+        if ((obj)->initialized) {                                                   \
+            PyErr_SetString(PyExc_RuntimeError, "Object was already initialized");  \
+            return retval;                                                          \
+        }                                                                           \
+    } while(0)                                                                      \
+
+#define RAISE_IF_NOT_INITIALIZED(obj, retval)                                                             \
+    do {                                                                                                  \
+        if (!((obj)->initialized)) {                                                                      \
+            PyErr_SetString(PyExc_RuntimeError, "Object was not initialized, forgot to call __init__?");  \
+            return retval;                                                                                \
+        }                                                                                                 \
+    } while(0)                                                                                            \
+
 #define RAISE_IF_HANDLE_CLOSED(obj, exc_type, retval)                       \
     do {                                                                    \
         if (UV_HANDLE_CLOSED(obj)) {                                        \
@@ -255,6 +271,7 @@ static PyTypeObject FSPollType;
 /* Barrier */
 typedef struct {
     PyObject_HEAD
+    Bool initialized;
     uv_barrier_t *uv_barrier;
 } Barrier;
 
@@ -263,6 +280,7 @@ static PyTypeObject BarrierType;
 /* Condition */
 typedef struct {
     PyObject_HEAD
+    Bool initialized;
     uv_cond_t *uv_condition;
 } Condition;
 
@@ -271,6 +289,7 @@ static PyTypeObject ConditionType;
 /* Mutex */
 typedef struct {
     PyObject_HEAD
+    Bool initialized;
     uv_mutex_t *uv_mutex;
 } Mutex;
 
@@ -279,6 +298,7 @@ static PyTypeObject MutexType;
 /* RWLock */
 typedef struct {
     PyObject_HEAD
+    Bool initialized;
     uv_rwlock_t *uv_rwlock;
 } RWLock;
 
@@ -287,6 +307,7 @@ static PyTypeObject RWLockType;
 /* Semaphore */
 typedef struct {
     PyObject_HEAD
+    Bool initialized;
     uv_sem_t *uv_semaphore;
 } Semaphore;
 

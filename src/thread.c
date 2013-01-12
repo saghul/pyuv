@@ -2,6 +2,8 @@
 static PyObject *
 Barrier_func_wait(Barrier *self)
 {
+    RAISE_IF_NOT_INITIALIZED(self, NULL);
+
     Py_BEGIN_ALLOW_THREADS
     uv_barrier_wait(self->uv_barrier);
     Py_END_ALLOW_THREADS
@@ -13,32 +15,22 @@ Barrier_func_wait(Barrier *self)
 static int
 Barrier_tp_init(Barrier *self, PyObject *args, PyObject *kwargs)
 {
-    uv_barrier_t *uv_barrier = NULL;
     unsigned int count;
 
     UNUSED_ARG(kwargs);
 
-    if (self->uv_barrier != NULL) {
-        PyErr_SetString(PyExc_ValueError, "Object already initialized");
-        return -1;
-    }
+    RAISE_IF_INITIALIZED(self, -1);
 
     if (!PyArg_ParseTuple(args, "I:__init__", &count)) {
         return -1;
     }
 
-    uv_barrier = PyMem_Malloc(sizeof(uv_barrier_t));
-    if (!uv_barrier) {
-        PyErr_NoMemory();
-        return -1;
-    }
-
-    if (uv_barrier_init(uv_barrier, count)) {
+    if (uv_barrier_init(self->uv_barrier, count)) {
         PyErr_SetString(PyExc_RuntimeError, "Error initializing Barrier");
         return -1;
     }
 
-    self->uv_barrier = uv_barrier;
+    self->initialized = True;
     return 0;
 }
 
@@ -46,35 +38,34 @@ Barrier_tp_init(Barrier *self, PyObject *args, PyObject *kwargs)
 static PyObject *
 Barrier_tp_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
 {
-    Barrier *self = (Barrier *)PyType_GenericNew(type, args, kwargs);
-    if (!self) {
+    uv_barrier_t *uv_barrier;
+
+    uv_barrier = PyMem_Malloc(sizeof(uv_barrier_t));
+    if (!uv_barrier) {
+        PyErr_NoMemory();
         return NULL;
     }
-    self->uv_barrier = NULL;
+
+    Barrier *self = (Barrier *)PyType_GenericNew(type, args, kwargs);
+    if (!self) {
+        PyMem_Free(uv_barrier);
+        return NULL;
+    }
+    self->uv_barrier = uv_barrier;
+    self->initialized = False;
     return (PyObject *)self;
-}
-
-
-static int
-Barrier_tp_traverse(Barrier *self, visitproc visit, void *arg)
-{
-    return 0;
-}
-
-
-static int
-Barrier_tp_clear(Barrier *self)
-{
-    return 0;
 }
 
 
 static void
 Barrier_tp_dealloc(Barrier *self)
 {
-    uv_barrier_destroy(self->uv_barrier);
-    Py_TYPE(self)->tp_clear((PyObject *)self);
-    Py_TYPE(self)->tp_free((PyObject *)self);
+    ASSERT(self->uv_barrier);
+    if (self->initialized) {
+        uv_barrier_destroy(self->uv_barrier);
+    }
+    PyMem_Free(self->uv_barrier);
+    Py_TYPE(self)->tp_free(self);
 }
 
 
@@ -105,10 +96,10 @@ static PyTypeObject BarrierType = {
     0,                                                              /*tp_getattro*/
     0,                                                              /*tp_setattro*/
     0,                                                              /*tp_as_buffer*/
-    Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE | Py_TPFLAGS_HAVE_GC,  /*tp_flags*/
+    Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE,                       /*tp_flags*/
     0,                                                              /*tp_doc*/
-    (traverseproc)Barrier_tp_traverse,                              /*tp_traverse*/
-    (inquiry)Barrier_tp_clear,                                      /*tp_clear*/
+    0,                                                              /*tp_traverse*/
+    0,                                                              /*tp_clear*/
     0,                                                              /*tp_richcompare*/
     0,                                                              /*tp_weaklistoffset*/
     0,                                                              /*tp_iter*/
@@ -130,6 +121,8 @@ static PyTypeObject BarrierType = {
 static PyObject *
 Mutex_func_lock(Mutex *self)
 {
+    RAISE_IF_NOT_INITIALIZED(self, NULL);
+
     Py_BEGIN_ALLOW_THREADS
     uv_mutex_lock(self->uv_mutex);
     Py_END_ALLOW_THREADS
@@ -141,6 +134,8 @@ Mutex_func_lock(Mutex *self)
 static PyObject *
 Mutex_func_unlock(Mutex *self)
 {
+    RAISE_IF_NOT_INITIALIZED(self, NULL);
+
     Py_BEGIN_ALLOW_THREADS
     uv_mutex_unlock(self->uv_mutex);
     Py_END_ALLOW_THREADS
@@ -154,6 +149,8 @@ Mutex_func_trylock(Mutex *self)
 {
     int r;
 
+    RAISE_IF_NOT_INITIALIZED(self, NULL);
+
     Py_BEGIN_ALLOW_THREADS
     r = uv_mutex_trylock(self->uv_mutex);
     Py_END_ALLOW_THREADS
@@ -165,28 +162,17 @@ Mutex_func_trylock(Mutex *self)
 static int
 Mutex_tp_init(Mutex *self, PyObject *args, PyObject *kwargs)
 {
-    uv_mutex_t *uv_mutex = NULL;
-
     UNUSED_ARG(args);
     UNUSED_ARG(kwargs);
 
-    if (self->uv_mutex != NULL) {
-        PyErr_SetString(PyExc_ValueError, "Object already initialized");
-        return -1;
-    }
+    RAISE_IF_INITIALIZED(self, -1);
 
-    uv_mutex = PyMem_Malloc(sizeof(uv_mutex_t));
-    if (!uv_mutex) {
-        PyErr_NoMemory();
-        return -1;
-    }
-
-    if (uv_mutex_init(uv_mutex)) {
+    if (uv_mutex_init(self->uv_mutex)) {
         PyErr_SetString(PyExc_RuntimeError, "Error initializing Mutex");
         return -1;
     }
 
-    self->uv_mutex = uv_mutex;
+    self->initialized = True;
     return 0;
 }
 
@@ -194,35 +180,34 @@ Mutex_tp_init(Mutex *self, PyObject *args, PyObject *kwargs)
 static PyObject *
 Mutex_tp_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
 {
-    Mutex *self = (Mutex *)PyType_GenericNew(type, args, kwargs);
-    if (!self) {
+    uv_mutex_t *uv_mutex;
+
+    uv_mutex = PyMem_Malloc(sizeof(uv_mutex_t));
+    if (!uv_mutex) {
+        PyErr_NoMemory();
         return NULL;
     }
-    self->uv_mutex = NULL;
+
+    Mutex *self = (Mutex *)PyType_GenericNew(type, args, kwargs);
+    if (!self) {
+        PyMem_Free(uv_mutex);
+        return NULL;
+    }
+    self->uv_mutex = uv_mutex;
+    self->initialized = False;
     return (PyObject *)self;
-}
-
-
-static int
-Mutex_tp_traverse(Mutex *self, visitproc visit, void *arg)
-{
-    return 0;
-}
-
-
-static int
-Mutex_tp_clear(Mutex *self)
-{
-    return 0;
 }
 
 
 static void
 Mutex_tp_dealloc(Mutex *self)
 {
-    uv_mutex_destroy(self->uv_mutex);
-    Py_TYPE(self)->tp_clear((PyObject *)self);
-    Py_TYPE(self)->tp_free((PyObject *)self);
+    ASSERT(self->uv_mutex);
+    if (self->initialized) {
+        uv_mutex_destroy(self->uv_mutex);
+    }
+    PyMem_Free(self->uv_mutex);
+    Py_TYPE(self)->tp_free(self);
 }
 
 
@@ -257,10 +242,10 @@ static PyTypeObject MutexType = {
     0,                                                              /*tp_getattro*/
     0,                                                              /*tp_setattro*/
     0,                                                              /*tp_as_buffer*/
-    Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE | Py_TPFLAGS_HAVE_GC,  /*tp_flags*/
+    Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE,                       /*tp_flags*/
     0,                                                              /*tp_doc*/
-    (traverseproc)Mutex_tp_traverse,                                /*tp_traverse*/
-    (inquiry)Mutex_tp_clear,                                        /*tp_clear*/
+    0,                                                              /*tp_traverse*/
+    0,                                                              /*tp_clear*/
     0,                                                              /*tp_richcompare*/
     0,                                                              /*tp_weaklistoffset*/
     0,                                                              /*tp_iter*/
@@ -282,6 +267,8 @@ static PyTypeObject MutexType = {
 static PyObject *
 RWLock_func_rdlock(RWLock *self)
 {
+    RAISE_IF_NOT_INITIALIZED(self, NULL);
+
     Py_BEGIN_ALLOW_THREADS
     uv_rwlock_rdlock(self->uv_rwlock);
     Py_END_ALLOW_THREADS
@@ -293,6 +280,8 @@ RWLock_func_rdlock(RWLock *self)
 static PyObject *
 RWLock_func_rdunlock(RWLock *self)
 {
+    RAISE_IF_NOT_INITIALIZED(self, NULL);
+
     Py_BEGIN_ALLOW_THREADS
     uv_rwlock_rdunlock(self->uv_rwlock);
     Py_END_ALLOW_THREADS
@@ -306,6 +295,8 @@ RWLock_func_tryrdlock(RWLock *self)
 {
     int r;
 
+    RAISE_IF_NOT_INITIALIZED(self, NULL);
+
     Py_BEGIN_ALLOW_THREADS
     r = uv_rwlock_tryrdlock(self->uv_rwlock);
     Py_END_ALLOW_THREADS
@@ -317,6 +308,8 @@ RWLock_func_tryrdlock(RWLock *self)
 static PyObject *
 RWLock_func_wrlock(RWLock *self)
 {
+    RAISE_IF_NOT_INITIALIZED(self, NULL);
+
     Py_BEGIN_ALLOW_THREADS
     uv_rwlock_wrlock(self->uv_rwlock);
     Py_END_ALLOW_THREADS
@@ -328,6 +321,8 @@ RWLock_func_wrlock(RWLock *self)
 static PyObject *
 RWLock_func_wrunlock(RWLock *self)
 {
+    RAISE_IF_NOT_INITIALIZED(self, NULL);
+
     Py_BEGIN_ALLOW_THREADS
     uv_rwlock_wrunlock(self->uv_rwlock);
     Py_END_ALLOW_THREADS
@@ -341,6 +336,8 @@ RWLock_func_trywrlock(RWLock *self)
 {
     int r;
 
+    RAISE_IF_NOT_INITIALIZED(self, NULL);
+
     Py_BEGIN_ALLOW_THREADS
     r = uv_rwlock_trywrlock(self->uv_rwlock);
     Py_END_ALLOW_THREADS
@@ -352,28 +349,17 @@ RWLock_func_trywrlock(RWLock *self)
 static int
 RWLock_tp_init(RWLock *self, PyObject *args, PyObject *kwargs)
 {
-    uv_rwlock_t *uv_rwlock = NULL;
-
     UNUSED_ARG(args);
     UNUSED_ARG(kwargs);
 
-    if (self->uv_rwlock != NULL) {
-        PyErr_SetString(PyExc_ValueError, "Object already initialized");
-        return -1;
-    }
+    RAISE_IF_INITIALIZED(self, -1);
 
-    uv_rwlock = PyMem_Malloc(sizeof(uv_rwlock_t));
-    if (!uv_rwlock) {
-        PyErr_NoMemory();
-        return -1;
-    }
-
-    if (uv_rwlock_init(uv_rwlock)) {
+    if (uv_rwlock_init(self->uv_rwlock)) {
         PyErr_SetString(PyExc_RuntimeError, "Error initializing RWLock");
         return -1;
     }
 
-    self->uv_rwlock = uv_rwlock;
+    self->initialized = True;
     return 0;
 }
 
@@ -381,35 +367,34 @@ RWLock_tp_init(RWLock *self, PyObject *args, PyObject *kwargs)
 static PyObject *
 RWLock_tp_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
 {
-    RWLock *self = (RWLock *)PyType_GenericNew(type, args, kwargs);
-    if (!self) {
+    uv_rwlock_t *uv_rwlock;
+
+    uv_rwlock = PyMem_Malloc(sizeof(uv_rwlock_t));
+    if (!uv_rwlock) {
+        PyErr_NoMemory();
         return NULL;
     }
-    self->uv_rwlock = NULL;
+
+    RWLock *self = (RWLock *)PyType_GenericNew(type, args, kwargs);
+    if (!self) {
+        PyMem_Free(uv_rwlock);
+        return NULL;
+    }
+    self->uv_rwlock = uv_rwlock;
+    self->initialized = False;
     return (PyObject *)self;
-}
-
-
-static int
-RWLock_tp_traverse(RWLock *self, visitproc visit, void *arg)
-{
-    return 0;
-}
-
-
-static int
-RWLock_tp_clear(RWLock *self)
-{
-    return 0;
 }
 
 
 static void
 RWLock_tp_dealloc(RWLock *self)
 {
-    uv_rwlock_destroy(self->uv_rwlock);
-    Py_TYPE(self)->tp_clear((PyObject *)self);
-    Py_TYPE(self)->tp_free((PyObject *)self);
+    ASSERT(self->uv_rwlock);
+    if (self->initialized) {
+        uv_rwlock_destroy(self->uv_rwlock);
+    }
+    PyMem_Free(self->uv_rwlock);
+    Py_TYPE(self)->tp_free(self);
 }
 
 
@@ -445,10 +430,10 @@ static PyTypeObject RWLockType = {
     0,                                                              /*tp_getattro*/
     0,                                                              /*tp_setattro*/
     0,                                                              /*tp_as_buffer*/
-    Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE | Py_TPFLAGS_HAVE_GC,  /*tp_flags*/
+    Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE,                       /*tp_flags*/
     0,                                                              /*tp_doc*/
-    (traverseproc)RWLock_tp_traverse,                               /*tp_traverse*/
-    (inquiry)RWLock_tp_clear,                                       /*tp_clear*/
+    0,                                                              /*tp_traverse*/
+    0,                                                              /*tp_clear*/
     0,                                                              /*tp_richcompare*/
     0,                                                              /*tp_weaklistoffset*/
     0,                                                              /*tp_iter*/
@@ -470,6 +455,8 @@ static PyTypeObject RWLockType = {
 static PyObject *
 Condition_func_signal(Condition *self)
 {
+    RAISE_IF_NOT_INITIALIZED(self, NULL);
+
     Py_BEGIN_ALLOW_THREADS
     uv_cond_signal(self->uv_condition);
     Py_END_ALLOW_THREADS
@@ -481,6 +468,8 @@ Condition_func_signal(Condition *self)
 static PyObject *
 Condition_func_broadcast(Condition *self)
 {
+    RAISE_IF_NOT_INITIALIZED(self, NULL);
+
     Py_BEGIN_ALLOW_THREADS
     uv_cond_broadcast(self->uv_condition);
     Py_END_ALLOW_THREADS
@@ -493,6 +482,8 @@ static PyObject *
 Condition_func_wait(Condition *self, PyObject *args)
 {
     Mutex *pymutex;
+
+    RAISE_IF_NOT_INITIALIZED(self, NULL);
 
     if (!PyArg_ParseTuple(args, "O!:wait", &MutexType, &pymutex)) {
         return NULL;
@@ -516,6 +507,8 @@ Condition_func_timedwait(Condition *self, PyObject *args)
     double timeout;
     Mutex *pymutex;
 
+    RAISE_IF_NOT_INITIALIZED(self, NULL);
+
     if (!PyArg_ParseTuple(args, "O!d:timedwait", &MutexType, &pymutex, &timeout)) {
         return NULL;
     }
@@ -534,28 +527,17 @@ Condition_func_timedwait(Condition *self, PyObject *args)
 static int
 Condition_tp_init(Condition *self, PyObject *args, PyObject *kwargs)
 {
-    uv_cond_t *uv_condition = NULL;
-
     UNUSED_ARG(args);
     UNUSED_ARG(kwargs);
 
-    if (self->uv_condition != NULL) {
-        PyErr_SetString(PyExc_ValueError, "Object already initialized");
-        return -1;
-    }
+    RAISE_IF_INITIALIZED(self, -1);
 
-    uv_condition = PyMem_Malloc(sizeof(uv_cond_t));
-    if (!uv_condition) {
-        PyErr_NoMemory();
-        return -1;
-    }
-
-    if (uv_cond_init(uv_condition)) {
+    if (uv_cond_init(self->uv_condition)) {
         PyErr_SetString(PyExc_RuntimeError, "Error initializing Condition");
         return -1;
     }
 
-    self->uv_condition = uv_condition;
+    self->initialized = True;
     return 0;
 }
 
@@ -563,35 +545,34 @@ Condition_tp_init(Condition *self, PyObject *args, PyObject *kwargs)
 static PyObject *
 Condition_tp_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
 {
-    Condition *self = (Condition *)PyType_GenericNew(type, args, kwargs);
-    if (!self) {
+    uv_cond_t *uv_condition;
+
+    uv_condition = PyMem_Malloc(sizeof(uv_cond_t));
+    if (!uv_condition) {
+        PyErr_NoMemory();
         return NULL;
     }
-    self->uv_condition = NULL;
+
+    Condition *self = (Condition *)PyType_GenericNew(type, args, kwargs);
+    if (!self) {
+        PyMem_Free(uv_condition);
+        return NULL;
+    }
+    self->uv_condition = uv_condition;
+    self->initialized = False;
     return (PyObject *)self;
-}
-
-
-static int
-Condition_tp_traverse(Condition *self, visitproc visit, void *arg)
-{
-    return 0;
-}
-
-
-static int
-Condition_tp_clear(Condition *self)
-{
-    return 0;
 }
 
 
 static void
 Condition_tp_dealloc(Condition *self)
 {
-    uv_cond_destroy(self->uv_condition);
-    Py_TYPE(self)->tp_clear((PyObject *)self);
-    Py_TYPE(self)->tp_free((PyObject *)self);
+    ASSERT(self->uv_condition);
+    if (self->initialized) {
+        uv_cond_destroy(self->uv_condition);
+    }
+    PyMem_Free(self->uv_condition);
+    Py_TYPE(self)->tp_free(self);
 }
 
 
@@ -625,10 +606,10 @@ static PyTypeObject ConditionType = {
     0,                                                              /*tp_getattro*/
     0,                                                              /*tp_setattro*/
     0,                                                              /*tp_as_buffer*/
-    Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE | Py_TPFLAGS_HAVE_GC,  /*tp_flags*/
+    Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE,                       /*tp_flags*/
     0,                                                              /*tp_doc*/
-    (traverseproc)Condition_tp_traverse,                            /*tp_traverse*/
-    (inquiry)Condition_tp_clear,                                    /*tp_clear*/
+    0,                                                              /*tp_traverse*/
+    0,                                                              /*tp_clear*/
     0,                                                              /*tp_richcompare*/
     0,                                                              /*tp_weaklistoffset*/
     0,                                                              /*tp_iter*/
@@ -650,6 +631,8 @@ static PyTypeObject ConditionType = {
 static PyObject *
 Semaphore_func_post(Semaphore *self)
 {
+    RAISE_IF_NOT_INITIALIZED(self, NULL);
+
     Py_BEGIN_ALLOW_THREADS
     uv_sem_post(self->uv_semaphore);
     Py_END_ALLOW_THREADS
@@ -661,6 +644,8 @@ Semaphore_func_post(Semaphore *self)
 static PyObject *
 Semaphore_func_wait(Semaphore *self)
 {
+    RAISE_IF_NOT_INITIALIZED(self, NULL);
+
     Py_BEGIN_ALLOW_THREADS
     uv_sem_wait(self->uv_semaphore);
     Py_END_ALLOW_THREADS
@@ -674,6 +659,8 @@ Semaphore_func_trywait(Semaphore *self)
 {
     int r;
 
+    RAISE_IF_NOT_INITIALIZED(self, NULL);
+
     Py_BEGIN_ALLOW_THREADS
     r = uv_sem_trywait(self->uv_semaphore);
     Py_END_ALLOW_THREADS
@@ -685,32 +672,22 @@ Semaphore_func_trywait(Semaphore *self)
 static int
 Semaphore_tp_init(Semaphore *self, PyObject *args, PyObject *kwargs)
 {
-    uv_sem_t *uv_sem = NULL;
     unsigned int value = 1;
 
     UNUSED_ARG(kwargs);
 
-    if (self->uv_semaphore != NULL) {
-        PyErr_SetString(PyExc_ValueError, "Object already initialized");
-        return -1;
-    }
+    RAISE_IF_INITIALIZED(self, -1);
 
     if (!PyArg_ParseTuple(args, "|I:__init__", &value)) {
         return -1;
     }
 
-    uv_sem = PyMem_Malloc(sizeof(uv_sem_t));
-    if (!uv_sem) {
-        PyErr_NoMemory();
-        return -1;
-    }
-
-    if (uv_sem_init(uv_sem, value)) {
+    if (uv_sem_init(self->uv_semaphore, value)) {
         PyErr_SetString(PyExc_RuntimeError, "Error initializing Semaphore");
         return -1;
     }
 
-    self->uv_semaphore = uv_sem;
+    self->initialized = True;
     return 0;
 }
 
@@ -718,35 +695,34 @@ Semaphore_tp_init(Semaphore *self, PyObject *args, PyObject *kwargs)
 static PyObject *
 Semaphore_tp_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
 {
-    Semaphore *self = (Semaphore *)PyType_GenericNew(type, args, kwargs);
-    if (!self) {
+    uv_sem_t *uv_semaphore;
+
+    uv_semaphore = PyMem_Malloc(sizeof(uv_sem_t));
+    if (!uv_semaphore) {
+        PyErr_NoMemory();
         return NULL;
     }
-    self->uv_semaphore = NULL;
+
+    Semaphore *self = (Semaphore *)PyType_GenericNew(type, args, kwargs);
+    if (!self) {
+        PyMem_Free(uv_semaphore);
+        return NULL;
+    }
+    self->uv_semaphore = uv_semaphore;
+    self->initialized = False;
     return (PyObject *)self;
-}
-
-
-static int
-Semaphore_tp_traverse(Semaphore *self, visitproc visit, void *arg)
-{
-    return 0;
-}
-
-
-static int
-Semaphore_tp_clear(Semaphore *self)
-{
-    return 0;
 }
 
 
 static void
 Semaphore_tp_dealloc(Semaphore *self)
 {
-    uv_sem_destroy(self->uv_semaphore);
-    Py_TYPE(self)->tp_clear((PyObject *)self);
-    Py_TYPE(self)->tp_free((PyObject *)self);
+    ASSERT(self->uv_semaphore);
+    if (self->initialized) {
+        uv_sem_destroy(self->uv_semaphore);
+    }
+    PyMem_Free(self->uv_semaphore);
+    Py_TYPE(self)->tp_free(self);
 }
 
 
@@ -781,10 +757,10 @@ static PyTypeObject SemaphoreType = {
     0,                                                              /*tp_getattro*/
     0,                                                              /*tp_setattro*/
     0,                                                              /*tp_as_buffer*/
-    Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE | Py_TPFLAGS_HAVE_GC,  /*tp_flags*/
+    Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE,                       /*tp_flags*/
     0,                                                              /*tp_doc*/
-    (traverseproc)Semaphore_tp_traverse,                            /*tp_traverse*/
-    (inquiry)Semaphore_tp_clear,                                    /*tp_clear*/
+    0,                                                              /*tp_traverse*/
+    0,                                                              /*tp_clear*/
     0,                                                              /*tp_richcompare*/
     0,                                                              /*tp_weaklistoffset*/
     0,                                                              /*tp_iter*/
