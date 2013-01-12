@@ -30,6 +30,14 @@ class EmbedTest(unittest2.TestCase):
         self.embed_async.close()
         handle.close()
 
+    def poll(self, poll_obj, timeout):
+        if poller_type == 'kqueue':
+            poll_obj.control(None, 0, timeout)
+        elif poller_type == 'epoll':
+            poll_obj.poll(timeout)
+        else:
+            self.fail('Bogus poller type')
+
     def embed_runner(self):
         fd = self.loop.fileno()
         poll = poller.fromfd(fd)
@@ -37,12 +45,7 @@ class EmbedTest(unittest2.TestCase):
             timeout = self.loop.get_timeout()
             while True:
                 try:
-                    if poller_type == 'kqueue':
-                        poll.control(None, 0, timeout)
-                    elif poller_type == 'epoll':
-                        poll.poll(timeout)
-                    else:
-                        self.fail('Bogus poller type')
+                    self.poll(poll, timeout)
                 except OSError as e:
                     if e.args[0] == errno.EINTR:
                         continue
