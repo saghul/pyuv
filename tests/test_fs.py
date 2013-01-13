@@ -833,8 +833,7 @@ class FSEventTestBasic(unittest2.TestCase):
         self.errorno = None
         self.events = None
         self.filename = None
-        fs_event = pyuv.fs.FSEvent(self.loop)
-        fs_event.start(TEST_FILE, self.on_fsevent_cb, 0)
+        fs_event = pyuv.fs.FSEvent(self.loop, TEST_FILE, self.on_fsevent_cb, 0)
         timer = pyuv.Timer(self.loop)
         timer.start(self.timer_cb, 1, 0)
         self.loop.run()
@@ -878,8 +877,7 @@ class FSEventTest(unittest2.TestCase):
         self.errorno = None
         self.events = None
         self.filename = None
-        fs_event = pyuv.fs.FSEvent(self.loop)
-        fs_event.start(TEST_DIR, self.on_fsevent_cb, 0)
+        fs_event = pyuv.fs.FSEvent(self.loop, TEST_DIR, self.on_fsevent_cb, 0)
         timer = pyuv.Timer(self.loop)
         timer.start(self.timer_cb2, 1, 0)
         self.loop.run()
@@ -895,8 +893,7 @@ class FSEventTest(unittest2.TestCase):
         self.errorno = None
         self.events = None
         self.filename = None
-        fs_event = pyuv.fs.FSEvent(self.loop)
-        fs_event.start(os.path.join(TEST_DIR, TEST_FILE), self.on_fsevent_cb, 0)
+        fs_event = pyuv.fs.FSEvent(self.loop, os.path.join(TEST_DIR, TEST_FILE), self.on_fsevent_cb, 0)
         timer = pyuv.Timer(self.loop)
         timer.start(self.timer_cb3, 1, 0)
         self.loop.run()
