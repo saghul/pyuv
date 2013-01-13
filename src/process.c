@@ -58,7 +58,6 @@ StdIO_stream_get(StdIO *self, void *closure)
 {
     UNUSED_ARG(closure);
     if (!self->stream) {
-        Py_INCREF(Py_None);
         Py_RETURN_NONE;
     } else {
         return self->stream;
