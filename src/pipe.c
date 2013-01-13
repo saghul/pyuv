@@ -345,21 +345,29 @@ Pipe_func_write2(Pipe *self, PyObject *args)
         return NULL;
     }
 
+    if (!PyObject_IsSubclass((PyObject *)send_handle->ob_type, (PyObject *)&StreamType)) {
+        PyErr_SetString(PyExc_TypeError, "Only stream objects are supported");
+        goto error;
+    }
+
     if (UV_HANDLE(send_handle)->type != UV_TCP && UV_HANDLE(send_handle)->type != UV_NAMED_PIPE) {
         PyErr_SetString(PyExc_TypeError, "Only TCP and Pipe objects are supported for write2");
-        PyBuffer_Release(view);
-        return NULL;
+        goto error;
     }
 
     if (callback != Py_None && !PyCallable_Check(callback)) {
-        PyBuffer_Release(view);
         PyErr_SetString(PyExc_TypeError, "a callable or None is required");
-        return NULL;
+        goto error;
     }
 
     buf = uv_buf_init(view->buf, view->len);
 
     return pyuv_stream_write((Stream *)self, view, &buf, 1, callback, send_handle);
+
+error:
+        PyBuffer_Release(view);
+        PyMem_Free(view);
+        return NULL;
 }
 
 

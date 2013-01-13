@@ -13,7 +13,6 @@ class TYTest(unittest2.TestCase):
         tty = pyuv.TTY(loop, sys.stdin.fileno(), True)
         w, h = tty.get_winsize()
         self.assertNotEqual((w, h), (None, None))
-        self.assertTrue(pyuv.TTY.isatty(sys.stdin.fileno()))
 
         tty.close()
 
