@@ -64,10 +64,6 @@ class TestBasetype(unittest2.TestCase):
         loop = pyuv.Loop.default_loop()
         self._inheritance_test(pyuv.Signal, loop)
 
-    def test_inherit_fs_fsevent(self):
-        loop = pyuv.Loop.default_loop()
-        self._inheritance_test(pyuv.fs.FSEvent, loop)
-
     def test_inherit_fs_fspoll(self):
         loop = pyuv.Loop.default_loop()
         self._inheritance_test(pyuv.fs.FSEvent, loop)
