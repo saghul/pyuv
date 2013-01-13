@@ -345,6 +345,12 @@ Pipe_func_write2(Pipe *self, PyObject *args)
         return NULL;
     }
 
+    if (!PyObject_IsSubclass((PyObject *)send_handle->ob_type, (PyObject *)&StreamType)) {
+        PyErr_SetString(PyExc_TypeError, "Only stream objects are supported");
+        PyBuffer_Release(view);
+        return NULL;
+    }
+
     if (UV_HANDLE(send_handle)->type != UV_TCP && UV_HANDLE(send_handle)->type != UV_NAMED_PIPE) {
         PyErr_SetString(PyExc_TypeError, "Only TCP and Pipe objects are supported for write2");
         PyBuffer_Release(view);
