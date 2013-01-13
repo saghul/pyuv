@@ -369,6 +369,7 @@ static PyObject* PyExc_ProcessError;
 static PyObject* PyExc_SignalError;
 static PyObject* PyExc_StreamError;
 static PyObject* PyExc_TCPError;
+static PyObject* PyExc_ThreadError;
 static PyObject* PyExc_TimerError;
 static PyObject* PyExc_TTYError;
 static PyObject* PyExc_UDPError;

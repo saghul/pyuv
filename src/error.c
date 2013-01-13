@@ -23,6 +23,7 @@ init_error(void)
     }
 
     PyExc_UVError = PyErr_NewException("pyuv.error.UVError", NULL, NULL);
+    PyExc_ThreadError = PyErr_NewException("pyuv.error.ThreadError", PyExc_UVError, NULL);
     PyExc_HandleError = PyErr_NewException("pyuv.error.HandleError", PyExc_UVError, NULL);
     PyExc_HandleClosedError = PyErr_NewException("pyuv.error.HandleClosedError", PyExc_HandleError, NULL);
     PyExc_AsyncError = PyErr_NewException("pyuv.error.AsyncError", PyExc_HandleError, NULL);
@@ -43,6 +44,7 @@ init_error(void)
     PyExc_ProcessError = PyErr_NewException("pyuv.error.ProcessError", PyExc_HandleError, NULL);
 
     PyUVModule_AddType(module, "UVError", (PyTypeObject *)PyExc_UVError);
+    PyUVModule_AddType(module, "ThreadError", (PyTypeObject *)PyExc_ThreadError);
     PyUVModule_AddType(module, "HandleError", (PyTypeObject *)PyExc_HandleError);
     PyUVModule_AddType(module, "AsyncError", (PyTypeObject *)PyExc_AsyncError);
     PyUVModule_AddType(module, "TimerError", (PyTypeObject *)PyExc_TimerError);

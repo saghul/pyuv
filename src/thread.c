@@ -26,7 +26,7 @@ Barrier_tp_init(Barrier *self, PyObject *args, PyObject *kwargs)
     }
 
     if (uv_barrier_init(self->uv_barrier, count)) {
-        PyErr_SetString(PyExc_RuntimeError, "Error initializing Barrier");
+        PyErr_SetString(PyExc_ThreadError, "Error initializing Barrier");
         return -1;
     }
 
@@ -168,7 +168,7 @@ Mutex_tp_init(Mutex *self, PyObject *args, PyObject *kwargs)
     RAISE_IF_INITIALIZED(self, -1);
 
     if (uv_mutex_init(self->uv_mutex)) {
-        PyErr_SetString(PyExc_RuntimeError, "Error initializing Mutex");
+        PyErr_SetString(PyExc_ThreadError, "Error initializing Mutex");
         return -1;
     }
 
@@ -355,7 +355,7 @@ RWLock_tp_init(RWLock *self, PyObject *args, PyObject *kwargs)
     RAISE_IF_INITIALIZED(self, -1);
 
     if (uv_rwlock_init(self->uv_rwlock)) {
-        PyErr_SetString(PyExc_RuntimeError, "Error initializing RWLock");
+        PyErr_SetString(PyExc_ThreadError, "Error initializing RWLock");
         return -1;
     }
 
@@ -533,7 +533,7 @@ Condition_tp_init(Condition *self, PyObject *args, PyObject *kwargs)
     RAISE_IF_INITIALIZED(self, -1);
 
     if (uv_cond_init(self->uv_condition)) {
-        PyErr_SetString(PyExc_RuntimeError, "Error initializing Condition");
+        PyErr_SetString(PyExc_ThreadError, "Error initializing Condition");
         return -1;
     }
 
@@ -683,7 +683,7 @@ Semaphore_tp_init(Semaphore *self, PyObject *args, PyObject *kwargs)
     }
 
     if (uv_sem_init(self->uv_semaphore, value)) {
-        PyErr_SetString(PyExc_RuntimeError, "Error initializing Semaphore");
+        PyErr_SetString(PyExc_ThreadError, "Error initializing Semaphore");
         return -1;
     }
 
