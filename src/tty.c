@@ -31,25 +31,6 @@ TTY_func_reset_mode(PyObject *cls)
 
 
 static PyObject *
-TTY_func_isatty(PyObject *cls, PyObject *args)
-{
-    int fd;
-
-    UNUSED_ARG(cls);
-
-    if (!PyArg_ParseTuple(args, "i:isatty", &fd)) {
-        return NULL;
-    }
-
-    if (uv_guess_handle(fd) == UV_TTY) {
-        Py_RETURN_TRUE;
-    } else {
-        Py_RETURN_FALSE;
-    }
-}
-
-
-static PyObject *
 TTY_func_get_winsize(TTY *self)
 {
     int r, width, height;
@@ -145,7 +126,6 @@ TTY_tp_methods[] = {
     { "set_mode", (PyCFunction)TTY_func_set_mode, METH_VARARGS, "Set TTY handle mode." },
     { "reset_mode", (PyCFunction)TTY_func_reset_mode, METH_CLASS|METH_NOARGS, "Reset TTY settings. To be called when program exits." },
     { "get_winsize", (PyCFunction)TTY_func_get_winsize, METH_NOARGS, "Get the currecnt Window size." },
-    { "isatty", (PyCFunction)TTY_func_isatty, METH_CLASS|METH_VARARGS, "Check if the given file descriptor is associated with a terminal." },
     { NULL }
 };
 
