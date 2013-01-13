@@ -2195,11 +2195,12 @@ end:
 static PyObject *
 FS_func_write(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
-    int r, fd, offset, length;
+    int r, fd, offset;
     char *pbuf, *buf;
     uv_fs_t *req;
     Loop *loop;
     FSRequest *pyreq;
+    Py_ssize_t length;
     PyObject *callback, *py_path, *py_errorno, *written_bytes, *ret;
 
     static char *kwlist[] = {"loop", "fd", "write_data", "offset", "callback", NULL};
