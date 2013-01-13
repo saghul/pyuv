@@ -16,7 +16,7 @@ on_timer_callback(uv_timer_t *timer, int status)
 
     result = PyObject_CallFunctionObjArgs(self->callback, self, NULL);
     if (result == NULL) {
-        handle_uncaught_exception(((Handle *)self)->loop);
+        handle_uncaught_exception(HANDLE(self)->loop);
     }
     Py_XDECREF(result);
 
@@ -36,6 +36,7 @@ Timer_func_start(Timer *self, PyObject *args, PyObject *kwargs)
 
     tmp = NULL;
 
+    RAISE_IF_HANDLE_NOT_INITIALIZED(self, NULL);
     RAISE_IF_HANDLE_CLOSED(self, PyExc_HandleClosedError, NULL);
 
     if (!PyArg_ParseTupleAndKeywords(args, kwargs, "Odd:__init__", kwlist, &callback, &timeout, &repeat)) {
@@ -77,6 +78,7 @@ Timer_func_stop(Timer *self)
 {
     int r;
 
+    RAISE_IF_HANDLE_NOT_INITIALIZED(self, NULL);
     RAISE_IF_HANDLE_CLOSED(self, PyExc_HandleClosedError, NULL);
 
     r = uv_timer_stop((uv_timer_t *)UV_HANDLE(self));
@@ -94,6 +96,7 @@ Timer_func_again(Timer *self)
 {
     int r;
 
+    RAISE_IF_HANDLE_NOT_INITIALIZED(self, NULL);
     RAISE_IF_HANDLE_CLOSED(self, PyExc_HandleClosedError, NULL);
 
     r = uv_timer_again((uv_timer_t *)UV_HANDLE(self));
@@ -110,7 +113,9 @@ static PyObject *
 Timer_repeat_get(Timer *self, void *closure)
 {
     UNUSED_ARG(closure);
-    RAISE_IF_HANDLE_CLOSED(self, PyExc_HandleClosedError, NULL);
+
+    RAISE_IF_HANDLE_NOT_INITIALIZED(self, NULL);
+
     return PyFloat_FromDouble(uv_timer_get_repeat((uv_timer_t *)UV_HANDLE(self))/1000.0);
 }
 
@@ -122,7 +127,7 @@ Timer_repeat_set(Timer *self, PyObject *value, void *closure)
 
     UNUSED_ARG(closure);
 
-    RAISE_IF_HANDLE_CLOSED(self, PyExc_HandleClosedError, -1);
+    RAISE_IF_HANDLE_NOT_INITIALIZED(self, -1);
 
     if (!value) {
         PyErr_SetString(PyExc_TypeError, "cannot delete attribute");
@@ -149,41 +154,29 @@ static int
 Timer_tp_init(Timer *self, PyObject *args, PyObject *kwargs)
 {
     int r;
-    uv_timer_t *uv_timer = NULL;
     Loop *loop;
     PyObject *tmp = NULL;
 
     UNUSED_ARG(kwargs);
 
-    if (UV_HANDLE(self)) {
-        PyErr_SetString(PyExc_TimerError, "Object already initialized");
-        return -1;
-    }
+    RAISE_IF_HANDLE_INITIALIZED(self, -1);
 
     if (!PyArg_ParseTuple(args, "O!:__init__", &LoopType, &loop)) {
         return -1;
     }
 
-    tmp = (PyObject *)((Handle *)self)->loop;
+    r = uv_timer_init(loop->uv_loop, (uv_timer_t *)UV_HANDLE(self));
+    if (r != 0) {
+        RAISE_UV_EXCEPTION(loop->uv_loop, PyExc_TimerError);
+        return -1;
+    }
+
+    tmp = (PyObject *)HANDLE(self)->loop;
     Py_INCREF(loop);
-    ((Handle *)self)->loop = loop;
+    HANDLE(self)->loop = loop;
     Py_XDECREF(tmp);
 
-    uv_timer = PyMem_Malloc(sizeof(uv_timer_t));
-    if (!uv_timer) {
-        PyErr_NoMemory();
-        return -1;
-    }
-
-    r = uv_timer_init(UV_HANDLE_LOOP(self), uv_timer);
-    if (r != 0) {
-        RAISE_UV_EXCEPTION(UV_HANDLE_LOOP(self), PyExc_TimerError);
-        PyMem_Free(uv_timer);
-        Py_DECREF(loop);
-        return -1;
-    }
-    uv_timer->data = (void *)self;
-    UV_HANDLE(self) = (uv_handle_t *)uv_timer;
+    HANDLE(self)->initialized = True;
 
     return 0;
 }
@@ -192,10 +185,23 @@ Timer_tp_init(Timer *self, PyObject *args, PyObject *kwargs)
 static PyObject *
 Timer_tp_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
 {
-    Timer *self = (Timer *)HandleType.tp_new(type, args, kwargs);
-    if (!self) {
+    uv_timer_t *uv_timer;
+
+    uv_timer = PyMem_Malloc(sizeof(uv_timer_t));
+    if (!uv_timer) {
+        PyErr_NoMemory();
         return NULL;
     }
+
+    Timer *self = (Timer *)HandleType.tp_new(type, args, kwargs);
+    if (!self) {
+        PyMem_Free(uv_timer);
+        return NULL;
+    }
+
+    uv_timer->data = (void *)self;
+    UV_HANDLE(self) = (uv_handle_t *)uv_timer;
+
     return (PyObject *)self;
 }
 
@@ -273,5 +279,4 @@ static PyTypeObject TimerType = {
     0,                                                              /*tp_alloc*/
     Timer_tp_new,                                                   /*tp_new*/
 };
-
 

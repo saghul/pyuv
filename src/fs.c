@@ -2806,7 +2806,7 @@ on_fsevent_callback(uv_fs_event_t *handle, const char *filename, int events, int
 
     result = PyObject_CallFunctionObjArgs(self->callback, self, py_filename, py_events, errorno, NULL);
     if (result == NULL) {
-        handle_uncaught_exception(((Handle *)self)->loop);
+        handle_uncaught_exception(HANDLE(self)->loop);
     }
     Py_XDECREF(result);
     Py_DECREF(py_events);
@@ -2819,64 +2819,12 @@ on_fsevent_callback(uv_fs_event_t *handle, const char *filename, int events, int
 
 
 static PyObject *
-FSEvent_func_start(FSEvent *self, PyObject *args, PyObject *kwargs)
-{
-    int r, flags;
-    char *path;
-    uv_fs_event_t *fs_event = NULL;
-    PyObject *tmp, *callback;
-
-    static char *kwlist[] = {"path", "callback", "flags", NULL};
-
-    tmp = NULL;
-
-    if (UV_HANDLE(self)) {
-        PyErr_SetString(PyExc_FSEventError, "FSEvent was already started");
-        return NULL;
-    }
-
-    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "sOi:start", kwlist, &path, &callback, &flags)) {
-        return NULL;
-    }
-
-    if (!PyCallable_Check(callback)) {
-        PyErr_SetString(PyExc_TypeError, "a callable is required");
-        return NULL;
-    }
-
-    fs_event = PyMem_Malloc(sizeof(uv_fs_event_t));
-    if (!fs_event) {
-        PyErr_NoMemory();
-        return NULL;
-    }
-    fs_event->data = (void *)self;
-    UV_HANDLE(self) = (uv_handle_t *)fs_event;
-
-    r = uv_fs_event_init(UV_HANDLE_LOOP(self), fs_event, path, on_fsevent_callback, flags);
-    if (r != 0) {
-        RAISE_UV_EXCEPTION(UV_HANDLE_LOOP(self), PyExc_FSEventError);
-        PyMem_Free(fs_event);
-        UV_HANDLE(self) = NULL;
-        return NULL;
-    }
-
-    tmp = self->callback;
-    Py_INCREF(callback);
-    self->callback = callback;
-    Py_XDECREF(tmp);
-
-    Py_RETURN_NONE;
-}
-
-
-static PyObject *
 FSEvent_filename_get(FSEvent *self, void *closure)
 {
     UNUSED_ARG(closure);
 
-    if (!UV_HANDLE(self)) {
-        Py_RETURN_NONE;
-    }
+    RAISE_IF_HANDLE_NOT_INITIALIZED(self, NULL);
+
     return Py_BuildValue("s", ((uv_fs_event_t *)UV_HANDLE(self))->filename);
 }
 
@@ -2884,24 +2832,44 @@ FSEvent_filename_get(FSEvent *self, void *closure)
 static int
 FSEvent_tp_init(FSEvent *self, PyObject *args, PyObject *kwargs)
 {
+    int r, flags;
+    char *path;
     Loop *loop;
-    PyObject *tmp = NULL;
+    PyObject *tmp, *callback;
+
+    static char *kwlist[] = {"loop", "path", "callback", "flags", NULL};
 
     UNUSED_ARG(kwargs);
+    tmp = NULL;
 
-    if (UV_HANDLE(self)) {
-        PyErr_SetString(PyExc_FSEventError, "Object already initialized");
+    RAISE_IF_HANDLE_INITIALIZED(self, -1);
+
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!sOi:__init__", kwlist, &LoopType, &loop, &path, &callback, &flags)) {
         return -1;
     }
 
-    if (!PyArg_ParseTuple(args, "O!:__init__", &LoopType, &loop)) {
+    if (!PyCallable_Check(callback)) {
+        PyErr_SetString(PyExc_TypeError, "a callable is required");
         return -1;
     }
 
-    tmp = (PyObject *)((Handle *)self)->loop;
-    Py_INCREF(loop);
-    ((Handle *)self)->loop = loop;
+    r = uv_fs_event_init(loop->uv_loop, (uv_fs_event_t *)UV_HANDLE(self), path, on_fsevent_callback, flags);
+    if (r != 0) {
+        RAISE_UV_EXCEPTION(loop->uv_loop, PyExc_FSEventError);
+        return -1;
+    }
+
+    tmp = self->callback;
+    Py_INCREF(callback);
+    self->callback = callback;
     Py_XDECREF(tmp);
+
+    tmp = (PyObject *)HANDLE(self)->loop;
+    Py_INCREF(loop);
+    HANDLE(self)->loop = loop;
+    Py_XDECREF(tmp);
+
+    HANDLE(self)->initialized = True;
 
     return 0;
 }
@@ -2910,10 +2878,23 @@ FSEvent_tp_init(FSEvent *self, PyObject *args, PyObject *kwargs)
 static PyObject *
 FSEvent_tp_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
 {
-    FSEvent *self = (FSEvent *)HandleType.tp_new(type, args, kwargs);
-    if (!self) {
+    uv_fs_event_t *fs_event;
+
+    fs_event = PyMem_Malloc(sizeof(uv_fs_event_t));
+    if (!fs_event) {
+        PyErr_NoMemory();
         return NULL;
     }
+
+    FSEvent *self = (FSEvent *)HandleType.tp_new(type, args, kwargs);
+    if (!self) {
+        PyMem_Free(fs_event);
+        return NULL;
+    }
+
+    fs_event->data = (void *)self;
+    UV_HANDLE(self) = (uv_handle_t *)fs_event;
+
     return (PyObject *)self;
 }
 
@@ -2934,13 +2915,6 @@ FSEvent_tp_clear(FSEvent *self)
     HandleType.tp_clear((PyObject *)self);
     return 0;
 }
-
-
-static PyMethodDef
-FSEvent_tp_methods[] = {
-    { "start", (PyCFunction)FSEvent_func_start, METH_VARARGS|METH_KEYWORDS, "Start the FSEvent." },
-    { NULL }
-};
 
 
 static PyGetSetDef FSEvent_tp_getsets[] = {
@@ -2977,7 +2951,7 @@ static PyTypeObject FSEventType = {
     0,                                                              /*tp_weaklistoffset*/
     0,                                                              /*tp_iter*/
     0,                                                              /*tp_iternext*/
-    FSEvent_tp_methods,                                             /*tp_methods*/
+    0,                                                              /*tp_methods*/
     0,                                                              /*tp_members*/
     FSEvent_tp_getsets,                                             /*tp_getsets*/
     0,                                                              /*tp_base*/
@@ -3037,7 +3011,7 @@ on_fspoll_callback(uv_fs_poll_t *handle, int status, const uv_statbuf_t *prev, c
 
     result = PyObject_CallFunctionObjArgs(self->callback, self, prev_stat_data, curr_stat_data, errorno, NULL);
     if (result == NULL) {
-        handle_uncaught_exception(((Handle *)self)->loop);
+        handle_uncaught_exception(HANDLE(self)->loop);
     }
     Py_XDECREF(result);
 
@@ -3058,6 +3032,7 @@ FSPoll_func_start(FSPoll *self, PyObject *args, PyObject *kwargs)
 
     tmp = NULL;
 
+    RAISE_IF_HANDLE_NOT_INITIALIZED(self, NULL);
     RAISE_IF_HANDLE_CLOSED(self, PyExc_HandleClosedError, NULL);
 
     if (!PyArg_ParseTupleAndKeywords(args, kwargs, "sOd:start", kwlist, &path, &callback, &interval)) {
@@ -3094,6 +3069,7 @@ FSPoll_func_stop(FSPoll *self)
 {
     int r;
 
+    RAISE_IF_HANDLE_NOT_INITIALIZED(self, NULL);
     RAISE_IF_HANDLE_CLOSED(self, PyExc_HandleClosedError, NULL);
 
     r = uv_fs_poll_stop((uv_fs_poll_t *)UV_HANDLE(self));
@@ -3113,41 +3089,29 @@ static int
 FSPoll_tp_init(FSPoll *self, PyObject *args, PyObject *kwargs)
 {
     int r;
-    uv_fs_poll_t *uv_fspoll = NULL;
     Loop *loop;
     PyObject *tmp = NULL;
 
     UNUSED_ARG(kwargs);
 
-    if (UV_HANDLE(self)) {
-        PyErr_SetString(PyExc_FSPollError, "Object already initialized");
-        return -1;
-    }
+    RAISE_IF_HANDLE_INITIALIZED(self, -1);
 
     if (!PyArg_ParseTuple(args, "O!:__init__", &LoopType, &loop)) {
         return -1;
     }
 
-    tmp = (PyObject *)((Handle *)self)->loop;
+    r = uv_fs_poll_init(loop->uv_loop, (uv_fs_poll_t *)UV_HANDLE(self));
+    if (r != 0) {
+        RAISE_UV_EXCEPTION(loop->uv_loop, PyExc_FSPollError);
+        return -1;
+    }
+
+    tmp = (PyObject *)HANDLE(self)->loop;
     Py_INCREF(loop);
-    ((Handle *)self)->loop = loop;
+    HANDLE(self)->loop = loop;
     Py_XDECREF(tmp);
 
-    uv_fspoll = PyMem_Malloc(sizeof(uv_fs_poll_t));
-    if (!uv_fspoll) {
-        PyErr_NoMemory();
-        Py_DECREF(loop);
-        return -1;
-    }
-
-    r = uv_fs_poll_init(UV_HANDLE_LOOP(self), uv_fspoll);
-    if (r != 0) {
-        RAISE_UV_EXCEPTION(UV_HANDLE_LOOP(self), PyExc_FSPollError);
-        Py_DECREF(loop);
-        return -1;
-    }
-    uv_fspoll->data = (void *)self;
-    UV_HANDLE(self) = (uv_handle_t *)uv_fspoll;
+    HANDLE(self)->initialized = True;
 
     return 0;
 }
@@ -3156,10 +3120,23 @@ FSPoll_tp_init(FSPoll *self, PyObject *args, PyObject *kwargs)
 static PyObject *
 FSPoll_tp_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
 {
-    FSPoll *self = (FSPoll *)HandleType.tp_new(type, args, kwargs);
-    if (!self) {
+    uv_fs_poll_t *uv_fspoll;
+
+    uv_fspoll = PyMem_Malloc(sizeof(uv_fs_poll_t));
+    if (!uv_fspoll) {
+        PyErr_NoMemory();
         return NULL;
     }
+
+    FSPoll *self = (FSPoll *)HandleType.tp_new(type, args, kwargs);
+    if (!self) {
+        PyMem_Free(uv_fspoll);
+        return NULL;
+    }
+
+    uv_fspoll->data = (void *)self;
+    UV_HANDLE(self) = (uv_handle_t *)uv_fspoll;
+
     return (PyObject *)self;
 }
 
@@ -3275,5 +3252,4 @@ init_fs(void)
 
     return module;
 }
-
 

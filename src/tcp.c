@@ -23,7 +23,7 @@ on_tcp_connection(uv_stream_t* server, int status)
 
     result = PyObject_CallFunctionObjArgs(self->on_new_connection_cb, self, py_errorno, NULL);
     if (result == NULL) {
-        handle_uncaught_exception(((Handle *)self)->loop);
+        handle_uncaught_exception(HANDLE(self)->loop);
     }
     Py_XDECREF(result);
     Py_DECREF(py_errorno);
@@ -56,7 +56,7 @@ on_tcp_client_connection(uv_connect_t *req, int status)
 
     result = PyObject_CallFunctionObjArgs(callback, self, py_errorno, NULL);
     if (result == NULL) {
-        handle_uncaught_exception(((Handle *)self)->loop);
+        handle_uncaught_exception(HANDLE(self)->loop);
     }
     Py_XDECREF(result);
     Py_DECREF(py_errorno);
@@ -77,6 +77,7 @@ TCP_func_bind(TCP *self, PyObject *args)
     int r, bind_port, address_type;
     char *bind_ip;
 
+    RAISE_IF_HANDLE_NOT_INITIALIZED(self, NULL);
     RAISE_IF_HANDLE_CLOSED(self, PyExc_HandleClosedError, NULL);
 
     if (!PyArg_ParseTuple(args, "(si):bind", &bind_ip, &bind_port)) {
@@ -117,6 +118,7 @@ TCP_func_listen(TCP *self, PyObject *args)
     backlog = 128;
     tmp = NULL;
 
+    RAISE_IF_HANDLE_NOT_INITIALIZED(self, NULL);
     RAISE_IF_HANDLE_CLOSED(self, PyExc_HandleClosedError, NULL);
 
     if (!PyArg_ParseTuple(args, "O|i:listen", &callback, &backlog)) {
@@ -154,6 +156,7 @@ TCP_func_accept(TCP *self, PyObject *args)
     int r;
     PyObject *client;
 
+    RAISE_IF_HANDLE_NOT_INITIALIZED(self, NULL);
     RAISE_IF_HANDLE_CLOSED(self, PyExc_HandleClosedError, NULL);
 
     if (!PyArg_ParseTuple(args, "O:accept", &client)) {
@@ -183,6 +186,7 @@ TCP_func_connect(TCP *self, PyObject *args)
     uv_connect_t *connect_req = NULL;
     PyObject *callback;
 
+    RAISE_IF_HANDLE_NOT_INITIALIZED(self, NULL);
     RAISE_IF_HANDLE_CLOSED(self, PyExc_HandleClosedError, NULL);
 
     if (!PyArg_ParseTuple(args, "(si)O:connect", &connect_ip, &connect_port, &callback)) {
@@ -232,9 +236,7 @@ TCP_func_connect(TCP *self, PyObject *args)
 
 error:
     Py_DECREF(callback);
-    if (connect_req) {
-        PyMem_Free(connect_req);
-    }
+    PyMem_Free(connect_req);
     return NULL;
 }
 
@@ -250,6 +252,7 @@ TCP_func_getsockname(TCP *self)
 
     namelen = sizeof(sockname);
 
+    RAISE_IF_HANDLE_NOT_INITIALIZED(self, NULL);
     RAISE_IF_HANDLE_CLOSED(self, PyExc_HandleClosedError, NULL);
 
     r = uv_tcp_getsockname((uv_tcp_t *)UV_HANDLE(self), &sockname, &namelen);
@@ -284,6 +287,7 @@ TCP_func_getpeername(TCP *self)
 
     namelen = sizeof(peername);
 
+    RAISE_IF_HANDLE_NOT_INITIALIZED(self, NULL);
     RAISE_IF_HANDLE_CLOSED(self, PyExc_HandleClosedError, NULL);
 
     r = uv_tcp_getpeername((uv_tcp_t *)UV_HANDLE(self), &peername, &namelen);
@@ -315,6 +319,7 @@ TCP_func_nodelay(TCP *self, PyObject *args)
     int r;
     PyObject *enable;
 
+    RAISE_IF_HANDLE_NOT_INITIALIZED(self, NULL);
     RAISE_IF_HANDLE_CLOSED(self, PyExc_HandleClosedError, NULL);
 
     if (!PyArg_ParseTuple(args, "O!:nodelay", &PyBool_Type, &enable)) {
@@ -338,6 +343,7 @@ TCP_func_keepalive(TCP *self, PyObject *args)
     unsigned int delay;
     PyObject *enable;
 
+    RAISE_IF_HANDLE_NOT_INITIALIZED(self, NULL);
     RAISE_IF_HANDLE_CLOSED(self, PyExc_HandleClosedError, NULL);
 
     if (!PyArg_ParseTuple(args, "O!I:keepalive", &PyBool_Type, &enable, &delay)) {
@@ -360,6 +366,7 @@ TCP_func_simultaneous_accepts(TCP *self, PyObject *args)
     int r;
     PyObject *enable;
 
+    RAISE_IF_HANDLE_NOT_INITIALIZED(self, NULL);
     RAISE_IF_HANDLE_CLOSED(self, PyExc_HandleClosedError, NULL);
 
     if (!PyArg_ParseTuple(args, "O!:simultaneous_accepts", &PyBool_Type, &enable)) {
@@ -381,6 +388,7 @@ TCP_func_open(TCP *self, PyObject *args)
 {
     long fd;
 
+    RAISE_IF_HANDLE_NOT_INITIALIZED(self, NULL);
     RAISE_IF_HANDLE_CLOSED(self, PyExc_HandleClosedError, NULL);
 
     if (!PyArg_ParseTuple(args, "l:open", &fd)) {
@@ -397,41 +405,29 @@ static int
 TCP_tp_init(TCP *self, PyObject *args, PyObject *kwargs)
 {
     int r;
-    uv_tcp_t *uv_tcp;
     Loop *loop;
     PyObject *tmp = NULL;
 
     UNUSED_ARG(kwargs);
 
-    if (UV_HANDLE(self)) {
-        PyErr_SetString(PyExc_TCPError, "Object already initialized");
-        return -1;
-    }
+    RAISE_IF_HANDLE_INITIALIZED(self, -1);
 
     if (!PyArg_ParseTuple(args, "O!:__init__", &LoopType, &loop)) {
         return -1;
     }
 
-    tmp = (PyObject *)((Handle *)self)->loop;
+    r = uv_tcp_init(loop->uv_loop, (uv_tcp_t *)UV_HANDLE(self));
+    if (r != 0) {
+        RAISE_UV_EXCEPTION(loop->uv_loop, PyExc_TCPError);
+        return -1;
+    }
+
+    tmp = (PyObject *)HANDLE(self)->loop;
     Py_INCREF(loop);
-    ((Handle *)self)->loop = loop;
+    HANDLE(self)->loop = loop;
     Py_XDECREF(tmp);
 
-    uv_tcp = PyMem_Malloc(sizeof(uv_tcp_t));
-    if (!uv_tcp) {
-        PyErr_NoMemory();
-        Py_DECREF(loop);
-        return -1;
-    }
-
-    r = uv_tcp_init(UV_HANDLE_LOOP(self), (uv_tcp_t *)uv_tcp);
-    if (r != 0) {
-        RAISE_UV_EXCEPTION(UV_HANDLE_LOOP(self), PyExc_TCPError);
-        Py_DECREF(loop);
-        return -1;
-    }
-    uv_tcp->data = (void *)self;
-    UV_HANDLE(self) = (uv_handle_t *)uv_tcp;
+    HANDLE(self)->initialized = True;
 
     return 0;
 }
@@ -440,10 +436,23 @@ TCP_tp_init(TCP *self, PyObject *args, PyObject *kwargs)
 static PyObject *
 TCP_tp_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
 {
-    TCP *self = (TCP *)StreamType.tp_new(type, args, kwargs);
-    if (!self) {
+    uv_tcp_t *uv_tcp;
+
+    uv_tcp = PyMem_Malloc(sizeof(uv_tcp_t));
+    if (!uv_tcp) {
+        PyErr_NoMemory();
         return NULL;
     }
+
+    TCP *self = (TCP *)StreamType.tp_new(type, args, kwargs);
+    if (!self) {
+        PyMem_Free(uv_tcp);
+        return NULL;
+    }
+
+    uv_tcp->data = (void *)self;
+    UV_HANDLE(self) = (uv_handle_t *)uv_tcp;
+
     return (PyObject *)self;
 }
 

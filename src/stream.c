@@ -39,7 +39,7 @@ on_stream_shutdown(uv_shutdown_t* req, int status)
         }
         result = PyObject_CallFunctionObjArgs(callback, self, py_errorno, NULL);
         if (result == NULL) {
-            handle_uncaught_exception(((Handle *)self)->loop);
+            handle_uncaught_exception(HANDLE(self)->loop);
         }
         Py_XDECREF(result);
         Py_DECREF(py_errorno);
@@ -82,7 +82,7 @@ on_stream_read(uv_stream_t* handle, int nread, uv_buf_t buf)
 
     result = PyObject_CallFunctionObjArgs(self->on_read_cb, self, data, py_errorno, NULL);
     if (result == NULL) {
-        handle_uncaught_exception(((Handle *)self)->loop);
+        handle_uncaught_exception(HANDLE(self)->loop);
     }
     Py_XDECREF(result);
     Py_DECREF(data);
@@ -122,7 +122,7 @@ on_stream_write(uv_write_t* req, int status)
         }
         result = PyObject_CallFunctionObjArgs(callback, self, py_errorno, NULL);
         if (result == NULL) {
-            handle_uncaught_exception(((Handle *)self)->loop);
+            handle_uncaught_exception(HANDLE(self)->loop);
         }
         Py_XDECREF(result);
         Py_DECREF(py_errorno);
@@ -151,6 +151,7 @@ Stream_func_shutdown(Stream *self, PyObject *args)
     uv_shutdown_t *req = NULL;
     PyObject *callback = Py_None;
 
+    RAISE_IF_HANDLE_NOT_INITIALIZED(self, NULL);
     RAISE_IF_HANDLE_CLOSED(self, PyExc_HandleClosedError, NULL);
 
     if (!PyArg_ParseTuple(args, "|O:shutdown", &callback)) {
@@ -180,9 +181,7 @@ Stream_func_shutdown(Stream *self, PyObject *args)
 
 error:
     Py_DECREF(callback);
-    if (req) {
-        PyMem_Free(req);
-    }
+    PyMem_Free(req);
     return NULL;
 }
 
@@ -195,6 +194,7 @@ Stream_func_start_read(Stream *self, PyObject *args)
 
     tmp = NULL;
 
+    RAISE_IF_HANDLE_NOT_INITIALIZED(self, NULL);
     RAISE_IF_HANDLE_CLOSED(self, PyExc_HandleClosedError, NULL);
 
     if (!PyArg_ParseTuple(args, "O:start_read", &callback)) {
@@ -226,6 +226,7 @@ Stream_func_stop_read(Stream *self)
 {
     int r;
 
+    RAISE_IF_HANDLE_NOT_INITIALIZED(self, NULL);
     RAISE_IF_HANDLE_CLOSED(self, PyExc_HandleClosedError, NULL);
 
     r = uv_read_stop((uv_stream_t *)UV_HANDLE(self));
@@ -305,6 +306,7 @@ Stream_func_write(Stream *self, PyObject *args)
     Py_buffer *view;
     PyObject *callback = Py_None;
 
+    RAISE_IF_HANDLE_NOT_INITIALIZED(self, NULL);
     RAISE_IF_HANDLE_CLOSED(self, PyExc_HandleClosedError, NULL);
 
     if ((view = PyMem_New(Py_buffer, 1)) == NULL) {
@@ -342,6 +344,7 @@ Stream_func_writelines(Stream *self, PyObject *args)
 
     callback = Py_None;
 
+    RAISE_IF_HANDLE_NOT_INITIALIZED(self, NULL);
     RAISE_IF_HANDLE_CLOSED(self, PyExc_HandleClosedError, NULL);
 
     if (!PyArg_ParseTuple(args, "O|O:writelines", &seq, &callback)) {
@@ -372,11 +375,10 @@ static PyObject *
 Stream_readable_get(Stream *self, void *closure)
 {
     UNUSED_ARG(closure);
-    if (!UV_HANDLE(self)) {
-        Py_RETURN_FALSE;
-    } else {
-        return PyBool_FromLong((long)uv_is_readable((uv_stream_t *)UV_HANDLE(self)));
-    }
+
+    RAISE_IF_HANDLE_NOT_INITIALIZED(self, NULL);
+
+    return PyBool_FromLong((long)uv_is_readable((uv_stream_t *)UV_HANDLE(self)));
 }
 
 
@@ -384,11 +386,10 @@ static PyObject *
 Stream_writable_get(Stream *self, void *closure)
 {
     UNUSED_ARG(closure);
-    if (!UV_HANDLE(self)) {
-        Py_RETURN_FALSE;
-    } else {
-        return PyBool_FromLong((long)uv_is_writable((uv_stream_t *)UV_HANDLE(self)));
-    }
+
+    RAISE_IF_HANDLE_NOT_INITIALIZED(self, NULL);
+
+    return PyBool_FromLong((long)uv_is_writable((uv_stream_t *)UV_HANDLE(self)));
 }
 
 

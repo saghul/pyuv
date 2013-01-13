@@ -64,7 +64,7 @@ on_udp_read(uv_udp_t* handle, int nread, uv_buf_t buf, struct sockaddr* addr, un
 
     result = PyObject_CallFunctionObjArgs(self->on_read_cb, self, address_tuple, data, py_errorno, NULL);
     if (result == NULL) {
-        handle_uncaught_exception(((Handle *)self)->loop);
+        handle_uncaught_exception(HANDLE(self)->loop);
     }
     Py_XDECREF(result);
     Py_DECREF(address_tuple);
@@ -105,7 +105,7 @@ on_udp_send(uv_udp_send_t* req, int status)
         }
         result = PyObject_CallFunctionObjArgs(callback, self, py_errorno, NULL);
         if (result == NULL) {
-            handle_uncaught_exception(((Handle *)self)->loop);
+            handle_uncaught_exception(HANDLE(self)->loop);
         }
         Py_XDECREF(result);
         Py_DECREF(py_errorno);
@@ -132,6 +132,7 @@ UDP_func_bind(UDP *self, PyObject *args)
     int r, bind_port, address_type;
     char *bind_ip;
 
+    RAISE_IF_HANDLE_NOT_INITIALIZED(self, NULL);
     RAISE_IF_HANDLE_CLOSED(self, PyExc_HandleClosedError, NULL);
 
     if (!PyArg_ParseTuple(args, "(si):bind", &bind_ip, &bind_port)) {
@@ -171,6 +172,7 @@ UDP_func_start_recv(UDP *self, PyObject *args)
 
     tmp = NULL;
 
+    RAISE_IF_HANDLE_NOT_INITIALIZED(self, NULL);
     RAISE_IF_HANDLE_CLOSED(self, PyExc_HandleClosedError, NULL);
 
     if (!PyArg_ParseTuple(args, "O:start_recv", &callback)) {
@@ -202,6 +204,7 @@ UDP_func_stop_recv(UDP *self)
 {
     int r;
 
+    RAISE_IF_HANDLE_NOT_INITIALIZED(self, NULL);
     RAISE_IF_HANDLE_CLOSED(self, PyExc_HandleClosedError, NULL);
 
     r = uv_udp_recv_stop((uv_udp_t *)UV_HANDLE(self));
@@ -228,6 +231,7 @@ UDP_func_send(UDP *self, PyObject *args)
     uv_udp_send_t *wr = NULL;
     udp_send_data_t *req_data = NULL;
 
+    RAISE_IF_HANDLE_NOT_INITIALIZED(self, NULL);
     RAISE_IF_HANDLE_CLOSED(self, PyExc_HandleClosedError, NULL);
 
     if ((view = PyMem_New(Py_buffer, 1)) == NULL) {
@@ -319,6 +323,7 @@ UDP_func_sendlines(UDP *self, PyObject *args)
 
     callback = Py_None;
 
+    RAISE_IF_HANDLE_NOT_INITIALIZED(self, NULL);
     RAISE_IF_HANDLE_CLOSED(self, PyExc_HandleClosedError, NULL);
 
     if (!PyArg_ParseTuple(args, "(si)O|O:sendlines", &dest_ip, &dest_port, &seq, &callback)) {
@@ -406,6 +411,7 @@ UDP_func_set_membership(UDP *self, PyObject *args)
 
     interface_address = NULL;
 
+    RAISE_IF_HANDLE_NOT_INITIALIZED(self, NULL);
     RAISE_IF_HANDLE_CLOSED(self, PyExc_HandleClosedError, NULL);
 
     if (!PyArg_ParseTuple(args, "si|s:set_membership", &multicast_address, &membership, &interface_address)) {
@@ -433,6 +439,7 @@ UDP_func_getsockname(UDP *self)
 
     namelen = sizeof(sockname);
 
+    RAISE_IF_HANDLE_NOT_INITIALIZED(self, NULL);
     RAISE_IF_HANDLE_CLOSED(self, PyExc_HandleClosedError, NULL);
 
     r = uv_udp_getsockname((uv_udp_t *)UV_HANDLE(self), &sockname, &namelen);
@@ -461,6 +468,7 @@ UDP_func_set_multicast_ttl(UDP *self, PyObject *args)
 {
     int r, ttl;
 
+    RAISE_IF_HANDLE_NOT_INITIALIZED(self, NULL);
     RAISE_IF_HANDLE_CLOSED(self, PyExc_HandleClosedError, NULL);
 
     if (!PyArg_ParseTuple(args, "i:set_multicast_ttl", &ttl)) {
@@ -488,6 +496,7 @@ UDP_func_set_broadcast(UDP *self, PyObject *args)
     int r;
     PyObject *enable;
 
+    RAISE_IF_HANDLE_NOT_INITIALIZED(self, NULL);
     RAISE_IF_HANDLE_CLOSED(self, PyExc_HandleClosedError, NULL);
 
     if (!PyArg_ParseTuple(args, "O!:set_broadcast", &PyBool_Type, &enable)) {
@@ -510,6 +519,7 @@ UDP_func_set_multicast_loop(UDP *self, PyObject *args)
     int r;
     PyObject *enable;
 
+    RAISE_IF_HANDLE_NOT_INITIALIZED(self, NULL);
     RAISE_IF_HANDLE_CLOSED(self, PyExc_HandleClosedError, NULL);
 
     if (!PyArg_ParseTuple(args, "O!:set_multicast_loop", &PyBool_Type, &enable)) {
@@ -531,6 +541,7 @@ UDP_func_set_ttl(UDP *self, PyObject *args)
 {
     int r, ttl;
 
+    RAISE_IF_HANDLE_NOT_INITIALIZED(self, NULL);
     RAISE_IF_HANDLE_CLOSED(self, PyExc_HandleClosedError, NULL);
 
     if (!PyArg_ParseTuple(args, "i:set_multicast_ttl", &ttl)) {
@@ -557,6 +568,7 @@ UDP_func_open(UDP *self, PyObject *args)
 {
     long fd;
 
+    RAISE_IF_HANDLE_NOT_INITIALIZED(self, NULL);
     RAISE_IF_HANDLE_CLOSED(self, PyExc_HandleClosedError, NULL);
 
     if (!PyArg_ParseTuple(args, "l:open", &fd)) {
@@ -573,40 +585,29 @@ static int
 UDP_tp_init(UDP *self, PyObject *args, PyObject *kwargs)
 {
     int r;
-    uv_udp_t *uv_udp_handle = NULL;
     Loop *loop;
     PyObject *tmp = NULL;
 
     UNUSED_ARG(kwargs);
 
-    if (UV_HANDLE(self)) {
-        PyErr_SetString(PyExc_UDPError, "Object already initialized");
-        return -1;
-    }
+    RAISE_IF_HANDLE_INITIALIZED(self, -1);
 
     if (!PyArg_ParseTuple(args, "O!:__init__", &LoopType, &loop)) {
         return -1;
     }
 
-    tmp = (PyObject *)((Handle *)self)->loop;
+    r = uv_udp_init(loop->uv_loop, (uv_udp_t *)UV_HANDLE(self));
+    if (r != 0) {
+        RAISE_UV_EXCEPTION(loop->uv_loop, PyExc_UDPError);
+        return -1;
+    }
+
+    tmp = (PyObject *)HANDLE(self)->loop;
     Py_INCREF(loop);
-    ((Handle *)self)->loop = loop;
+    HANDLE(self)->loop = loop;
     Py_XDECREF(tmp);
 
-    uv_udp_handle = PyMem_Malloc(sizeof(uv_udp_t));
-    if (!uv_udp_handle) {
-        PyErr_NoMemory();
-        Py_DECREF(loop);
-        return -1;
-    }
-    r = uv_udp_init(UV_HANDLE_LOOP(self), uv_udp_handle);
-    if (r != 0) {
-        RAISE_UV_EXCEPTION(UV_HANDLE_LOOP(self), PyExc_UDPError);
-        Py_DECREF(loop);
-        return -1;
-    }
-    uv_udp_handle->data = (void *)self;
-    UV_HANDLE(self) = (uv_handle_t *)uv_udp_handle;
+    HANDLE(self)->initialized = True;
 
     return 0;
 }
@@ -615,10 +616,23 @@ UDP_tp_init(UDP *self, PyObject *args, PyObject *kwargs)
 static PyObject *
 UDP_tp_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
 {
-    UDP *self = (UDP *)HandleType.tp_new(type, args, kwargs);
-    if (!self) {
+    uv_udp_t *uv_udp_handle;
+
+    uv_udp_handle = PyMem_Malloc(sizeof(uv_udp_t));
+    if (!uv_udp_handle) {
+        PyErr_NoMemory();
         return NULL;
     }
+
+    UDP *self = (UDP *)HandleType.tp_new(type, args, kwargs);
+    if (!self) {
+        PyMem_Free(uv_udp_handle);
+        return NULL;
+    }
+
+    uv_udp_handle->data = (void *)self;
+    UV_HANDLE(self) = (uv_handle_t *)uv_udp_handle;
+
     return (PyObject *)self;
 }
 
@@ -699,5 +713,4 @@ static PyTypeObject UDPType = {
     0,                                                              /*tp_alloc*/
     UDP_tp_new,                                                     /*tp_new*/
 };
-
 

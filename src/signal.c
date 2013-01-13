@@ -15,7 +15,7 @@ on_signal_callback(uv_signal_t *handle, int signum)
 
     result = PyObject_CallFunctionObjArgs(self->callback, self, PyInt_FromLong((long)signum), NULL);
     if (result == NULL) {
-        handle_uncaught_exception(((Handle *)self)->loop);
+        handle_uncaught_exception(HANDLE(self)->loop);
     }
     Py_XDECREF(result);
 
@@ -32,6 +32,7 @@ Signal_func_start(Signal *self, PyObject *args)
 
     tmp = NULL;
 
+    RAISE_IF_HANDLE_NOT_INITIALIZED(self, NULL);
     RAISE_IF_HANDLE_CLOSED(self, PyExc_HandleClosedError, NULL);
 
     if (!PyArg_ParseTuple(args, "Oi:start", &callback, &signum)) {
@@ -63,6 +64,7 @@ Signal_func_stop(Signal *self)
 {
     int r;
 
+    RAISE_IF_HANDLE_NOT_INITIALIZED(self, NULL);
     RAISE_IF_HANDLE_CLOSED(self, PyExc_HandleClosedError, NULL);
 
     r = uv_signal_stop((uv_signal_t *)UV_HANDLE(self));
@@ -79,41 +81,29 @@ static int
 Signal_tp_init(Signal *self, PyObject *args, PyObject *kwargs)
 {
     int r;
-    uv_signal_t *uv_signal = NULL;
     Loop *loop;
     PyObject *tmp = NULL;
 
     UNUSED_ARG(kwargs);
 
-    if (UV_HANDLE(self)) {
-        PyErr_SetString(PyExc_SignalError, "Object already initialized");
-        return -1;
-    }
+    RAISE_IF_HANDLE_INITIALIZED(self, -1);
 
     if (!PyArg_ParseTuple(args, "O!:__init__", &LoopType, &loop)) {
         return -1;
     }
 
-    tmp = (PyObject *)((Handle *)self)->loop;
+    r = uv_signal_init(loop->uv_loop, (uv_signal_t *)UV_HANDLE(self));
+    if (r != 0) {
+        RAISE_UV_EXCEPTION(loop->uv_loop, PyExc_SignalError);
+        return -1;
+    }
+
+    tmp = (PyObject *)HANDLE(self)->loop;
     Py_INCREF(loop);
-    ((Handle *)self)->loop = loop;
+    HANDLE(self)->loop = loop;
     Py_XDECREF(tmp);
 
-    uv_signal = PyMem_Malloc(sizeof(uv_signal_t));
-    if (!uv_signal) {
-        PyErr_NoMemory();
-        Py_DECREF(loop);
-        return -1;
-    }
-
-    r = uv_signal_init(UV_HANDLE_LOOP(self), uv_signal);
-    if (r != 0) {
-        RAISE_UV_EXCEPTION(UV_HANDLE_LOOP(self), PyExc_SignalError);
-        Py_DECREF(loop);
-        return -1;
-    }
-    uv_signal->data = (void *)self;
-    UV_HANDLE(self) = (uv_handle_t *)uv_signal;
+    HANDLE(self)->initialized = True;
 
     return 0;
 }
@@ -122,10 +112,23 @@ Signal_tp_init(Signal *self, PyObject *args, PyObject *kwargs)
 static PyObject *
 Signal_tp_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
 {
-    Signal *self = (Signal *)HandleType.tp_new(type, args, kwargs);
-    if (!self) {
+    uv_signal_t *uv_signal;
+
+    uv_signal = PyMem_Malloc(sizeof(uv_signal_t));
+    if (!uv_signal) {
+        PyErr_NoMemory();
         return NULL;
     }
+
+    Signal *self = (Signal *)HandleType.tp_new(type, args, kwargs);
+    if (!self) {
+        PyMem_Free(uv_signal);
+        return NULL;
+    }
+
+    uv_signal->data = (void *)self;
+    UV_HANDLE(self) = (uv_handle_t *)uv_signal;
+
     return (PyObject *)self;
 }
 
@@ -196,5 +199,4 @@ static PyTypeObject SignalType = {
     0,                                                              /*tp_alloc*/
     Signal_tp_new,                                                  /*tp_new*/
 };
-
 

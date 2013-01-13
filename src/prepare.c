@@ -16,7 +16,7 @@ on_prepare_callback(uv_prepare_t *handle, int status)
 
     result = PyObject_CallFunctionObjArgs(self->callback, self, NULL);
     if (result == NULL) {
-        handle_uncaught_exception(((Handle *)self)->loop);
+        handle_uncaught_exception(HANDLE(self)->loop);
     }
     Py_XDECREF(result);
 
@@ -33,6 +33,7 @@ Prepare_func_start(Prepare *self, PyObject *args)
 
     tmp = NULL;
 
+    RAISE_IF_HANDLE_NOT_INITIALIZED(self, NULL);
     RAISE_IF_HANDLE_CLOSED(self, PyExc_HandleClosedError, NULL);
 
     if (!PyArg_ParseTuple(args, "O:start", &callback)) {
@@ -64,6 +65,7 @@ Prepare_func_stop(Prepare *self)
 {
     int r;
 
+    RAISE_IF_HANDLE_NOT_INITIALIZED(self, NULL);
     RAISE_IF_HANDLE_CLOSED(self, PyExc_HandleClosedError, NULL);
 
     r = uv_prepare_stop((uv_prepare_t *)UV_HANDLE(self));
@@ -83,41 +85,29 @@ static int
 Prepare_tp_init(Prepare *self, PyObject *args, PyObject *kwargs)
 {
     int r;
-    uv_prepare_t *uv_prepare = NULL;
     Loop *loop;
     PyObject *tmp = NULL;
 
     UNUSED_ARG(kwargs);
 
-    if (UV_HANDLE(self)) {
-        PyErr_SetString(PyExc_PrepareError, "Object already initialized");
-        return -1;
-    }
+    RAISE_IF_HANDLE_INITIALIZED(self, -1);
 
     if (!PyArg_ParseTuple(args, "O!:__init__", &LoopType, &loop)) {
         return -1;
     }
 
-    tmp = (PyObject *)((Handle *)self)->loop;
+    r = uv_prepare_init(loop->uv_loop, (uv_prepare_t *)UV_HANDLE(self));
+    if (r != 0) {
+        RAISE_UV_EXCEPTION(loop->uv_loop, PyExc_PrepareError);
+        return -1;
+    }
+
+    tmp = (PyObject *)HANDLE(self)->loop;
     Py_INCREF(loop);
-    ((Handle *)self)->loop = loop;
+    HANDLE(self)->loop = loop;
     Py_XDECREF(tmp);
 
-    uv_prepare = PyMem_Malloc(sizeof(uv_prepare_t));
-    if (!uv_prepare) {
-        PyErr_NoMemory();
-        Py_DECREF(loop);
-        return -1;
-    }
-
-    r = uv_prepare_init(UV_HANDLE_LOOP(self), uv_prepare);
-    if (r != 0) {
-        RAISE_UV_EXCEPTION(UV_HANDLE_LOOP(self), PyExc_PrepareError);
-        Py_DECREF(loop);
-        return -1;
-    }
-    uv_prepare->data = (void *)self;
-    UV_HANDLE(self) = (uv_handle_t *)uv_prepare;
+    HANDLE(self)->initialized = True;
 
     return 0;
 }
@@ -126,10 +116,23 @@ Prepare_tp_init(Prepare *self, PyObject *args, PyObject *kwargs)
 static PyObject *
 Prepare_tp_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
 {
-    Prepare *self = (Prepare *)HandleType.tp_new(type, args, kwargs);
-    if (!self) {
+    uv_prepare_t *uv_prepare;
+
+    uv_prepare = PyMem_Malloc(sizeof(uv_prepare_t));
+    if (!uv_prepare) {
+        PyErr_NoMemory();
         return NULL;
     }
+
+    Prepare *self = (Prepare *)HandleType.tp_new(type, args, kwargs);
+    if (!self) {
+        PyMem_Free(uv_prepare);
+        return NULL;
+    }
+
+    uv_prepare->data = (void *)self;
+    UV_HANDLE(self) = (uv_handle_t *)uv_prepare;
+
     return (PyObject *)self;
 }
 

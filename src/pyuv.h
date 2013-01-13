@@ -58,13 +58,13 @@ typedef int Bool;
         }                                                                   \
     } while(0)                                                              \
 
+#define HANDLE(x) ((Handle *)x)
+
 #define UV_LOOP(x) (x)->loop->uv_loop
 
-#define UV_HANDLE(x) ((Handle *)x)->uv_handle
+#define UV_HANDLE(x) HANDLE(x)->uv_handle
 
-#define UV_HANDLE_CLOSED(x) (!UV_HANDLE(x) || uv_is_closing(UV_HANDLE(x)))
-
-#define UV_HANDLE_LOOP(x) UV_LOOP((Handle *)x)
+#define UV_HANDLE_LOOP(x) UV_LOOP(HANDLE(x))
 
 #define RAISE_IF_INITIALIZED(obj, retval)                                           \
     do {                                                                            \
@@ -82,10 +82,14 @@ typedef int Bool;
         }                                                                                                 \
     } while(0)                                                                                            \
 
+#define RAISE_IF_HANDLE_INITIALIZED(obj, retval)      RAISE_IF_INITIALIZED((Handle *)obj, retval)
+
+#define RAISE_IF_HANDLE_NOT_INITIALIZED(obj, retval)  RAISE_IF_NOT_INITIALIZED((Handle *)obj, retval)
+
 #define RAISE_IF_HANDLE_CLOSED(obj, exc_type, retval)                       \
     do {                                                                    \
-        if (UV_HANDLE_CLOSED(obj)) {                                        \
-            PyErr_SetString(exc_type, "");                                  \
+        if (uv_is_closing(UV_HANDLE(obj))) {                                \
+            PyErr_SetString(exc_type, "Handle is closing/closed");          \
             return retval;                                                  \
         }                                                                   \
     } while(0)                                                              \
@@ -120,6 +124,7 @@ static PyTypeObject LoopType;
 /* Handle */
 typedef struct {
     PyObject_HEAD
+    Bool initialized;
     PyObject *weakreflist;
     PyObject *dict;
     Loop *loop;
@@ -246,6 +251,7 @@ static PyTypeObject StdIOType;
 
 typedef struct {
     Handle handle;
+    Bool spawned;
     PyObject *on_exit_cb;
     PyObject *stdio;
 } Process;

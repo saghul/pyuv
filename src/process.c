@@ -58,7 +58,6 @@ StdIO_stream_get(StdIO *self, void *closure)
 {
     UNUSED_ARG(closure);
     if (!self->stream) {
-        Py_INCREF(Py_None);
         Py_RETURN_NONE;
     } else {
         return self->stream;
@@ -78,7 +77,7 @@ static PyObject *
 StdIO_flags_get(StdIO *self, void *closure)
 {
     UNUSED_ARG(closure);
-    return PyInt_FromLong((long)self->fd);
+    return PyInt_FromLong((long)self->flags);
 }
 
 
@@ -169,6 +168,22 @@ static PyTypeObject StdIOType = {
 
 /* Process handle */
 
+#define RAISE_IF_SPAWNED(obj, retval)                                               \
+    do {                                                                            \
+        if ((obj)->spawned) {                                                       \
+            PyErr_SetString(PyExc_ProcessError, "Process already spawned");         \
+            return retval;                                                          \
+        }                                                                           \
+    } while(0)                                                                      \
+
+#define RAISE_IF_NOT_SPAWNED(obj, retval)                                           \
+    do {                                                                            \
+        if (!((obj)->spawned)) {                                                    \
+            PyErr_SetString(PyExc_ProcessError, "Process was not spawned");         \
+            return retval;                                                          \
+        }                                                                           \
+    } while(0)                                                                      \
+
 static void
 on_process_exit(uv_process_t *process, int exit_status, int term_signal)
 {
@@ -180,22 +195,20 @@ on_process_exit(uv_process_t *process, int exit_status, int term_signal)
     self = (Process *)process->data;
     ASSERT(self);
 
-    /* Object could go out of scope in the callback, increase refcount to avoid it */
-    Py_INCREF(self);
-
     py_exit_status = PyInt_FromLong(exit_status);
     py_term_signal = PyInt_FromLong(term_signal);
 
     if (self->on_exit_cb != Py_None) {
         result = PyObject_CallFunctionObjArgs(self->on_exit_cb, self, py_exit_status, py_term_signal, NULL);
         if (result == NULL) {
-            handle_uncaught_exception(((Handle *)self)->loop);
+            handle_uncaught_exception(HANDLE(self)->loop);
         }
         Py_XDECREF(result);
         Py_DECREF(py_exit_status);
         Py_DECREF(py_term_signal);
     }
 
+    /* Refcount was increased in the spawn function */
     Py_DECREF(self);
 
     PyGILState_Release(gstate);
@@ -211,7 +224,6 @@ Process_func_spawn(Process *self, PyObject *args, PyObject *kwargs)
     char **ptr, **process_args, **process_env;
     Py_ssize_t i, n, pos;
     PyObject *key, *value, *item, *tmp, *callback, *arguments, *env, *stdio, *ret;
-    uv_process_t *uv_process;
     uv_process_options_t options;
     uv_stdio_container_t *stdio_container;
 
@@ -223,10 +235,7 @@ Process_func_spawn(Process *self, PyObject *args, PyObject *kwargs)
     stdio_container = NULL;
     flags = uid = gid = stdio_count = 0;
 
-    if (UV_HANDLE(self)) {
-        PyErr_SetString(PyExc_ProcessError, "Process already spawned");
-        return NULL;
-    }
+    RAISE_IF_SPAWNED(self, NULL);
 
     if (!PyArg_ParseTupleAndKeywords(args, kwargs, "s|OOO!sIIiO:__init__", kwlist, &file, &callback, &arguments, &PyDict_Type, &env, &cwd, &uid, &gid, &flags, &stdio)) {
         return NULL;
@@ -379,20 +388,9 @@ Process_func_spawn(Process *self, PyObject *args, PyObject *kwargs)
     options.stdio = stdio_container;
     options.stdio_count = stdio_count;
 
-    uv_process = PyMem_Malloc(sizeof(uv_process_t));
-    if (!uv_process) {
-        PyErr_NoMemory();
-        ret = NULL;
-        goto cleanup;
-    }
-    uv_process->data = (void *)self;
-    UV_HANDLE(self) = (uv_handle_t *)uv_process;
-
-    r = uv_spawn(UV_HANDLE_LOOP(self), uv_process, options);
+    r = uv_spawn(UV_HANDLE_LOOP(self), (uv_process_t *)UV_HANDLE(self), options);
     if (r != 0) {
         RAISE_UV_EXCEPTION(UV_HANDLE_LOOP(self), PyExc_ProcessError);
-        PyMem_Free(uv_process);
-        UV_HANDLE(self) = NULL;
         ret = NULL;
         goto cleanup;
     }
@@ -407,27 +405,31 @@ Process_func_spawn(Process *self, PyObject *args, PyObject *kwargs)
     self->stdio = stdio;
     Py_XDECREF(tmp);
 
+    HANDLE(self)->initialized = True;
+    self->spawned = True;
+
     ret = Py_None;
+
+    /* Increase refcount so that object is not removed before the exit callback is called */
+    Py_INCREF(self);
 
 cleanup:
     if (options.args) {
         for (ptr = options.args; *ptr != NULL; ptr++) {
             PyMem_Free(*ptr);
         }
-        PyMem_Free(options.args);
     }
-    if (options.cwd) {
-        PyMem_Free(options.cwd);
-    }
+
     if (options.env) {
         for (ptr = options.env; *ptr != NULL; ptr++) {
             PyMem_Free(*ptr);
         }
-        PyMem_Free(options.env);
     }
-    if (options.stdio) {
-        PyMem_Free(options.stdio);
-    }
+
+    PyMem_Free(options.args);
+    PyMem_Free(options.cwd);
+    PyMem_Free(options.env);
+    PyMem_Free(options.stdio);
 
     Py_XINCREF(ret);
     return ret;
@@ -439,10 +441,9 @@ Process_func_kill(Process *self, PyObject *args)
 {
     int signum, r;
 
-    if (UV_HANDLE_CLOSED(self)) {
-        PyErr_SetString(PyExc_ProcessError, "Process wasn't spawned yet");
-        return NULL;
-    }
+    RAISE_IF_HANDLE_NOT_INITIALIZED(self, NULL);
+    RAISE_IF_NOT_SPAWNED(self, NULL);
+    RAISE_IF_HANDLE_CLOSED(self, PyExc_HandleClosedError, NULL);
 
     if (!PyArg_ParseTuple(args, "i:kill", &signum)) {
         return NULL;
@@ -463,7 +464,7 @@ Process_pid_get(Process *self, void *closure)
 {
     UNUSED_ARG(closure);
 
-    if (UV_HANDLE_CLOSED(self)) {
+    if (!HANDLE(self)->initialized || !self->spawned) {
         Py_RETURN_NONE;
     }
     return PyInt_FromLong((long)((uv_process_t *)UV_HANDLE(self))->pid);
@@ -478,19 +479,19 @@ Process_tp_init(Process *self, PyObject *args, PyObject *kwargs)
 
     UNUSED_ARG(kwargs);
 
-    if (UV_HANDLE(self)) {
-        PyErr_SetString(PyExc_ProcessError, "Object already initialized");
-        return -1;
-    }
+    RAISE_IF_HANDLE_INITIALIZED(self, -1);
 
     if (!PyArg_ParseTuple(args, "O!:__init__", &LoopType, &loop)) {
         return -1;
     }
 
-    tmp = (PyObject *)((Handle *)self)->loop;
+    tmp = (PyObject *)HANDLE(self)->loop;
     Py_INCREF(loop);
-    ((Handle *)self)->loop = loop;
+    HANDLE(self)->loop = loop;
     Py_XDECREF(tmp);
+
+    /* uv_process_t handles are not initialized explicitly, so workaround it. See tp_dealloc for the rest */
+    HANDLE(self)->initialized = False;
 
     return 0;
 }
@@ -508,11 +509,33 @@ Process_func_disable_stdio_inheritance(PyObject *cls)
 static PyObject *
 Process_tp_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
 {
-    Process *self = (Process *)HandleType.tp_new(type, args, kwargs);
-    if (!self) {
+    uv_process_t *uv_process;
+
+    uv_process = PyMem_Malloc(sizeof(uv_process_t));
+    if (!uv_process) {
+        PyErr_NoMemory();
         return NULL;
     }
+
+    Process *self = (Process *)HandleType.tp_new(type, args, kwargs);
+    if (!self) {
+        PyMem_Free(uv_process);
+        return NULL;
+    }
+
+    uv_process->data = (void *)self;
+    UV_HANDLE(self) = (uv_handle_t *)uv_process;
+    self->spawned = False;
+
     return (PyObject *)self;
+}
+
+
+static void
+Process_tp_dealloc(Process *self)
+{
+    HANDLE(self)->initialized = self->spawned;
+    HandleType.tp_dealloc((PyObject *)self);
 }
 
 
@@ -556,7 +579,7 @@ static PyTypeObject ProcessType = {
     "pyuv.Process",                                                 /*tp_name*/
     sizeof(Process),                                                /*tp_basicsize*/
     0,                                                              /*tp_itemsize*/
-    0,                                                              /*tp_dealloc*/
+    (destructor)Process_tp_dealloc,                                 /*tp_dealloc*/
     0,                                                              /*tp_print*/
     0,                                                              /*tp_getattr*/
     0,                                                              /*tp_setattr*/
