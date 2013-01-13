@@ -77,7 +77,7 @@ static PyObject *
 StdIO_flags_get(StdIO *self, void *closure)
 {
     UNUSED_ARG(closure);
-    return PyInt_FromLong((long)self->fd);
+    return PyInt_FromLong((long)self->flags);
 }
 
 
