@@ -248,21 +248,18 @@ UDP_func_send(UDP *self, PyObject *args)
     }
 
     if (callback != Py_None && !PyCallable_Check(callback)) {
-        PyBuffer_Release(view);
         PyErr_SetString(PyExc_TypeError, "a callable or None is required");
-        return NULL;
+        goto error1;
     }
 
     if (dest_port < 0 || dest_port > 65535) {
-        PyBuffer_Release(view);
         PyErr_SetString(PyExc_ValueError, "port must be between 0 and 65535");
-        return NULL;
+        goto error1;
     }
 
     if (pyuv_guess_ip_family(dest_ip, &address_type)) {
-        PyBuffer_Release(view);
         PyErr_SetString(PyExc_ValueError, "invalid IP address");
-        return NULL;
+        goto error1;
     }
 
     Py_INCREF(callback);
@@ -270,13 +267,13 @@ UDP_func_send(UDP *self, PyObject *args)
     wr = (uv_udp_send_t *)PyMem_Malloc(sizeof(uv_udp_send_t));
     if (!wr) {
         PyErr_NoMemory();
-        goto error;
+        goto error2;
     }
 
     req_data = (udp_send_data_t*) PyMem_Malloc(sizeof(udp_send_data_t));
     if (!req_data) {
         PyErr_NoMemory();
-        goto error;
+        goto error2;
     }
 
     buf = uv_buf_init(view->buf, view->len);
@@ -293,7 +290,7 @@ UDP_func_send(UDP *self, PyObject *args)
     }
     if (r != 0) {
         RAISE_UV_EXCEPTION(UV_HANDLE_LOOP(self), PyExc_UDPError);
-        goto error;
+        goto error2;
     }
 
     /* Increase refcount so that object is not removed before the callback is called */
@@ -301,11 +298,13 @@ UDP_func_send(UDP *self, PyObject *args)
 
     Py_RETURN_NONE;
 
-error:
-    PyBuffer_Release(view);
+error2:
     Py_DECREF(callback);
     PyMem_Free(req_data);
     PyMem_Free(wr);
+error1:
+    PyBuffer_Release(view);
+    PyMem_Free(view);
     return NULL;
 }
 

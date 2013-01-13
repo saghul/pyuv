@@ -293,6 +293,7 @@ error:
     for (i = 0; i < buf_count; i++) {
         PyBuffer_Release(&views[i]);
     }
+    PyMem_Free(views);
     PyMem_Free(req_data);
     PyMem_Free(wr);
     return NULL;
@@ -324,6 +325,7 @@ Stream_func_write(Stream *self, PyObject *args)
 
     if (callback != Py_None && !PyCallable_Check(callback)) {
         PyBuffer_Release(view);
+        PyMem_Free(view);
         PyErr_SetString(PyExc_TypeError, "a callable or None is required");
         return NULL;
     }
