@@ -1,3 +1,17 @@
+Version 0.9.4
+=============
+ - Allow handle types and loop to be inheritable
+ - Internal refactor, allocate handles on tp_new and free them
+   on tp_dealloc
+ - Added ThreadError and used it in the thread module
+ - Removed FSEvent.start and moved functionality to __init__
+ - Removed TTY.isatty
+ - Check if the object passed as send_handle is a Stream object
+ - Fixed Loop.run return value
+ - Fixed leaks on stream and UDP write functions
+ - Fixed crash in fs.write
+ - Raised libuv revision to 8e3e60f (master)
+
 Version 0.9.3
 =============
  - Added mode parameter to Loop.run
