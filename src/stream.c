@@ -78,6 +78,8 @@ on_stream_read(uv_stream_t* handle, int nread, uv_buf_t buf)
         Py_INCREF(Py_None);
         err = uv_last_error(UV_HANDLE_LOOP(self));
         py_errorno = PyInt_FromLong((long)err.code);
+        /* Stop reading, otherwise an assert blows up on unix */
+        uv_read_stop(handle);
     }
 
     result = PyObject_CallFunctionObjArgs(self->on_read_cb, self, data, py_errorno, NULL);
