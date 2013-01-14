@@ -30,7 +30,8 @@
             - ``UV_RUN_ONCE``: Run a single event loop iteration.
             - ``UV_RUN_NOWAIT``: Run a single event loop iteration, but don't block for io.
 
-        Run the event loop.
+        Run the event loop. Returns True if there are pending operations and run should be called again
+        or False otherwise.
 
     .. py:method:: now
     .. py:method:: update_time

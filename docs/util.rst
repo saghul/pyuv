@@ -58,4 +58,28 @@
     a `GAIRequest` object which has a `cancel()` method that can be called
     in order to cancel the request.
 
+.. py:class:: pyuv.util.SignalChecker(loop)
+
+    :type loop: :py:class:`Loop`
+    :param loop: loop object where this handle runs (accessible through :py:attr:`SignalChecker.loop`).
+
+    :param int fd: File descriptor to be monitored for readability.
+
+    `SignalChecker` is a pseudo-handle which can be used to interact with signals set up by the standard `signal` module. Here is how
+    it works: the user is required to get a pair of file descriptors and put them in nonblocking mode. These descriptors can be either
+    a `os.pipe()`, a `socket.socketpair()` or a manually made pair of connected sockets. One of these descriptors will be used just for
+    writing, and the other end for reading. The user must use `signal.set_wakeup_fd` and register the write descriptor. The read descriptor
+    must be passed to this handle. When the process receives a signal Python will write on the write end of the socket pair and it will cause
+    the SignalChecker to wakeup the loop and call the Python C API function to process signals: `PyErr_CheckSignals`.
+
+    It's best to use the `Signal` handle also provided by this library, because it doesn't need any work from the user and it works for any thread. This
+    pseudo-handle merely exists for some corner cases which you don't probably care about :-
+
+    .. py:method:: start
+
+        Start the signal checking handle.
+
+    .. py:method:: stop
+
+        Stop the signal checking handle.
 

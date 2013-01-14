@@ -350,23 +350,19 @@
     Same as :py:func:`pyuv.fs.utime` but using a file-descriptor instead of the path.
 
 
-.. py:class:: pyuv.fs.FSEvent(loop)
+.. py:class:: pyuv.fs.FSEvent(loop, path, callback, flags)
 
     :type loop: :py:class:`Loop`
     :param loop: loop object where this handle runs (accessible through :py:attr:`FSEvent.loop`).
 
-    ``FSEvent`` handles monitor a given path for changes.
+    :param string path: Path to monitor for events.
 
-    .. py:method:: start(path, callback, flags)
+    :param callable callback: Function that will be called when an event occurs in the
+        given path.
 
-        :param string path: Path to monitor for events.
+    :param int flags: Flags which control what events are watched for. Not used at the moment.
 
-        :param callable callback: Function that will be called when an event occurs in the
-            given path.
-
-        :param int flags: Flags which control what events are watched for. Not used at the moment.
-
-        Start the ``FSEvent`` handle.
+    `FSEvent` handles monitor a given path for changes.
 
         Callback signature: ``callback(fsevent_handle, filename, events, error)``.
 
