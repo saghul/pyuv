@@ -89,7 +89,7 @@ Loop_func_run(Loop *self, PyObject *args)
     }
 
     Py_BEGIN_ALLOW_THREADS
-    r = uv_run2(self->uv_loop, mode);
+    r = uv_run(self->uv_loop, mode);
     Py_END_ALLOW_THREADS
 
     if (PyErr_Occurred()) {
