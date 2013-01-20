@@ -1,16 +1,8 @@
 
 from __future__ import print_function
 
-import os
-import sys
 import signal
-import threading
 import pyuv
-
-if sys.version_info >= (3, 0):
-    LINESEP = os.linesep.encode()
-else:
-    LINESEP = os.linesep
 
 
 def on_read(client, data, error):
@@ -18,10 +10,7 @@ def on_read(client, data, error):
         client.close()
         clients.remove(client)
         return
-    data = data.strip()
-    if not data:
-        return
-    client.write(data+LINESEP)
+    client.write(data)
 
 def on_connection(server, error):
     client = pyuv.TCP(server.loop)
@@ -29,21 +18,15 @@ def on_connection(server, error):
     clients.append(client)
     client.start_read(on_read)
 
-def async_exit(async):
+def signal_cb(handle, signum):
     [c.close() for c in clients]
-    async.close()
     signal_h.close()
     server.close()
-
-def signal_cb(handle, signum):
-    async.send()
 
 
 print("PyUV version %s" % pyuv.__version__)
 
 loop = pyuv.Loop.default_loop()
-
-async = pyuv.Async(loop, async_exit)
 clients = []
 
 server = pyuv.TCP(loop)
@@ -53,10 +36,6 @@ server.listen(on_connection)
 signal_h = pyuv.Signal(loop)
 signal_h.start(signal_cb, signal.SIGINT)
 
-t = threading.Thread(target=loop.run)
-t.start()
-t.join()
-
+loop.run()
 print("Stopped!")
-
 

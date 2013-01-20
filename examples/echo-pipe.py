@@ -1,20 +1,20 @@
 
-import os
+import signal
 import sys
 import pyuv
 
-if sys.version_info >= (3, 0):
-    LINESEP = os.linesep.encode()
-else:
-    LINESEP = os.linesep
 
 def on_pipe_read(handle, data, error):
-    data = data.strip()
-    if data == b"exit":
+    if data is None or data == b"exit":
         pipe_stdin.close()
         pipe_stdout.close()
     else:
-        pipe_stdout.write(data+LINESEP)
+        pipe_stdout.write(data)
+
+def signal_cb(handle, signum):
+    pipe_stdin.close()
+    pipe_stdout.close()
+    signal_h.close()
 
 
 loop = pyuv.Loop.default_loop()
@@ -25,6 +25,9 @@ pipe_stdin.start_read(on_pipe_read)
 
 pipe_stdout = pyuv.Pipe(loop)
 pipe_stdout.open(sys.stdout.fileno())
+
+signal_h = pyuv.Signal(loop)
+signal_h.start(signal_cb, signal.SIGINT)
 
 loop.run()
 
