@@ -51,6 +51,18 @@ on_handle_dealloc_close(uv_handle_t *handle)
 }
 
 
+static void
+initialize_handle(Handle *self, Loop *loop)
+{
+    PyObject *tmp;
+    tmp = (PyObject *)self->loop;
+    Py_INCREF(loop);
+    self->loop = loop;
+    Py_XDECREF(tmp);
+    self->initialized = True;
+}
+
+
 static PyObject *
 Handle_func_ref(Handle *self)
 {

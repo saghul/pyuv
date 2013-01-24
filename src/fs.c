@@ -2836,12 +2836,11 @@ FSEvent_tp_init(FSEvent *self, PyObject *args, PyObject *kwargs)
     int r, flags;
     char *path;
     Loop *loop;
-    PyObject *tmp, *callback;
+    PyObject *callback, *tmp;
 
     static char *kwlist[] = {"loop", "path", "callback", "flags", NULL};
 
     UNUSED_ARG(kwargs);
-    tmp = NULL;
 
     RAISE_IF_HANDLE_INITIALIZED(self, -1);
 
@@ -2865,12 +2864,7 @@ FSEvent_tp_init(FSEvent *self, PyObject *args, PyObject *kwargs)
     self->callback = callback;
     Py_XDECREF(tmp);
 
-    tmp = (PyObject *)HANDLE(self)->loop;
-    Py_INCREF(loop);
-    HANDLE(self)->loop = loop;
-    Py_XDECREF(tmp);
-
-    HANDLE(self)->initialized = True;
+    initialize_handle(HANDLE(self), loop);
 
     return 0;
 }
@@ -3091,7 +3085,6 @@ FSPoll_tp_init(FSPoll *self, PyObject *args, PyObject *kwargs)
 {
     int r;
     Loop *loop;
-    PyObject *tmp = NULL;
 
     UNUSED_ARG(kwargs);
 
@@ -3107,12 +3100,7 @@ FSPoll_tp_init(FSPoll *self, PyObject *args, PyObject *kwargs)
         return -1;
     }
 
-    tmp = (PyObject *)HANDLE(self)->loop;
-    Py_INCREF(loop);
-    HANDLE(self)->loop = loop;
-    Py_XDECREF(tmp);
-
-    HANDLE(self)->initialized = True;
+    initialize_handle(HANDLE(self), loop);
 
     return 0;
 }

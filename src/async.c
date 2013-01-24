@@ -48,8 +48,7 @@ Async_tp_init(Async *self, PyObject *args, PyObject *kwargs)
 {
     int r;
     Loop *loop;
-    PyObject *callback;
-    PyObject *tmp = NULL;
+    PyObject *callback, *tmp;
 
     UNUSED_ARG(kwargs);
 
@@ -75,12 +74,7 @@ Async_tp_init(Async *self, PyObject *args, PyObject *kwargs)
     self->callback = callback;
     Py_XDECREF(tmp);
 
-    tmp = (PyObject *)HANDLE(self)->loop;
-    Py_INCREF(loop);
-    HANDLE(self)->loop = loop;
-    Py_XDECREF(tmp);
-
-    HANDLE(self)->initialized = True;
+    initialize_handle(HANDLE(self), loop);
 
     return 0;
 }

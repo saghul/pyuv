@@ -582,7 +582,6 @@ SignalChecker_tp_init(SignalChecker *self, PyObject *args, PyObject *kwargs)
     int r;
     long fd;
     Loop *loop;
-    PyObject *tmp = NULL;
 
     UNUSED_ARG(kwargs);
 
@@ -600,12 +599,7 @@ SignalChecker_tp_init(SignalChecker *self, PyObject *args, PyObject *kwargs)
 
     self->fd = (uv_os_sock_t)fd;
 
-    tmp = (PyObject *)HANDLE(self)->loop;
-    Py_INCREF(loop);
-    HANDLE(self)->loop = loop;
-    Py_XDECREF(tmp);
-
-    HANDLE(self)->initialized = True;
+    initialize_handle(HANDLE(self), loop);
 
     return 0;
 }

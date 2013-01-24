@@ -585,7 +585,6 @@ UDP_tp_init(UDP *self, PyObject *args, PyObject *kwargs)
 {
     int r;
     Loop *loop;
-    PyObject *tmp = NULL;
 
     UNUSED_ARG(kwargs);
 
@@ -601,12 +600,7 @@ UDP_tp_init(UDP *self, PyObject *args, PyObject *kwargs)
         return -1;
     }
 
-    tmp = (PyObject *)HANDLE(self)->loop;
-    Py_INCREF(loop);
-    HANDLE(self)->loop = loop;
-    Py_XDECREF(tmp);
-
-    HANDLE(self)->initialized = True;
+    initialize_handle(HANDLE(self), loop);
 
     return 0;
 }

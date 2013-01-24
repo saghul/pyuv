@@ -54,7 +54,6 @@ TTY_tp_init(TTY *self, PyObject *args, PyObject *kwargs)
     int fd, r;
     Loop *loop;
     PyObject *readable;
-    PyObject *tmp = NULL;
 
     UNUSED_ARG(kwargs);
 
@@ -70,12 +69,7 @@ TTY_tp_init(TTY *self, PyObject *args, PyObject *kwargs)
         return -1;
     }
 
-    tmp = (PyObject *)HANDLE(self)->loop;
-    Py_INCREF(loop);
-    HANDLE(self)->loop = loop;
-    Py_XDECREF(tmp);
-
-    HANDLE(self)->initialized = True;
+    initialize_handle(HANDLE(self), loop);
 
     return 0;
 }

@@ -474,7 +474,6 @@ Process_pid_get(Process *self, void *closure)
 static int
 Process_tp_init(Process *self, PyObject *args, PyObject *kwargs)
 {
-    PyObject *tmp = NULL;
     Loop *loop;
 
     UNUSED_ARG(kwargs);
@@ -485,10 +484,7 @@ Process_tp_init(Process *self, PyObject *args, PyObject *kwargs)
         return -1;
     }
 
-    tmp = (PyObject *)HANDLE(self)->loop;
-    Py_INCREF(loop);
-    HANDLE(self)->loop = loop;
-    Py_XDECREF(tmp);
+    initialize_handle(HANDLE(self), loop);
 
     /* uv_process_t handles are not initialized explicitly, so workaround it. See tp_dealloc for the rest */
     HANDLE(self)->initialized = False;
