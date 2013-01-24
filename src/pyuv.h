@@ -185,6 +185,7 @@ static PyTypeObject SignalType;
 /* SignalChecker */
 typedef struct {
     PyObject_HEAD
+    Bool initialized;
     Loop *loop;
     uv_poll_t *poll_handle;
     uv_os_sock_t fd;
