@@ -1,3 +1,12 @@
+Version 0.9.5
+=============
+ - Stop reading if a Stream gets an error in the on_read callback
+ - Cleanup and fix examples
+ - Allow None for Handle.close callback
+ - Made SignalChecker inherit from Handle
+ - Updated documentation
+ - Raised libuv revision to e4d8cba (master)
+
 Version 0.9.4
 =============
  - Allow handle types and loop to be inheritable
