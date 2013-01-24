@@ -9,7 +9,7 @@
 ==========================================
 
 
-.. py:class:: TTY(loop)
+.. py:class:: TTY(loop, fd, readable)
 
     :type loop: :py:class:`Loop`
     :param loop: loop object where this handle runs (accessible through :py:attr:`TTY.loop`).
@@ -23,15 +23,6 @@
         :param callable callback: Callback to be called after shutdown has been performed.
 
         Shutdown the outgoing (write) direction of the ``TTY`` connection.
-
-        Callback signature: ``callback(tty_handle)``.
-
-    .. py:method:: close([callback])
-
-        :param callable callback: Callback to be called after the handle has been closed.
-
-        Close the ``TTY`` handle. After a handle has been closed no other
-        operations can be performed on it.
 
         Callback signature: ``callback(tty_handle)``.
 
@@ -85,12 +76,6 @@
 
         Reset TTY settings. To be called when program exits.
 
-    .. py:attribute:: loop
-
-        *Read only*
-
-        :py:class:`Loop` object where this handle runs.
-
     .. py:attribute:: readable
 
         *Read only*
@@ -102,17 +87,4 @@
         *Read only*
 
         Indicates if this handle is writable.
-
-    .. py:attribute:: active
-
-        *Read only*
-
-        Indicates if this handle is active.
-
-    .. py:attribute:: closed
-
-        *Read only*
-
-        Indicates if this handle is closing or already closed.
-
 

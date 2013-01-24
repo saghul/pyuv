@@ -18,19 +18,9 @@ Python `errno` module.
 
     Mapping (code, string) with libuv error codes.
 
-.. py:attribute:: pyuv.errno.ares_errorcode
-
-    Mapping (code, string) with c-ares error codes.
-
 .. py:function:: pyuv.errno.strerror(errorno)
 
     :param int errorno: Error number.
 
     Get the string representation of the given error number.
-
-.. py:function:: pyuv.errno.ares_strerror(errorno)
-
-    :param int errorno: Error number.
-
-    Get the string representation of the given c-ares error number.
 

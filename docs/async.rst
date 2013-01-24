@@ -30,32 +30,3 @@
 
         Callback signature: ``callback(async_handle)``
 
-    .. py:method:: close([callback])
-
-        :param callable callback: Function that will be called after the ``Async``
-            handle is closed.
-
-        Close the ``Async`` handle. After a handle has been closed no other
-        operations can be performed on it.
-
-        Callback signature: ``callback(async_handle)``
-
-    .. py:attribute:: loop
-
-        *Read only*
-
-        :py:class:`Loop` object where this handle runs.
-
-    .. py:attribute:: active
-
-        *Read only*
-
-        Indicates if this handle is active.
-
-    .. py:attribute:: closed
-
-        *Read only*
-
-        Indicates if this handle is closing or already closed.
-
-

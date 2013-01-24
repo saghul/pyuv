@@ -32,15 +32,6 @@
 
         Open the given file descriptor (or SOCKET in Windows) as a ``UDP`` handle.
 
-    .. py:method:: close([callback])
-
-        :param callable callback: Callback to be called after the handle has been closed.
-
-        Close the ``UDP`` handle. After a handle has been closed no other
-        operations can be performed on it.
-
-        Callback signature: ``callback(udp_handle)``.
-
     .. py:method:: getsockname
 
         Return tuple containing IP address and port of the local socket.
@@ -125,23 +116,4 @@
         :param int ttl: TTL value to be set.
 
         Set the Time To Live (TTL).
-
-    .. py:attribute:: loop
-
-        *Read only*
-
-        :py:class:`Loop` object where this handle runs.
-
-    .. py:attribute:: active
-
-        *Read only*
-
-        Indicates if this handle is active.
-
-    .. py:attribute:: closed
-
-        *Read only*
-
-        Indicates if this handle is closing or already closed.
-
 

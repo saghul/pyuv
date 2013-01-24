@@ -72,39 +72,11 @@
 
         Send the specified signal to the child process.
 
-    .. py:method:: close([callback])
-
-        :param callable callback: Function that will be called after the ``Process``
-            handle is closed.
-
-        Close the ``Process`` handle. After a handle has been closed no other
-        operations can be performed on it.
-
-        Callback signature: ``callback(process_handle)``.
-
-    .. py:attribute:: loop
-
-        *Read only*
-
-        :py:class:`Loop` object where this handle runs.
-
     .. py:attribute:: pid
 
         *Read only*
 
         PID of the spawned process.
-
-    .. py:attribute:: active
-
-        *Read only*
-
-        Indicates if this handle is active.
-
-    .. py:attribute:: closed
-
-        *Read only*
-
-        Indicates if this handle is closing or already closed.
 
 
 .. py:class:: StdIO([[[stream], fd], flags])
@@ -125,5 +97,4 @@
     - UV_CREATE_PIPE: indicates a pipe should be created. UV_READABLE_PIPE and UV_WRITABLE_PIPE determine the direction of flow, from the child process' perspective. Both flags may be specified to create a duplex data stream.
     - UV_INHERIT_FD: inherit the given file descriptor in the child.
     - UV_INHERIT_STREAM: inherit the file descriptor of the given stream in the child.
-
 

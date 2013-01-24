@@ -77,10 +77,6 @@ are used throughout `puyv`.
 
     Exception raised if an error is found when calling ``TCP`` handle functions.
 
-.. py:exception:: ThreadPoolError()
-
-    Exception raised if an error is found when running operatios in a ``ThreadPool``.
-
 .. py:exception:: TimerError()
 
     Exception raised if an error is found when calling ``Timer`` handle functions.

@@ -79,15 +79,6 @@
 
         Callback signature: ``callback(tcp_handle, error)``.
 
-    .. py:method:: close([callback])
-
-        :param callable callback: Callback to be called after the handle has been closed.
-
-        Close the ``TCP`` handle. After a handle has been closed no other
-        operations can be performed on it.
-
-        Callback signature: ``callback(tcp_handle)``.
-
     .. py:method:: write(data, [callback])
 
         :param object data: Data to be written on the ``TCP`` connection. It can be any Python object conforming
@@ -149,12 +140,6 @@
         accepts can significantly improve the rate of accepting connections (which
         is why it is enabled by default).
 
-    .. py:attribute:: loop
-
-        *Read only*
-
-        :py:class:`Loop` object where this handle runs.
-
     .. py:attribute:: readable
 
         *Read only*
@@ -166,17 +151,4 @@
         *Read only*
 
         Indicates if this handle is writable.
-
-    .. py:attribute:: active
-
-        *Read only*
-
-        Indicates if this handle is active.
-
-    .. py:attribute:: closed
-
-        *Read only*
-
-        Indicates if this handle is closing or already closed.
-
 

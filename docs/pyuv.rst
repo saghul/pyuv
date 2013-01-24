@@ -22,6 +22,7 @@ Objects
     :titlesonly:
 
     loop
+    handle
     timer
     tcp
     udp
