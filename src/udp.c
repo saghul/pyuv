@@ -234,7 +234,8 @@ UDP_func_send(UDP *self, PyObject *args)
     RAISE_IF_HANDLE_NOT_INITIALIZED(self, NULL);
     RAISE_IF_HANDLE_CLOSED(self, PyExc_HandleClosedError, NULL);
 
-    if ((view = PyMem_New(Py_buffer, 1)) == NULL) {
+    view = PyMem_Malloc(sizeof *view);
+    if (!view) {
         PyErr_NoMemory();
         return NULL;
     }
@@ -264,13 +265,13 @@ UDP_func_send(UDP *self, PyObject *args)
 
     Py_INCREF(callback);
 
-    wr = (uv_udp_send_t *)PyMem_Malloc(sizeof(uv_udp_send_t));
+    wr = PyMem_Malloc(sizeof *wr);
     if (!wr) {
         PyErr_NoMemory();
         goto error2;
     }
 
-    req_data = (udp_send_data_t*) PyMem_Malloc(sizeof(udp_send_data_t));
+    req_data = PyMem_Malloc(sizeof *req_data);
     if (!req_data) {
         PyErr_NoMemory();
         goto error2;
@@ -352,13 +353,13 @@ UDP_func_sendlines(UDP *self, PyObject *args)
 
     Py_INCREF(callback);
 
-    wr = (uv_udp_send_t *)PyMem_Malloc(sizeof(uv_udp_send_t));
+    wr = PyMem_Malloc(sizeof *wr);
     if (!wr) {
         PyErr_NoMemory();
         goto error;
     }
 
-    req_data = (udp_send_data_t*) PyMem_Malloc(sizeof(udp_send_data_t));
+    req_data = PyMem_Malloc(sizeof *req_data);
     if (!req_data) {
         PyErr_NoMemory();
         goto error;
@@ -609,22 +610,22 @@ UDP_tp_init(UDP *self, PyObject *args, PyObject *kwargs)
 static PyObject *
 UDP_tp_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
 {
-    uv_udp_t *uv_udp_handle;
+    uv_udp_t *uv_udp;
 
-    uv_udp_handle = PyMem_Malloc(sizeof(uv_udp_t));
-    if (!uv_udp_handle) {
+    uv_udp = PyMem_Malloc(sizeof *uv_udp);
+    if (!uv_udp) {
         PyErr_NoMemory();
         return NULL;
     }
 
     UDP *self = (UDP *)HandleType.tp_new(type, args, kwargs);
     if (!self) {
-        PyMem_Free(uv_udp_handle);
+        PyMem_Free(uv_udp);
         return NULL;
     }
 
-    uv_udp_handle->data = (void *)self;
-    UV_HANDLE(self) = (uv_handle_t *)uv_udp_handle;
+    uv_udp->data = (void *)self;
+    UV_HANDLE(self) = (uv_handle_t *)uv_udp;
 
     return (PyObject *)self;
 }

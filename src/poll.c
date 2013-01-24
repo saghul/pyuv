@@ -124,7 +124,7 @@ Poll_tp_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
 {
     uv_poll_t *uv_poll;
 
-    uv_poll = PyMem_Malloc(sizeof(uv_poll_t));
+    uv_poll = PyMem_Malloc(sizeof *uv_poll);
     if (!uv_poll) {
         PyErr_NoMemory();
         return NULL;

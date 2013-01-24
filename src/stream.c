@@ -162,7 +162,7 @@ Stream_func_shutdown(Stream *self, PyObject *args)
 
     Py_INCREF(callback);
 
-    req = (uv_shutdown_t*) PyMem_Malloc(sizeof(uv_shutdown_t));
+    req = PyMem_Malloc(sizeof *req);
     if (!req) {
         PyErr_NoMemory();
         goto error;
@@ -254,13 +254,13 @@ pyuv_stream_write(Stream *self, Py_buffer *views, uv_buf_t *bufs, int buf_count,
     Py_INCREF(callback);
     Py_XINCREF(send_handle);
 
-    wr = (uv_write_t *)PyMem_Malloc(sizeof(uv_write_t));
+    wr = PyMem_Malloc(sizeof *wr);
     if (!wr) {
         PyErr_NoMemory();
         goto error;
     }
 
-    req_data = (stream_write_data_t*) PyMem_Malloc(sizeof(stream_write_data_t));
+    req_data = PyMem_Malloc(sizeof *req_data);
     if (!req_data) {
         PyErr_NoMemory();
         goto error;
@@ -312,7 +312,8 @@ Stream_func_write(Stream *self, PyObject *args)
     RAISE_IF_HANDLE_NOT_INITIALIZED(self, NULL);
     RAISE_IF_HANDLE_CLOSED(self, PyExc_HandleClosedError, NULL);
 
-    if ((view = PyMem_New(Py_buffer, 1)) == NULL) {
+    view = PyMem_Malloc(sizeof *view);
+    if (!view) {
         PyErr_NoMemory();
         return NULL;
     }

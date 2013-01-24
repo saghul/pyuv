@@ -112,7 +112,7 @@ Check_tp_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
 {
     uv_check_t *uv_check;
 
-    uv_check = PyMem_Malloc(sizeof(uv_check_t));
+    uv_check = PyMem_Malloc(sizeof *uv_check);
     if (!uv_check) {
         PyErr_NoMemory();
         return NULL;

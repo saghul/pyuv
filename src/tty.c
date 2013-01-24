@@ -80,7 +80,7 @@ TTY_tp_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
 {
     uv_tty_t *uv_tty;
 
-    uv_tty = PyMem_Malloc(sizeof(uv_tty_t));
+    uv_tty = PyMem_Malloc(sizeof *uv_tty);
     if (!uv_tty) {
         PyErr_NoMemory();
         return NULL;

@@ -263,7 +263,7 @@ Process_func_spawn(Process *self, PyObject *args, PyObject *kwargs)
     options.flags = flags;
     options.exit_cb = on_process_exit;
 
-    file2 = (char *) PyMem_Malloc(strlen(file) + 1);
+    file2 = PyMem_Malloc(strlen(file) + 1);
     if (!file2) {
         PyErr_NoMemory();
         ret = NULL;
@@ -274,7 +274,7 @@ Process_func_spawn(Process *self, PyObject *args, PyObject *kwargs)
 
     if (arguments) {
         n = PySequence_Length(arguments);
-        process_args = (char **)PyMem_Malloc(sizeof(char *) * (n + 2));
+        process_args = PyMem_Malloc(sizeof *process_args * (n + 2));
         if (!process_args) {
             PyErr_NoMemory();
             PyMem_Free(file2);
@@ -290,7 +290,7 @@ Process_func_spawn(Process *self, PyObject *args, PyObject *kwargs)
                 ret = NULL;
                 goto cleanup;
             }
-            tmp_str = (char *) PyMem_Malloc(strlen(arg_str) + 1);
+            tmp_str = PyMem_Malloc(strlen(arg_str) + 1);
             if (!tmp_str) {
                 Py_DECREF(item);
                 ret = NULL;
@@ -303,7 +303,7 @@ Process_func_spawn(Process *self, PyObject *args, PyObject *kwargs)
         }
         process_args[i+1] = NULL;
     } else {
-        process_args = (char **)PyMem_Malloc(sizeof(char *) * 2);
+        process_args = PyMem_Malloc(sizeof *process_args * 2);
         if (!process_args) {
             PyErr_NoMemory();
             PyMem_Free(file2);
@@ -316,7 +316,7 @@ Process_func_spawn(Process *self, PyObject *args, PyObject *kwargs)
     options.args = process_args;
 
     if (cwd) {
-        cwd2 = (char *) PyMem_Malloc(strlen(cwd) + 1);
+        cwd2 = PyMem_Malloc(strlen(cwd) + 1);
         if (!cwd2) {
             PyErr_NoMemory();
             ret = NULL;
@@ -329,7 +329,7 @@ Process_func_spawn(Process *self, PyObject *args, PyObject *kwargs)
     if (env) {
         n = PyDict_Size(env);
         if (n > 0) {
-            process_env = (char **)PyMem_Malloc(sizeof(char *) * (n + 1));
+            process_env = PyMem_Malloc(sizeof *process_env * (n + 1));
             if (!process_env) {
                 PyErr_NoMemory();
                 ret = NULL;
@@ -343,7 +343,7 @@ Process_func_spawn(Process *self, PyObject *args, PyObject *kwargs)
                     goto cleanup;
                 }
                 len = strlen(key_str) + strlen(value_str) + 2;
-                tmp_str = (char *) PyMem_Malloc(len);
+                tmp_str = PyMem_Malloc(len);
                 if (!tmp_str) {
                     PyErr_NoMemory();
                     ret = NULL;
@@ -360,7 +360,7 @@ Process_func_spawn(Process *self, PyObject *args, PyObject *kwargs)
 
     if (stdio) {
         n = PySequence_Length(stdio);
-        stdio_container = (uv_stdio_container_t *)PyMem_Malloc(sizeof(uv_stdio_container_t) * n);
+        stdio_container = PyMem_Malloc(sizeof *stdio_container * n);
         if (!stdio_container) {
             PyErr_NoMemory();
             ret = NULL;
@@ -507,7 +507,7 @@ Process_tp_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
 {
     uv_process_t *uv_process;
 
-    uv_process = PyMem_Malloc(sizeof(uv_process_t));
+    uv_process = PyMem_Malloc(sizeof *uv_process);
     if (!uv_process) {
         PyErr_NoMemory();
         return NULL;

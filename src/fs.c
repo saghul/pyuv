@@ -1122,7 +1122,7 @@ stat_func(PyObject *args, PyObject *kwargs, int type)
     Py_INCREF(loop);
     Py_XINCREF(callback);
 
-    req = PyMem_Malloc(sizeof(uv_fs_t));
+    req = PyMem_Malloc(sizeof *req);
     if (!req) {
         PyErr_NoMemory();
         ret = NULL;
@@ -1213,7 +1213,7 @@ FS_func_fstat(PyObject *obj, PyObject *args, PyObject *kwargs)
     Py_INCREF(loop);
     Py_XINCREF(callback);
 
-    req = PyMem_Malloc(sizeof(uv_fs_t));
+    req = PyMem_Malloc(sizeof *req);
     if (!req) {
         PyErr_NoMemory();
         ret = NULL;
@@ -1285,7 +1285,7 @@ FS_func_unlink(PyObject *obj, PyObject *args, PyObject *kwargs)
     Py_INCREF(loop);
     Py_XINCREF(callback);
 
-    req = PyMem_Malloc(sizeof(uv_fs_t));
+    req = PyMem_Malloc(sizeof *req);
     if (!req) {
         PyErr_NoMemory();
         goto end;
@@ -1350,7 +1350,7 @@ FS_func_mkdir(PyObject *obj, PyObject *args, PyObject *kwargs)
     Py_INCREF(loop);
     Py_XINCREF(callback);
 
-    req = PyMem_Malloc(sizeof(uv_fs_t));
+    req = PyMem_Malloc(sizeof *req);
     if (!req) {
         PyErr_NoMemory();
         goto end;
@@ -1415,7 +1415,7 @@ FS_func_rmdir(PyObject *obj, PyObject *args, PyObject *kwargs)
     Py_INCREF(loop);
     Py_XINCREF(callback);
 
-    req = PyMem_Malloc(sizeof(uv_fs_t));
+    req = PyMem_Malloc(sizeof *req);
     if (!req) {
         PyErr_NoMemory();
         goto end;
@@ -1480,7 +1480,7 @@ FS_func_rename(PyObject *obj, PyObject *args, PyObject *kwargs)
     Py_INCREF(loop);
     Py_XINCREF(callback);
 
-    req = PyMem_Malloc(sizeof(uv_fs_t));
+    req = PyMem_Malloc(sizeof *req);
     if (!req) {
         PyErr_NoMemory();
         goto end;
@@ -1545,7 +1545,7 @@ FS_func_chmod(PyObject *obj, PyObject *args, PyObject *kwargs)
     Py_INCREF(loop);
     Py_XINCREF(callback);
 
-    req = PyMem_Malloc(sizeof(uv_fs_t));
+    req = PyMem_Malloc(sizeof *req);
     if (!req) {
         PyErr_NoMemory();
         goto end;
@@ -1609,7 +1609,7 @@ FS_func_fchmod(PyObject *obj, PyObject *args, PyObject *kwargs)
     Py_INCREF(loop);
     Py_XINCREF(callback);
 
-    req = PyMem_Malloc(sizeof(uv_fs_t));
+    req = PyMem_Malloc(sizeof *req);
     if (!req) {
         PyErr_NoMemory();
         goto end;
@@ -1674,7 +1674,7 @@ FS_func_link(PyObject *obj, PyObject *args, PyObject *kwargs)
     Py_INCREF(loop);
     Py_XINCREF(callback);
 
-    req = PyMem_Malloc(sizeof(uv_fs_t));
+    req = PyMem_Malloc(sizeof *req);
     if (!req) {
         PyErr_NoMemory();
         goto end;
@@ -1739,7 +1739,7 @@ FS_func_symlink(PyObject *obj, PyObject *args, PyObject *kwargs)
     Py_INCREF(loop);
     Py_XINCREF(callback);
 
-    req = PyMem_Malloc(sizeof(uv_fs_t));
+    req = PyMem_Malloc(sizeof *req);
     if (!req) {
         PyErr_NoMemory();
         goto end;
@@ -1804,7 +1804,7 @@ FS_func_readlink(PyObject *obj, PyObject *args, PyObject *kwargs)
     Py_INCREF(loop);
     Py_XINCREF(callback);
 
-    req = PyMem_Malloc(sizeof(uv_fs_t));
+    req = PyMem_Malloc(sizeof *req);
     if (!req) {
         PyErr_NoMemory();
         ret = NULL;
@@ -1875,7 +1875,7 @@ FS_func_chown(PyObject *obj, PyObject *args, PyObject *kwargs)
     Py_INCREF(loop);
     Py_XINCREF(callback);
 
-    req = PyMem_Malloc(sizeof(uv_fs_t));
+    req = PyMem_Malloc(sizeof *req);
     if (!req) {
         PyErr_NoMemory();
         goto end;
@@ -1939,7 +1939,7 @@ FS_func_fchown(PyObject *obj, PyObject *args, PyObject *kwargs)
     Py_INCREF(loop);
     Py_XINCREF(callback);
 
-    req = PyMem_Malloc(sizeof(uv_fs_t));
+    req = PyMem_Malloc(sizeof *req);
     if (!req) {
         PyErr_NoMemory();
         goto end;
@@ -2004,7 +2004,7 @@ FS_func_open(PyObject *obj, PyObject *args, PyObject *kwargs)
     Py_INCREF(loop);
     Py_XINCREF(callback);
 
-    req = PyMem_Malloc(sizeof(uv_fs_t));
+    req = PyMem_Malloc(sizeof *req);
     if (!req) {
         PyErr_NoMemory();
         ret = NULL;
@@ -2075,7 +2075,7 @@ FS_func_close(PyObject *obj, PyObject *args, PyObject *kwargs)
     Py_INCREF(loop);
     Py_XINCREF(callback);
 
-    req = PyMem_Malloc(sizeof(uv_fs_t));
+    req = PyMem_Malloc(sizeof *req);
     if (!req) {
         PyErr_NoMemory();
         goto end;
@@ -2141,7 +2141,7 @@ FS_func_read(PyObject *obj, PyObject *args, PyObject *kwargs)
     Py_INCREF(loop);
     Py_XINCREF(callback);
 
-    req = PyMem_Malloc(sizeof(uv_fs_t));
+    req = PyMem_Malloc(sizeof *req);
     if (!req) {
         PyErr_NoMemory();
         ret = NULL;
@@ -2223,7 +2223,7 @@ FS_func_write(PyObject *obj, PyObject *args, PyObject *kwargs)
     Py_INCREF(loop);
     Py_XINCREF(callback);
 
-    req = PyMem_Malloc(sizeof(uv_fs_t));
+    req = PyMem_Malloc(sizeof *req);
     if (!req) {
         PyErr_NoMemory();
         ret = NULL;
@@ -2303,7 +2303,7 @@ FS_func_fsync(PyObject *obj, PyObject *args, PyObject *kwargs)
     Py_INCREF(loop);
     Py_XINCREF(callback);
 
-    req = PyMem_Malloc(sizeof(uv_fs_t));
+    req = PyMem_Malloc(sizeof *req);
     if (!req) {
         PyErr_NoMemory();
         goto end;
@@ -2367,7 +2367,7 @@ FS_func_fdatasync(PyObject *obj, PyObject *args, PyObject *kwargs)
     Py_INCREF(loop);
     Py_XINCREF(callback);
 
-    req = PyMem_Malloc(sizeof(uv_fs_t));
+    req = PyMem_Malloc(sizeof *req);
     if (!req) {
         PyErr_NoMemory();
         goto end;
@@ -2431,7 +2431,7 @@ FS_func_ftruncate(PyObject *obj, PyObject *args, PyObject *kwargs)
     Py_INCREF(loop);
     Py_XINCREF(callback);
 
-    req = PyMem_Malloc(sizeof(uv_fs_t));
+    req = PyMem_Malloc(sizeof *req);
     if (!req) {
         PyErr_NoMemory();
         goto end;
@@ -2496,7 +2496,7 @@ FS_func_readdir(PyObject *obj, PyObject *args, PyObject *kwargs)
     Py_INCREF(loop);
     Py_XINCREF(callback);
 
-    req = PyMem_Malloc(sizeof(uv_fs_t));
+    req = PyMem_Malloc(sizeof *req);
     if (!req) {
         PyErr_NoMemory();
         ret = NULL;
@@ -2567,7 +2567,7 @@ FS_func_sendfile(PyObject *obj, PyObject *args, PyObject *kwargs)
     Py_INCREF(loop);
     Py_XINCREF(callback);
 
-    req = PyMem_Malloc(sizeof(uv_fs_t));
+    req = PyMem_Malloc(sizeof *req);
     if (!req) {
         PyErr_NoMemory();
         ret = NULL;
@@ -2640,7 +2640,7 @@ FS_func_utime(PyObject *obj, PyObject *args, PyObject *kwargs)
     Py_INCREF(loop);
     Py_XINCREF(callback);
 
-    req = PyMem_Malloc(sizeof(uv_fs_t));
+    req = PyMem_Malloc(sizeof *req);
     if (!req) {
         PyErr_NoMemory();
         goto end;
@@ -2705,7 +2705,7 @@ FS_func_futime(PyObject *obj, PyObject *args, PyObject *kwargs)
     Py_INCREF(loop);
     Py_XINCREF(callback);
 
-    req = PyMem_Malloc(sizeof(uv_fs_t));
+    req = PyMem_Malloc(sizeof *req);
     if (!req) {
         PyErr_NoMemory();
         goto end;
@@ -2875,7 +2875,7 @@ FSEvent_tp_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
 {
     uv_fs_event_t *fs_event;
 
-    fs_event = PyMem_Malloc(sizeof(uv_fs_event_t));
+    fs_event = PyMem_Malloc(sizeof *fs_event);
     if (!fs_event) {
         PyErr_NoMemory();
         return NULL;
@@ -3111,7 +3111,7 @@ FSPoll_tp_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
 {
     uv_fs_poll_t *uv_fspoll;
 
-    uv_fspoll = PyMem_Malloc(sizeof(uv_fs_poll_t));
+    uv_fspoll = PyMem_Malloc(sizeof *uv_fspoll);
     if (!uv_fspoll) {
         PyErr_NoMemory();
         return NULL;

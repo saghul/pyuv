@@ -40,7 +40,7 @@ Barrier_tp_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
 {
     uv_barrier_t *uv_barrier;
 
-    uv_barrier = PyMem_Malloc(sizeof(uv_barrier_t));
+    uv_barrier = PyMem_Malloc(sizeof *uv_barrier);
     if (!uv_barrier) {
         PyErr_NoMemory();
         return NULL;
@@ -182,7 +182,7 @@ Mutex_tp_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
 {
     uv_mutex_t *uv_mutex;
 
-    uv_mutex = PyMem_Malloc(sizeof(uv_mutex_t));
+    uv_mutex = PyMem_Malloc(sizeof *uv_mutex);
     if (!uv_mutex) {
         PyErr_NoMemory();
         return NULL;
@@ -369,7 +369,7 @@ RWLock_tp_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
 {
     uv_rwlock_t *uv_rwlock;
 
-    uv_rwlock = PyMem_Malloc(sizeof(uv_rwlock_t));
+    uv_rwlock = PyMem_Malloc(sizeof *uv_rwlock);
     if (!uv_rwlock) {
         PyErr_NoMemory();
         return NULL;
@@ -547,7 +547,7 @@ Condition_tp_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
 {
     uv_cond_t *uv_condition;
 
-    uv_condition = PyMem_Malloc(sizeof(uv_cond_t));
+    uv_condition = PyMem_Malloc(sizeof *uv_condition);
     if (!uv_condition) {
         PyErr_NoMemory();
         return NULL;
@@ -697,7 +697,7 @@ Semaphore_tp_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
 {
     uv_sem_t *uv_semaphore;
 
-    uv_semaphore = PyMem_Malloc(sizeof(uv_sem_t));
+    uv_semaphore = PyMem_Malloc(sizeof *uv_semaphore);
     if (!uv_semaphore) {
         PyErr_NoMemory();
         return NULL;
