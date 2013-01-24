@@ -422,7 +422,7 @@ Util_func_getaddrinfo(PyObject *obj, PyObject *args, PyObject *kwargs)
     }
     snprintf(port_str, sizeof(port_str), "%d", port);
 
-    req = PyMem_Malloc(sizeof(uv_getaddrinfo_t));
+    req = PyMem_Malloc(sizeof *req);
     if (!req) {
         PyErr_NoMemory();
         goto error;
@@ -610,7 +610,7 @@ SignalChecker_tp_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
 {
     uv_poll_t *uv_poll;
 
-    uv_poll = PyMem_Malloc(sizeof(uv_poll_t));
+    uv_poll = PyMem_Malloc(sizeof *uv_poll);
     if (!uv_poll) {
         PyErr_NoMemory();
         return NULL;

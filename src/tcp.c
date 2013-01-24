@@ -210,7 +210,7 @@ TCP_func_connect(TCP *self, PyObject *args)
 
     Py_INCREF(callback);
 
-    connect_req = (uv_connect_t *)PyMem_Malloc(sizeof(uv_connect_t));
+    connect_req = PyMem_Malloc(sizeof *connect_req);
     if (!connect_req) {
         PyErr_NoMemory();
         goto error;
@@ -432,7 +432,7 @@ TCP_tp_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
 {
     uv_tcp_t *uv_tcp;
 
-    uv_tcp = PyMem_Malloc(sizeof(uv_tcp_t));
+    uv_tcp = PyMem_Malloc(sizeof *uv_tcp);
     if (!uv_tcp) {
         PyErr_NoMemory();
         return NULL;

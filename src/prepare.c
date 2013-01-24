@@ -112,7 +112,7 @@ Prepare_tp_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
 {
     uv_prepare_t *uv_prepare;
 
-    uv_prepare = PyMem_Malloc(sizeof(uv_prepare_t));
+    uv_prepare = PyMem_Malloc(sizeof *uv_prepare);
     if (!uv_prepare) {
         PyErr_NoMemory();
         return NULL;

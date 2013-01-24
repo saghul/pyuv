@@ -108,7 +108,7 @@ Signal_tp_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
 {
     uv_signal_t *uv_signal;
 
-    uv_signal = PyMem_Malloc(sizeof(uv_signal_t));
+    uv_signal = PyMem_Malloc(sizeof *uv_signal);
     if (!uv_signal) {
         PyErr_NoMemory();
         return NULL;

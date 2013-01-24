@@ -258,7 +258,7 @@ Loop_func_queue_work(Loop *self, PyObject *args)
         return NULL;
     }
 
-    req = PyMem_Malloc(sizeof(uv_work_t));
+    req = PyMem_Malloc(sizeof *req);
     if (!req) {
         PyErr_NoMemory();
         goto error;

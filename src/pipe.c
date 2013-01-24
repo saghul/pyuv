@@ -224,7 +224,7 @@ Pipe_func_connect(Pipe *self, PyObject *args)
 
     Py_INCREF(callback);
 
-    connect_req = (uv_connect_t *)PyMem_Malloc(sizeof(uv_connect_t));
+    connect_req = PyMem_Malloc(sizeof *connect_req);
     if (!connect_req) {
         PyErr_NoMemory();
         goto error;
@@ -332,7 +332,8 @@ Pipe_func_write2(Pipe *self, PyObject *args)
     RAISE_IF_HANDLE_NOT_INITIALIZED(self, NULL);
     RAISE_IF_HANDLE_CLOSED(self, PyExc_HandleClosedError, NULL);
 
-    if ((view = PyMem_New(Py_buffer, 1)) == NULL) {
+    view = PyMem_Malloc(sizeof *view);
+    if (!view) {
         PyErr_NoMemory();
         return NULL;
     }
@@ -403,7 +404,7 @@ Pipe_tp_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
 {
     uv_pipe_t *uv_pipe;
 
-    uv_pipe = PyMem_Malloc(sizeof(uv_pipe_t));
+    uv_pipe = PyMem_Malloc(sizeof *uv_pipe);
     if (!uv_pipe) {
         PyErr_NoMemory();
         return NULL;

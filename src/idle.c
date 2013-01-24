@@ -112,7 +112,7 @@ Idle_tp_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
 {
     uv_idle_t *uv_idle;
 
-    uv_idle = PyMem_Malloc(sizeof(uv_idle_t));
+    uv_idle = PyMem_Malloc(sizeof *uv_idle);
     if (!uv_idle) {
         PyErr_NoMemory();
         return NULL;

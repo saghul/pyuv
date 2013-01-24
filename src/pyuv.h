@@ -543,7 +543,9 @@ pyseq2uvbuf(PyObject *seq, Py_buffer **rviews, uv_buf_t **rbufs, int *rbuf_count
         goto error;
     }
 
-    if (((uv_bufs = PyMem_New(uv_buf_t, buf_count)) == NULL || (views = PyMem_New(Py_buffer, buf_count)) == NULL)) {
+    uv_bufs = PyMem_Malloc(sizeof *uv_bufs * buf_count);
+    views = PyMem_Malloc(sizeof *views * buf_count);
+    if (!uv_bufs || !views) {
         PyErr_NoMemory();
         goto error;
     }

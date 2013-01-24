@@ -181,7 +181,7 @@ Timer_tp_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
 {
     uv_timer_t *uv_timer;
 
-    uv_timer = PyMem_Malloc(sizeof(uv_timer_t));
+    uv_timer = PyMem_Malloc(sizeof *uv_timer);
     if (!uv_timer) {
         PyErr_NoMemory();
         return NULL;

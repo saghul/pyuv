@@ -85,7 +85,7 @@ Async_tp_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
 {
     uv_async_t *uv_async;
 
-    uv_async = PyMem_Malloc(sizeof(uv_async_t));
+    uv_async = PyMem_Malloc(sizeof *uv_async);
     if (!uv_async) {
         PyErr_NoMemory();
         return NULL;
