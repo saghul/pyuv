@@ -56,7 +56,7 @@ pyuv_setmaxstdio(void)
 
 /* Module */
 PyObject*
-init_pyuv(void)
+init__pyuv(void)
 {
     /* Modules */
     PyObject *pyuv;
@@ -79,7 +79,7 @@ init_pyuv(void)
 #ifdef PYUV_PYTHON3
     pyuv = PyModule_Create(&pyuv_module);
 #else
-    pyuv = Py_InitModule("pyuv", NULL);
+    pyuv = Py_InitModule("_pyuv", NULL);
 #endif
 
     /* Errno module */
@@ -231,15 +231,15 @@ fail:
 
 #ifdef PYUV_PYTHON3
 PyMODINIT_FUNC
-PyInit_pyuv(void)
+PyInit__pyuv(void)
 {
-    return init_pyuv();
+    return init__pyuv();
 }
 #else
 PyMODINIT_FUNC
-initpyuv(void)
+init_pyuv(void)
 {
-    init_pyuv();
+    init__pyuv();
 }
 #endif
 
