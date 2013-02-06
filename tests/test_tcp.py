@@ -111,7 +111,6 @@ class TCPTest2(unittest2.TestCase):
         self.assertTrue(client.writable)
 
     def on_client_write(self, handle, error):
-        self.assertTrue(error in (None, pyuv.errno.UV_ECANCELED))
         self.write_cb_count += 1
 
     def test_tcp_write_cancel(self):
