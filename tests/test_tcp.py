@@ -76,7 +76,7 @@ class TCPTest(unittest2.TestCase):
 
     def on_client_read(self, client, data, error):
         self.assertNotEqual(data, None)
-        self.assertEquals(data, b"PING"+common.linesep)
+        self.assertEqual(data, b"PING"+common.linesep)
         client.close()
 
     def test_tcp1(self):
@@ -231,7 +231,7 @@ class TCPTestNull(unittest2.TestCase):
 
     def on_client_read(self, client, data, error):
         self.assertNotEqual(data, None)
-        self.assertEquals(data, b"PIN\x00G"+common.linesep)
+        self.assertEqual(data, b"PIN\x00G"+common.linesep)
         client.close()
 
     def test_tcp_null(self):
@@ -266,12 +266,12 @@ class TCPTestList(unittest2.TestCase):
             return
 
     def on_client_connection(self, client, error):
-        self.assertEquals(error, None)
+        self.assertEqual(error, None)
         client.start_read(self.on_client_read)
 
     def on_client_read(self, client, data, error):
         self.assertNotEqual(data, None)
-        self.assertEquals(data, b"PING1PING2PING3PING4PING5PING6PING7PING8PING9PING10PING11PING12")
+        self.assertEqual(data, b"PING1PING2PING3PING4PING5PING6PING7PING8PING9PING10PING11PING12")
         client.close()
 
     def test_tcp_list(self):
@@ -304,7 +304,7 @@ class TCPTestListUnicode(unittest2.TestCase):
         self.server.close()
 
     def on_client_connection(self, client, error):
-        self.assertEquals(error, None)
+        self.assertEqual(error, None)
         client.start_read(self.on_client_read)
 
     def on_client_read(self, client, data, error):
@@ -342,12 +342,12 @@ class TCPTestListNull(unittest2.TestCase):
             return
 
     def on_client_connection(self, client, error):
-        self.assertEquals(error, None)
+        self.assertEqual(error, None)
         client.start_read(self.on_client_read)
 
     def on_client_read(self, client, data, error):
         self.assertNotEqual(data, None)
-        self.assertEquals(data, b"PING1PING2PING3PING4PING5PING\x00\xFF6")
+        self.assertEqual(data, b"PING1PING2PING3PING4PING5PING\x00\xFF6")
         client.close()
 
     def test_tcp_list_null(self):
@@ -390,7 +390,7 @@ class TCPTestInvalidData(unittest2.TestCase):
         return
 
     def on_client_connection(self, client, error):
-        self.assertEquals(error, None)
+        self.assertEqual(error, None)
         client.start_read(self.on_client_read)
 
     def on_client_read(self, client, data, error):
@@ -429,7 +429,7 @@ class TCPShutdownTest(unittest2.TestCase):
             return
 
     def on_client_connection(self, client, error):
-        self.assertEquals(error, None)
+        self.assertEqual(error, None)
         client.start_read(self.on_client_read)
 
     def on_close(self, handle):
@@ -441,7 +441,7 @@ class TCPShutdownTest(unittest2.TestCase):
 
     def on_client_read(self, client, data, error):
         self.assertNotEqual(data, None)
-        self.assertEquals(data, b"PING"+common.linesep)
+        self.assertEqual(data, b"PING"+common.linesep)
         client.shutdown(self.on_client_shutdown)
 
     def test_tcp_shutdown(self):

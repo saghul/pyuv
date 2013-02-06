@@ -73,7 +73,7 @@ class EmbedTest(unittest2.TestCase):
         t.join()
         external = None
 
-        self.assertEquals(self.embed_timer_called, 1)
+        self.assertEqual(self.embed_timer_called, 1)
 
 
 if __name__ == '__main__':

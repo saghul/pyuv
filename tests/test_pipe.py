@@ -49,13 +49,13 @@ class PipeTest(unittest2.TestCase):
             return
 
     def on_client_connection(self, client, error):
-        self.assertEquals(error, None)
+        self.assertEqual(error, None)
         client.start_read(self.on_client_read)
 
     def on_client_read(self, client, data, error):
         self.assertNotEqual(data, None)
         data = data.strip()
-        self.assertEquals(data, b"PING")
+        self.assertEqual(data, b"PING")
         client.close()
 
     def test_pipe1(self):
@@ -91,13 +91,13 @@ class PipeTestNull(unittest2.TestCase):
             return
 
     def on_client_connection(self, client, error):
-        self.assertEquals(error, None)
+        self.assertEqual(error, None)
         client.start_read(self.on_client_read)
 
     def on_client_read(self, client, data, error):
         self.assertNotEqual(data, None)
         data = data.strip()
-        self.assertEquals(data, b"PIN\x00G")
+        self.assertEqual(data, b"PIN\x00G")
         client.close()
 
     def test_pipe_null(self):
@@ -134,12 +134,12 @@ class PipeTestList(unittest2.TestCase):
             return
 
     def on_client_connection(self, client, error):
-        self.assertEquals(error, None)
+        self.assertEqual(error, None)
         client.start_read(self.on_client_read)
 
     def on_client_read(self, client, data, error):
         self.assertNotEqual(data, None)
-        self.assertEquals(data, b"PING"+common.linesep)
+        self.assertEqual(data, b"PING"+common.linesep)
         client.close()
 
     def test_pipe_list(self):
@@ -176,12 +176,12 @@ class PipeTestListNull(unittest2.TestCase):
             return
 
     def on_client_connection(self, client, error):
-        self.assertEquals(error, None)
+        self.assertEqual(error, None)
         client.start_read(self.on_client_read)
 
     def on_client_read(self, client, data, error):
         self.assertNotEqual(data, None)
-        self.assertEquals(data, b"PING\x00"+common.linesep)
+        self.assertEqual(data, b"PING\x00"+common.linesep)
         client.close()
 
     def test_pipe_list_null(self):
@@ -217,7 +217,7 @@ class PipeShutdownTest(unittest2.TestCase):
             return
 
     def on_client_connection(self, client, error):
-        self.assertEquals(error, None)
+        self.assertEqual(error, None)
         client.start_read(self.on_client_read)
 
     def on_close(self, handle):
@@ -230,7 +230,7 @@ class PipeShutdownTest(unittest2.TestCase):
     def on_client_read(self, client, data, error):
         self.assertNotEqual(data, None)
         data = data.strip()
-        self.assertEquals(data, b"PING")
+        self.assertEqual(data, b"PING")
         client.shutdown(self.on_client_shutdown)
 
     def test_pipe1(self):
