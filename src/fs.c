@@ -2873,6 +2873,7 @@ FSEvent_tp_init(FSEvent *self, PyObject *args, PyObject *kwargs)
 static PyObject *
 FSEvent_tp_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
 {
+    FSEvent *self;
     uv_fs_event_t *fs_event;
 
     fs_event = PyMem_Malloc(sizeof *fs_event);
@@ -2881,7 +2882,7 @@ FSEvent_tp_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
         return NULL;
     }
 
-    FSEvent *self = (FSEvent *)HandleType.tp_new(type, args, kwargs);
+    self = (FSEvent *)HandleType.tp_new(type, args, kwargs);
     if (!self) {
         PyMem_Free(fs_event);
         return NULL;
@@ -3109,6 +3110,7 @@ FSPoll_tp_init(FSPoll *self, PyObject *args, PyObject *kwargs)
 static PyObject *
 FSPoll_tp_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
 {
+    FSPoll *self;
     uv_fs_poll_t *uv_fspoll;
 
     uv_fspoll = PyMem_Malloc(sizeof *uv_fspoll);
@@ -3117,7 +3119,7 @@ FSPoll_tp_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
         return NULL;
     }
 
-    FSPoll *self = (FSPoll *)HandleType.tp_new(type, args, kwargs);
+    self = (FSPoll *)HandleType.tp_new(type, args, kwargs);
     if (!self) {
         PyMem_Free(uv_fspoll);
         return NULL;

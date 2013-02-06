@@ -402,6 +402,7 @@ Pipe_tp_init(Pipe *self, PyObject *args, PyObject *kwargs)
 static PyObject *
 Pipe_tp_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
 {
+    Pipe *self;
     uv_pipe_t *uv_pipe;
 
     uv_pipe = PyMem_Malloc(sizeof *uv_pipe);
@@ -410,7 +411,7 @@ Pipe_tp_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
         return NULL;
     }
 
-    Pipe *self = (Pipe *)StreamType.tp_new(type, args, kwargs);
+    self = (Pipe *)StreamType.tp_new(type, args, kwargs);
     if (!self) {
         PyMem_Free(uv_pipe);
         return NULL;

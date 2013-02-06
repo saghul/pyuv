@@ -110,6 +110,7 @@ Idle_tp_init(Idle *self, PyObject *args, PyObject *kwargs)
 static PyObject *
 Idle_tp_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
 {
+    Idle *self;
     uv_idle_t *uv_idle;
 
     uv_idle = PyMem_Malloc(sizeof *uv_idle);
@@ -118,7 +119,7 @@ Idle_tp_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
         return NULL;
     }
 
-    Idle *self = (Idle *)HandleType.tp_new(type, args, kwargs);
+    self = (Idle *)HandleType.tp_new(type, args, kwargs);
     if (!self) {
         PyMem_Free(uv_idle);
         return NULL;

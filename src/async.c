@@ -83,6 +83,7 @@ Async_tp_init(Async *self, PyObject *args, PyObject *kwargs)
 static PyObject *
 Async_tp_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
 {
+    Async *self;
     uv_async_t *uv_async;
 
     uv_async = PyMem_Malloc(sizeof *uv_async);
@@ -91,7 +92,7 @@ Async_tp_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
         return NULL;
     }
 
-    Async *self = (Async *)HandleType.tp_new(type, args, kwargs);
+    self = (Async *)HandleType.tp_new(type, args, kwargs);
     if (!self) {
         PyMem_Free(uv_async);
         return NULL;

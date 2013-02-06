@@ -610,6 +610,7 @@ UDP_tp_init(UDP *self, PyObject *args, PyObject *kwargs)
 static PyObject *
 UDP_tp_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
 {
+    UDP *self;
     uv_udp_t *uv_udp;
 
     uv_udp = PyMem_Malloc(sizeof *uv_udp);
@@ -618,7 +619,7 @@ UDP_tp_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
         return NULL;
     }
 
-    UDP *self = (UDP *)HandleType.tp_new(type, args, kwargs);
+    self = (UDP *)HandleType.tp_new(type, args, kwargs);
     if (!self) {
         PyMem_Free(uv_udp);
         return NULL;

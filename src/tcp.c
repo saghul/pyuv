@@ -430,6 +430,7 @@ TCP_tp_init(TCP *self, PyObject *args, PyObject *kwargs)
 static PyObject *
 TCP_tp_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
 {
+    TCP *self;
     uv_tcp_t *uv_tcp;
 
     uv_tcp = PyMem_Malloc(sizeof *uv_tcp);
@@ -438,7 +439,7 @@ TCP_tp_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
         return NULL;
     }
 
-    TCP *self = (TCP *)StreamType.tp_new(type, args, kwargs);
+    self = (TCP *)StreamType.tp_new(type, args, kwargs);
     if (!self) {
         PyMem_Free(uv_tcp);
         return NULL;

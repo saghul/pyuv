@@ -106,6 +106,7 @@ Signal_tp_init(Signal *self, PyObject *args, PyObject *kwargs)
 static PyObject *
 Signal_tp_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
 {
+    Signal *self;
     uv_signal_t *uv_signal;
 
     uv_signal = PyMem_Malloc(sizeof *uv_signal);
@@ -114,7 +115,7 @@ Signal_tp_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
         return NULL;
     }
 
-    Signal *self = (Signal *)HandleType.tp_new(type, args, kwargs);
+    self = (Signal *)HandleType.tp_new(type, args, kwargs);
     if (!self) {
         PyMem_Free(uv_signal);
         return NULL;

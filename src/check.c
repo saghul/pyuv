@@ -110,6 +110,7 @@ Check_tp_init(Check *self, PyObject *args, PyObject *kwargs)
 static PyObject *
 Check_tp_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
 {
+    Check *self;
     uv_check_t *uv_check;
 
     uv_check = PyMem_Malloc(sizeof *uv_check);
@@ -118,7 +119,7 @@ Check_tp_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
         return NULL;
     }
 
-    Check *self = (Check *)HandleType.tp_new(type, args, kwargs);
+    self = (Check *)HandleType.tp_new(type, args, kwargs);
     if (!self) {
         PyMem_Free(uv_check);
         return NULL;

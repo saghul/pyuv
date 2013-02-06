@@ -608,6 +608,7 @@ SignalChecker_tp_init(SignalChecker *self, PyObject *args, PyObject *kwargs)
 static PyObject *
 SignalChecker_tp_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
 {
+    SignalChecker *self;
     uv_poll_t *uv_poll;
 
     uv_poll = PyMem_Malloc(sizeof *uv_poll);
@@ -616,7 +617,7 @@ SignalChecker_tp_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
         return NULL;
     }
 
-    SignalChecker *self = (SignalChecker *)HandleType.tp_new(type, args, kwargs);
+    self = (SignalChecker *)HandleType.tp_new(type, args, kwargs);
     if (!self) {
         PyMem_Free(uv_poll);
         return NULL;

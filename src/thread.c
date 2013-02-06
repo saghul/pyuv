@@ -38,6 +38,7 @@ Barrier_tp_init(Barrier *self, PyObject *args, PyObject *kwargs)
 static PyObject *
 Barrier_tp_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
 {
+    Barrier *self;
     uv_barrier_t *uv_barrier;
 
     uv_barrier = PyMem_Malloc(sizeof *uv_barrier);
@@ -46,7 +47,7 @@ Barrier_tp_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
         return NULL;
     }
 
-    Barrier *self = (Barrier *)PyType_GenericNew(type, args, kwargs);
+    self = (Barrier *)PyType_GenericNew(type, args, kwargs);
     if (!self) {
         PyMem_Free(uv_barrier);
         return NULL;
@@ -180,6 +181,7 @@ Mutex_tp_init(Mutex *self, PyObject *args, PyObject *kwargs)
 static PyObject *
 Mutex_tp_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
 {
+    Mutex *self;
     uv_mutex_t *uv_mutex;
 
     uv_mutex = PyMem_Malloc(sizeof *uv_mutex);
@@ -188,7 +190,7 @@ Mutex_tp_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
         return NULL;
     }
 
-    Mutex *self = (Mutex *)PyType_GenericNew(type, args, kwargs);
+    self = (Mutex *)PyType_GenericNew(type, args, kwargs);
     if (!self) {
         PyMem_Free(uv_mutex);
         return NULL;
@@ -367,6 +369,7 @@ RWLock_tp_init(RWLock *self, PyObject *args, PyObject *kwargs)
 static PyObject *
 RWLock_tp_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
 {
+    RWLock *self;
     uv_rwlock_t *uv_rwlock;
 
     uv_rwlock = PyMem_Malloc(sizeof *uv_rwlock);
@@ -375,7 +378,7 @@ RWLock_tp_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
         return NULL;
     }
 
-    RWLock *self = (RWLock *)PyType_GenericNew(type, args, kwargs);
+    self = (RWLock *)PyType_GenericNew(type, args, kwargs);
     if (!self) {
         PyMem_Free(uv_rwlock);
         return NULL;
@@ -545,6 +548,7 @@ Condition_tp_init(Condition *self, PyObject *args, PyObject *kwargs)
 static PyObject *
 Condition_tp_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
 {
+    Condition *self;
     uv_cond_t *uv_condition;
 
     uv_condition = PyMem_Malloc(sizeof *uv_condition);
@@ -553,7 +557,7 @@ Condition_tp_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
         return NULL;
     }
 
-    Condition *self = (Condition *)PyType_GenericNew(type, args, kwargs);
+    self = (Condition *)PyType_GenericNew(type, args, kwargs);
     if (!self) {
         PyMem_Free(uv_condition);
         return NULL;
@@ -695,6 +699,7 @@ Semaphore_tp_init(Semaphore *self, PyObject *args, PyObject *kwargs)
 static PyObject *
 Semaphore_tp_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
 {
+    Semaphore *self;
     uv_sem_t *uv_semaphore;
 
     uv_semaphore = PyMem_Malloc(sizeof *uv_semaphore);
@@ -703,7 +708,7 @@ Semaphore_tp_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
         return NULL;
     }
 
-    Semaphore *self = (Semaphore *)PyType_GenericNew(type, args, kwargs);
+    self = (Semaphore *)PyType_GenericNew(type, args, kwargs);
     if (!self) {
         PyMem_Free(uv_semaphore);
         return NULL;

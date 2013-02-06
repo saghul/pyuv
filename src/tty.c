@@ -78,6 +78,7 @@ TTY_tp_init(TTY *self, PyObject *args, PyObject *kwargs)
 static PyObject *
 TTY_tp_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
 {
+    TTY *self;
     uv_tty_t *uv_tty;
 
     uv_tty = PyMem_Malloc(sizeof *uv_tty);
@@ -86,7 +87,7 @@ TTY_tp_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
         return NULL;
     }
 
-    TTY *self = (TTY *)StreamType.tp_new(type, args, kwargs);
+    self = (TTY *)StreamType.tp_new(type, args, kwargs);
     if (!self) {
         PyMem_Free(uv_tty);
         return NULL;

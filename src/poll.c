@@ -122,6 +122,7 @@ Poll_tp_init(Poll *self, PyObject *args, PyObject *kwargs)
 static PyObject *
 Poll_tp_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
 {
+    Poll *self;
     uv_poll_t *uv_poll;
 
     uv_poll = PyMem_Malloc(sizeof *uv_poll);
@@ -130,7 +131,7 @@ Poll_tp_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
         return NULL;
     }
 
-    Poll *self = (Poll *)HandleType.tp_new(type, args, kwargs);
+    self = (Poll *)HandleType.tp_new(type, args, kwargs);
     if (!self) {
         PyMem_Free(uv_poll);
         return NULL;

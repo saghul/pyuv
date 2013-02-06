@@ -110,6 +110,7 @@ Prepare_tp_init(Prepare *self, PyObject *args, PyObject *kwargs)
 static PyObject *
 Prepare_tp_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
 {
+    Prepare *self;
     uv_prepare_t *uv_prepare;
 
     uv_prepare = PyMem_Malloc(sizeof *uv_prepare);
@@ -118,7 +119,7 @@ Prepare_tp_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
         return NULL;
     }
 
-    Prepare *self = (Prepare *)HandleType.tp_new(type, args, kwargs);
+    self = (Prepare *)HandleType.tp_new(type, args, kwargs);
     if (!self) {
         PyMem_Free(uv_prepare);
         return NULL;

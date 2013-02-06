@@ -179,6 +179,7 @@ Timer_tp_init(Timer *self, PyObject *args, PyObject *kwargs)
 static PyObject *
 Timer_tp_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
 {
+    Timer *self;
     uv_timer_t *uv_timer;
 
     uv_timer = PyMem_Malloc(sizeof *uv_timer);
@@ -187,7 +188,7 @@ Timer_tp_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
         return NULL;
     }
 
-    Timer *self = (Timer *)HandleType.tp_new(type, args, kwargs);
+    self = (Timer *)HandleType.tp_new(type, args, kwargs);
     if (!self) {
         PyMem_Free(uv_timer);
         return NULL;

@@ -505,6 +505,7 @@ Process_func_disable_stdio_inheritance(PyObject *cls)
 static PyObject *
 Process_tp_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
 {
+    Process *self;
     uv_process_t *uv_process;
 
     uv_process = PyMem_Malloc(sizeof *uv_process);
@@ -513,7 +514,7 @@ Process_tp_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
         return NULL;
     }
 
-    Process *self = (Process *)HandleType.tp_new(type, args, kwargs);
+    self = (Process *)HandleType.tp_new(type, args, kwargs);
     if (!self) {
         PyMem_Free(uv_process);
         return NULL;
