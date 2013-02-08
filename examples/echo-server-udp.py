@@ -5,7 +5,7 @@ import signal
 import pyuv
 
 
-def on_read(handle, ip_port, data, error):
+def on_read(handle, ip_port, flags, data, error):
     if data is not None:
         handle.send(ip_port, data)
 
