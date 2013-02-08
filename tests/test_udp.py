@@ -19,13 +19,15 @@ class UDPTest(unittest2.TestCase):
     def on_close(self, handle):
         self.on_close_called += 1
 
-    def on_server_recv(self, handle, ip_port, data, error):
+    def on_server_recv(self, handle, ip_port, flags, data, error):
+        self.assertEqual(flags, 0)
         ip, port = ip_port
         data = data.strip()
         self.assertEqual(data, b"PING")
         self.server.send((ip, port), b"PONG"+common.linesep)
 
-    def on_client_recv(self, handle, ip_port, data, error):
+    def on_client_recv(self, handle, ip_port, flags, data, error):
+        self.assertEqual(flags, 0)
         ip, port = ip_port
         data = data.strip()
         self.assertEqual(data, b"PONG")
@@ -66,13 +68,15 @@ class UDPTestNull(unittest2.TestCase):
     def on_close(self, handle):
         self.on_close_called += 1
 
-    def on_server_recv(self, handle, ip_port, data, error):
+    def on_server_recv(self, handle, ip_port, flags, data, error):
+        self.assertEqual(flags, 0)
         ip, port = ip_port
         data = data.strip()
         self.assertEqual(data, b"PIN\x00G")
         self.server.send((ip, port), b"PONG"+common.linesep)
 
-    def on_client_recv(self, handle, ip_port, data, error):
+    def on_client_recv(self, handle, ip_port, flags, data, error):
+        self.assertEqual(flags, 0)
         ip, port = ip_port
         data = data.strip()
         self.assertEqual(data, b"PONG")
@@ -107,13 +111,15 @@ class UDPTestList(unittest2.TestCase):
     def on_close(self, handle):
         self.on_close_called += 1
 
-    def on_server_recv(self, handle, ip_port, data, error):
+    def on_server_recv(self, handle, ip_port, flags, data, error):
+        self.assertEqual(flags, 0)
         ip, port = ip_port
         data = data.strip()
         self.assertEqual(data, b"PING")
         self.server.sendlines((ip, port), [b"PONG", common.linesep])
 
-    def on_client_recv(self, handle, ip_port, data, error):
+    def on_client_recv(self, handle, ip_port, flags, data, error):
+        self.assertEqual(flags, 0)
         ip, port = ip_port
         data = data.strip()
         self.assertEqual(data, b"PONG")
@@ -148,13 +154,15 @@ class UDPTestListNull(unittest2.TestCase):
     def on_close(self, handle):
         self.on_close_called += 1
 
-    def on_server_recv(self, handle, ip_port, data, error):
+    def on_server_recv(self, handle, ip_port, flags, data, error):
+        self.assertEqual(flags, 0)
         ip, port = ip_port
         data = data.strip()
         self.assertEqual(data, b"PIN\x00G")
         self.server.sendlines((ip, port), [b"PONG", common.linesep])
 
-    def on_client_recv(self, handle, ip_port, data, error):
+    def on_client_recv(self, handle, ip_port, flags, data, error):
+        self.assertEqual(flags, 0)
         ip, port = ip_port
         data = data.strip()
         self.assertEqual(data, b"PONG")
@@ -189,7 +197,8 @@ class UDPTestInvalidData(unittest2.TestCase):
     def on_close(self, handle):
         self.on_close_called += 1
 
-    def on_server_recv(self, handle, ip_port, data, error):
+    def on_server_recv(self, handle, ip_port, flags, data, error):
+        self.assertEqual(flags, 0)
         ip, port = ip_port
         self.client.close(self.on_close)
         self.server.close(self.on_close)
@@ -230,7 +239,8 @@ class UDPTestMulticast(unittest2.TestCase):
     def on_close(self, handle):
         self.on_close_called += 1
 
-    def on_client_recv(self, handle, ip_port, data, error):
+    def on_client_recv(self, handle, ip_port, flags, data, error):
+        self.assertEqual(flags, 0)
         ip, port = ip_port
         self.received_data = data.strip()
         self.client.set_membership(MULTICAST_ADDRESS, pyuv.UV_LEAVE_GROUP)
