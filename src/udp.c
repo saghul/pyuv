@@ -129,13 +129,15 @@ on_udp_send(uv_udp_send_t* req, int status)
 static PyObject *
 UDP_func_bind(UDP *self, PyObject *args)
 {
-    int r, bind_port, address_type;
+    int r, bind_port, address_type, flags;
     char *bind_ip;
 
     RAISE_IF_HANDLE_NOT_INITIALIZED(self, NULL);
     RAISE_IF_HANDLE_CLOSED(self, PyExc_HandleClosedError, NULL);
 
-    if (!PyArg_ParseTuple(args, "(si):bind", &bind_ip, &bind_port)) {
+    flags = 0;
+
+    if (!PyArg_ParseTuple(args, "(si)|i:bind", &bind_ip, &bind_port, &flags)) {
         return NULL;
     }
 
@@ -150,9 +152,9 @@ UDP_func_bind(UDP *self, PyObject *args)
     }
 
     if (address_type == AF_INET) {
-        r = uv_udp_bind((uv_udp_t *)UV_HANDLE(self), uv_ip4_addr(bind_ip, bind_port), 0);
+        r = uv_udp_bind((uv_udp_t *)UV_HANDLE(self), uv_ip4_addr(bind_ip, bind_port), flags);
     } else {
-        r = uv_udp_bind6((uv_udp_t *)UV_HANDLE(self), uv_ip6_addr(bind_ip, bind_port), UV_UDP_IPV6ONLY);
+        r = uv_udp_bind6((uv_udp_t *)UV_HANDLE(self), uv_ip6_addr(bind_ip, bind_port), flags);
     }
 
     if (r != 0) {

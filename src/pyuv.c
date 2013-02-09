@@ -190,6 +190,7 @@ init_pyuv(void)
     PyModule_AddIntMacro(pyuv, UV_JOIN_GROUP);
     PyModule_AddIntMacro(pyuv, UV_LEAVE_GROUP);
     PyModule_AddIntMacro(pyuv, UV_UDP_PARTIAL);
+    PyModule_AddIntMacro(pyuv, UV_UDP_IPV6ONLY);
 
     /* Process constants */
     PyModule_AddIntMacro(pyuv, UV_PROCESS_SETUID);
