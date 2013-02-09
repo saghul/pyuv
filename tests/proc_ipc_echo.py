@@ -13,7 +13,7 @@ def on_write2(handle, error):
 
 def on_channel_read(handle, data, pending, error):
     global channel, loop, recv_handle
-    assert pending == pyuv.UV_NAMED_PIPE, "wrong handle"
+    assert pending in (pyuv.UV_NAMED_PIPE, pyuv.UV_UDP), "wrong handle type"
     recv_handle = pyuv.Pipe(loop)
     channel.accept(recv_handle)
     channel.write2(b".", recv_handle, on_write2)

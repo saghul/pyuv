@@ -116,5 +116,38 @@ class IPCSendRecvTest(unittest2.TestCase):
         self.loop.run()
 
 
+@platform_skip(["win32"])
+class IPCSendRecvTest2(unittest2.TestCase):
+
+    def setUp(self):
+        self.loop = pyuv.Loop.default_loop()
+
+    def proc_exit_cb(self, proc, exit_status, term_signal):
+        proc.close()
+
+    def on_channel_read(self, handle, data, pending, error):
+        self.assertEqual(pending, pyuv.UV_UDP)
+        self.recv_pipe = pyuv.Pipe(self.loop)
+        self.channel.accept(self.recv_pipe)
+        self.channel.close()
+        self.udp.close()
+        self.recv_pipe.close()
+
+    def test_ipc_send_recv_udp(self):
+        # Handle that will be sent to the process and back
+        self.udp = pyuv.UDP(self.loop)
+        self.udp.bind(("127.0.0.1", TEST_PORT))
+        self.channel = pyuv.Pipe(self.loop, True)
+        stdio = [pyuv.StdIO(stream=self.channel, flags=pyuv.UV_CREATE_PIPE|pyuv.UV_READABLE_PIPE|pyuv.UV_WRITABLE_PIPE)]
+        proc = pyuv.Process(self.loop)
+        if sys.platform == 'win32':
+            proc.spawn(file="cmd.exe", args=["/c", " proc_ipc_echo.py"], exit_callback=self.proc_exit_cb, stdio=stdio)
+        else:
+            proc.spawn(file=sys.executable, args=["proc_ipc_echo.py"], exit_callback=self.proc_exit_cb, stdio=stdio)
+        self.channel.write2(b".", self.udp)
+        self.channel.start_read2(self.on_channel_read)
+        self.loop.run()
+
+
 if __name__ == '__main__':
     unittest2.main(verbosity=2)
