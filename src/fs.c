@@ -113,7 +113,7 @@ process_stat(uv_fs_t* req, PyObject **path, PyObject **stat_data, PyObject **err
     ASSERT(req);
     ASSERT(req->fs_type == UV_FS_STAT || req->fs_type == UV_FS_LSTAT || req->fs_type == UV_FS_FSTAT);
 
-    st = req->ptr;
+    st = &req->statbuf;
 
     if (req->path != NULL) {
         *path = Py_BuildValue("s", req->path);
