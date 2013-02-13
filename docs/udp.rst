@@ -16,11 +16,14 @@
 
     The ``UDP`` handle provides asynchronous UDP functionality both as a client and server.
 
-    .. py:method:: bind((ip, port))
+    .. py:method:: bind((ip, port), [flags])
 
         :param string ip: IP address to bind to.
 
         :param int port: Port number to bind to.
+
+        :param int flags: Binding flags. Only pyuv.UV_UDP_IPV6ONLY is supported at the moment, which
+            disables dual stack support on IPv6 handles.
 
         Bind to the specified IP address and port. This function needs to be called always,
         both when acting as a client and as a server. It sets the local IP address and port
@@ -75,7 +78,8 @@
 
         Start receiving data on the bound IP address and port.
 
-        Callback signature: ``callback(udp_handle, (ip, port), data, error)``.
+        Callback signature: ``callback(udp_handle, (ip, port), flags, data, error)``. The flags attribute can only
+        contain pyuv.UV_UDP_PARTIAL, in case the UDP packet was truncated.
 
     .. py:method:: stop_recv
 

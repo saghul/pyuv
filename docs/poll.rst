@@ -62,3 +62,7 @@
 
         Stop the ``Poll`` handle.
 
+    .. py:method:: fileno
+
+        Returns the file descriptor being monitored or -1 if the handle is closed.
+
