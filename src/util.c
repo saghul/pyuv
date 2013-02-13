@@ -597,7 +597,7 @@ SignalChecker_tp_init(SignalChecker *self, PyObject *args, PyObject *kwargs)
         return -1;
     }
 
-    self->fd = (uv_os_sock_t)fd;
+    self->fd = fd;
 
     initialize_handle(HANDLE(self), loop);
 

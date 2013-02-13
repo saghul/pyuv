@@ -92,6 +92,17 @@ Poll_func_stop(Poll *self)
 }
 
 
+static PyObject *
+Poll_func_fileno(Poll *self)
+{
+    RAISE_IF_HANDLE_NOT_INITIALIZED(self, NULL);
+    if (uv_is_closing(UV_HANDLE(self))) {
+        return PyInt_FromLong(-1);
+    }
+    return PyInt_FromLong(self->fd);
+}
+
+
 static int
 Poll_tp_init(Poll *self, PyObject *args, PyObject *kwargs)
 {
@@ -112,6 +123,8 @@ Poll_tp_init(Poll *self, PyObject *args, PyObject *kwargs)
         RAISE_UV_EXCEPTION(loop->uv_loop, PyExc_PollError);
         return -1;
     }
+
+    self->fd = fd;
 
     initialize_handle(HANDLE(self), loop);
 
@@ -166,6 +179,7 @@ static PyMethodDef
 Poll_tp_methods[] = {
     { "start", (PyCFunction)Poll_func_start, METH_VARARGS, "Start the Poll." },
     { "stop", (PyCFunction)Poll_func_stop, METH_NOARGS, "Stop the Poll." },
+    { "fileno", (PyCFunction)Poll_func_fileno, METH_NOARGS, "File descriptor being monitored." },
     { NULL }
 };
 

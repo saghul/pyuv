@@ -185,7 +185,7 @@ static PyTypeObject SignalType;
 /* SignalChecker */
 typedef struct {
     Handle handle;
-    uv_os_sock_t fd;
+    long fd;
 } SignalChecker;
 
 static PyTypeObject SignalCheckerType;
@@ -233,6 +233,7 @@ static PyTypeObject UDPType;
 typedef struct {
     Handle handle;
     PyObject *callback;
+    long fd;
 } Poll;
 
 static PyTypeObject PollType;

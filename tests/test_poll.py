@@ -82,8 +82,11 @@ class PollTest(unittest2.TestCase):
             return
         self.connecting = True
         self.poll = pyuv.Poll(self.loop, self.sock.fileno())
+        self.assertEqual(self.sock.fileno(), self.poll.fileno())
         self.poll.start(pyuv.UV_WRITABLE, self.poll_cb)
         self.loop.run()
+        self.assertTrue(self.poll.closed)
+        self.assertEqual(self.poll.fileno(), -1)
 
 
 if __name__ == '__main__':
