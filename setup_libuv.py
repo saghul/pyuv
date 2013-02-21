@@ -116,6 +116,8 @@ class libuv_build_ext(build_ext):
             env['CFLAGS'] = ' '.join(x for x in (cflags, env.get('CFLAGS', None)) if x)
             log.info('Building libuv...')
             if win32_msvc:
+                if sys.version_info < (3, 3):
+                    env.pop('VS100COMNTOOLS', None)
                 exec_process('cmd.exe /C vcbuild.bat release', cwd=self.libuv_dir, env=env, shell=True)
             else:
                 exec_process(['make', 'libuv.a'], cwd=self.libuv_dir, env=env)
