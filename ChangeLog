@@ -1,3 +1,17 @@
+Version 0.9.6
+=============
+ - Added support for sending UDP handles over IPC pipes
+ - Added missing flags argument to UDP recv callback
+ - Added flags to UDP.bind
+ - Added fileno() method to Poll handles
+ - Fixed compilation with MSVC 2010
+ - Fixed choosing the right version of Visual Studio
+ - Fixed UDP echo example
+ - Fixed process and IPC tests on Windows
+ - Fixed Windwos symlinks issues in tests
+ - Fixed multicast tests on Windows and Linux
+ - Raised libuv revision to 3348cd7 (master)
+
 Version 0.9.5
 =============
  - Stop reading if a Stream gets an error in the on_read callback
