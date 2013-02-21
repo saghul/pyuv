@@ -519,7 +519,7 @@ Condition_func_timedwait(Condition *self, PyObject *args)
     Py_INCREF(pymutex);
 
     Py_BEGIN_ALLOW_THREADS
-    r = uv_cond_timedwait(self->uv_condition, pymutex->uv_mutex, (uint64_t)timeout*1e9);
+    r = uv_cond_timedwait(self->uv_condition, pymutex->uv_mutex, (uint64_t)(timeout*1e9));
     Py_END_ALLOW_THREADS
 
     Py_DECREF(pymutex);
