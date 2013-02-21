@@ -64,11 +64,18 @@ class FSTestLstat(unittest2.TestCase):
         self.loop = pyuv.Loop.default_loop()
         with open(TEST_FILE, 'w') as f:
             f.write('test')
-        pyuv.fs.symlink(self.loop, TEST_FILE, TEST_LINK, 0)
+        try:
+            pyuv.fs.symlink(self.loop, TEST_FILE, TEST_LINK, 0)
+        except pyuv.error.FSError as e:
+            if e.args[0] == pyuv.errno.UV_EPERM:
+                raise unittest2.SkipTest("Symlinks not permitted")
 
     def tearDown(self):
         os.remove(TEST_FILE)
-        os.remove(TEST_LINK)
+        try:
+            os.remove(TEST_LINK)
+        except OSError:
+            pass
 
     def stat_cb(self, loop, path, stat_result, errorno):
         self.errorno = errorno
@@ -376,11 +383,17 @@ class FSTestSymlink(unittest2.TestCase):
         self.errorno = None
         pyuv.fs.symlink(self.loop, TEST_FILE, TEST_LINK, 0, self.symlink_cb)
         self.loop.run()
+        if self.errorno == pyuv.errno.UV_EPERM:
+            raise unittest2.SkipTest("Symlinks not permitted")
         self.assertEqual(self.errorno, None)
         self.assertTrue(os.stat(TEST_LINK).st_mode & stat.S_IFLNK)
 
     def test_symlink_sync(self):
-        pyuv.fs.symlink(self.loop, TEST_FILE, TEST_LINK, 0)
+        try:
+            pyuv.fs.symlink(self.loop, TEST_FILE, TEST_LINK, 0)
+        except pyuv.error.FSError as e:
+            if e.args[0] == pyuv.errno.UV_EPERM:
+                raise unittest2.SkipTest("Symlinks not permitted")
         self.assertTrue(os.stat(TEST_LINK).st_mode & stat.S_IFLNK)
 
 
@@ -390,11 +403,18 @@ class FSTestReadlink(unittest2.TestCase):
         self.loop = pyuv.Loop.default_loop()
         with open(TEST_FILE, 'w') as f:
             f.write('test')
-        pyuv.fs.symlink(self.loop, TEST_FILE, TEST_LINK, 0)
+        try:
+            pyuv.fs.symlink(self.loop, TEST_FILE, TEST_LINK, 0)
+        except pyuv.error.FSError as e:
+            if e.args[0] == pyuv.errno.UV_EPERM:
+                raise unittest2.SkipTest("Symlinks not permitted")
 
     def tearDown(self):
         os.remove(TEST_FILE)
-        os.remove(TEST_LINK)
+        try:
+            os.remove(TEST_LINK)
+        except OSError:
+            pass
 
     def readlink_cb(self, loop, path, errorno):
         self.errorno = errorno
