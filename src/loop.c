@@ -103,7 +103,7 @@ Loop_func_run(Loop *self, PyObject *args)
 static PyObject *
 Loop_func_now(Loop *self)
 {
-    return PyLong_FromDouble(uv_now(self->uv_loop));
+    return PyLong_FromUnsignedLongLong(uv_now(self->uv_loop));
 }
 
 

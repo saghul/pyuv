@@ -58,7 +58,7 @@ Timer_func_start(Timer *self, PyObject *args, PyObject *kwargs)
         return NULL;
     }
 
-    r = uv_timer_start((uv_timer_t *)UV_HANDLE(self), on_timer_callback, (int64_t)(timeout * 1000), (int64_t)(repeat * 1000));
+    r = uv_timer_start((uv_timer_t *)UV_HANDLE(self), on_timer_callback, (uint64_t)(timeout * 1000), (uint64_t)(repeat * 1000));
     if (r != 0) {
         RAISE_UV_EXCEPTION(UV_HANDLE_LOOP(self), PyExc_TimerError);
         return NULL;
@@ -144,7 +144,7 @@ Timer_repeat_set(Timer *self, PyObject *value, void *closure)
         return -1;
     }
 
-    uv_timer_set_repeat((uv_timer_t *)UV_HANDLE(self), (int64_t)(repeat * 1000));
+    uv_timer_set_repeat((uv_timer_t *)UV_HANDLE(self), (uint64_t)(repeat * 1000));
 
     return 0;
 }
