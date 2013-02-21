@@ -188,8 +188,15 @@ Pipe_func_accept(Pipe *self, PyObject *args)
         return NULL;
     }
 
-    if (!PyObject_IsSubclass((PyObject *)client->ob_type, (PyObject *)&StreamType)) {
-        PyErr_SetString(PyExc_TypeError, "Only stream objects are supported for accept");
+    if (PyObject_IsSubclass((PyObject *)client->ob_type, (PyObject *)&StreamType)) {
+        if (UV_HANDLE(client)->type != UV_TCP && UV_HANDLE(client)->type != UV_NAMED_PIPE) {
+            PyErr_SetString(PyExc_TypeError, "Only TCP and Pipe objects are supported for accept");
+            return NULL;
+        }
+    } else if (PyObject_IsSubclass((PyObject *)client->ob_type, (PyObject *)&UDPType)) {
+        /* empty */
+    } else {
+        PyErr_SetString(PyExc_TypeError, "Only Stream and UDP objects are supported for accept");
         return NULL;
     }
 

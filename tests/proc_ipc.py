@@ -6,9 +6,6 @@ sys.path.insert(0, '../')
 import pyuv
 
 
-TEST_PORT = 1234
-
-
 def on_channel_write(handle, error):
     global channel, tcp_server
     channel.close()
@@ -27,6 +24,7 @@ def on_ipc_connection(handle, error):
 
 connection_accepted = False
 listen_after_write = sys.argv[1] == "listen_after_write"
+port = int(sys.argv[2])
 
 loop = pyuv.Loop.default_loop()
 
@@ -34,7 +32,7 @@ channel = pyuv.Pipe(loop, True)
 channel.open(sys.stdin.fileno())
 
 tcp_server = pyuv.TCP(loop)
-tcp_server.bind(("0.0.0.0", TEST_PORT))
+tcp_server.bind(("0.0.0.0", port))
 if not listen_after_write:
     tcp_server.listen(on_ipc_connection, 12)
 
