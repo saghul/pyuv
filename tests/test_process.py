@@ -24,10 +24,8 @@ class ProcessTest(unittest2.TestCase):
             proc.close(proc_close_cb)
         loop = pyuv.Loop.default_loop()
         proc = pyuv.Process(loop)
-        if sys.platform == 'win32':
-            proc.spawn(file="cmd.exe", args=["/c", "proc_basic.py"], exit_callback=proc_exit_cb)
-        else:
-            proc.spawn(file="./proc_basic.py", exit_callback=proc_exit_cb)
+        proc.spawn(file=sys.executable, args=["proc_basic.py"],
+                   exit_callback=proc_exit_cb)
         pid = proc.pid
         loop.run()
         self.assertEqual(self.exit_cb_called, 1)
@@ -45,10 +43,8 @@ class ProcessTest(unittest2.TestCase):
             proc.close(proc_close_cb)
         loop = pyuv.Loop.default_loop()
         proc = pyuv.Process(loop)
-        if sys.platform == 'win32':
-            proc.spawn(file="cmd.exe", args=["/c", "proc_basic.py"], exit_callback=proc_exit_cb, cwd=".")
-        else:
-            proc.spawn(file="./proc_basic.py", exit_callback=proc_exit_cb, cwd=".")
+        proc.spawn(file=sys.executable, args=["proc_basic.py"],
+                   exit_callback=proc_exit_cb, cwd=".")
         loop.run()
         self.assertEqual(self.exit_cb_called, 1)
         self.assertEqual(self.close_cb_called, 1)
@@ -73,10 +69,8 @@ class ProcessTest(unittest2.TestCase):
         stdio.append(pyuv.StdIO(flags=pyuv.UV_IGNORE))
         stdio.append(pyuv.StdIO(stream=stdout_pipe, flags=pyuv.UV_CREATE_PIPE|pyuv.UV_WRITABLE_PIPE))
         proc = pyuv.Process(loop)
-        if sys.platform == 'win32':
-            proc.spawn(file="cmd.exe", args=["/c", "proc_stdout.py"], exit_callback=proc_exit_cb, stdio=stdio)
-        else:
-            proc.spawn(file="./proc_stdout.py", exit_callback=proc_exit_cb, stdio=stdio)
+        proc.spawn(file=sys.executable, args=["proc_stdout.py"],
+                   exit_callback=proc_exit_cb, stdio=stdio)
         stdout_pipe.start_read(stdout_read_cb)
         loop.run()
         self.assertEqual(self.exit_cb_called, 1)
@@ -102,10 +96,8 @@ class ProcessTest(unittest2.TestCase):
         stdio.append(pyuv.StdIO(flags=pyuv.UV_IGNORE))
         stdio.append(pyuv.StdIO(stream=stdout_pipe, flags=pyuv.UV_CREATE_PIPE|pyuv.UV_WRITABLE_PIPE))
         proc = pyuv.Process(loop)
-        if sys.platform == 'win32':
-            proc.spawn(file="cmd.exe", args=["/c", "proc_args_stdout.py", "TEST"], exit_callback=proc_exit_cb, stdio=stdio)
-        else:
-            proc.spawn(file="./proc_args_stdout.py", args=["TEST"], exit_callback=proc_exit_cb, stdio=stdio)
+        proc.spawn(file=sys.executable, args=["proc_args_stdout.py", "TEST"],
+                   exit_callback=proc_exit_cb, stdio=stdio)
         stdout_pipe.start_read(stdout_read_cb)
         loop.run()
         self.assertEqual(self.exit_cb_called, 1)
@@ -131,10 +123,9 @@ class ProcessTest(unittest2.TestCase):
         stdio.append(pyuv.StdIO(flags=pyuv.UV_IGNORE))
         stdio.append(pyuv.StdIO(stream=stdout_pipe, flags=pyuv.UV_CREATE_PIPE|pyuv.UV_WRITABLE_PIPE))
         proc = pyuv.Process(loop)
-        if sys.platform == 'win32':
-            proc.spawn(file="cmd.exe", args=["/c", "proc_env_stdout.py"], env={"TEST": "TEST"}, exit_callback=proc_exit_cb, stdio=stdio)
-        else:
-            proc.spawn(file="./proc_env_stdout.py", env={"TEST": "TEST"}, exit_callback=proc_exit_cb, stdio=stdio)
+        proc.spawn(file=sys.executable, args=["proc_env_stdout.py"],
+                   env={"TEST": "TEST"}, exit_callback=proc_exit_cb,
+                   stdio=stdio)
         stdout_pipe.start_read(stdout_read_cb)
         loop.run()
         self.assertEqual(self.exit_cb_called, 1)
@@ -167,10 +158,8 @@ class ProcessTest(unittest2.TestCase):
         stdio.append(pyuv.StdIO(stream=stdin_pipe, flags=pyuv.UV_CREATE_PIPE|pyuv.UV_READABLE_PIPE))
         stdio.append(pyuv.StdIO(stream=stdout_pipe, flags=pyuv.UV_CREATE_PIPE|pyuv.UV_WRITABLE_PIPE))
         proc = pyuv.Process(loop)
-        if sys.platform == 'win32':
-            proc.spawn(file="cmd.exe", args=["/c", "proc_stdin_stdout.py"], exit_callback=proc_exit_cb, stdio=stdio)
-        else:
-            proc.spawn(file="./proc_stdin_stdout.py", exit_callback=proc_exit_cb, stdio=stdio)
+        proc.spawn(file=sys.executable, args=["proc_stdin_stdout.py"],
+                   exit_callback=proc_exit_cb, stdio=stdio)
         stdout_pipe.start_read(stdout_read_cb)
         stdin_pipe.write(b"TEST"+common.linesep, stdin_write_cb)
         loop.run()
@@ -197,10 +186,8 @@ class ProcessTest(unittest2.TestCase):
         timer = pyuv.Timer(loop)
         timer.start(timer_cb, 0.1, 0)
         proc = pyuv.Process(loop)
-        if sys.platform == 'win32':
-            proc.spawn(file="cmd.exe", args=["/c", "proc_infinite.py"], exit_callback=proc_exit_cb)
-        else:
-            proc.spawn(file="./proc_infinite.py", exit_callback=proc_exit_cb)
+        proc.spawn(file=sys.executable, args=["proc_infinite.py"],
+                   exit_callback=proc_exit_cb)
         loop.run()
         self.assertEqual(self.exit_cb_called, 1)
         self.assertEqual(self.close_cb_called, 2)
@@ -259,10 +246,8 @@ class ProcessTest(unittest2.TestCase):
             self.exit_cb_called += 1
         loop = pyuv.Loop.default_loop()
         proc = pyuv.Process(loop)
-        if sys.platform == 'win32':
-            proc.spawn(file="cmd.exe", args=["/c", "proc_basic.py"], exit_callback=proc_exit_cb, flags=pyuv.UV_PROCESS_DETACHED)
-        else:
-            proc.spawn(file="./proc_basic.py", exit_callback=proc_exit_cb, flags=pyuv.UV_PROCESS_DETACHED)
+        proc.spawn(file=sys.executable, args=["proc_basic.py"],
+                   exit_callback=proc_exit_cb, flags=pyuv.UV_PROCESS_DETACHED)
         proc.unref()
         pid = proc.pid
         loop.run()
@@ -274,4 +259,3 @@ class ProcessTest(unittest2.TestCase):
 
 if __name__ == '__main__':
     unittest2.main(verbosity=2)
-
