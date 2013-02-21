@@ -3,6 +3,7 @@ from common import unittest2, platform_skip
 import common
 import pyuv
 import socket
+import sys
 
 
 TEST_PORT = 12345
@@ -227,10 +228,14 @@ class UDPTestInvalidData(unittest2.TestCase):
         self.assertEqual(self.on_close_called, 3)
 
 
-def interface_addresses(family=socket.AF_INET):
-    for fam, _, _, _, sockaddr in socket.getaddrinfo('', None):
-        if family == fam:
-            yield sockaddr[0]
+if sys.platform == 'win32':
+    def interface_addresses():
+        for family, _, _, _, sockaddr in socket.getaddrinfo('', None):
+            if family == socket.AF_INET:
+                yield sockaddr[0]
+else:
+    def interface_addresses():
+        yield MULTICAST_ADDRESS
 
 
 class UDPTestMulticast(unittest2.TestCase):
