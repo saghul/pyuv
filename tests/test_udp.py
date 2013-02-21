@@ -227,13 +227,18 @@ class UDPTestInvalidData(unittest2.TestCase):
         self.assertEqual(self.on_close_called, 3)
 
 
-@platform_skip(["win32"])
+def interface_addresses(family=socket.AF_INET):
+    for fam, _, _, _, sockaddr in socket.getaddrinfo('', None):
+        if family == fam:
+            yield sockaddr[0]
+
+
 class UDPTestMulticast(unittest2.TestCase):
 
     def setUp(self):
         self.loop = pyuv.Loop.default_loop()
         self.server = None
-        self.client = None
+        self.clients = None
         self.received_data = None
 
     def on_close(self, handle):
@@ -243,36 +248,44 @@ class UDPTestMulticast(unittest2.TestCase):
         self.assertEqual(flags, 0)
         ip, port = ip_port
         self.received_data = data.strip()
-        self.client.set_membership(MULTICAST_ADDRESS, pyuv.UV_LEAVE_GROUP)
-        self.client.close(self.on_close)
+
+        for client in self.clients:
+            client.set_membership(MULTICAST_ADDRESS, pyuv.UV_LEAVE_GROUP)
+            client.close(self.on_close)
 
     def on_server_send(self, handle, error):
         handle.close(self.on_close)
 
+    def _create_clients(self, loop=False):
+        self.clients = list()
+        for addr in interface_addresses():
+            client = pyuv.UDP(self.loop)
+            client.bind((addr, TEST_PORT))
+            client.set_membership(MULTICAST_ADDRESS, pyuv.UV_JOIN_GROUP)
+            if loop:
+                client.set_multicast_loop(True)
+            else:
+                client.set_multicast_ttl(10)
+            client.start_recv(self.on_client_recv)
+            self.clients.append(client)
+
     def test_udp_multicast(self):
         self.on_close_called = 0
         self.server = pyuv.UDP(self.loop)
-        self.client = pyuv.UDP(self.loop)
-        self.client.bind((MULTICAST_ADDRESS, TEST_PORT))
-        self.client.set_membership(MULTICAST_ADDRESS, pyuv.UV_JOIN_GROUP)
-        self.client.set_multicast_ttl(10)
-        self.client.start_recv(self.on_client_recv)
+        self._create_clients()
         self.server.send((MULTICAST_ADDRESS, TEST_PORT), b"PING", self.on_server_send)
         self.loop.run()
-        self.assertEqual(self.on_close_called, 2)
+        self.assertEqual(self.on_close_called, 1 + len(self.clients))
         self.assertEqual(self.received_data, b"PING")
 
     @platform_skip(["darwin"])
     def test_udp_multicast_loop(self):
         self.on_close_called = 0
-        self.client = pyuv.UDP(self.loop)
-        self.client.bind((MULTICAST_ADDRESS, TEST_PORT))
-        self.client.set_membership(MULTICAST_ADDRESS, pyuv.UV_JOIN_GROUP)
-        self.client.set_multicast_loop(True)
-        self.client.start_recv(self.on_client_recv)
-        self.client.send((MULTICAST_ADDRESS, TEST_PORT), b"PING")
+        self._create_clients(True)
+        for client in self.clients:
+            client.send((MULTICAST_ADDRESS, TEST_PORT), b"PING")
         self.loop.run()
-        self.assertEqual(self.on_close_called, 1)
+        self.assertEqual(self.on_close_called, len(self.clients))
         self.assertEqual(self.received_data, b"PING")
 
 
