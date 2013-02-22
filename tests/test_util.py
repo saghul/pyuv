@@ -1,9 +1,8 @@
 
-import socket
-import sys
+from common import unittest2
 
-from common import platform_skip, unittest2
 import pyuv
+import socket
 
 
 class UtilTest(unittest2.TestCase):
@@ -39,16 +38,6 @@ class UtilTest(unittest2.TestCase):
     def test_cpu_info(self):
         r = pyuv.util.cpu_info()
         self.assertTrue(r)
-
-    @platform_skip(['darwin'])
-    def test_process_title(self):
-        if sys.version_info >= (3, 0):
-            self.skipTest("test disabled on Python 3")
-            return
-        title = 'my process'
-        pyuv.util.set_process_title(title)
-        r = pyuv.util.get_process_title()
-        self.assertEqual(r, title)
 
     def test_getaddrinfo(self):
         def getaddrinfo_cb(result, errorno):

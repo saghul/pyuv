@@ -179,91 +179,6 @@ Util_func_cpu_info(PyObject *obj)
 }
 
 
-static Bool setup_args_called = False;
-
-static void
-setup_args(void)
-{
-    int r, argc;
-    char **argv;
-    void (*Py_GetArgcArgv)(int *argc, char ***argv);
-    uv_lib_t dlmain;
-
-    r = uv_dlopen(NULL, &dlmain);
-    if (r != 0) {
-        return;
-    }
-
-    r = uv_dlsym(&dlmain, "Py_GetArgcArgv", (void **)&Py_GetArgcArgv);
-    if (r != 0) {
-        uv_dlclose(&dlmain);
-        return;
-    }
-
-    Py_GetArgcArgv(&argc, &argv);
-    uv_dlclose(&dlmain);
-
-    uv_setup_args(argc, argv);
-    setup_args_called = True;
-}
-
-
-static PyObject *
-Util_func_set_process_title(PyObject *obj, PyObject *args)
-{
-    char *title;
-    uv_err_t err;
-
-    UNUSED_ARG(obj);
-
-    if (!PyArg_ParseTuple(args, "s:set_process_title", &title)) {
-        return NULL;
-    }
-
-    if (!setup_args_called) {
-        setup_args();
-    }
-
-    err = uv_set_process_title(title);
-    if (err.code == UV_OK) {
-        Py_RETURN_NONE;
-    } else {
-        PyObject *exc_data = Py_BuildValue("(is)", err.code, uv_strerror(err));
-        if (exc_data != NULL) {
-            PyErr_SetObject(PyExc_UVError, exc_data);
-            Py_DECREF(exc_data);
-        }
-        return NULL;
-    }
-}
-
-
-static PyObject *
-Util_func_get_process_title(PyObject *obj)
-{
-    char buffer[512];
-    uv_err_t err;
-
-    UNUSED_ARG(obj);
-
-    if (!setup_args_called) {
-        setup_args();
-    }
-
-    err = uv_get_process_title(buffer, sizeof(buffer));
-    if (err.code == UV_OK) {
-        return PyBytes_FromString(buffer);
-    } else {
-        PyObject *exc_data = Py_BuildValue("(is)", err.code, uv_strerror(err));
-        if (exc_data != NULL) {
-            PyErr_SetObject(PyExc_UVError, exc_data);
-            Py_DECREF(exc_data);
-        }
-        return NULL;
-    }
-}
-
-
 /* Modified from Python Modules/socketmodule.c */
 static PyObject *
 makesockaddr(struct sockaddr *addr, int addrlen)
@@ -472,8 +387,6 @@ Util_methods[] = {
     { "resident_set_memory", (PyCFunction)Util_func_resident_set_memory, METH_NOARGS, "Gets resident memory size for the current process." },
     { "interface_addresses", (PyCFunction)Util_func_interface_addresses, METH_NOARGS, "Gets network interface addresses." },
     { "cpu_info", (PyCFunction)Util_func_cpu_info, METH_NOARGS, "Gets system CPU information." },
-    { "set_process_title", (PyCFunction)Util_func_set_process_title, METH_VARARGS, "Sets current process title." },
-    { "get_process_title", (PyCFunction)Util_func_get_process_title, METH_NOARGS, "Gets current process title." },
     { "getaddrinfo", (PyCFunction)Util_func_getaddrinfo, METH_VARARGS|METH_KEYWORDS, "Getaddrinfo" },
     { NULL }
 };
