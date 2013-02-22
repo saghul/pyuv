@@ -42,16 +42,6 @@
 
     Get CPUs information.
 
-.. py:function:: pyuv.util.set_process_title(title)
-
-    :param string title: Desired process title.
-
-    Set current process title.
-
-.. py:function:: pyuv.util.get_process_title
-
-    Get current process title.
-
 .. py:function:: pyuv.util.getaddrinfo(...)
 
     Asyncronous equivalent of `socket.getaddrinfo`. This function returns
@@ -66,7 +56,7 @@
     :param int fd: File descriptor to be monitored for readability.
 
     `SignalChecker` is a handle which can be used to interact with signals set up by the standard `signal` module.
-    
+
     Here is how it works: the user is required to get a pair of file descriptors and put them in nonblocking mode. These descriptors can be either
     a `os.pipe()`, a `socket.socketpair()` or a manually made pair of connected sockets. One of these descriptors will be used just for
     writing, and the other end for reading. The user must use `signal.set_wakeup_fd` and register the write descriptor. The read descriptor

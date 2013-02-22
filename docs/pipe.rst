@@ -101,7 +101,7 @@
         :param object data: Data to be written on the ``Pipe`` connection. It can be either
             a string or any iterable containing strings.
 
-        :param object handle: Handle to send over the ``Pipe``. Currently only ``TCP`` and ``Pipe`` handles
+        :param object handle: Handle to send over the ``Pipe``. Currently only ``TCP``, ``UDP`` and ``Pipe`` handles
             are supported.
 
         :param callable callback: Callback to be called after the write operation
