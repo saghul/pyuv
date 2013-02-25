@@ -1,8 +1,9 @@
 
 import gc
-import pyuv
 import weakref
+
 from common import unittest2
+import pyuv
 
 
 class WalkTest(unittest2.TestCase):
