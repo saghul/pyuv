@@ -101,6 +101,14 @@ Loop_func_run(Loop *self, PyObject *args)
 
 
 static PyObject *
+Loop_func_stop(Loop *self)
+{
+    uv_stop(self->uv_loop);
+    Py_RETURN_NONE;
+}
+
+
+static PyObject *
 Loop_func_now(Loop *self)
 {
     return PyLong_FromUnsignedLongLong(uv_now(self->uv_loop));
@@ -428,6 +436,7 @@ Loop_excepthook_set(Loop *self, PyObject* val, void* c)
 static PyMethodDef
 Loop_tp_methods[] = {
     { "run", (PyCFunction)Loop_func_run, METH_VARARGS, "Run the event loop." },
+    { "stop", (PyCFunction)Loop_func_stop, METH_NOARGS, "Stop running the event loop." },
     { "now", (PyCFunction)Loop_func_now, METH_NOARGS, "Return event loop time, expressed in nanoseconds." },
     { "update_time", (PyCFunction)Loop_func_update_time, METH_NOARGS, "Update event loop's notion of time by querying the kernel." },
     { "walk", (PyCFunction)Loop_func_walk, METH_VARARGS, "Walk all handles in the loop." },
