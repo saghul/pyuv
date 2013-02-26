@@ -590,7 +590,8 @@ class FSTestWrite(unittest2.TestCase):
         self.loop.run()
         self.assertEqual(self.bytes_written, 4)
         self.assertEqual(self.errorno, None)
-        self.assertEqual(open(TEST_FILE, 'r').read(), "TEST")
+        with open(TEST_FILE, 'r') as fobj:
+            self.assertEqual(fobj.read(), "TEST")
 
     def test_write_null(self):
         self.bytes_written = None
@@ -599,13 +600,15 @@ class FSTestWrite(unittest2.TestCase):
         self.loop.run()
         self.assertEqual(self.bytes_written, 5)
         self.assertEqual(self.errorno, None)
-        self.assertEqual(open(TEST_FILE, 'r').read(), "TES\x00T")
+        with open(TEST_FILE, 'r') as fobj:
+            self.assertEqual(fobj.read(), "TES\x00T")
 
     def test_write_sync(self):
         self.bytes_written = pyuv.fs.write(self.loop, self.fd, "TEST", -1)
         pyuv.fs.close(self.loop, self.fd)
         self.assertEqual(self.bytes_written, 4)
-        self.assertEqual(open(TEST_FILE, 'r').read(), "TEST")
+        with open(TEST_FILE, 'r') as fobj:
+            self.assertEqual(fobj.read(), "TEST")
 
 
 class FSTestFsync(unittest2.TestCase):
@@ -630,7 +633,8 @@ class FSTestFsync(unittest2.TestCase):
         pyuv.fs.write(self.loop, self.fd, "TEST", -1, self.write_cb)
         self.loop.run()
         pyuv.fs.close(self.loop, self.fd)
-        self.assertEqual(open(TEST_FILE, 'r').read(), "TEST")
+        with open(TEST_FILE, 'r') as fobj:
+            self.assertEqual(fobj.read(), "TEST")
 
     def test_fsync_sync(self):
         self.fd = pyuv.fs.open(self.loop, TEST_FILE, os.O_RDWR|os.O_CREAT|os.O_TRUNC, stat.S_IREAD|stat.S_IWRITE)
@@ -638,7 +642,8 @@ class FSTestFsync(unittest2.TestCase):
         pyuv.fs.fdatasync(self.loop, self.fd)
         pyuv.fs.fsync(self.loop, self.fd)
         pyuv.fs.close(self.loop, self.fd)
-        self.assertEqual(open(TEST_FILE, 'r').read(), "TEST")
+        with open(TEST_FILE, 'r') as fobj:
+            self.assertEqual(fobj.read(), "TEST")
 
 
 class FSTestFtruncate(unittest2.TestCase):
@@ -661,7 +666,8 @@ class FSTestFtruncate(unittest2.TestCase):
         pyuv.fs.ftruncate(self.loop, self.fd, 4, self.ftruncate_cb)
         self.loop.run()
         self.assertEqual(self.errorno, None)
-        self.assertEqual(open(TEST_FILE, 'r').read(), "test")
+        with open(TEST_FILE, 'r') as fobj:
+            self.assertEqual(fobj.read(), "test")
 
     def test_ftruncate2(self):
         self.errorno = None
@@ -669,13 +675,15 @@ class FSTestFtruncate(unittest2.TestCase):
         pyuv.fs.ftruncate(self.loop, self.fd, 0, self.ftruncate_cb)
         self.loop.run()
         self.assertEqual(self.errorno, None)
-        self.assertEqual(open(TEST_FILE, 'r').read(), "")
+        with open(TEST_FILE, 'r') as fobj:
+            self.assertEqual(fobj.read(), "")
 
     def test_ftruncate_sync(self):
         fd = pyuv.fs.open(self.loop, TEST_FILE, os.O_RDWR, stat.S_IREAD|stat.S_IWRITE)
         pyuv.fs.ftruncate(self.loop, fd, 0)
         pyuv.fs.close(self.loop, fd)
-        self.assertEqual(open(TEST_FILE, 'r').read(), "")
+        with open(TEST_FILE, 'r') as fobj:
+            self.assertEqual(fobj.read(), "")
 
 
 class FSTestReaddir(unittest2.TestCase):
@@ -758,7 +766,9 @@ class FSTestSendfile(unittest2.TestCase):
         pyuv.fs.close(self.loop, fd)
         pyuv.fs.close(self.loop, fd2)
         self.assertEqual(self.errorno, None)
-        self.assertEqual(open(TEST_FILE, 'r').read(), open(TEST_FILE2, 'r').read())
+        with open(TEST_FILE, 'r') as fobj1:
+            with open(TEST_FILE2, 'r') as fobj2:
+                self.assertEqual(fobj1.read(), fobj2.read())
 
     def test_sendfile_sync(self):
         fd = pyuv.fs.open(self.loop, TEST_FILE, os.O_RDWR, stat.S_IREAD|stat.S_IWRITE)
@@ -766,7 +776,9 @@ class FSTestSendfile(unittest2.TestCase):
         self.bytes_written = pyuv.fs.sendfile(self.loop, fd2, fd, 0, 131072)
         pyuv.fs.close(self.loop, fd)
         pyuv.fs.close(self.loop, fd2)
-        self.assertEqual(open(TEST_FILE, 'r').read(), open(TEST_FILE2, 'r').read())
+        with open(TEST_FILE, 'r') as fobj1:
+            with open(TEST_FILE2, 'r') as fobj2:
+                self.assertEqual(fobj1.read(), fobj2.read())
 
 
 class FSTestUtime(unittest2.TestCase):
