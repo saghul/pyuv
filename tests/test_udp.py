@@ -324,6 +324,7 @@ class UDPTestOpen(unittest2.TestCase):
         except pyuv.error.UDPError as e:
             self.assertEqual(e.args[0], pyuv.errno.UV_EADDRNOTAVAIL)
         loop.run()
+        sock.close()
 
 
 if __name__ == '__main__':

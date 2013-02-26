@@ -34,6 +34,7 @@ class TestBasetype(unittest2.TestCase):
         loop = pyuv.Loop.default_loop()
         sock = socket.socket()
         self._inheritance_test(pyuv.Poll, loop, sock.fileno())
+        sock.close()
 
     def test_inherit_pipe(self):
         loop = pyuv.Loop.default_loop()

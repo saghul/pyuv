@@ -43,6 +43,7 @@ class TCPErrorTest(unittest2.TestCase):
         client.open(sock.fileno())
         client.connect(("127.0.0.1", TEST_PORT), self.on_client_connect_error)
         loop.run()
+        sock.close()
 
 
 class TCPTest(unittest2.TestCase):
