@@ -871,7 +871,7 @@ class FSEventTestBasic(unittest2.TestCase):
         self.loop.run()
         self.assertEqual(self.errorno, None)
         self.assertTrue(self.filename == None or self.filename == TEST_FILE)
-        self.assertTrue(self.events & pyuv.fs.UV_RENAME)
+        self.assertTrue(self.events in (pyuv.fs.UV_CHANGE, pyuv.fs.UV_RENAME))
 
 
 class FSEventTest(unittest2.TestCase):
