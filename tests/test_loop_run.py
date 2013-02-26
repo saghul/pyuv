@@ -42,7 +42,7 @@ class LoopRunTest(unittest2.TestCase):
             self.prepare_called += 1
             if self.prepare_called == self.num_ticks:
                 handle.close()
-        self.loop = pyuv.Loop()
+        self.loop = pyuv.Loop.default_loop()
         timer = pyuv.Timer(self.loop)
         timer.start(timer_cb, 0.1, 0.1)
         prepare = pyuv.Prepare(self.loop)
