@@ -1,4 +1,3 @@
-
 import errno
 import os
 import shutil
@@ -42,7 +41,7 @@ def exec_process(cmdline, silent=True, input=None, **kwargs):
         else:
             raise
     if returncode != 0:
-        raise DistutilsError('Got return value %d while executing "%s", stderr output was:\n%s' % (returncode, " ".join(cmdline), stderr.rstrip("\n")))
+        raise DistutilsError('Got return value %d while executing "%s", stderr output was:\n%s' % (returncode, "".join(cmdline), stderr.decode("utf-8").rstrip("\n")))
     return stdout
 
 
