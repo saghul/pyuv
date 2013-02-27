@@ -124,7 +124,11 @@ class libuv_build_ext(build_ext):
         if self.libuv_force_fetch:
             rmtree('deps')
         if not os.path.exists(self.libuv_dir):
-            download_libuv()
+            try:
+                download_libuv()
+            except BaseException:
+                rmtree('deps')
+                raise
             patch_libuv()
             build_libuv()
         else:
