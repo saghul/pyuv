@@ -90,7 +90,7 @@ on_pipe_read2(uv_pipe_t* handle, int nread, uv_buf_t buf, uv_handle_type pending
         data = PyBytes_FromStringAndSize(buf.base, nread);
         py_errorno = Py_None;
         Py_INCREF(Py_None);
-    } else if (nread < 0) {
+    } else {
         data = Py_None;
         Py_INCREF(Py_None);
         err = uv_last_error(UV_HANDLE_LOOP(self));

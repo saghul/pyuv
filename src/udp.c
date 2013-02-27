@@ -53,7 +53,7 @@ on_udp_read(uv_udp_t* handle, int nread, uv_buf_t buf, struct sockaddr* addr, un
         data = PyBytes_FromStringAndSize(buf.base, nread);
         py_errorno = Py_None;
         Py_INCREF(Py_None);
-    } else if (nread < 0) {
+    } else {
         address_tuple = Py_None;
         Py_INCREF(Py_None);
         data = Py_None;
