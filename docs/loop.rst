@@ -33,6 +33,12 @@
         Run the event loop. Returns True if there are pending operations and run should be called again
         or False otherwise.
 
+    .. py:method:: stop
+
+        Stops a running event loop. The action won't happen immediately, it will happen the next loop
+        iteration, but if stop was called before blocking for i/o a 0 timeout poll will be performed,
+        so the loop will not block for i/o on that iteration.
+
     .. py:method:: now
     .. py:method:: update_time
 
