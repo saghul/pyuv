@@ -1,4 +1,5 @@
 
+import ast
 import errno
 import os
 import shutil
@@ -44,6 +45,45 @@ def exec_process(cmdline, silent=True, input=None, **kwargs):
     if returncode != 0:
         raise DistutilsError('Got return value %d while executing "%s", stderr output was:\n%s' % (returncode, " ".join(cmdline), stderr.decode("utf-8").rstrip("\n")))
     return stdout
+
+
+def _set_python_executable(env):
+    if env.get('PYTHON'):
+        return  # Already manually set by user.
+
+    if (2, 6) <= sys.version_info[:2] <= (2, 7):
+        env['PYTHON'] = sys.executable
+        return  # The current executable is fine.
+
+    # Try if `python` on PATH is the right one. If we would execute
+    # `python` directly the current executable might be used so we
+    # delegate this to cmd.
+    cmd = ['cmd.exe', '/C',  'python', '-c', 'import sys; '
+           'v = str(sys.version_info[:2]); sys.stdout.write(v); '
+           'sys.stdout.flush()']
+    try:
+        sub = subprocess.Popen(cmd, stdout=subprocess.PIPE)
+        stdout, _ = sub.communicate()
+        version = ast.literal_eval(stdout.decode('utf-8').strip())
+        if (2, 6) <= version <= (2, 7):
+            return  # Python on PATH is fine
+    except OSError:
+        pass
+
+    # Check default install locations
+    for v in ('26', '27'):
+        path = os.path.join('%SYSTEMDRIVE%', 'Python%s' % v, 'python.exe')
+        path = os.path.expandvars(path)
+        if os.path.isfile(path):
+            log.info('Using "%s" to build libuv...' % path)
+            env['PYTHON'] = path
+            return
+
+    raise DistutilsError('No appropriate Python version found. An '
+                         'installation of 2.6 or 2.7 is required to '
+                         'build libuv. You can set the environment '
+                         'variable "PYTHON" to point to a custom '
+                         'installation location.')
 
 
 class libuv_build_ext(build_ext):
@@ -118,6 +158,7 @@ class libuv_build_ext(build_ext):
             if win32_msvc:
                 if sys.version_info < (3, 3):
                     env.pop('VS100COMNTOOLS', None)
+                _set_python_executable(env)
                 exec_process(['cmd.exe', '/C', 'vcbuild.bat', 'release'], cwd=self.libuv_dir, env=env, shell=True)
             else:
                 exec_process(['make', 'libuv.a'], cwd=self.libuv_dir, env=env)
