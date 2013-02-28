@@ -42,7 +42,7 @@ def exec_process(cmdline, silent=True, input=None, **kwargs):
         else:
             raise
     if returncode != 0:
-        raise DistutilsError('Got return value %d while executing "%s", stderr output was:\n%s' % (returncode, "".join(cmdline), stderr.decode("utf-8").rstrip("\n")))
+        raise DistutilsError('Got return value %d while executing "%s", stderr output was:\n%s' % (returncode, " ".join(cmdline), stderr.decode("utf-8").rstrip("\n")))
     return stdout
 
 
@@ -118,7 +118,7 @@ class libuv_build_ext(build_ext):
             if win32_msvc:
                 if sys.version_info < (3, 3):
                     env.pop('VS100COMNTOOLS', None)
-                exec_process('cmd.exe /C vcbuild.bat release', cwd=self.libuv_dir, env=env, shell=True)
+                exec_process(['cmd.exe', '/C', 'vcbuild.bat', 'release'], cwd=self.libuv_dir, env=env, shell=True)
             else:
                 exec_process(['make', 'libuv.a'], cwd=self.libuv_dir, env=env)
         if self.libuv_force_fetch:
@@ -130,7 +130,7 @@ class libuv_build_ext(build_ext):
         else:
             if self.libuv_clean_compile:
                 if win32_msvc:
-                    exec_process('cmd.exe /C vcbuild.bat clean', cwd=self.libuv_dir, shell=True)
+                    exec_process(['cmd.exe', '/C', 'vcbuild.bat', 'clean'], cwd=self.libuv_dir, shell=True)
                     rmtree(os.path.join(self.libuv_dir, 'Release'))
                 else:
                     exec_process(['make', 'clean'], cwd=self.libuv_dir)
