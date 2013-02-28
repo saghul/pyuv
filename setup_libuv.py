@@ -2,6 +2,7 @@
 import ast
 import errno
 import os
+import platform
 import shutil
 import subprocess
 import sys
@@ -159,7 +160,8 @@ class libuv_build_ext(build_ext):
                 if sys.version_info < (3, 3):
                     env.pop('VS100COMNTOOLS', None)
                 _set_python_executable(env)
-                exec_process(['cmd.exe', '/C', 'vcbuild.bat', 'release'], cwd=self.libuv_dir, env=env, shell=True)
+                libuv_arch = {'32bit': 'x86', '64bit': 'x64'}[platform.architecture()[0]]
+                exec_process(['cmd.exe', '/C', 'vcbuild.bat', libuv_arch, 'release'], cwd=self.libuv_dir, env=env, shell=True)
             else:
                 exec_process(['make', 'libuv.a'], cwd=self.libuv_dir, env=env)
         if self.libuv_force_fetch:
