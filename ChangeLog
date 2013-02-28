@@ -1,3 +1,14 @@
+Version 0.9.7
+=============
+ - Added Loop.stop
+ - Removed get/set process title functions
+ - Cleanup deps directory if libuv download fails
+ - Fixed build on Windows when using Python 3.3
+ - Several fixes for the test suite
+ - Fixed a few compilation warnings
+ - Updated documentation
+ - Raised libuv revision to 0ad46bd (master)
+
 Version 0.9.6
 =============
  - Added support for sending UDP handles over IPC pipes
