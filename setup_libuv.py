@@ -123,15 +123,15 @@ class libuv_build_ext(build_ext):
             self.compiler.add_library_dir(self.libuv_dir)
             self.compiler.add_library('uv')
         else:
-            self.extensions[0].extra_objects = [self.libuv_lib]
+            self.extensions[0].extra_objects.extend([self.libuv_lib])
         self.compiler.add_include_dir(os.path.join(self.libuv_dir, 'include'))
         if sys.platform.startswith('linux'):
             self.compiler.add_library('rt')
         elif sys.platform == 'darwin':
-            self.extensions[0].extra_link_args = ['-framework', 'CoreServices']
+            self.extensions[0].extra_link_args.extend(['-framework', 'CoreServices'])
         elif sys.platform == 'win32':
             if self.compiler.compiler_type == 'msvc':
-                self.extensions[0].extra_link_args = ['/NODEFAULTLIB:libcmt', '/LTCG']
+                self.extensions[0].extra_link_args.extend(['/NODEFAULTLIB:libcmt', '/LTCG'])
                 self.compiler.add_library('advapi32')
             self.compiler.add_library('iphlpapi')
             self.compiler.add_library('psapi')
