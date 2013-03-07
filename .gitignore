@@ -1,6 +1,7 @@
 #python specific
 *.pyc
 *.so
+*.pyd
 build/*
 dist/*
 MANIFEST
