@@ -178,6 +178,7 @@ Handle_tp_dealloc(Handle *self)
     } else {
         /* Refcount is increased in close(), so it's guaranteed that if we arrived here and the user had called close(),
          * the callback was already executed and it's safe to free the handle */
+        ASSERT(self->uv_handle->flags & UV_HANDLE_CLOSED);
         free_handle(self->uv_handle);
     }
     if (self->weakreflist != NULL) {
