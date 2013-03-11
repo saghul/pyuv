@@ -75,6 +75,10 @@
         returned, which has a `cancel()` method that can be called to avoid running the request, in case
         it didn't already run.
 
+        Unix only: The size of the internal threadpool can be controlled with the `UV_THREADPOOL_SIZE`
+        environment variable, which needs to be set before the first call to this function. The default
+        size is 4 threads.
+
     .. py:method:: excepthook(type, value, traceback)
 
         This function prints out a given traceback and exception to sys.stderr.

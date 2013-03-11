@@ -2,7 +2,7 @@
 
 
 ################################
-Welcome to PyUV's documentation!
+Welcome to pyuv's documentation!
 ################################
 
 Python interface for libuv.
