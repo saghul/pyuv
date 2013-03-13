@@ -48,7 +48,10 @@ def exec_process(cmdline, silent=True, input=None, **kwargs):
     return stdout
 
 
-def _set_python_executable(env):
+def prepare_windows_env(env):
+    if sys.version_info < (3, 3):
+        env.pop('VS100COMNTOOLS', None)
+
     if env.get('PYTHON'):
         return  # Already manually set by user.
 
@@ -157,9 +160,7 @@ class libuv_build_ext(build_ext):
             env['CFLAGS'] = ' '.join(x for x in (cflags, env.get('CFLAGS', None)) if x)
             log.info('Building libuv...')
             if win32_msvc:
-                if sys.version_info < (3, 3):
-                    env.pop('VS100COMNTOOLS', None)
-                _set_python_executable(env)
+                prepare_windows_env(env)
                 libuv_arch = {'32bit': 'x86', '64bit': 'x64'}[platform.architecture()[0]]
                 exec_process(['cmd.exe', '/C', 'vcbuild.bat', libuv_arch, 'release'], cwd=self.libuv_dir, env=env, shell=True)
             else:
@@ -177,7 +178,9 @@ class libuv_build_ext(build_ext):
         else:
             if self.libuv_clean_compile:
                 if win32_msvc:
-                    exec_process(['cmd.exe', '/C', 'vcbuild.bat', 'clean'], cwd=self.libuv_dir, shell=True)
+                    env = os.environ.copy()
+                    prepare_windows_env(env)
+                    exec_process(['cmd.exe', '/C', 'vcbuild.bat', 'clean'], cwd=self.libuv_dir, env=env, shell=True)
                     rmtree(os.path.join(self.libuv_dir, 'Release'))
                 else:
                     exec_process(['make', 'clean'], cwd=self.libuv_dir)
