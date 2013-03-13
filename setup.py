@@ -1,6 +1,9 @@
 # coding=utf8
 
-from distutils.core import setup, Extension
+try:
+    from setuptools import setup, Extension
+except ImportError:
+    from distutils.core import setup, Extension
 from setup_libuv import libuv_build_ext, libuv_sdist
 
 
