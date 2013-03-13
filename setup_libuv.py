@@ -130,8 +130,8 @@ class libuv_build_ext(build_ext):
         elif sys.platform == 'darwin':
             self.extensions[0].extra_link_args.extend(['-framework', 'CoreServices'])
         elif sys.platform == 'win32':
+            self.extensions[0].define_macros.append(('WIN32', 1))
             if self.compiler.compiler_type == 'msvc':
-                self.extensions[0].extra_compile_args.extend(['/D', '"WIN32"'])
                 self.extensions[0].extra_link_args.extend(['/NODEFAULTLIB:libcmt', '/LTCG'])
                 self.compiler.add_library('advapi32')
             self.compiler.add_library('iphlpapi')

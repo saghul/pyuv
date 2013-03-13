@@ -1,6 +1,6 @@
 
-from common import unittest2, platform_skip, linesep
-
+from common import unittest2
+import common
 import errno
 import pyuv
 import socket
@@ -14,8 +14,6 @@ if sys.platform == "win32":
 else:
     NONBLOCKING = (errno.EAGAIN, errno.EINPROGRESS, errno.EWOULDBLOCK)
 
-
-@platform_skip(["win32"])
 class PollTest(unittest2.TestCase):
 
     def setUp(self):
@@ -32,10 +30,10 @@ class PollTest(unittest2.TestCase):
         server.accept(client)
         self.client_connection = client
         client.start_read(self.on_client_connection_read)
-        client.write(b"PING"+linesep)
+        client.write(b"PING"+common.linesep)
 
     def on_client_connection_read(self, client, data, error):
-        self.assertEqual(data, b"PONG"+linesep)
+        self.assertEqual(data, b"PONG"+common.linesep)
         self.poll.close()
         self.client_connection.close()
         self.server.close()
@@ -62,11 +60,11 @@ class PollTest(unittest2.TestCase):
         if (events & pyuv.UV_READABLE):
             self.poll.stop()
             data = self.sock.recv(1024)
-            self.assertEqual(data, b"PING"+linesep)
+            self.assertEqual(data, b"PING"+common.linesep)
             self.poll.start(pyuv.UV_WRITABLE, self.poll_cb)
         elif (events & pyuv.UV_WRITABLE):
             self.poll.stop()
-            self.sock.send(b"PONG"+linesep)
+            self.sock.send(b"PONG"+common.linesep)
 
     def test_poll(self):
         self.server = pyuv.TCP(self.loop)
