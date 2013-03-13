@@ -1,5 +1,5 @@
 
-from common import unittest2, platform_skip
+from common import unittest2
 
 import pyuv
 import socket
@@ -30,7 +30,6 @@ class TestBasetype(unittest2.TestCase):
         loop = pyuv.Loop.default_loop()
         self._inheritance_test(pyuv.UDP, loop)
 
-    @platform_skip(["win32"])
     def test_inherit_poll(self):
         loop = pyuv.Loop.default_loop()
         sock = socket.socket()

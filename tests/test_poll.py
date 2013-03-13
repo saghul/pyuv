@@ -1,5 +1,5 @@
 
-from common import unittest2, platform_skip, linesep
+from common import unittest2, linesep
 
 import errno
 import pyuv
@@ -15,7 +15,6 @@ else:
     NONBLOCKING = (errno.EAGAIN, errno.EINPROGRESS, errno.EWOULDBLOCK)
 
 
-@platform_skip(["win32"])
 class PollTest(unittest2.TestCase):
 
     def setUp(self):
