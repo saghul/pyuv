@@ -150,7 +150,7 @@ class libuv_build_ext(build_ext):
             log.info('Downloading libuv...')
             makedirs(self.libuv_dir)
             exec_process(['git', 'clone', '-b', self.libuv_branch, self.libuv_repo, self.libuv_dir])
-            exec_process(['git', 'checkout', self.libuv_revision], cwd=self.libuv_dir)
+            exec_process(['git', 'reset', '--hard', self.libuv_revision], cwd=self.libuv_dir)
         def patch_libuv():
             if self.libuv_patches:
                 log.info('Patching libuv...')
