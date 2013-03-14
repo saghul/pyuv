@@ -142,7 +142,8 @@
         by the operating system when listening for new tcp connections. This setting
         is used to tune a tcp server for the desired performance. Having simultaneous
         accepts can significantly improve the rate of accepting connections (which
-        is why it is enabled by default).
+        is why it is enabled by default) but may lead to uneven load distribution in
+        multi-process setups.
 
     .. py:attribute:: readable
 
