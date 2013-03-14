@@ -72,6 +72,13 @@ If you'd like to use the `development version <https://github.com/saghul/pyuv/zi
 Building
 ========
 
+Get the source:
+
+::
+
+    git clone https://github.com/saghul/pyuv
+
+
 Linux:
 
 ::
@@ -90,7 +97,6 @@ Microsoft Windows (with Visual Studio 2008):
 
 ::
 
-    (Subversion needs to be installed)
     ./build_inplace
 
 Microsoft Windows (with MinGW, not recommended):
