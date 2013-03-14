@@ -1,3 +1,14 @@
+Version 0.10.0
+==============
+(these entries cover the changes since the last 0.9 release, not the entire
+changelog since the las 0.8 release)
+ - Don't override extra_objects and extra_link_args in setup.py
+ - Fix libuv-clean-compile on Windows
+ - Use setuptools if available
+ - Fix miscalculation of struct sizes in Windows
+ - Updated documentation
+ - Raised libuv revision to 7b66ea1 (v0.10 branch)
+
 Version 0.9.7
 =============
  - Added Loop.stop
