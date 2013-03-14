@@ -30,7 +30,7 @@ setup(name             = "pyuv",
           "Programming Language :: Python :: 3",
           "Programming Language :: Python :: 3.0",
           "Programming Language :: Python :: 3.1",
-          "Programming Language :: Python :: 3.2"
+          "Programming Language :: Python :: 3.2",
           "Programming Language :: Python :: 3.3"
       ],
       cmdclass     = {'build_ext': libuv_build_ext,
