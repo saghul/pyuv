@@ -204,7 +204,7 @@ makesockaddr(struct sockaddr *addr, int addrlen)
     {
         addr6 = (struct sockaddr_in6*)addr;
         uv_ip6_name(addr6, ip, INET6_ADDRSTRLEN);
-        return Py_BuildValue("siii", ip, ntohs(addr6->sin6_port), addr6->sin6_flowinfo, addr6->sin6_scope_id);
+        return Py_BuildValue("siII", ip, ntohs(addr6->sin6_port), ntohl(addr6->sin6_flowinfo), addr6->sin6_scope_id);
     }
 
     default:
