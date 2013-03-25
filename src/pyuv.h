@@ -27,10 +27,8 @@ typedef int Bool;
 
 
 /* Utility macros */
-#ifndef __STRING
-    #define __STRING(x) #x
-#endif
-#define __MSTR(x) __STRING(x)
+#define PYUV_STRINGIFY_HELPER(x) #x
+#define PYUV_STRINGIFY(x) PYUV_STRINGIFY_HELPER(x)
 
 #define UNUSED_ARG(arg)  (void)arg
 

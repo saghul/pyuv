@@ -75,7 +75,7 @@ init_errno(void)
         return NULL;
     }
 
-#define XX(val, name, s) inscode(module_dict, errorcode_dict, __MSTR(UV_##name), UV_##name);
+#define XX(val, name, s) inscode(module_dict, errorcode_dict, PYUV_STRINGIFY(UV_##name), UV_##name);
     UV_ERRNO_MAP(XX)
 #undef XX
 
