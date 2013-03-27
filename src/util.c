@@ -84,8 +84,8 @@ Util_func_resident_set_memory(PyObject *obj)
 static PyObject *
 Util_func_interface_addresses(PyObject *obj)
 {
+    static char buf[INET6_ADDRSTRLEN+1];
     int i, count;
-    char ip[INET6_ADDRSTRLEN];
     uv_interface_address_t* interfaces;
     uv_err_t err;
     PyObject *result, *item, *exc_data;
@@ -109,11 +109,11 @@ Util_func_interface_addresses(PyObject *obj)
             PyStructSequence_SET_ITEM(item, 0, Py_BuildValue("s", interfaces[i].name));
             PyStructSequence_SET_ITEM(item, 1, PyBool_FromLong((long)interfaces[i].is_internal));
             if (interfaces[i].address.address4.sin_family == AF_INET) {
-                uv_ip4_name(&interfaces[i].address.address4, ip, INET_ADDRSTRLEN);
+                uv_ip4_name(&interfaces[i].address.address4, buf, sizeof(buf));
             } else if (interfaces[i].address.address4.sin_family == AF_INET6) {
-                uv_ip6_name(&interfaces[i].address.address6, ip, INET6_ADDRSTRLEN);
+                uv_ip6_name(&interfaces[i].address.address6, buf, sizeof(buf));
             }
-            PyStructSequence_SET_ITEM(item, 2, Py_BuildValue("s", ip));
+            PyStructSequence_SET_ITEM(item, 2, Py_BuildValue("s", buf));
             PyList_SET_ITEM(result, i, item);
         }
         uv_free_interface_addresses(interfaces, count);

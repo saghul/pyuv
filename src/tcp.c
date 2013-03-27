@@ -236,10 +236,7 @@ static PyObject *
 TCP_func_getsockname(TCP *self)
 {
     int r, namelen;
-    char ip[INET6_ADDRSTRLEN];
     struct sockaddr sockname;
-    struct sockaddr_in *addr4;
-    struct sockaddr_in6 *addr6;
 
     namelen = sizeof(sockname);
 
@@ -252,18 +249,7 @@ TCP_func_getsockname(TCP *self)
         return NULL;
     }
 
-    if (sockname.sa_family == AF_INET) {
-        addr4 = (struct sockaddr_in*)&sockname;
-        uv_ip4_name(addr4, ip, INET_ADDRSTRLEN);
-        return Py_BuildValue("si", ip, ntohs(addr4->sin_port));
-    } else if (sockname.sa_family == AF_INET6) {
-        addr6 = (struct sockaddr_in6*)&sockname;
-        uv_ip6_name(addr6, ip, INET6_ADDRSTRLEN);
-        return Py_BuildValue("si", ip, ntohs(addr6->sin6_port));
-    } else {
-        PyErr_SetString(PyExc_TCPError, "unknown address type detected");
-        return NULL;
-    }
+    return makesockaddr(&sockname, namelen);
 }
 
 
@@ -271,10 +257,7 @@ static PyObject *
 TCP_func_getpeername(TCP *self)
 {
     int r, namelen;
-    char ip[INET6_ADDRSTRLEN];
     struct sockaddr peername;
-    struct sockaddr_in *addr4;
-    struct sockaddr_in6 *addr6;
 
     namelen = sizeof(peername);
 
@@ -287,20 +270,7 @@ TCP_func_getpeername(TCP *self)
         return NULL;
     }
 
-    if (peername.sa_family == AF_INET) {
-        addr4 = (struct sockaddr_in*)&peername;
-        r = uv_ip4_name(addr4, ip, INET_ADDRSTRLEN);
-        ASSERT(r == 0);
-        return Py_BuildValue("si", ip, ntohs(addr4->sin_port));
-    } else if (peername.sa_family == AF_INET6) {
-        addr6 = (struct sockaddr_in6*)&peername;
-        r = uv_ip6_name(addr6, ip, INET6_ADDRSTRLEN);
-        ASSERT(r == 0);
-        return Py_BuildValue("si", ip, ntohs(addr6->sin6_port));
-    } else {
-        PyErr_SetString(PyExc_TCPError, "unknown address type detected");
-        return NULL;
-    }
+    return makesockaddr(&peername, namelen);
 }
 
 

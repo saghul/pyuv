@@ -19,9 +19,7 @@ static void
 on_udp_read(uv_udp_t* handle, int nread, uv_buf_t buf, struct sockaddr* addr, unsigned flags)
 {
     PyGILState_STATE gstate = PyGILState_Ensure();
-    char ip[INET6_ADDRSTRLEN];
-    struct sockaddr_in addr4;
-    struct sockaddr_in6 addr6;
+    int addrlen;
     uv_err_t err;
     UDP *self;
     PyObject *result, *address_tuple, *data, *py_errorno;
@@ -41,15 +39,8 @@ on_udp_read(uv_udp_t* handle, int nread, uv_buf_t buf, struct sockaddr* addr, un
 
     if (nread > 0) {
         ASSERT(addr);
-        if (addr->sa_family == AF_INET) {
-            addr4 = *(struct sockaddr_in*)addr;
-            uv_ip4_name(&addr4, ip, INET_ADDRSTRLEN);
-            address_tuple = Py_BuildValue("(si)", ip, ntohs(addr4.sin_port));
-        } else {
-            addr6 = *(struct sockaddr_in6*)addr;
-            uv_ip6_name(&addr6, ip, INET6_ADDRSTRLEN);
-            address_tuple = Py_BuildValue("(si)", ip, ntohs(addr6.sin6_port));
-        }
+        addrlen = sizeof(*addr);
+        address_tuple = makesockaddr(addr, addrlen);
         data = PyBytes_FromStringAndSize(buf.base, nread);
         py_errorno = Py_None;
         Py_INCREF(Py_None);
@@ -426,10 +417,7 @@ static PyObject *
 UDP_func_getsockname(UDP *self)
 {
     int r, namelen;
-    char ip[INET6_ADDRSTRLEN];
     struct sockaddr sockname;
-    struct sockaddr_in *addr4;
-    struct sockaddr_in6 *addr6;
 
     namelen = sizeof(sockname);
 
@@ -442,18 +430,7 @@ UDP_func_getsockname(UDP *self)
         return NULL;
     }
 
-    if (sockname.sa_family == AF_INET) {
-        addr4 = (struct sockaddr_in*)&sockname;
-        uv_ip4_name(addr4, ip, INET_ADDRSTRLEN);
-        return Py_BuildValue("si", ip, ntohs(addr4->sin_port));
-    } else if (sockname.sa_family == AF_INET6) {
-        addr6 = (struct sockaddr_in6*)&sockname;
-        uv_ip6_name(addr6, ip, INET6_ADDRSTRLEN);
-        return Py_BuildValue("si", ip, ntohs(addr6->sin6_port));
-    } else {
-        PyErr_SetString(PyExc_UDPError, "unknown address type detected");
-        return NULL;
-    }
+    return makesockaddr(&sockname, namelen);
 }
 
 
