@@ -2,9 +2,6 @@
 pyuv: Python interface for libuv
 ================================
 
-.. image:: https://secure.travis-ci.org/saghul/pyuv.png?branch=master
-    :target: http://travis-ci.org/saghul/pyuv
-
 pyuv is a Python module which provides an interface to libuv.
 `libuv <http://github.com/joyent/libuv>`_ is a high performance
 asynchronous networking library, used as the platform layer for
@@ -33,6 +30,20 @@ pyuv's features:
 - IPC and TCP socket sharing between processes
 - Arbitrary file descriptor polling
 - Thread synchronization primitives
+
+
+CI status
+=========
+
+Stable branch (v0.10):
+
+.. image:: https://secure.travis-ci.org/saghul/pyuv.png?branch=v0.10
+    :target: http://travis-ci.org/saghul/pyuv
+
+Master:
+
+.. image:: https://secure.travis-ci.org/saghul/pyuv.png?branch=master
+    :target: http://travis-ci.org/saghul/pyuv
 
 
 Versioning
