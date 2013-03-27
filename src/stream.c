@@ -318,11 +318,7 @@ Stream_func_write(Stream *self, PyObject *args)
         return NULL;
     }
 
-#ifdef PYUV_PYTHON3
-    if (!PyArg_ParseTuple(args, "y*|O:write", view, &callback)) {
-#else
-    if (!PyArg_ParseTuple(args, "s*|O:write", view, &callback)) {
-#endif
+    if (!PyArg_ParseTuple(args, PYUV_BYTES"*|O:write", view, &callback)) {
         return NULL;
     }
 

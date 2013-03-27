@@ -233,11 +233,7 @@ UDP_func_send(UDP *self, PyObject *args)
         return NULL;
     }
 
-#ifdef PYUV_PYTHON3
-    if (!PyArg_ParseTuple(args, "Oy*|O:send", &addr, view, &callback)) {
-#else
-    if (!PyArg_ParseTuple(args, "Os*|O:send", &addr, view, &callback)) {
-#endif
+    if (!PyArg_ParseTuple(args, "O"PYUV_BYTES"*|O:send", &addr, view, &callback)) {
         return NULL;
     }
 

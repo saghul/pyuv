@@ -14,6 +14,9 @@
     #define PYUV_PYTHON3
     #define PyInt_FromSsize_t PyLong_FromSsize_t
     #define PyInt_FromLong PyLong_FromLong
+    #define PYUV_BYTES "y"
+#else
+    #define PYUV_BYTES "s"
 #endif
 
 /* libuv */
@@ -34,17 +37,13 @@ typedef int Bool;
 
 #if defined(__MINGW32__) || defined(_MSC_VER)
     #define PYUV_WINDOWS
+    #define PYUV_MAXSTDIO 2048
 #endif
 
 #ifdef _MSC_VER
     #define INLINE __inline
 #else
     #define INLINE inline
-#endif
-
-/* borrowed from pyev */
-#ifdef PYUV_WINDOWS
-    #define PYUV_MAXSTDIO 2048
 #endif
 
 #define ASSERT(x)                                                           \
@@ -550,13 +549,7 @@ pyseq2uvbuf(PyObject *seq, Py_buffer **rviews, uv_buf_t **rbufs, int *rbuf_count
     }
 
     for (i = 0; i < buf_count; i++) {
-        if (!PyArg_Parse(PySequence_Fast_GET_ITEM(data_fast, i),
-#ifdef PYUV_PYTHON3
-                         "y*;argument 1 must be an iterable of buffer-compatible objects",
-#else
-                         "s*;argument 1 must be an iterable of buffer-compatible objects",
-#endif
-                         &views[i])) {
+        if (!PyArg_Parse(PySequence_Fast_GET_ITEM(data_fast, i), PYUV_BYTES"*;argument 1 must be an iterable of buffer-compatible objects", &views[i])) {
             goto error;
         }
         uv_bufs[i].base = views[i].buf;

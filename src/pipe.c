@@ -345,11 +345,7 @@ Pipe_func_write2(Pipe *self, PyObject *args)
         return NULL;
     }
 
-#ifdef PYUV_PYTHON3
-    if (!PyArg_ParseTuple(args, "y*O|O:write", view, &send_handle, &callback)) {
-#else
-    if (!PyArg_ParseTuple(args, "s*O|O:write", view, &send_handle, &callback)) {
-#endif
+    if (!PyArg_ParseTuple(args, PYUV_BYTES"*O|O:write", view, &send_handle, &callback)) {
         return NULL;
     }
 
