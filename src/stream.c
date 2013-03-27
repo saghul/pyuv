@@ -1,10 +1,11 @@
 
 typedef struct {
+    uv_write_t req;
     PyObject *callback;
     PyObject *send_handle;
     Py_buffer *views;
     int view_count;
-} stream_write_data_t;
+} stream_write_ctx;
 
 
 static uv_buf_t
@@ -100,17 +101,17 @@ on_stream_write(uv_write_t* req, int status)
 {
     PyGILState_STATE gstate = PyGILState_Ensure();
     int i;
-    stream_write_data_t* req_data;
+    stream_write_ctx *ctx;
     Stream *self;
     PyObject *callback, *send_handle, *result, *py_errorno;
     uv_err_t err;
 
     ASSERT(req);
 
-    req_data = (stream_write_data_t *)req->data;
+    ctx = (stream_write_ctx *)req->data;
     self = (Stream *)req->handle->data;
-    callback = req_data->callback;
-    send_handle = req_data->send_handle;
+    callback = ctx->callback;
+    send_handle = ctx->send_handle;
 
     ASSERT(self);
 
@@ -132,12 +133,11 @@ on_stream_write(uv_write_t* req, int status)
 
     Py_DECREF(callback);
     Py_XDECREF(send_handle);
-    for (i = 0; i < req_data->view_count; i++) {
-        PyBuffer_Release(&req_data->views[i]);
+    for (i = 0; i < ctx->view_count; i++) {
+        PyBuffer_Release(&ctx->views[i]);
     }
-    PyMem_Free(req_data->views);
-    PyMem_Free(req_data);
-    PyMem_Free(req);
+    PyMem_Free(ctx->views);
+    PyMem_Free(ctx);
 
     /* Refcount was increased in the caller function */
     Py_DECREF(self);
@@ -248,35 +248,27 @@ static INLINE PyObject *
 pyuv_stream_write(Stream *self, Py_buffer *views, uv_buf_t *bufs, int buf_count, PyObject *callback, PyObject *send_handle)
 {
     int i, r;
-    uv_write_t *wr = NULL;
-    stream_write_data_t *req_data = NULL;
+    stream_write_ctx *ctx;
 
     Py_INCREF(callback);
     Py_XINCREF(send_handle);
 
-    wr = PyMem_Malloc(sizeof *wr);
-    if (!wr) {
+    ctx = PyMem_Malloc(sizeof *ctx);
+    if (!ctx) {
         PyErr_NoMemory();
         goto error;
     }
 
-    req_data = PyMem_Malloc(sizeof *req_data);
-    if (!req_data) {
-        PyErr_NoMemory();
-        goto error;
-    }
-
-    req_data->callback = callback;
-    req_data->send_handle = send_handle;
-    req_data->views = views;
-    req_data->view_count = buf_count;
-
-    wr->data = (void *)req_data;
+    ctx->callback = callback;
+    ctx->send_handle = send_handle;
+    ctx->views = views;
+    ctx->view_count = buf_count;
+    ctx->req.data = (void *)ctx;
 
     if (send_handle) {
-        r = uv_write2(wr, (uv_stream_t *)UV_HANDLE(self), bufs, buf_count, (uv_stream_t *)UV_HANDLE(send_handle), on_stream_write);
+        r = uv_write2(&ctx->req, (uv_stream_t *)UV_HANDLE(self), bufs, buf_count, (uv_stream_t *)UV_HANDLE(send_handle), on_stream_write);
     } else {
-        r = uv_write(wr, (uv_stream_t *)UV_HANDLE(self), bufs, buf_count, on_stream_write);
+        r = uv_write(&ctx->req, (uv_stream_t *)UV_HANDLE(self), bufs, buf_count, on_stream_write);
     }
 
     if (r != 0) {
@@ -296,8 +288,7 @@ error:
         PyBuffer_Release(&views[i]);
     }
     PyMem_Free(views);
-    PyMem_Free(req_data);
-    PyMem_Free(wr);
+    PyMem_Free(ctx);
     return NULL;
 }
 

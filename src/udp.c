@@ -1,9 +1,10 @@
 
 typedef struct {
+    uv_udp_send_t req;
     PyObject *callback;
     Py_buffer *views;
     int view_count;
-} udp_send_data_t;
+} udp_send_ctx;
 
 
 static uv_buf_t
@@ -73,16 +74,15 @@ on_udp_send(uv_udp_send_t* req, int status)
 {
     PyGILState_STATE gstate = PyGILState_Ensure();
     int i;
-    udp_send_data_t* req_data;
+    udp_send_ctx *ctx;
     UDP *self;
     PyObject *callback, *result, *py_errorno;
 
     ASSERT(req);
 
-    req_data = (udp_send_data_t *)req->data;
-
+    ctx = (udp_send_ctx *)req->data;
     self = (UDP *)req->handle->data;
-    callback = req_data->callback;
+    callback = ctx->callback;
 
     ASSERT(self);
 
@@ -103,12 +103,11 @@ on_udp_send(uv_udp_send_t* req, int status)
     }
 
     Py_DECREF(callback);
-    for (i = 0; i < req_data->view_count; i++) {
-        PyBuffer_Release(&req_data->views[i]);
+    for (i = 0; i < ctx->view_count; i++) {
+        PyBuffer_Release(&ctx->views[i]);
     }
-    PyMem_Free(req_data->views);
-    PyMem_Free(req_data);
-    PyMem_Free(req);
+    PyMem_Free(ctx->views);
+    PyMem_Free(ctx);
 
     /* Refcount was increased in the caller function */
     Py_DECREF(self);
@@ -217,15 +216,13 @@ UDP_func_send(UDP *self, PyObject *args)
     uv_buf_t buf;
     Py_buffer *view;
     PyObject *addr, *callback;
-    uv_udp_send_t *wr;
-    udp_send_data_t *req_data;
+    udp_send_ctx *ctx;
 
     RAISE_IF_HANDLE_NOT_INITIALIZED(self, NULL);
     RAISE_IF_HANDLE_CLOSED(self, PyExc_HandleClosedError, NULL);
 
     callback = Py_None;
-    wr = NULL;
-    req_data = NULL;
+    ctx = NULL;
 
     view = PyMem_Malloc(sizeof *view);
     if (!view) {
@@ -249,29 +246,22 @@ UDP_func_send(UDP *self, PyObject *args)
 
     Py_INCREF(callback);
 
-    wr = PyMem_Malloc(sizeof *wr);
-    if (!wr) {
-        PyErr_NoMemory();
-        goto error2;
-    }
-
-    req_data = PyMem_Malloc(sizeof *req_data);
-    if (!req_data) {
+    ctx = PyMem_Malloc(sizeof *ctx);
+    if (!ctx) {
         PyErr_NoMemory();
         goto error2;
     }
 
     buf = uv_buf_init(view->buf, view->len);
-    req_data->callback = callback;
-    req_data->view_count = 1;
-    req_data->views = view;
-
-    wr->data = (void *)req_data;
+    ctx->callback = callback;
+    ctx->view_count = 1;
+    ctx->views = view;
+    ctx->req.data = (void *)ctx;
 
     if (sa.sa_family == AF_INET) {
-        r = uv_udp_send(wr, (uv_udp_t *)UV_HANDLE(self), &buf, 1, *(struct sockaddr_in *)&sa, (uv_udp_send_cb)on_udp_send);
+        r = uv_udp_send(&ctx->req, (uv_udp_t *)UV_HANDLE(self), &buf, 1, *(struct sockaddr_in *)&sa, (uv_udp_send_cb)on_udp_send);
     } else {
-        r = uv_udp_send6(wr, (uv_udp_t *)UV_HANDLE(self), &buf, 1, *(struct sockaddr_in6 *)&sa, (uv_udp_send_cb)on_udp_send);
+        r = uv_udp_send6(&ctx->req, (uv_udp_t *)UV_HANDLE(self), &buf, 1, *(struct sockaddr_in6 *)&sa, (uv_udp_send_cb)on_udp_send);
     }
     if (r != 0) {
         RAISE_UV_EXCEPTION(UV_HANDLE_LOOP(self), PyExc_UDPError);
@@ -285,8 +275,7 @@ UDP_func_send(UDP *self, PyObject *args)
 
 error2:
     Py_DECREF(callback);
-    PyMem_Free(req_data);
-    PyMem_Free(wr);
+    PyMem_Free(ctx);
 error1:
     PyBuffer_Release(view);
     PyMem_Free(view);
@@ -302,12 +291,10 @@ UDP_func_sendlines(UDP *self, PyObject *args)
     PyObject *addr, *callback, *seq;
     Py_buffer *views;
     uv_buf_t *bufs;
-    uv_udp_send_t *wr;
-    udp_send_data_t *req_data;
+    udp_send_ctx *ctx;
 
     callback = Py_None;
-    wr = NULL;
-    req_data = NULL;
+    ctx = NULL;
 
     RAISE_IF_HANDLE_NOT_INITIALIZED(self, NULL);
     RAISE_IF_HANDLE_CLOSED(self, PyExc_HandleClosedError, NULL);
@@ -334,27 +321,21 @@ UDP_func_sendlines(UDP *self, PyObject *args)
 
     Py_INCREF(callback);
 
-    wr = PyMem_Malloc(sizeof *wr);
-    if (!wr) {
+    ctx = PyMem_Malloc(sizeof *ctx);
+    if (!ctx) {
         PyErr_NoMemory();
         goto error;
     }
 
-    req_data = PyMem_Malloc(sizeof *req_data);
-    if (!req_data) {
-        PyErr_NoMemory();
-        goto error;
-    }
-
-    req_data->callback = callback;
-    req_data->view_count = buf_count;
-    req_data->views = views;
-    wr->data = (void *)req_data;
+    ctx->callback = callback;
+    ctx->view_count = buf_count;
+    ctx->views = views;
+    ctx->req.data = (void *)ctx;
 
     if (sa.sa_family == AF_INET) {
-        r = uv_udp_send(wr, (uv_udp_t *)UV_HANDLE(self), bufs, buf_count, *(struct sockaddr_in *)&sa, (uv_udp_send_cb)on_udp_send);
+        r = uv_udp_send(&ctx->req, (uv_udp_t *)UV_HANDLE(self), bufs, buf_count, *(struct sockaddr_in *)&sa, (uv_udp_send_cb)on_udp_send);
     } else {
-        r = uv_udp_send6(wr, (uv_udp_t *)UV_HANDLE(self), bufs, buf_count, *(struct sockaddr_in6 *)&sa, (uv_udp_send_cb)on_udp_send);
+        r = uv_udp_send6(&ctx->req, (uv_udp_t *)UV_HANDLE(self), bufs, buf_count, *(struct sockaddr_in6 *)&sa, (uv_udp_send_cb)on_udp_send);
     }
 
     /* uv_write copies the uv_buf_t structures, so we can free them now */
@@ -378,8 +359,7 @@ error:
     }
     PyMem_Free(views);
     PyMem_Free(bufs);
-    PyMem_Free(req_data);
-    PyMem_Free(wr);
+    PyMem_Free(ctx);
     return NULL;
 }
 
