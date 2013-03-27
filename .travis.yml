@@ -11,4 +11,5 @@ script: nosetests -v -w tests/
 branches:
   only:
     - master
+    - v0.10
 
