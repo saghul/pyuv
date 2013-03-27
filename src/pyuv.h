@@ -608,6 +608,11 @@ pyuv_parse_addr_tuple(PyObject *addr, struct sockaddr *sa)
         return -1;
     }
 
+    if (flowinfo > 0xfffff) {
+        PyErr_SetString(PyExc_OverflowError, "flowinfo must be 0-1048575");
+        return -1;
+    }
+
     memset(sa, 0, sizeof(struct sockaddr));
 
     if (uv_inet_pton(AF_INET, host, &addr4).code == UV_OK) {
