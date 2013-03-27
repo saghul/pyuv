@@ -74,30 +74,26 @@ on_tcp_client_connection(uv_connect_t *req, int status)
 static PyObject *
 TCP_func_bind(TCP *self, PyObject *args)
 {
-    int r, bind_port, address_type;
-    char *bind_ip;
+    int r;
+    struct sockaddr sa;
+    PyObject *addr;
 
     RAISE_IF_HANDLE_NOT_INITIALIZED(self, NULL);
     RAISE_IF_HANDLE_CLOSED(self, PyExc_HandleClosedError, NULL);
 
-    if (!PyArg_ParseTuple(args, "(si):bind", &bind_ip, &bind_port)) {
+    if (!PyArg_ParseTuple(args, "O:bind", &addr)) {
         return NULL;
     }
 
-    if (bind_port < 0 || bind_port > 65535) {
-        PyErr_SetString(PyExc_ValueError, "port must be between 0 and 65535");
+    if (pyuv_parse_addr_tuple(addr, &sa) < 0) {
+        /* Error is set by the function itself */
         return NULL;
     }
 
-    if (pyuv_guess_ip_family(bind_ip, &address_type)) {
-        PyErr_SetString(PyExc_ValueError, "invalid IP address");
-        return NULL;
-    }
-
-    if (address_type == AF_INET) {
-        r = uv_tcp_bind((uv_tcp_t *)UV_HANDLE(self), uv_ip4_addr(bind_ip, bind_port));
+    if (sa.sa_family == AF_INET) {
+        r = uv_tcp_bind((uv_tcp_t *)UV_HANDLE(self), *(struct sockaddr_in *)&sa);
     } else {
-        r = uv_tcp_bind6((uv_tcp_t *)UV_HANDLE(self), uv_ip6_addr(bind_ip, bind_port));
+        r = uv_tcp_bind6((uv_tcp_t *)UV_HANDLE(self), *(struct sockaddr_in6 *)&sa);
     }
 
     if (r != 0) {
@@ -181,15 +177,15 @@ TCP_func_accept(TCP *self, PyObject *args)
 static PyObject *
 TCP_func_connect(TCP *self, PyObject *args)
 {
-    int r, connect_port, address_type;
-    char *connect_ip;
+    int r;
+    struct sockaddr sa;
     uv_connect_t *connect_req = NULL;
-    PyObject *callback;
+    PyObject *addr, *callback;
 
     RAISE_IF_HANDLE_NOT_INITIALIZED(self, NULL);
     RAISE_IF_HANDLE_CLOSED(self, PyExc_HandleClosedError, NULL);
 
-    if (!PyArg_ParseTuple(args, "(si)O:connect", &connect_ip, &connect_port, &callback)) {
+    if (!PyArg_ParseTuple(args, "OO:connect", &addr, &callback)) {
         return NULL;
     }
 
@@ -198,13 +194,8 @@ TCP_func_connect(TCP *self, PyObject *args)
         return NULL;
     }
 
-    if (connect_port < 0 || connect_port > 65535) {
-        PyErr_SetString(PyExc_ValueError, "port must be between 0 and 65535");
-        return NULL;
-    }
-
-    if (pyuv_guess_ip_family(connect_ip, &address_type)) {
-        PyErr_SetString(PyExc_ValueError, "invalid IP address");
+    if (pyuv_parse_addr_tuple(addr, &sa) < 0) {
+        /* Error is set by the function itself */
         return NULL;
     }
 
@@ -218,10 +209,10 @@ TCP_func_connect(TCP *self, PyObject *args)
 
     connect_req->data = (void *)callback;
 
-    if (address_type == AF_INET) {
-        r = uv_tcp_connect(connect_req, (uv_tcp_t *)UV_HANDLE(self), uv_ip4_addr(connect_ip, connect_port), on_tcp_client_connection);
+    if (sa.sa_family == AF_INET) {
+        r = uv_tcp_connect(connect_req, (uv_tcp_t *)UV_HANDLE(self), *(struct sockaddr_in *)&sa, on_tcp_client_connection);
     } else {
-        r = uv_tcp_connect6(connect_req, (uv_tcp_t *)UV_HANDLE(self), uv_ip6_addr(connect_ip, connect_port), on_tcp_client_connection);
+        r = uv_tcp_connect6(connect_req, (uv_tcp_t *)UV_HANDLE(self), *(struct sockaddr_in6 *)&sa, on_tcp_client_connection);
     }
 
     if (r != 0) {
@@ -245,10 +236,7 @@ static PyObject *
 TCP_func_getsockname(TCP *self)
 {
     int r, namelen;
-    char ip[INET6_ADDRSTRLEN];
     struct sockaddr sockname;
-    struct sockaddr_in *addr4;
-    struct sockaddr_in6 *addr6;
 
     namelen = sizeof(sockname);
 
@@ -261,18 +249,7 @@ TCP_func_getsockname(TCP *self)
         return NULL;
     }
 
-    if (sockname.sa_family == AF_INET) {
-        addr4 = (struct sockaddr_in*)&sockname;
-        uv_ip4_name(addr4, ip, INET_ADDRSTRLEN);
-        return Py_BuildValue("si", ip, ntohs(addr4->sin_port));
-    } else if (sockname.sa_family == AF_INET6) {
-        addr6 = (struct sockaddr_in6*)&sockname;
-        uv_ip6_name(addr6, ip, INET6_ADDRSTRLEN);
-        return Py_BuildValue("si", ip, ntohs(addr6->sin6_port));
-    } else {
-        PyErr_SetString(PyExc_TCPError, "unknown address type detected");
-        return NULL;
-    }
+    return makesockaddr(&sockname, namelen);
 }
 
 
@@ -280,10 +257,7 @@ static PyObject *
 TCP_func_getpeername(TCP *self)
 {
     int r, namelen;
-    char ip[INET6_ADDRSTRLEN];
     struct sockaddr peername;
-    struct sockaddr_in *addr4;
-    struct sockaddr_in6 *addr6;
 
     namelen = sizeof(peername);
 
@@ -296,20 +270,7 @@ TCP_func_getpeername(TCP *self)
         return NULL;
     }
 
-    if (peername.sa_family == AF_INET) {
-        addr4 = (struct sockaddr_in*)&peername;
-        r = uv_ip4_name(addr4, ip, INET_ADDRSTRLEN);
-        ASSERT(r == 0);
-        return Py_BuildValue("si", ip, ntohs(addr4->sin_port));
-    } else if (peername.sa_family == AF_INET6) {
-        addr6 = (struct sockaddr_in6*)&peername;
-        r = uv_ip6_name(addr6, ip, INET6_ADDRSTRLEN);
-        ASSERT(r == 0);
-        return Py_BuildValue("si", ip, ntohs(addr6->sin6_port));
-    } else {
-        PyErr_SetString(PyExc_TCPError, "unknown address type detected");
-        return NULL;
-    }
+    return makesockaddr(&peername, namelen);
 }
 
 

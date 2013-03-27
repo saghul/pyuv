@@ -19,9 +19,7 @@ static void
 on_udp_read(uv_udp_t* handle, int nread, uv_buf_t buf, struct sockaddr* addr, unsigned flags)
 {
     PyGILState_STATE gstate = PyGILState_Ensure();
-    char ip[INET6_ADDRSTRLEN];
-    struct sockaddr_in addr4;
-    struct sockaddr_in6 addr6;
+    int addrlen;
     uv_err_t err;
     UDP *self;
     PyObject *result, *address_tuple, *data, *py_errorno;
@@ -41,15 +39,8 @@ on_udp_read(uv_udp_t* handle, int nread, uv_buf_t buf, struct sockaddr* addr, un
 
     if (nread > 0) {
         ASSERT(addr);
-        if (addr->sa_family == AF_INET) {
-            addr4 = *(struct sockaddr_in*)addr;
-            uv_ip4_name(&addr4, ip, INET_ADDRSTRLEN);
-            address_tuple = Py_BuildValue("(si)", ip, ntohs(addr4.sin_port));
-        } else {
-            addr6 = *(struct sockaddr_in6*)addr;
-            uv_ip6_name(&addr6, ip, INET6_ADDRSTRLEN);
-            address_tuple = Py_BuildValue("(si)", ip, ntohs(addr6.sin6_port));
-        }
+        addrlen = sizeof(*addr);
+        address_tuple = makesockaddr(addr, addrlen);
         data = PyBytes_FromStringAndSize(buf.base, nread);
         py_errorno = Py_None;
         Py_INCREF(Py_None);
@@ -129,32 +120,28 @@ on_udp_send(uv_udp_send_t* req, int status)
 static PyObject *
 UDP_func_bind(UDP *self, PyObject *args)
 {
-    int r, bind_port, address_type, flags;
-    char *bind_ip;
+    int r, flags;
+    struct sockaddr sa;
+    PyObject *addr;
 
     RAISE_IF_HANDLE_NOT_INITIALIZED(self, NULL);
     RAISE_IF_HANDLE_CLOSED(self, PyExc_HandleClosedError, NULL);
 
     flags = 0;
 
-    if (!PyArg_ParseTuple(args, "(si)|i:bind", &bind_ip, &bind_port, &flags)) {
+    if (!PyArg_ParseTuple(args, "O|i:bind", &addr, &flags)) {
         return NULL;
     }
 
-    if (bind_port < 0 || bind_port > 65535) {
-        PyErr_SetString(PyExc_ValueError, "port must be between 0 and 65535");
+    if (pyuv_parse_addr_tuple(addr, &sa) < 0) {
+        /* Error is set by the function itself */
         return NULL;
     }
 
-    if (pyuv_guess_ip_family(bind_ip, &address_type)) {
-        PyErr_SetString(PyExc_ValueError, "invalid IP address");
-        return NULL;
-    }
-
-    if (address_type == AF_INET) {
-        r = uv_udp_bind((uv_udp_t *)UV_HANDLE(self), uv_ip4_addr(bind_ip, bind_port), flags);
+    if (sa.sa_family == AF_INET) {
+        r = uv_udp_bind((uv_udp_t *)UV_HANDLE(self), *(struct sockaddr_in *)&sa, flags);
     } else {
-        r = uv_udp_bind6((uv_udp_t *)UV_HANDLE(self), uv_ip6_addr(bind_ip, bind_port), flags);
+        r = uv_udp_bind6((uv_udp_t *)UV_HANDLE(self), *(struct sockaddr_in6 *)&sa, flags);
     }
 
     if (r != 0) {
@@ -225,16 +212,20 @@ UDP_func_stop_recv(UDP *self)
 static PyObject *
 UDP_func_send(UDP *self, PyObject *args)
 {
-    int r, dest_port, address_type;
-    char *dest_ip;
+    int r;
+    struct sockaddr sa;
     uv_buf_t buf;
     Py_buffer *view;
-    PyObject *callback = Py_None;
-    uv_udp_send_t *wr = NULL;
-    udp_send_data_t *req_data = NULL;
+    PyObject *addr, *callback;
+    uv_udp_send_t *wr;
+    udp_send_data_t *req_data;
 
     RAISE_IF_HANDLE_NOT_INITIALIZED(self, NULL);
     RAISE_IF_HANDLE_CLOSED(self, PyExc_HandleClosedError, NULL);
+
+    callback = Py_None;
+    wr = NULL;
+    req_data = NULL;
 
     view = PyMem_Malloc(sizeof *view);
     if (!view) {
@@ -243,9 +234,9 @@ UDP_func_send(UDP *self, PyObject *args)
     }
 
 #ifdef PYUV_PYTHON3
-    if (!PyArg_ParseTuple(args, "(si)y*|O:send", &dest_ip, &dest_port, view, &callback)) {
+    if (!PyArg_ParseTuple(args, "Oy*|O:send", &addr, view, &callback)) {
 #else
-    if (!PyArg_ParseTuple(args, "(si)s*|O:send", &dest_ip, &dest_port, view, &callback)) {
+    if (!PyArg_ParseTuple(args, "Os*|O:send", &addr, view, &callback)) {
 #endif
         return NULL;
     }
@@ -255,13 +246,8 @@ UDP_func_send(UDP *self, PyObject *args)
         goto error1;
     }
 
-    if (dest_port < 0 || dest_port > 65535) {
-        PyErr_SetString(PyExc_ValueError, "port must be between 0 and 65535");
-        goto error1;
-    }
-
-    if (pyuv_guess_ip_family(dest_ip, &address_type)) {
-        PyErr_SetString(PyExc_ValueError, "invalid IP address");
+    if (pyuv_parse_addr_tuple(addr, &sa) < 0) {
+        /* Error is set by the function itself */
         goto error1;
     }
 
@@ -286,10 +272,10 @@ UDP_func_send(UDP *self, PyObject *args)
 
     wr->data = (void *)req_data;
 
-    if (address_type == AF_INET) {
-        r = uv_udp_send(wr, (uv_udp_t *)UV_HANDLE(self), &buf, 1, uv_ip4_addr(dest_ip, dest_port), (uv_udp_send_cb)on_udp_send);
+    if (sa.sa_family == AF_INET) {
+        r = uv_udp_send(wr, (uv_udp_t *)UV_HANDLE(self), &buf, 1, *(struct sockaddr_in *)&sa, (uv_udp_send_cb)on_udp_send);
     } else {
-        r = uv_udp_send6(wr, (uv_udp_t *)UV_HANDLE(self), &buf, 1, uv_ip6_addr(dest_ip, dest_port), (uv_udp_send_cb)on_udp_send);
+        r = uv_udp_send6(wr, (uv_udp_t *)UV_HANDLE(self), &buf, 1, *(struct sockaddr_in6 *)&sa, (uv_udp_send_cb)on_udp_send);
     }
     if (r != 0) {
         RAISE_UV_EXCEPTION(UV_HANDLE_LOOP(self), PyExc_UDPError);
@@ -315,20 +301,22 @@ error1:
 static PyObject *
 UDP_func_sendlines(UDP *self, PyObject *args)
 {
-    int i, r, buf_count, dest_port, address_type;
-    char *dest_ip;
-    PyObject *callback, *seq;
+    int i, r, buf_count;
+    struct sockaddr sa;
+    PyObject *addr, *callback, *seq;
     Py_buffer *views;
     uv_buf_t *bufs;
-    uv_udp_send_t *wr = NULL;
-    udp_send_data_t *req_data = NULL;
+    uv_udp_send_t *wr;
+    udp_send_data_t *req_data;
 
     callback = Py_None;
+    wr = NULL;
+    req_data = NULL;
 
     RAISE_IF_HANDLE_NOT_INITIALIZED(self, NULL);
     RAISE_IF_HANDLE_CLOSED(self, PyExc_HandleClosedError, NULL);
 
-    if (!PyArg_ParseTuple(args, "(si)O|O:sendlines", &dest_ip, &dest_port, &seq, &callback)) {
+    if (!PyArg_ParseTuple(args, "OO|O:sendlines", &addr, &seq, &callback)) {
         return NULL;
     }
 
@@ -337,13 +325,8 @@ UDP_func_sendlines(UDP *self, PyObject *args)
         return NULL;
     }
 
-    if (dest_port < 0 || dest_port > 65535) {
-        PyErr_SetString(PyExc_ValueError, "port must be between 0 and 65535");
-        return NULL;
-    }
-
-    if (pyuv_guess_ip_family(dest_ip, &address_type)) {
-        PyErr_SetString(PyExc_ValueError, "invalid IP address");
+    if (pyuv_parse_addr_tuple(addr, &sa) < 0) {
+        /* Error is set by the function itself */
         return NULL;
     }
 
@@ -372,10 +355,10 @@ UDP_func_sendlines(UDP *self, PyObject *args)
     req_data->views = views;
     wr->data = (void *)req_data;
 
-    if (address_type == AF_INET) {
-        r = uv_udp_send(wr, (uv_udp_t *)UV_HANDLE(self), bufs, buf_count, uv_ip4_addr(dest_ip, dest_port), (uv_udp_send_cb)on_udp_send);
+    if (sa.sa_family == AF_INET) {
+        r = uv_udp_send(wr, (uv_udp_t *)UV_HANDLE(self), bufs, buf_count, *(struct sockaddr_in *)&sa, (uv_udp_send_cb)on_udp_send);
     } else {
-        r = uv_udp_send6(wr, (uv_udp_t *)UV_HANDLE(self), bufs, buf_count, uv_ip6_addr(dest_ip, dest_port), (uv_udp_send_cb)on_udp_send);
+        r = uv_udp_send6(wr, (uv_udp_t *)UV_HANDLE(self), bufs, buf_count, *(struct sockaddr_in6 *)&sa, (uv_udp_send_cb)on_udp_send);
     }
 
     /* uv_write copies the uv_buf_t structures, so we can free them now */
@@ -434,10 +417,7 @@ static PyObject *
 UDP_func_getsockname(UDP *self)
 {
     int r, namelen;
-    char ip[INET6_ADDRSTRLEN];
     struct sockaddr sockname;
-    struct sockaddr_in *addr4;
-    struct sockaddr_in6 *addr6;
 
     namelen = sizeof(sockname);
 
@@ -450,18 +430,7 @@ UDP_func_getsockname(UDP *self)
         return NULL;
     }
 
-    if (sockname.sa_family == AF_INET) {
-        addr4 = (struct sockaddr_in*)&sockname;
-        uv_ip4_name(addr4, ip, INET_ADDRSTRLEN);
-        return Py_BuildValue("si", ip, ntohs(addr4->sin_port));
-    } else if (sockname.sa_family == AF_INET6) {
-        addr6 = (struct sockaddr_in6*)&sockname;
-        uv_ip6_name(addr6, ip, INET6_ADDRSTRLEN);
-        return Py_BuildValue("si", ip, ntohs(addr6->sin6_port));
-    } else {
-        PyErr_SetString(PyExc_UDPError, "unknown address type detected");
-        return NULL;
-    }
+    return makesockaddr(&sockname, namelen);
 }
 
 
