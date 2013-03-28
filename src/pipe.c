@@ -331,6 +331,7 @@ static PyObject *
 Pipe_func_write2(Pipe *self, PyObject *args)
 {
     uv_buf_t buf;
+    stream_write_ctx *ctx;
     Py_buffer *view;
     PyObject *callback, *send_handle;
 
@@ -339,13 +340,16 @@ Pipe_func_write2(Pipe *self, PyObject *args)
     RAISE_IF_HANDLE_NOT_INITIALIZED(self, NULL);
     RAISE_IF_HANDLE_CLOSED(self, PyExc_HandleClosedError, NULL);
 
-    view = PyMem_Malloc(sizeof *view);
-    if (!view) {
+    ctx = PyMem_Malloc(sizeof *ctx);
+    if (!ctx) {
         PyErr_NoMemory();
         return NULL;
     }
 
+    view = &ctx->view[0];
+
     if (!PyArg_ParseTuple(args, PYUV_BYTES"*O|O:write", view, &send_handle, &callback)) {
+        PyMem_Free(ctx);
         return NULL;
     }
 
@@ -368,11 +372,11 @@ Pipe_func_write2(Pipe *self, PyObject *args)
 
     buf = uv_buf_init(view->buf, view->len);
 
-    return pyuv_stream_write((Stream *)self, view, &buf, 1, callback, send_handle);
+    return pyuv_stream_write((Stream *)self, ctx, view, &buf, 1, callback, send_handle);
 
 error:
         PyBuffer_Release(view);
-        PyMem_Free(view);
+        PyMem_Free(ctx);
         return NULL;
 }
 

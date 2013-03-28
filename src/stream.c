@@ -4,6 +4,7 @@ typedef struct {
     PyObject *callback;
     PyObject *send_handle;
     Py_buffer *views;
+    Py_buffer view[1];
     int view_count;
 } stream_write_ctx;
 
@@ -136,7 +137,9 @@ on_stream_write(uv_write_t* req, int status)
     for (i = 0; i < ctx->view_count; i++) {
         PyBuffer_Release(&ctx->views[i]);
     }
-    PyMem_Free(ctx->views);
+    if (ctx->views != ctx->view) {
+        PyMem_Free(ctx->views);
+    }
     PyMem_Free(ctx);
 
     /* Refcount was increased in the caller function */
@@ -245,19 +248,12 @@ Stream_func_stop_read(Stream *self)
 
 
 static INLINE PyObject *
-pyuv_stream_write(Stream *self, Py_buffer *views, uv_buf_t *bufs, int buf_count, PyObject *callback, PyObject *send_handle)
+pyuv_stream_write(Stream *self, stream_write_ctx *ctx, Py_buffer *views, uv_buf_t *bufs, int buf_count, PyObject *callback, PyObject *send_handle)
 {
     int i, r;
-    stream_write_ctx *ctx;
 
     Py_INCREF(callback);
     Py_XINCREF(send_handle);
-
-    ctx = PyMem_Malloc(sizeof *ctx);
-    if (!ctx) {
-        PyErr_NoMemory();
-        goto error;
-    }
 
     ctx->callback = callback;
     ctx->send_handle = send_handle;
@@ -287,7 +283,9 @@ error:
     for (i = 0; i < buf_count; i++) {
         PyBuffer_Release(&views[i]);
     }
-    PyMem_Free(views);
+    if (ctx->views != ctx->view) {
+        PyMem_Free(views);
+    }
     PyMem_Free(ctx);
     return NULL;
 }
@@ -297,32 +295,36 @@ static PyObject *
 Stream_func_write(Stream *self, PyObject *args)
 {
     uv_buf_t buf;
+    stream_write_ctx *ctx;
     Py_buffer *view;
     PyObject *callback = Py_None;
 
     RAISE_IF_HANDLE_NOT_INITIALIZED(self, NULL);
     RAISE_IF_HANDLE_CLOSED(self, PyExc_HandleClosedError, NULL);
 
-    view = PyMem_Malloc(sizeof *view);
-    if (!view) {
+    ctx = PyMem_Malloc(sizeof *ctx);
+    if (!ctx) {
         PyErr_NoMemory();
         return NULL;
     }
 
+    view = &ctx->view[0];
+
     if (!PyArg_ParseTuple(args, PYUV_BYTES"*|O:write", view, &callback)) {
+        PyMem_Free(ctx);
         return NULL;
     }
 
     if (callback != Py_None && !PyCallable_Check(callback)) {
         PyBuffer_Release(view);
-        PyMem_Free(view);
+        PyMem_Free(ctx);
         PyErr_SetString(PyExc_TypeError, "a callable or None is required");
         return NULL;
     }
 
     buf = uv_buf_init(view->buf, view->len);
 
-    return pyuv_stream_write(self, view, &buf, 1, callback, NULL);
+    return pyuv_stream_write(self, ctx, view, &buf, 1, callback, NULL);
 }
 
 
@@ -333,6 +335,7 @@ Stream_func_writelines(Stream *self, PyObject *args)
     Py_buffer *views;
     PyObject *callback, *seq, *ret;
     uv_buf_t *bufs;
+    stream_write_ctx *ctx;
 
     callback = Py_None;
 
@@ -348,13 +351,20 @@ Stream_func_writelines(Stream *self, PyObject *args)
         return NULL;
     }
 
-    r = pyseq2uvbuf(seq, &views, &bufs, &buf_count);
-    if (r != 0) {
-        /* error is already set */
+    ctx = PyMem_Malloc(sizeof *ctx);
+    if (!ctx) {
+        PyErr_NoMemory();
         return NULL;
     }
 
-    ret = pyuv_stream_write(self, views, bufs, buf_count, callback, NULL);
+    r = pyseq2uvbuf(seq, &views, &bufs, &buf_count);
+    if (r != 0) {
+        /* error is already set */
+        PyMem_Free(ctx);
+        return NULL;
+    }
+
+    ret = pyuv_stream_write(self, ctx, views, bufs, buf_count, callback, NULL);
 
     /* uv_write copies the uv_buf_t structures, so we can free them now */
     PyMem_Free(bufs);
