@@ -9,13 +9,18 @@ class WeakrefTest(unittest2.TestCase):
     handle_types = ('Check', 'Idle', 'Pipe', 'Prepare', 'TCP', 'Timer', 'UDP')
 
     def test_weakref(self):
-        loop = pyuv.Loop.default_loop()
+        loop = pyuv.Loop()
+        refs = []
         for type in self.handle_types:
             klass = getattr(pyuv, type)
             obj = klass(loop)
-            weak = weakref.ref(obj)
+            refs.append(weakref.ref(obj))
             del obj
-            self.assertEqual(weak(), None)
+        for ref in refs:
+            self.assertNotEqual(ref(), None)
+        loop.run()
+        for ref in refs:
+            self.assertEqual(ref(), None)
 
 
 if __name__ == '__main__':
