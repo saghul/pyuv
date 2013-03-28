@@ -3,6 +3,7 @@ typedef struct {
     uv_udp_send_t req;
     PyObject *callback;
     Py_buffer *views;
+    Py_buffer view[1];
     int view_count;
 } udp_send_ctx;
 
@@ -106,7 +107,9 @@ on_udp_send(uv_udp_send_t* req, int status)
     for (i = 0; i < ctx->view_count; i++) {
         PyBuffer_Release(&ctx->views[i]);
     }
-    PyMem_Free(ctx->views);
+    if (ctx->views != ctx->view) {
+        PyMem_Free(ctx->views);
+    }
     PyMem_Free(ctx);
 
     /* Refcount was increased in the caller function */
@@ -222,35 +225,31 @@ UDP_func_send(UDP *self, PyObject *args)
     RAISE_IF_HANDLE_CLOSED(self, PyExc_HandleClosedError, NULL);
 
     callback = Py_None;
-    ctx = NULL;
 
-    view = PyMem_Malloc(sizeof *view);
-    if (!view) {
+    ctx = PyMem_Malloc(sizeof *ctx);
+    if (!ctx) {
         PyErr_NoMemory();
         return NULL;
     }
 
+    view = &ctx->view[0];
+
     if (!PyArg_ParseTuple(args, "O"PYUV_BYTES"*|O:send", &addr, view, &callback)) {
+        PyMem_Free(ctx);
         return NULL;
     }
 
     if (callback != Py_None && !PyCallable_Check(callback)) {
         PyErr_SetString(PyExc_TypeError, "a callable or None is required");
-        goto error1;
+        goto error;
     }
 
     if (pyuv_parse_addr_tuple(addr, &sa) < 0) {
         /* Error is set by the function itself */
-        goto error1;
+        goto error;
     }
 
     Py_INCREF(callback);
-
-    ctx = PyMem_Malloc(sizeof *ctx);
-    if (!ctx) {
-        PyErr_NoMemory();
-        goto error2;
-    }
 
     buf = uv_buf_init(view->buf, view->len);
     ctx->callback = callback;
@@ -265,7 +264,8 @@ UDP_func_send(UDP *self, PyObject *args)
     }
     if (r != 0) {
         RAISE_UV_EXCEPTION(UV_HANDLE_LOOP(self), PyExc_UDPError);
-        goto error2;
+        Py_DECREF(callback);
+        goto error;
     }
 
     /* Increase refcount so that object is not removed before the callback is called */
@@ -273,12 +273,9 @@ UDP_func_send(UDP *self, PyObject *args)
 
     Py_RETURN_NONE;
 
-error2:
-    Py_DECREF(callback);
-    PyMem_Free(ctx);
-error1:
+error:
     PyBuffer_Release(view);
-    PyMem_Free(view);
+    PyMem_Free(ctx);
     return NULL;
 }
 
