@@ -1,14 +1,14 @@
 
 static void
-on_pipe_connection(uv_stream_t* server, int status)
+on_pipe_connection(uv_stream_t* handle, int status)
 {
     PyGILState_STATE gstate = PyGILState_Ensure();
     Pipe *self;
     PyObject *result, *py_errorno;
-    ASSERT(server);
+    ASSERT(handle);
 
-    self = (Pipe *)server->data;
-    ASSERT(self);
+    self = PYUV_CONTAINER_OF(handle, Pipe, pipe_h);
+
     /* Object could go out of scope in the callback, increase refcount to avoid it */
     Py_INCREF(self);
 
@@ -40,7 +40,7 @@ on_pipe_client_connection(uv_connect_t *req, int status)
     PyObject *callback, *result, *py_errorno;
     ASSERT(req);
 
-    self = (Pipe *)req->handle->data;
+    self = PYUV_CONTAINER_OF(req->handle, Pipe, pipe_h);
     callback = (PyObject *)req->data;
 
     ASSERT(self);
@@ -75,12 +75,12 @@ on_pipe_read2(uv_pipe_t* handle, int nread, uv_buf_t buf, uv_handle_type pending
 {
     PyGILState_STATE gstate = PyGILState_Ensure();
     uv_err_t err;
-    Stream *self;
+    Pipe *self;
     PyObject *result, *data, *py_errorno, *py_pending;
     ASSERT(handle);
 
-    self = (Stream *)handle->data;
-    ASSERT(self);
+    self = PYUV_CONTAINER_OF(handle, Pipe, pipe_h);
+
     /* Object could go out of scope in the callback, increase refcount to avoid it */
     Py_INCREF(self);
 
@@ -97,7 +97,7 @@ on_pipe_read2(uv_pipe_t* handle, int nread, uv_buf_t buf, uv_handle_type pending
         py_errorno = PyInt_FromLong((long)err.code);
     }
 
-    result = PyObject_CallFunctionObjArgs(self->on_read_cb, self, data, py_pending, py_errorno, NULL);
+    result = PyObject_CallFunctionObjArgs(((Stream *)self)->on_read_cb, self, data, py_pending, py_errorno, NULL);
     if (result == NULL) {
         handle_uncaught_exception(HANDLE(self)->loop);
     }
@@ -238,7 +238,7 @@ Pipe_func_connect(Pipe *self, PyObject *args)
         return NULL;
     }
 
-    connect_req->data = (void *)callback;
+    connect_req->data = callback;
 
     uv_pipe_connect(connect_req, &self->pipe_h, name, on_pipe_client_connection);
 
@@ -416,7 +416,7 @@ Pipe_tp_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
         return NULL;
     }
 
-    self->pipe_h.data = (void *)self;
+    self->pipe_h.data = self;
     UV_HANDLE(self) = (uv_handle_t *)&self->pipe_h;
 
     return (PyObject *)self;

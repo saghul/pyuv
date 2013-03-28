@@ -185,15 +185,15 @@ static PyTypeObject StdIOType = {
     } while(0)                                                                      \
 
 static void
-on_process_exit(uv_process_t *process, int exit_status, int term_signal)
+on_process_exit(uv_process_t *handle, int exit_status, int term_signal)
 {
     PyGILState_STATE gstate = PyGILState_Ensure();
     Process *self;
     PyObject *result, *py_exit_status, *py_term_signal;
 
-    ASSERT(process);
-    self = (Process *)process->data;
-    ASSERT(self);
+    ASSERT(handle);
+
+    self = PYUV_CONTAINER_OF(handle, Process, process_h);
 
     py_exit_status = PyInt_FromLong(exit_status);
     py_term_signal = PyInt_FromLong(term_signal);
@@ -512,7 +512,7 @@ Process_tp_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
         return NULL;
     }
 
-    self->process_h.data = (void *)self;
+    self->process_h.data = self;
     UV_HANDLE(self) = (uv_handle_t *)&self->process_h;
     self->spawned = False;
 
@@ -603,5 +603,4 @@ static PyTypeObject ProcessType = {
     0,                                                              /*tp_alloc*/
     Process_tp_new,                                                 /*tp_new*/
 };
-
 

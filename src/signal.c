@@ -8,8 +8,8 @@ on_signal_callback(uv_signal_t *handle, int signum)
 
     ASSERT(handle);
 
-    self = (Signal *)handle->data;
-    ASSERT(self);
+    self = PYUV_CONTAINER_OF(handle, Signal, signal_h);
+
     /* Object could go out of scope in the callback, increase refcount to avoid it */
     Py_INCREF(self);
 
@@ -113,7 +113,7 @@ Signal_tp_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
         return NULL;
     }
 
-    self->signal_h.data = (void *)self;
+    self->signal_h.data = self;
     UV_HANDLE(self) = (uv_handle_t *)&self->signal_h;
 
     return (PyObject *)self;

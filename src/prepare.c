@@ -9,8 +9,8 @@ on_prepare_callback(uv_prepare_t *handle, int status)
     ASSERT(handle);
     ASSERT(status == 0);
 
-    self = (Prepare *)handle->data;
-    ASSERT(self);
+    self = PYUV_CONTAINER_OF(handle, Prepare, prepare_h);
+
     /* Object could go out of scope in the callback, increase refcount to avoid it */
     Py_INCREF(self);
 
@@ -117,7 +117,7 @@ Prepare_tp_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
         return NULL;
     }
 
-    self->prepare_h.data = (void *)self;
+    self->prepare_h.data = self;
     UV_HANDLE(self) = (uv_handle_t *)&self->prepare_h;
 
     return (PyObject *)self;
@@ -190,5 +190,4 @@ static PyTypeObject PrepareType = {
     0,                                                              /*tp_alloc*/
     Prepare_tp_new,                                                 /*tp_new*/
 };
-
 

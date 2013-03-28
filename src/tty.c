@@ -85,7 +85,7 @@ TTY_tp_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
         return NULL;
     }
 
-    self->tty_h.data = (void *)self;
+    self->tty_h.data = self;
     UV_HANDLE(self) = (uv_handle_t *)&self->tty_h;
 
     return (PyObject *)self;

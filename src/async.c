@@ -1,16 +1,16 @@
 
 static void
-on_async_callback(uv_async_t *async, int status)
+on_async_callback(uv_async_t *handle, int status)
 {
     PyGILState_STATE gstate = PyGILState_Ensure();
     Async *self;
     PyObject *result;
 
-    ASSERT(async);
+    ASSERT(handle);
     ASSERT(status == 0);
 
-    self = (Async *)async->data;
-    ASSERT(self);
+    self = PYUV_CONTAINER_OF(handle, Async, async_h);
+
     /* Object could go out of scope in the callback, increase refcount to avoid it */
     Py_INCREF(self);
 
@@ -90,7 +90,7 @@ Async_tp_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
         return NULL;
     }
 
-    self->async_h.data = (void *)self;
+    self->async_h.data = self;
     UV_HANDLE(self) = (uv_handle_t *)&self->async_h;
 
     return (PyObject *)self;

@@ -29,8 +29,7 @@ on_udp_read(uv_udp_t* handle, int nread, uv_buf_t buf, struct sockaddr* addr, un
     ASSERT(handle);
     ASSERT(flags == 0);
 
-    self = (UDP *)handle->data;
-    ASSERT(self);
+    self = PYUV_CONTAINER_OF(handle, UDP, udp_h);
 
     /* Object could go out of scope in the callback, increase refcount to avoid it */
     Py_INCREF(self);
@@ -81,8 +80,8 @@ on_udp_send(uv_udp_send_t* req, int status)
 
     ASSERT(req);
 
-    ctx = (udp_send_ctx *)req->data;
-    self = (UDP *)req->handle->data;
+    ctx = PYUV_CONTAINER_OF(req, udp_send_ctx, req);
+    self = PYUV_CONTAINER_OF(req->handle, UDP, udp_h);
     callback = ctx->callback;
 
     ASSERT(self);
@@ -255,7 +254,6 @@ UDP_func_send(UDP *self, PyObject *args)
     ctx->callback = callback;
     ctx->view_count = 1;
     ctx->views = view;
-    ctx->req.data = (void *)ctx;
 
     if (sa.sa_family == AF_INET) {
         r = uv_udp_send(&ctx->req, &self->udp_h, &buf, 1, *(struct sockaddr_in *)&sa, (uv_udp_send_cb)on_udp_send);
@@ -327,7 +325,6 @@ UDP_func_sendlines(UDP *self, PyObject *args)
     ctx->callback = callback;
     ctx->view_count = buf_count;
     ctx->views = views;
-    ctx->req.data = (void *)ctx;
 
     if (sa.sa_family == AF_INET) {
         r = uv_udp_send(&ctx->req, &self->udp_h, bufs, buf_count, *(struct sockaddr_in *)&sa, (uv_udp_send_cb)on_udp_send);
@@ -561,7 +558,7 @@ UDP_tp_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
         return NULL;
     }
 
-    self->udp_h.data = (void *)self;
+    self->udp_h.data = self;
     UV_HANDLE(self) = (uv_handle_t *)&self->udp_h;
 
     return (PyObject *)self;

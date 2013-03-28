@@ -9,8 +9,8 @@ on_poll_callback(uv_poll_t *handle, int status, int events)
 
     ASSERT(handle);
 
-    self = (Poll *)handle->data;
-    ASSERT(self);
+    self = PYUV_CONTAINER_OF(handle, Poll, poll_h);
+
     /* Object could go out of scope in the callback, increase refcount to avoid it */
     Py_INCREF(self);
 
@@ -142,7 +142,7 @@ Poll_tp_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
         return NULL;
     }
 
-    self->poll_h.data = (void *)self;
+    self->poll_h.data = self;
     UV_HANDLE(self) = (uv_handle_t *)&self->poll_h;
 
     return (PyObject *)self;

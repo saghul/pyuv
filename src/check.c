@@ -9,8 +9,8 @@ on_check_callback(uv_check_t *handle, int status)
     ASSERT(handle);
     ASSERT(status == 0);
 
-    self = (Check *)handle->data;
-    ASSERT(self);
+    self = PYUV_CONTAINER_OF(handle, Check, check_h);
+
     /* Object could go out of scope in the callback, increase refcount to avoid it */
     Py_INCREF(self);
 
@@ -117,7 +117,7 @@ Check_tp_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
         return NULL;
     }
 
-    self->check_h.data = (void *)self;
+    self->check_h.data = self;
     UV_HANDLE(self) = (uv_handle_t *)&self->check_h;
 
     return (PyObject *)self;
@@ -190,5 +190,4 @@ static PyTypeObject CheckType = {
     0,                                                              /*tp_alloc*/
     Check_tp_new,                                                   /*tp_new*/
 };
-
 

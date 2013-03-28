@@ -9,8 +9,8 @@ on_idle_callback(uv_idle_t *handle, int status)
     ASSERT(handle);
     ASSERT(status == 0);
 
-    self = (Idle *)handle->data;
-    ASSERT(self);
+    self = PYUV_CONTAINER_OF(handle, Idle, idle_h);
+
     /* Object could go out of scope in the callback, increase refcount to avoid it */
     Py_INCREF(self);
 
@@ -117,7 +117,7 @@ Idle_tp_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
         return NULL;
     }
 
-    self->idle_h.data = (void *)self;
+    self->idle_h.data = self;
     UV_HANDLE(self) = (uv_handle_t *)&self->idle_h;
 
     return (PyObject *)self;

@@ -33,6 +33,9 @@ typedef int Bool;
 #define PYUV_STRINGIFY_HELPER(x) #x
 #define PYUV_STRINGIFY(x) PYUV_STRINGIFY_HELPER(x)
 
+#define PYUV_CONTAINER_OF(ptr, type, field)                                  \
+      ((type *) ((char *) (ptr) - ((long) &((type *) 0)->field)))
+
 #define UNUSED_ARG(arg)  (void)arg
 
 #if defined(__MINGW32__) || defined(_MSC_VER)
@@ -121,12 +124,12 @@ static PyTypeObject LoopType;
 /* Handle */
 typedef struct {
     PyObject_HEAD
+    uv_handle_t *uv_handle;
     Bool initialized;
     PyObject *weakreflist;
     PyObject *dict;
     Loop *loop;
     PyObject *on_close_cb;
-    uv_handle_t *uv_handle;
 } Handle;
 
 static PyTypeObject HandleType;

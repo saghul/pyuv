@@ -1,15 +1,15 @@
 
 static void
-on_tcp_connection(uv_stream_t* server, int status)
+on_tcp_connection(uv_stream_t *handle, int status)
 {
     PyGILState_STATE gstate = PyGILState_Ensure();
     TCP *self;
     PyObject *result, *py_errorno;
 
-    ASSERT(server);
-    self = (TCP *)server->data;
+    ASSERT(handle);
 
-    ASSERT(self);
+    self = PYUV_CONTAINER_OF(handle, TCP, tcp_h);
+
     /* Object could go out of scope in the callback, increase refcount to avoid it */
     Py_INCREF(self);
 
@@ -41,10 +41,8 @@ on_tcp_client_connection(uv_connect_t *req, int status)
     PyObject *callback, *result, *py_errorno;
 
     ASSERT(req);
-    self = (TCP *)req->handle->data;
+    self = PYUV_CONTAINER_OF(req->handle, TCP, tcp_h);
     callback = (PyObject *)req->data;
-
-    ASSERT(self);
 
     if (status != 0) {
         uv_err_t err = uv_last_error(UV_HANDLE_LOOP(self));
@@ -207,7 +205,7 @@ TCP_func_connect(TCP *self, PyObject *args)
         goto error;
     }
 
-    connect_req->data = (void *)callback;
+    connect_req->data = callback;
 
     if (sa.sa_family == AF_INET) {
         r = uv_tcp_connect(connect_req, &self->tcp_h, *(struct sockaddr_in *)&sa, on_tcp_client_connection);
@@ -403,7 +401,7 @@ TCP_tp_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
         return NULL;
     }
 
-    self->tcp_h.data = (void *)self;
+    self->tcp_h.data = self;
     UV_HANDLE(self) = (uv_handle_t *)&self->tcp_h;
 
     return (PyObject *)self;

@@ -1,6 +1,7 @@
 
 typedef struct {
     uv_write_t req;
+    Stream *obj;
     PyObject *callback;
     PyObject *send_handle;
     Py_buffer *views;
@@ -8,6 +9,12 @@ typedef struct {
     int view_count;
 } stream_write_ctx;
 
+
+typedef struct {
+    uv_shutdown_t req;
+    Stream *obj;
+    PyObject *callback;
+} stream_shutdown_ctx;
 
 static uv_buf_t
 on_stream_alloc(uv_stream_t* handle, size_t suggested_size)
@@ -22,18 +29,17 @@ static void
 on_stream_shutdown(uv_shutdown_t* req, int status)
 {
     PyGILState_STATE gstate = PyGILState_Ensure();
-    uv_err_t err;
+    stream_shutdown_ctx *ctx;
     Stream *self;
     PyObject *callback, *result, *py_errorno;
 
-    self = (Stream *)req->handle->data;
-    callback = (PyObject *)req->data;
-
-    ASSERT(self);
+    ctx = PYUV_CONTAINER_OF(req, stream_shutdown_ctx, req);
+    self = ctx->obj;
+    callback = ctx->callback;
 
     if (callback != Py_None) {
         if (status < 0) {
-            err = uv_last_error(UV_HANDLE_LOOP(self));
+            uv_err_t err = uv_last_error(UV_HANDLE_LOOP(self));
             py_errorno = PyInt_FromLong((long)err.code);
         } else {
             py_errorno = Py_None;
@@ -66,8 +72,9 @@ on_stream_read(uv_stream_t* handle, int nread, uv_buf_t buf)
     PyObject *result, *data, *py_errorno;
     ASSERT(handle);
 
+    /* Can't use container_of here */
     self = (Stream *)handle->data;
-    ASSERT(self);
+
     /* Object could go out of scope in the callback, increase refcount to avoid it */
     Py_INCREF(self);
 
@@ -109,12 +116,10 @@ on_stream_write(uv_write_t* req, int status)
 
     ASSERT(req);
 
-    ctx = (stream_write_ctx *)req->data;
-    self = (Stream *)req->handle->data;
+    ctx = PYUV_CONTAINER_OF(req, stream_write_ctx, req);
+    self = ctx->obj;
     callback = ctx->callback;
     send_handle = ctx->send_handle;
-
-    ASSERT(self);
 
     if (callback != Py_None) {
         if (status < 0) {
@@ -153,8 +158,11 @@ static PyObject *
 Stream_func_shutdown(Stream *self, PyObject *args)
 {
     int r;
-    uv_shutdown_t *req = NULL;
-    PyObject *callback = Py_None;
+    stream_shutdown_ctx *ctx;
+    PyObject *callback;
+
+    ctx = NULL;
+    callback = Py_None;
 
     RAISE_IF_HANDLE_NOT_INITIALIZED(self, NULL);
     RAISE_IF_HANDLE_CLOSED(self, PyExc_HandleClosedError, NULL);
@@ -163,17 +171,18 @@ Stream_func_shutdown(Stream *self, PyObject *args)
         return NULL;
     }
 
-    Py_INCREF(callback);
-
-    req = PyMem_Malloc(sizeof *req);
-    if (!req) {
+    ctx = PyMem_Malloc(sizeof *ctx);
+    if (!ctx) {
         PyErr_NoMemory();
-        goto error;
+        return NULL;
     }
 
-    req->data = (void *)callback;
+    Py_INCREF(callback);
 
-    r = uv_shutdown(req, (uv_stream_t *)UV_HANDLE(self), on_stream_shutdown);
+    ctx->obj = self;
+    ctx->callback = callback;
+
+    r = uv_shutdown(&ctx->req, (uv_stream_t *)UV_HANDLE(self), on_stream_shutdown);
     if (r != 0) {
         RAISE_UV_EXCEPTION(UV_HANDLE_LOOP(self), PyExc_StreamError);
         goto error;
@@ -186,7 +195,7 @@ Stream_func_shutdown(Stream *self, PyObject *args)
 
 error:
     Py_DECREF(callback);
-    PyMem_Free(req);
+    PyMem_Free(ctx);
     return NULL;
 }
 
@@ -255,11 +264,11 @@ pyuv_stream_write(Stream *self, stream_write_ctx *ctx, Py_buffer *views, uv_buf_
     Py_INCREF(callback);
     Py_XINCREF(send_handle);
 
+    ctx->obj = self;
     ctx->callback = callback;
     ctx->send_handle = send_handle;
     ctx->views = views;
     ctx->view_count = buf_count;
-    ctx->req.data = (void *)ctx;
 
     if (send_handle) {
         r = uv_write2(&ctx->req, (uv_stream_t *)UV_HANDLE(self), bufs, buf_count, (uv_stream_t *)UV_HANDLE(send_handle), on_stream_write);

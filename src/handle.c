@@ -48,8 +48,8 @@ on_handle_close(uv_handle_t *handle)
     PyObject *result;
     ASSERT(handle);
 
+    /* Can't use container_of here */
     self = (Handle *)handle->data;
-    ASSERT(self);
 
     if (self->on_close_cb != Py_None) {
         result = PyObject_CallFunctionObjArgs(self->on_close_cb, self, NULL);
@@ -77,12 +77,12 @@ static void
 on_handle_dealloc_close(uv_handle_t *handle)
 {
     PyGILState_STATE gstate = PyGILState_Ensure();
+    Handle *self;
 
     ASSERT(handle);
-    Handle *self;
-    self = (Handle *)handle->data;
-    ASSERT(self);
 
+    /* Can't use container_of here */
+    self = (Handle *)handle->data;
     Py_DECREF(self);
 
     PyGILState_Release(gstate);

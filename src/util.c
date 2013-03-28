@@ -394,9 +394,8 @@ check_signals(uv_poll_t *handle, int status, int events)
     SignalChecker *self;
 
     ASSERT(handle);
-    self = (SignalChecker *)handle->data;
 
-    Py_INCREF(self);
+    self = PYUV_CONTAINER_OF(handle, SignalChecker, poll_h);
 
     if (status == 0) {
         ASSERT(events == UV_READABLE);
@@ -494,7 +493,7 @@ SignalChecker_tp_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
         return NULL;
     }
 
-    self->poll_h.data = (void *)self;
+    self->poll_h.data = self;
     UV_HANDLE(self) = (uv_handle_t *)&self->poll_h;
 
     return (PyObject *)self;
@@ -605,5 +604,4 @@ init_util(void)
 
     return module;
 }
-
 

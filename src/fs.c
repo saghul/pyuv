@@ -2783,8 +2783,8 @@ on_fsevent_callback(uv_fs_event_t *handle, const char *filename, int events, int
 
     ASSERT(handle);
 
-    self = (FSEvent *)handle->data;
-    ASSERT(self);
+    self = PYUV_CONTAINER_OF(handle, FSEvent, fsevent_h);
+
     /* Object could go out of scope in the callback, increase refcount to avoid it */
     Py_INCREF(self);
 
@@ -2880,7 +2880,7 @@ FSEvent_tp_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
         return NULL;
     }
 
-    self->fsevent_h.data = (void *)self;
+    self->fsevent_h.data = self;
     UV_HANDLE(self) = (uv_handle_t *)&self->fsevent_h;
 
     return (PyObject *)self;
@@ -2964,8 +2964,8 @@ on_fspoll_callback(uv_fs_poll_t *handle, int status, const uv_statbuf_t *prev, c
 
     ASSERT(handle);
 
-    self = (FSPoll *)handle->data;
-    ASSERT(self);
+    self = PYUV_CONTAINER_OF(handle, FSPoll, fspoll_h);
+
     /* Object could go out of scope in the callback, increase refcount to avoid it */
     Py_INCREF(self);
 
@@ -3109,7 +3109,7 @@ FSPoll_tp_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
         return NULL;
     }
 
-    self->fspoll_h.data = (void *)self;
+    self->fspoll_h.data = self;
     UV_HANDLE(self) = (uv_handle_t *)&self->fspoll_h;
 
     return (PyObject *)self;
