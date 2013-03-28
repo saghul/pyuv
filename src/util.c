@@ -427,7 +427,7 @@ SignalChecker_func_start(SignalChecker *self)
     RAISE_IF_HANDLE_NOT_INITIALIZED(self, NULL);
     RAISE_IF_HANDLE_CLOSED(self, PyExc_HandleClosedError, NULL);
 
-    r = uv_poll_start((uv_poll_t *)UV_HANDLE(self), UV_READABLE, check_signals);
+    r = uv_poll_start(&self->poll_h, UV_READABLE, check_signals);
     if (r != 0) {
         RAISE_UV_EXCEPTION(UV_HANDLE_LOOP(self), PyExc_UVError);
         return NULL;
@@ -445,7 +445,7 @@ SignalChecker_func_stop(SignalChecker *self)
     RAISE_IF_HANDLE_NOT_INITIALIZED(self, NULL);
     RAISE_IF_HANDLE_CLOSED(self, PyExc_HandleClosedError, NULL);
 
-    r = uv_poll_stop((uv_poll_t *)UV_HANDLE(self));
+    r = uv_poll_stop(&self->poll_h);
     if (r != 0) {
         RAISE_UV_EXCEPTION(UV_HANDLE_LOOP(self), PyExc_UVError);
         return NULL;
@@ -470,7 +470,7 @@ SignalChecker_tp_init(SignalChecker *self, PyObject *args, PyObject *kwargs)
         return -1;
     }
 
-    r = uv_poll_init_socket(loop->uv_loop, (uv_poll_t *)UV_HANDLE(self), (uv_os_sock_t)fd);
+    r = uv_poll_init_socket(loop->uv_loop, &self->poll_h, (uv_os_sock_t)fd);
     if (r != 0) {
         RAISE_UV_EXCEPTION(loop->uv_loop, PyExc_UVError);
         return -1;
@@ -488,22 +488,14 @@ static PyObject *
 SignalChecker_tp_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
 {
     SignalChecker *self;
-    uv_poll_t *uv_poll;
-
-    uv_poll = PyMem_Malloc(sizeof *uv_poll);
-    if (!uv_poll) {
-        PyErr_NoMemory();
-        return NULL;
-    }
 
     self = (SignalChecker *)HandleType.tp_new(type, args, kwargs);
     if (!self) {
-        PyMem_Free(uv_poll);
         return NULL;
     }
 
-    uv_poll->data = (void *)self;
-    UV_HANDLE(self) = (uv_handle_t *)uv_poll;
+    self->poll_h.data = (void *)self;
+    UV_HANDLE(self) = (uv_handle_t *)&self->poll_h;
 
     return (PyObject *)self;
 }

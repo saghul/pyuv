@@ -11,7 +11,7 @@ TTY_func_set_mode(TTY *self, PyObject *args)
         return NULL;
     }
 
-    r = uv_tty_set_mode((uv_tty_t *)UV_HANDLE(self), mode);
+    r = uv_tty_set_mode(&self->tty_h, mode);
     if (r != 0) {
         RAISE_UV_EXCEPTION(UV_HANDLE_LOOP(self), PyExc_TTYError);
         return NULL;
@@ -38,7 +38,7 @@ TTY_func_get_winsize(TTY *self)
     RAISE_IF_HANDLE_NOT_INITIALIZED(self, NULL);
     RAISE_IF_HANDLE_CLOSED(self, PyExc_HandleClosedError, NULL);
 
-    r = uv_tty_get_winsize((uv_tty_t *)UV_HANDLE(self), &width, &height);
+    r = uv_tty_get_winsize(&self->tty_h, &width, &height);
     if (r != 0) {
         RAISE_UV_EXCEPTION(UV_HANDLE_LOOP(self), PyExc_TTYError);
         return NULL;
@@ -63,7 +63,7 @@ TTY_tp_init(TTY *self, PyObject *args, PyObject *kwargs)
         return -1;
     }
 
-    r = uv_tty_init(loop->uv_loop, (uv_tty_t *)UV_HANDLE(self), fd, (readable == Py_True) ? 1 : 0);
+    r = uv_tty_init(loop->uv_loop, &self->tty_h, fd, (readable == Py_True) ? 1 : 0);
     if (r != 0) {
         RAISE_UV_EXCEPTION(loop->uv_loop, PyExc_TTYError);
         return -1;
@@ -79,22 +79,14 @@ static PyObject *
 TTY_tp_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
 {
     TTY *self;
-    uv_tty_t *uv_tty;
-
-    uv_tty = PyMem_Malloc(sizeof *uv_tty);
-    if (!uv_tty) {
-        PyErr_NoMemory();
-        return NULL;
-    }
 
     self = (TTY *)StreamType.tp_new(type, args, kwargs);
     if (!self) {
-        PyMem_Free(uv_tty);
         return NULL;
     }
 
-    uv_tty->data = (void *)self;
-    UV_HANDLE(self) = (uv_handle_t *)uv_tty;
+    self->tty_h.data = (void *)self;
+    UV_HANDLE(self) = (uv_handle_t *)&self->tty_h;
 
     return (PyObject *)self;
 }

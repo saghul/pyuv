@@ -141,9 +141,9 @@ UDP_func_bind(UDP *self, PyObject *args)
     }
 
     if (sa.sa_family == AF_INET) {
-        r = uv_udp_bind((uv_udp_t *)UV_HANDLE(self), *(struct sockaddr_in *)&sa, flags);
+        r = uv_udp_bind(&self->udp_h, *(struct sockaddr_in *)&sa, flags);
     } else {
-        r = uv_udp_bind6((uv_udp_t *)UV_HANDLE(self), *(struct sockaddr_in6 *)&sa, flags);
+        r = uv_udp_bind6(&self->udp_h, *(struct sockaddr_in6 *)&sa, flags);
     }
 
     if (r != 0) {
@@ -175,7 +175,7 @@ UDP_func_start_recv(UDP *self, PyObject *args)
         return NULL;
     }
 
-    r = uv_udp_recv_start((uv_udp_t *)UV_HANDLE(self), (uv_alloc_cb)on_udp_alloc, (uv_udp_recv_cb)on_udp_read);
+    r = uv_udp_recv_start(&self->udp_h, (uv_alloc_cb)on_udp_alloc, (uv_udp_recv_cb)on_udp_read);
     if (r != 0) {
         RAISE_UV_EXCEPTION(UV_HANDLE_LOOP(self), PyExc_UDPError);
         return NULL;
@@ -198,7 +198,7 @@ UDP_func_stop_recv(UDP *self)
     RAISE_IF_HANDLE_NOT_INITIALIZED(self, NULL);
     RAISE_IF_HANDLE_CLOSED(self, PyExc_HandleClosedError, NULL);
 
-    r = uv_udp_recv_stop((uv_udp_t *)UV_HANDLE(self));
+    r = uv_udp_recv_stop(&self->udp_h);
     if (r != 0) {
         RAISE_UV_EXCEPTION(UV_HANDLE_LOOP(self), PyExc_UDPError);
         return NULL;
@@ -258,9 +258,9 @@ UDP_func_send(UDP *self, PyObject *args)
     ctx->req.data = (void *)ctx;
 
     if (sa.sa_family == AF_INET) {
-        r = uv_udp_send(&ctx->req, (uv_udp_t *)UV_HANDLE(self), &buf, 1, *(struct sockaddr_in *)&sa, (uv_udp_send_cb)on_udp_send);
+        r = uv_udp_send(&ctx->req, &self->udp_h, &buf, 1, *(struct sockaddr_in *)&sa, (uv_udp_send_cb)on_udp_send);
     } else {
-        r = uv_udp_send6(&ctx->req, (uv_udp_t *)UV_HANDLE(self), &buf, 1, *(struct sockaddr_in6 *)&sa, (uv_udp_send_cb)on_udp_send);
+        r = uv_udp_send6(&ctx->req, &self->udp_h, &buf, 1, *(struct sockaddr_in6 *)&sa, (uv_udp_send_cb)on_udp_send);
     }
     if (r != 0) {
         RAISE_UV_EXCEPTION(UV_HANDLE_LOOP(self), PyExc_UDPError);
@@ -330,9 +330,9 @@ UDP_func_sendlines(UDP *self, PyObject *args)
     ctx->req.data = (void *)ctx;
 
     if (sa.sa_family == AF_INET) {
-        r = uv_udp_send(&ctx->req, (uv_udp_t *)UV_HANDLE(self), bufs, buf_count, *(struct sockaddr_in *)&sa, (uv_udp_send_cb)on_udp_send);
+        r = uv_udp_send(&ctx->req, &self->udp_h, bufs, buf_count, *(struct sockaddr_in *)&sa, (uv_udp_send_cb)on_udp_send);
     } else {
-        r = uv_udp_send6(&ctx->req, (uv_udp_t *)UV_HANDLE(self), bufs, buf_count, *(struct sockaddr_in6 *)&sa, (uv_udp_send_cb)on_udp_send);
+        r = uv_udp_send6(&ctx->req, &self->udp_h, bufs, buf_count, *(struct sockaddr_in6 *)&sa, (uv_udp_send_cb)on_udp_send);
     }
 
     /* uv_write copies the uv_buf_t structures, so we can free them now */
@@ -376,7 +376,7 @@ UDP_func_set_membership(UDP *self, PyObject *args)
         return NULL;
     }
 
-    r = uv_udp_set_membership((uv_udp_t *)UV_HANDLE(self), multicast_address, interface_address, membership);
+    r = uv_udp_set_membership(&self->udp_h, multicast_address, interface_address, membership);
     if (r != 0) {
         RAISE_UV_EXCEPTION(UV_HANDLE_LOOP(self), PyExc_UDPError);
         return NULL;
@@ -397,7 +397,7 @@ UDP_func_getsockname(UDP *self)
     RAISE_IF_HANDLE_NOT_INITIALIZED(self, NULL);
     RAISE_IF_HANDLE_CLOSED(self, PyExc_HandleClosedError, NULL);
 
-    r = uv_udp_getsockname((uv_udp_t *)UV_HANDLE(self), &sockname, &namelen);
+    r = uv_udp_getsockname(&self->udp_h, &sockname, &namelen);
     if (r != 0) {
         RAISE_UV_EXCEPTION(UV_HANDLE_LOOP(self), PyExc_UDPError);
         return NULL;
@@ -424,7 +424,7 @@ UDP_func_set_multicast_ttl(UDP *self, PyObject *args)
         return NULL;
     }
 
-    r = uv_udp_set_multicast_ttl((uv_udp_t *)UV_HANDLE(self), ttl);
+    r = uv_udp_set_multicast_ttl(&self->udp_h, ttl);
     if (r != 0) {
         RAISE_UV_EXCEPTION(UV_HANDLE_LOOP(self), PyExc_UDPError);
         return NULL;
@@ -447,7 +447,7 @@ UDP_func_set_broadcast(UDP *self, PyObject *args)
         return NULL;
     }
 
-    r = uv_udp_set_broadcast((uv_udp_t *)UV_HANDLE(self), (enable == Py_True) ? 1 : 0);
+    r = uv_udp_set_broadcast(&self->udp_h, (enable == Py_True) ? 1 : 0);
     if (r != 0) {
         RAISE_UV_EXCEPTION(UV_HANDLE_LOOP(self), PyExc_UDPError);
         return NULL;
@@ -470,7 +470,7 @@ UDP_func_set_multicast_loop(UDP *self, PyObject *args)
         return NULL;
     }
 
-    r = uv_udp_set_multicast_loop((uv_udp_t *)UV_HANDLE(self), (enable == Py_True) ? 1 : 0);
+    r = uv_udp_set_multicast_loop(&self->udp_h, (enable == Py_True) ? 1 : 0);
     if (r != 0) {
         RAISE_UV_EXCEPTION(UV_HANDLE_LOOP(self), PyExc_UDPError);
         return NULL;
@@ -497,7 +497,7 @@ UDP_func_set_ttl(UDP *self, PyObject *args)
         return NULL;
     }
 
-    r = uv_udp_set_ttl((uv_udp_t *)UV_HANDLE(self), ttl);
+    r = uv_udp_set_ttl(&self->udp_h, ttl);
     if (r != 0) {
         RAISE_UV_EXCEPTION(UV_HANDLE_LOOP(self), PyExc_UDPError);
         return NULL;
@@ -519,7 +519,7 @@ UDP_func_open(UDP *self, PyObject *args)
         return NULL;
     }
 
-    uv_udp_open((uv_udp_t *)UV_HANDLE(self), (uv_os_sock_t)fd);
+    uv_udp_open(&self->udp_h, (uv_os_sock_t)fd);
 
     Py_RETURN_NONE;
 }
@@ -539,7 +539,7 @@ UDP_tp_init(UDP *self, PyObject *args, PyObject *kwargs)
         return -1;
     }
 
-    r = uv_udp_init(loop->uv_loop, (uv_udp_t *)UV_HANDLE(self));
+    r = uv_udp_init(loop->uv_loop, &self->udp_h);
     if (r != 0) {
         RAISE_UV_EXCEPTION(loop->uv_loop, PyExc_UDPError);
         return -1;
@@ -555,22 +555,14 @@ static PyObject *
 UDP_tp_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
 {
     UDP *self;
-    uv_udp_t *uv_udp;
-
-    uv_udp = PyMem_Malloc(sizeof *uv_udp);
-    if (!uv_udp) {
-        PyErr_NoMemory();
-        return NULL;
-    }
 
     self = (UDP *)HandleType.tp_new(type, args, kwargs);
     if (!self) {
-        PyMem_Free(uv_udp);
         return NULL;
     }
 
-    uv_udp->data = (void *)self;
-    UV_HANDLE(self) = (uv_handle_t *)uv_udp;
+    self->udp_h.data = (void *)self;
+    UV_HANDLE(self) = (uv_handle_t *)&self->udp_h;
 
     return (PyObject *)self;
 }

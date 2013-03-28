@@ -45,7 +45,7 @@ Check_func_start(Check *self, PyObject *args)
         return NULL;
     }
 
-    r = uv_check_start((uv_check_t *)UV_HANDLE(self), on_check_callback);
+    r = uv_check_start(&self->check_h, on_check_callback);
     if (r != 0) {
         RAISE_UV_EXCEPTION(UV_HANDLE_LOOP(self), PyExc_CheckError);
         return NULL;
@@ -68,7 +68,7 @@ Check_func_stop(Check *self)
     RAISE_IF_HANDLE_NOT_INITIALIZED(self, NULL);
     RAISE_IF_HANDLE_CLOSED(self, PyExc_HandleClosedError, NULL);
 
-    r = uv_check_stop((uv_check_t *)UV_HANDLE(self));
+    r = uv_check_stop(&self->check_h);
     if (r != 0) {
         RAISE_UV_EXCEPTION(UV_HANDLE_LOOP(self), PyExc_CheckError);
         return NULL;
@@ -95,7 +95,7 @@ Check_tp_init(Check *self, PyObject *args, PyObject *kwargs)
         return -1;
     }
 
-    r = uv_check_init(loop->uv_loop, (uv_check_t *)UV_HANDLE(self));
+    r = uv_check_init(loop->uv_loop, &self->check_h);
     if (r != 0) {
         RAISE_UV_EXCEPTION(loop->uv_loop, PyExc_CheckError);
         return -1;
@@ -111,22 +111,14 @@ static PyObject *
 Check_tp_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
 {
     Check *self;
-    uv_check_t *uv_check;
-
-    uv_check = PyMem_Malloc(sizeof *uv_check);
-    if (!uv_check) {
-        PyErr_NoMemory();
-        return NULL;
-    }
 
     self = (Check *)HandleType.tp_new(type, args, kwargs);
     if (!self) {
-        PyMem_Free(uv_check);
         return NULL;
     }
 
-    uv_check->data = (void *)self;
-    UV_HANDLE(self) = (uv_handle_t *)uv_check;
+    self->check_h.data = (void *)self;
+    UV_HANDLE(self) = (uv_handle_t *)&self->check_h;
 
     return (PyObject *)self;
 }

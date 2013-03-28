@@ -58,7 +58,7 @@ Timer_func_start(Timer *self, PyObject *args, PyObject *kwargs)
         return NULL;
     }
 
-    r = uv_timer_start((uv_timer_t *)UV_HANDLE(self), on_timer_callback, (uint64_t)(timeout * 1000), (uint64_t)(repeat * 1000));
+    r = uv_timer_start(&self->timer_h, on_timer_callback, (uint64_t)(timeout * 1000), (uint64_t)(repeat * 1000));
     if (r != 0) {
         RAISE_UV_EXCEPTION(UV_HANDLE_LOOP(self), PyExc_TimerError);
         return NULL;
@@ -81,7 +81,7 @@ Timer_func_stop(Timer *self)
     RAISE_IF_HANDLE_NOT_INITIALIZED(self, NULL);
     RAISE_IF_HANDLE_CLOSED(self, PyExc_HandleClosedError, NULL);
 
-    r = uv_timer_stop((uv_timer_t *)UV_HANDLE(self));
+    r = uv_timer_stop(&self->timer_h);
     if (r != 0) {
         RAISE_UV_EXCEPTION(UV_HANDLE_LOOP(self), PyExc_TimerError);
         return NULL;
@@ -99,7 +99,7 @@ Timer_func_again(Timer *self)
     RAISE_IF_HANDLE_NOT_INITIALIZED(self, NULL);
     RAISE_IF_HANDLE_CLOSED(self, PyExc_HandleClosedError, NULL);
 
-    r = uv_timer_again((uv_timer_t *)UV_HANDLE(self));
+    r = uv_timer_again(&self->timer_h);
     if (r != 0) {
         RAISE_UV_EXCEPTION(UV_HANDLE_LOOP(self), PyExc_TimerError);
         return NULL;
@@ -116,7 +116,7 @@ Timer_repeat_get(Timer *self, void *closure)
 
     RAISE_IF_HANDLE_NOT_INITIALIZED(self, NULL);
 
-    return PyFloat_FromDouble(uv_timer_get_repeat((uv_timer_t *)UV_HANDLE(self))/1000.0);
+    return PyFloat_FromDouble(uv_timer_get_repeat(&self->timer_h)/1000.0);
 }
 
 
@@ -144,7 +144,7 @@ Timer_repeat_set(Timer *self, PyObject *value, void *closure)
         return -1;
     }
 
-    uv_timer_set_repeat((uv_timer_t *)UV_HANDLE(self), (uint64_t)(repeat * 1000));
+    uv_timer_set_repeat(&self->timer_h, (uint64_t)(repeat * 1000));
 
     return 0;
 }
@@ -164,7 +164,7 @@ Timer_tp_init(Timer *self, PyObject *args, PyObject *kwargs)
         return -1;
     }
 
-    r = uv_timer_init(loop->uv_loop, (uv_timer_t *)UV_HANDLE(self));
+    r = uv_timer_init(loop->uv_loop, &self->timer_h);
     if (r != 0) {
         RAISE_UV_EXCEPTION(loop->uv_loop, PyExc_TimerError);
         return -1;
@@ -180,22 +180,14 @@ static PyObject *
 Timer_tp_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
 {
     Timer *self;
-    uv_timer_t *uv_timer;
-
-    uv_timer = PyMem_Malloc(sizeof *uv_timer);
-    if (!uv_timer) {
-        PyErr_NoMemory();
-        return NULL;
-    }
 
     self = (Timer *)HandleType.tp_new(type, args, kwargs);
     if (!self) {
-        PyMem_Free(uv_timer);
         return NULL;
     }
 
-    uv_timer->data = (void *)self;
-    UV_HANDLE(self) = (uv_handle_t *)uv_timer;
+    self->timer_h.data = (void *)self;
+    UV_HANDLE(self) = (uv_handle_t *)&self->timer_h;
 
     return (PyObject *)self;
 }

@@ -2826,7 +2826,7 @@ FSEvent_filename_get(FSEvent *self, void *closure)
 
     RAISE_IF_HANDLE_NOT_INITIALIZED(self, NULL);
 
-    return Py_BuildValue("s", ((uv_fs_event_t *)UV_HANDLE(self))->filename);
+    return Py_BuildValue("s", self->fsevent_h.filename);
 }
 
 
@@ -2853,7 +2853,7 @@ FSEvent_tp_init(FSEvent *self, PyObject *args, PyObject *kwargs)
         return -1;
     }
 
-    r = uv_fs_event_init(loop->uv_loop, (uv_fs_event_t *)UV_HANDLE(self), path, on_fsevent_callback, flags);
+    r = uv_fs_event_init(loop->uv_loop, &self->fsevent_h, path, on_fsevent_callback, flags);
     if (r != 0) {
         RAISE_UV_EXCEPTION(loop->uv_loop, PyExc_FSEventError);
         return -1;
@@ -2874,22 +2874,14 @@ static PyObject *
 FSEvent_tp_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
 {
     FSEvent *self;
-    uv_fs_event_t *fs_event;
-
-    fs_event = PyMem_Malloc(sizeof *fs_event);
-    if (!fs_event) {
-        PyErr_NoMemory();
-        return NULL;
-    }
 
     self = (FSEvent *)HandleType.tp_new(type, args, kwargs);
     if (!self) {
-        PyMem_Free(fs_event);
         return NULL;
     }
 
-    fs_event->data = (void *)self;
-    UV_HANDLE(self) = (uv_handle_t *)fs_event;
+    self->fsevent_h.data = (void *)self;
+    UV_HANDLE(self) = (uv_handle_t *)&self->fsevent_h;
 
     return (PyObject *)self;
 }
@@ -3045,7 +3037,7 @@ FSPoll_func_start(FSPoll *self, PyObject *args, PyObject *kwargs)
         return NULL;
     }
 
-    r = uv_fs_poll_start((uv_fs_poll_t *)UV_HANDLE(self), on_fspoll_callback, path, (unsigned int)interval*1000);
+    r = uv_fs_poll_start(&self->fspoll_h, on_fspoll_callback, path, (unsigned int)interval*1000);
     if (r != 0) {
         RAISE_UV_EXCEPTION(UV_HANDLE_LOOP(self), PyExc_FSPollError);
         return NULL;
@@ -3068,7 +3060,7 @@ FSPoll_func_stop(FSPoll *self)
     RAISE_IF_HANDLE_NOT_INITIALIZED(self, NULL);
     RAISE_IF_HANDLE_CLOSED(self, PyExc_HandleClosedError, NULL);
 
-    r = uv_fs_poll_stop((uv_fs_poll_t *)UV_HANDLE(self));
+    r = uv_fs_poll_stop(&self->fspoll_h);
     if (r != 0) {
         RAISE_UV_EXCEPTION(UV_HANDLE_LOOP(self), PyExc_FSPollError);
         return NULL;
@@ -3095,7 +3087,7 @@ FSPoll_tp_init(FSPoll *self, PyObject *args, PyObject *kwargs)
         return -1;
     }
 
-    r = uv_fs_poll_init(loop->uv_loop, (uv_fs_poll_t *)UV_HANDLE(self));
+    r = uv_fs_poll_init(loop->uv_loop, &self->fspoll_h);
     if (r != 0) {
         RAISE_UV_EXCEPTION(loop->uv_loop, PyExc_FSPollError);
         return -1;
@@ -3111,22 +3103,14 @@ static PyObject *
 FSPoll_tp_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
 {
     FSPoll *self;
-    uv_fs_poll_t *uv_fspoll;
-
-    uv_fspoll = PyMem_Malloc(sizeof *uv_fspoll);
-    if (!uv_fspoll) {
-        PyErr_NoMemory();
-        return NULL;
-    }
 
     self = (FSPoll *)HandleType.tp_new(type, args, kwargs);
     if (!self) {
-        PyMem_Free(uv_fspoll);
         return NULL;
     }
 
-    uv_fspoll->data = (void *)self;
-    UV_HANDLE(self) = (uv_handle_t *)uv_fspoll;
+    self->fspoll_h.data = (void *)self;
+    UV_HANDLE(self) = (uv_handle_t *)&self->fspoll_h;
 
     return (PyObject *)self;
 }

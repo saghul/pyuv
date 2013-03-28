@@ -56,7 +56,7 @@ Poll_func_start(Poll *self, PyObject *args)
         return NULL;
     }
 
-    r = uv_poll_start((uv_poll_t *)UV_HANDLE(self), events, on_poll_callback);
+    r = uv_poll_start(&self->poll_h, events, on_poll_callback);
     if (r != 0) {
         RAISE_UV_EXCEPTION(UV_HANDLE_LOOP(self), PyExc_PollError);
         return NULL;
@@ -79,7 +79,7 @@ Poll_func_stop(Poll *self)
     RAISE_IF_HANDLE_NOT_INITIALIZED(self, NULL);
     RAISE_IF_HANDLE_CLOSED(self, PyExc_HandleClosedError, NULL);
 
-    r = uv_poll_stop((uv_poll_t *)UV_HANDLE(self));
+    r = uv_poll_stop(&self->poll_h);
     if (r != 0) {
         RAISE_UV_EXCEPTION(UV_HANDLE_LOOP(self), PyExc_PollError);
         return NULL;
@@ -96,7 +96,7 @@ static PyObject *
 Poll_func_fileno(Poll *self)
 {
     RAISE_IF_HANDLE_NOT_INITIALIZED(self, NULL);
-    if (uv_is_closing(UV_HANDLE(self))) {
+    if (uv_is_closing((uv_handle_t *)&self->poll_h)) {
         return PyInt_FromLong(-1);
     }
     return PyInt_FromLong(self->fd);
@@ -118,7 +118,7 @@ Poll_tp_init(Poll *self, PyObject *args, PyObject *kwargs)
         return -1;
     }
 
-    r = uv_poll_init_socket(loop->uv_loop, (uv_poll_t *)UV_HANDLE(self), (uv_os_sock_t)fd);
+    r = uv_poll_init_socket(loop->uv_loop, &self->poll_h, (uv_os_sock_t)fd);
     if (r != 0) {
         RAISE_UV_EXCEPTION(loop->uv_loop, PyExc_PollError);
         return -1;
@@ -136,22 +136,14 @@ static PyObject *
 Poll_tp_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
 {
     Poll *self;
-    uv_poll_t *uv_poll;
-
-    uv_poll = PyMem_Malloc(sizeof *uv_poll);
-    if (!uv_poll) {
-        PyErr_NoMemory();
-        return NULL;
-    }
 
     self = (Poll *)HandleType.tp_new(type, args, kwargs);
     if (!self) {
-        PyMem_Free(uv_poll);
         return NULL;
     }
 
-    uv_poll->data = (void *)self;
-    UV_HANDLE(self) = (uv_handle_t *)uv_poll;
+    self->poll_h.data = (void *)self;
+    UV_HANDLE(self) = (uv_handle_t *)&self->poll_h;
 
     return (PyObject *)self;
 }

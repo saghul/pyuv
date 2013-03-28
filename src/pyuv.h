@@ -134,6 +134,7 @@ static PyTypeObject HandleType;
 /* Async */
 typedef struct {
     Handle handle;
+    uv_async_t async_h;
     PyObject *callback;
 } Async;
 
@@ -142,6 +143,7 @@ static PyTypeObject AsyncType;
 /* Timer */
 typedef struct {
     Handle handle;
+    uv_timer_t timer_h;
     PyObject *callback;
 } Timer;
 
@@ -150,6 +152,7 @@ static PyTypeObject TimerType;
 /* Prepare */
 typedef struct {
     Handle handle;
+    uv_prepare_t prepare_h;
     PyObject *callback;
 } Prepare;
 
@@ -158,6 +161,7 @@ static PyTypeObject PrepareType;
 /* Idle */
 typedef struct {
     Handle handle;
+    uv_idle_t idle_h;
     PyObject *callback;
 } Idle;
 
@@ -166,6 +170,7 @@ static PyTypeObject IdleType;
 /* Check */
 typedef struct {
     Handle handle;
+    uv_check_t check_h;
     PyObject *callback;
 } Check;
 
@@ -174,6 +179,7 @@ static PyTypeObject CheckType;
 /* Signal */
 typedef struct {
     Handle handle;
+    uv_signal_t signal_h;
     PyObject *callback;
 } Signal;
 
@@ -182,6 +188,7 @@ static PyTypeObject SignalType;
 /* SignalChecker */
 typedef struct {
     Handle handle;
+    uv_poll_t poll_h;
     long fd;
 } SignalChecker;
 
@@ -198,6 +205,7 @@ static PyTypeObject StreamType;
 /* TCP */
 typedef struct {
     Stream stream;
+    uv_tcp_t tcp_h;
     PyObject *on_new_connection_cb;
 } TCP;
 
@@ -206,6 +214,7 @@ static PyTypeObject TCPType;
 /* Pipe */
 typedef struct {
     Stream stream;
+    uv_pipe_t pipe_h;
     PyObject *on_new_connection_cb;
 } Pipe;
 
@@ -214,6 +223,7 @@ static PyTypeObject PipeType;
 /* TTY */
 typedef struct {
     Stream stream;
+    uv_tty_t tty_h;
 } TTY;
 
 static PyTypeObject TTYType;
@@ -221,6 +231,7 @@ static PyTypeObject TTYType;
 /* UDP */
 typedef struct {
     Handle handle;
+    uv_udp_t udp_h;
     PyObject *on_read_cb;
 } UDP;
 
@@ -229,6 +240,7 @@ static PyTypeObject UDPType;
 /* Poll */
 typedef struct {
     Handle handle;
+    uv_poll_t poll_h;
     PyObject *callback;
     long fd;
 } Poll;
@@ -248,6 +260,7 @@ static PyTypeObject StdIOType;
 typedef struct {
     Handle handle;
     Bool spawned;
+    uv_process_t process_h;
     PyObject *on_exit_cb;
     PyObject *stdio;
 } Process;
@@ -257,6 +270,7 @@ static PyTypeObject ProcessType;
 /* FSEvent */
 typedef struct {
     Handle handle;
+    uv_fs_event_t fsevent_h;
     PyObject *callback;
 } FSEvent;
 
@@ -265,6 +279,7 @@ static PyTypeObject FSEventType;
 /* FSPoll */
 typedef struct {
     Handle handle;
+    uv_fs_poll_t fspoll_h;
     PyObject *callback;
 } FSPoll;
 
