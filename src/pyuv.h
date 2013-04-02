@@ -66,6 +66,10 @@ typedef int Bool;
 
 #define UV_HANDLE_LOOP(x) UV_LOOP(HANDLE(x))
 
+#define REQUEST(x) ((Request *)x)
+
+#define UV_REQUEST(x) REQUEST(x)->req_ptr
+
 #define RAISE_IF_INITIALIZED(obj, retval)                                           \
     do {                                                                            \
         if ((obj)->initialized) {                                                   \
@@ -336,7 +340,8 @@ static PyTypeObject SemaphoreType;
 /* Request */
 typedef struct {
     PyObject_HEAD
-    uv_req_t *req;
+    uv_req_t *req_ptr;
+    Loop *loop;
 } Request;
 
 static PyTypeObject RequestType;
@@ -344,6 +349,7 @@ static PyTypeObject RequestType;
 /* GAIRequest */
 typedef struct {
     Request request;
+    uv_getaddrinfo_t req;
     PyObject *callback;
 } GAIRequest;
 
@@ -352,6 +358,7 @@ static PyTypeObject GAIRequestType;
 /* WorkRequest */
 typedef struct {
     Request request;
+    uv_work_t req;
     PyObject *work_cb;
     PyObject *done_cb;
 } WorkRequest;
@@ -361,6 +368,7 @@ static PyTypeObject WorkRequestType;
 /* FSRequest */
 typedef struct {
     Request request;
+    uv_fs_t req;
     PyObject *callback;
 } FSRequest;
 
