@@ -319,7 +319,7 @@ Util_func_getaddrinfo(PyObject *obj, PyObject *args, PyObject *kwargs)
 
     Py_INCREF(loop);
     Py_INCREF(callback);
-    req->data = (void *)pyreq;
+    req->data = pyreq;
 
     memset(&hints, 0, sizeof(hints));
     hints.ai_family = family;

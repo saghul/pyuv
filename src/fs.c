@@ -1136,7 +1136,7 @@ stat_func(PyObject *args, PyObject *kwargs, int type)
     }
     ((Request *)pyreq)->req = (uv_req_t *)req;
     pyreq->callback = callback;
-    req->data = (void *)pyreq;
+    req->data = pyreq;
 
     if (type == UV_FS_STAT) {
         r = uv_fs_stat(loop->uv_loop, req, path, (callback != NULL) ? stat_cb : NULL);
@@ -1227,7 +1227,7 @@ FS_func_fstat(PyObject *obj, PyObject *args, PyObject *kwargs)
     }
     ((Request *)pyreq)->req = (uv_req_t *)req;
     pyreq->callback = callback;
-    req->data = (void *)pyreq;
+    req->data = pyreq;
 
     r = uv_fs_fstat(loop->uv_loop, req, fd, (callback != NULL) ? stat_cb : NULL);
     if (r < 0) {
@@ -1297,7 +1297,7 @@ FS_func_unlink(PyObject *obj, PyObject *args, PyObject *kwargs)
     }
     ((Request *)pyreq)->req = (uv_req_t *)req;
     pyreq->callback = callback;
-    req->data = (void *)pyreq;
+    req->data = pyreq;
 
     r = uv_fs_unlink(loop->uv_loop, req, path, (callback != NULL) ? unlink_cb : NULL);
     if (r < 0) {
@@ -1362,7 +1362,7 @@ FS_func_mkdir(PyObject *obj, PyObject *args, PyObject *kwargs)
     }
     ((Request *)pyreq)->req = (uv_req_t *)req;
     pyreq->callback = callback;
-    req->data = (void *)pyreq;
+    req->data = pyreq;
 
     r = uv_fs_mkdir(loop->uv_loop, req, path, mode, (callback != NULL) ? mkdir_cb : NULL);
     if (r < 0) {
@@ -1427,7 +1427,7 @@ FS_func_rmdir(PyObject *obj, PyObject *args, PyObject *kwargs)
     }
     ((Request *)pyreq)->req = (uv_req_t *)req;
     pyreq->callback = callback;
-    req->data = (void *)pyreq;
+    req->data = pyreq;
 
     r = uv_fs_rmdir(loop->uv_loop, req, path, (callback != NULL) ? rmdir_cb : NULL);
     if (r < 0) {
@@ -1492,7 +1492,7 @@ FS_func_rename(PyObject *obj, PyObject *args, PyObject *kwargs)
     }
     ((Request *)pyreq)->req = (uv_req_t *)req;
     pyreq->callback = callback;
-    req->data = (void *)pyreq;
+    req->data = pyreq;
 
     r = uv_fs_rename(loop->uv_loop, req, path, new_path, (callback != NULL) ? rename_cb : NULL);
     if (r < 0) {
@@ -1557,7 +1557,7 @@ FS_func_chmod(PyObject *obj, PyObject *args, PyObject *kwargs)
     }
     ((Request *)pyreq)->req = (uv_req_t *)req;
     pyreq->callback = callback;
-    req->data = (void *)pyreq;
+    req->data = pyreq;
 
     r = uv_fs_chmod(loop->uv_loop, req, path, mode, (callback != NULL) ? chmod_cb : NULL);
     if (r < 0) {
@@ -1621,7 +1621,7 @@ FS_func_fchmod(PyObject *obj, PyObject *args, PyObject *kwargs)
     }
     ((Request *)pyreq)->req = (uv_req_t *)req;
     pyreq->callback = callback;
-    req->data = (void *)pyreq;
+    req->data = pyreq;
 
     r = uv_fs_fchmod(loop->uv_loop, req, fd, mode, (callback != NULL) ? chmod_cb : NULL);
     if (r < 0) {
@@ -1686,7 +1686,7 @@ FS_func_link(PyObject *obj, PyObject *args, PyObject *kwargs)
     }
     ((Request *)pyreq)->req = (uv_req_t *)req;
     pyreq->callback = callback;
-    req->data = (void *)pyreq;
+    req->data = pyreq;
 
     r = uv_fs_link(loop->uv_loop, req, path, new_path, (callback != NULL) ? link_cb : NULL);
     if (r < 0) {
@@ -1751,7 +1751,7 @@ FS_func_symlink(PyObject *obj, PyObject *args, PyObject *kwargs)
     }
     ((Request *)pyreq)->req = (uv_req_t *)req;
     pyreq->callback = callback;
-    req->data = (void *)pyreq;
+    req->data = pyreq;
 
     r = uv_fs_symlink(loop->uv_loop, req, path, new_path, flags, (callback != NULL) ? symlink_cb : NULL);
     if (r < 0) {
@@ -1818,7 +1818,7 @@ FS_func_readlink(PyObject *obj, PyObject *args, PyObject *kwargs)
     }
     ((Request *)pyreq)->req = (uv_req_t *)req;
     pyreq->callback = callback;
-    req->data = (void *)pyreq;
+    req->data = pyreq;
 
     r = uv_fs_readlink(loop->uv_loop, req, path, (callback != NULL) ? readlink_cb : NULL);
     if (r < 0) {
@@ -1887,7 +1887,7 @@ FS_func_chown(PyObject *obj, PyObject *args, PyObject *kwargs)
     }
     ((Request *)pyreq)->req = (uv_req_t *)req;
     pyreq->callback = callback;
-    req->data = (void *)pyreq;
+    req->data = pyreq;
 
     r = uv_fs_chown(loop->uv_loop, req, path, uid, gid, (callback != NULL) ? chown_cb : NULL);
     if (r < 0) {
@@ -1951,7 +1951,7 @@ FS_func_fchown(PyObject *obj, PyObject *args, PyObject *kwargs)
     }
     ((Request *)pyreq)->req = (uv_req_t *)req;
     pyreq->callback = callback;
-    req->data = (void *)pyreq;
+    req->data = pyreq;
 
     r = uv_fs_fchown(loop->uv_loop, req, fd, uid, gid, (callback != NULL) ? chown_cb : NULL);
     if (r != 0) {
@@ -2018,7 +2018,7 @@ FS_func_open(PyObject *obj, PyObject *args, PyObject *kwargs)
     }
     ((Request *)pyreq)->req = (uv_req_t *)req;
     pyreq->callback = callback;
-    req->data = (void *)pyreq;
+    req->data = pyreq;
 
     r = uv_fs_open(loop->uv_loop, req, path, flags, mode, (callback != NULL) ? open_cb : NULL);
     if (r < 0) {
@@ -2087,7 +2087,7 @@ FS_func_close(PyObject *obj, PyObject *args, PyObject *kwargs)
     }
     ((Request *)pyreq)->req = (uv_req_t *)req;
     pyreq->callback = callback;
-    req->data = (void *)pyreq;
+    req->data = pyreq;
 
     r = uv_fs_close(loop->uv_loop, req, fd, (callback != NULL) ? close_cb : NULL);
     if (r < 0) {
@@ -2155,7 +2155,7 @@ FS_func_read(PyObject *obj, PyObject *args, PyObject *kwargs)
     }
     ((Request *)pyreq)->req = (uv_req_t *)req;
     pyreq->callback = callback;
-    req->data = (void *)pyreq;
+    req->data = pyreq;
 
     buf = PyMem_Malloc(length);
     if (!buf) {
@@ -2237,7 +2237,7 @@ FS_func_write(PyObject *obj, PyObject *args, PyObject *kwargs)
     }
     ((Request *)pyreq)->req = (uv_req_t *)req;
     pyreq->callback = callback;
-    req->data = (void *)pyreq;
+    req->data = pyreq;
 
     buf = PyMem_Malloc(length);
     if (!buf) {
@@ -2315,7 +2315,7 @@ FS_func_fsync(PyObject *obj, PyObject *args, PyObject *kwargs)
     }
     ((Request *)pyreq)->req = (uv_req_t *)req;
     pyreq->callback = callback;
-    req->data = (void *)pyreq;
+    req->data = pyreq;
 
     r = uv_fs_fsync(loop->uv_loop, req, fd, (callback != NULL) ? fsync_cb : NULL);
     if (r < 0) {
@@ -2379,7 +2379,7 @@ FS_func_fdatasync(PyObject *obj, PyObject *args, PyObject *kwargs)
     }
     ((Request *)pyreq)->req = (uv_req_t *)req;
     pyreq->callback = callback;
-    req->data = (void *)pyreq;
+    req->data = pyreq;
 
     r = uv_fs_fdatasync(loop->uv_loop, req, fd, (callback != NULL) ? fsync_cb : NULL);
     if (r != 0) {
@@ -2443,7 +2443,7 @@ FS_func_ftruncate(PyObject *obj, PyObject *args, PyObject *kwargs)
     }
     ((Request *)pyreq)->req = (uv_req_t *)req;
     pyreq->callback = callback;
-    req->data = (void *)pyreq;
+    req->data = pyreq;
 
     r = uv_fs_ftruncate(loop->uv_loop, req, fd, offset, (callback != NULL) ? ftruncate_cb : NULL);
     if (r < 0) {
@@ -2510,7 +2510,7 @@ FS_func_readdir(PyObject *obj, PyObject *args, PyObject *kwargs)
     }
     ((Request *)pyreq)->req = (uv_req_t *)req;
     pyreq->callback = callback;
-    req->data = (void *)pyreq;
+    req->data = pyreq;
 
     r = uv_fs_readdir(loop->uv_loop, req, path, flags, (callback != NULL) ? readdir_cb : NULL);
     if (r < 0) {
@@ -2581,7 +2581,7 @@ FS_func_sendfile(PyObject *obj, PyObject *args, PyObject *kwargs)
     }
     ((Request *)pyreq)->req = (uv_req_t *)req;
     pyreq->callback = callback;
-    req->data = (void *)pyreq;
+    req->data = pyreq;
 
     r = uv_fs_sendfile(loop->uv_loop, req, out_fd, in_fd, in_offset, length, (callback != NULL) ? sendfile_cb : NULL);
     if (r < 0) {
@@ -2652,7 +2652,7 @@ FS_func_utime(PyObject *obj, PyObject *args, PyObject *kwargs)
     }
     ((Request *)pyreq)->req = (uv_req_t *)req;
     pyreq->callback = callback;
-    req->data = (void *)pyreq;
+    req->data = pyreq;
 
     r = uv_fs_utime(loop->uv_loop, req, path, atime, mtime, (callback != NULL) ? utime_cb : NULL);
     if (r < 0) {
@@ -2717,7 +2717,7 @@ FS_func_futime(PyObject *obj, PyObject *args, PyObject *kwargs)
     }
     ((Request *)pyreq)->req = (uv_req_t *)req;
     pyreq->callback = callback;
-    req->data = (void *)pyreq;
+    req->data = pyreq;
 
     r = uv_fs_futime(loop->uv_loop, req, fd, atime, mtime, (callback != NULL) ? utime_cb : NULL);
     if (r < 0) {

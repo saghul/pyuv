@@ -26,7 +26,7 @@ init_loop(Loop *loop, int is_default)
         PyErr_NoMemory();
         return -1;
     }
-    uv_loop->data = (void *)loop;
+    uv_loop->data = loop;
 
     loop->uv_loop = uv_loop;
     loop->is_default = is_default;
@@ -284,7 +284,7 @@ Loop_func_queue_work(Loop *self, PyObject *args)
 
     Py_INCREF(work_cb);
     Py_XINCREF(done_cb);
-    req->data = (void *)pyreq;
+    req->data = pyreq;
 
     r = uv_queue_work(self->uv_loop, req, threadpool_work_cb, threadpool_done_cb);
     if (r != 0) {
