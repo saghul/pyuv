@@ -129,15 +129,16 @@ walk_cb(uv_handle_t* handle, void* arg)
     PyObject *result;
     PyObject *callback = (PyObject *)arg;
     PyObject *obj = (PyObject *)handle->data;
-    if (obj && Py_REFCNT(obj) > 0) {
-        Py_INCREF(obj);
-        result = PyObject_CallFunctionObjArgs(callback, obj, NULL);
-        if (result == NULL) {
-            handle_uncaught_exception(((Handle *)obj)->loop);
-        }
-        Py_DECREF(obj);
-        Py_XDECREF(result);
+
+    ASSERT(obj);
+
+    Py_INCREF(obj);
+    result = PyObject_CallFunctionObjArgs(callback, obj, NULL);
+    if (result == NULL) {
+        handle_uncaught_exception(((Handle *)obj)->loop);
     }
+    Py_DECREF(obj);
+    Py_XDECREF(result);
 }
 
 static PyObject *
@@ -155,7 +156,7 @@ Loop_func_walk(Loop *self, PyObject *args)
     }
 
     Py_INCREF(callback);
-    uv_walk(self->uv_loop, (uv_walk_cb)walk_cb, (void*)callback);
+    uv_walk(self->uv_loop, (uv_walk_cb)walk_cb, callback);
     Py_DECREF(callback);
 
     Py_RETURN_NONE;
