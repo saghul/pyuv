@@ -16,11 +16,15 @@
 
     The ``UDP`` handle provides asynchronous UDP functionality both as a client and server.
 
-    .. py:method:: bind((ip, port), [flags])
+    .. py:method:: bind((ip, port, [flowinfo, [scope_id]]), [flags])
 
         :param string ip: IP address to bind to.
 
         :param int port: Port number to bind to.
+
+        :param int flowinfo: Flow info, used only for IPv6. Defaults to 0.
+
+        :param int scope_id: Scope ID, used only for IPv6. Defaults to 0.
 
         :param int flags: Binding flags. Only pyuv.UV_UDP_IPV6ONLY is supported at the moment, which
             disables dual stack support on IPv6 handles.
@@ -41,13 +45,18 @@
 
     .. py:method:: getsockname
 
-        Return tuple containing IP address and port of the local socket.
+        Return tuple containing IP address and port of the local socket. In case of IPv6 sockets, it also returns
+        the flow info and scope ID (a 4 element tuple).
 
-    .. py:method:: send((ip, port), data, [callback])
+    .. py:method:: send((ip, port, [flowinfo, [scope_id]]), data, [callback])
 
         :param string ip: IP address where data will be sent.
 
         :param int port: Port number where data will be sent.
+
+        :param int flowinfo: Flow info, used only for IPv6. Defaults to 0.
+
+        :param int scope_id: Scope ID, used only for IPv6. Defaults to 0.
 
         :param object data: Data to be sent over the ``UDP`` connection. It can be either
             a string or any iterable containing strings.
@@ -59,11 +68,15 @@
 
         Callback signature: ``callback(udp_handle, error)``.
 
-    .. py:method:: sendlines((ip, port), seq, [callback])
+    .. py:method:: sendlines((ip, port, [flowinfo, [scope_id]]), seq, [callback])
 
         :param string ip: IP address where data will be sent.
 
         :param int port: Port number where data will be sent.
+
+        :param int flowinfo: Flow info, used only for IPv6. Defaults to 0.
+
+        :param int scope_id: Scope ID, used only for IPv6. Defaults to 0.
 
         :param object seq: Data to be written on the ``UDP`` connection. It can be any iterable object and the same
             logic is applied for the contained elements as in the ``send`` method.

@@ -16,11 +16,15 @@
 
     The ``TCP`` handle provides asynchronous TCP functionality both as a client and server.
 
-    .. py:method:: bind((ip, port))
+    .. py:method:: bind((ip, port, [flowinfo, [scope_id]]))
 
         :param string ip: IP address to bind to.
 
         :param int port: Port number to bind to.
+
+        :param int flowinfo: Flow info, used only for IPv6. Defaults to 0.
+
+        :param int scope_id: Scope ID, used only for IPv6. Defaults to 0.
 
         Bind to the specified IP address and port.
 
@@ -44,11 +48,15 @@
         Accept a new incoming connection which was pending. This function needs to be
         called in the callback given to the :py:meth:`listen` function.
 
-    .. py:method:: connect((ip, port), callback)
+    .. py:method:: connect((ip, port, [flowinfo, [scope_id]]), callback)
 
         :param string ip: IP address to connect to.
 
         :param int port: Port number to connect to.
+
+        :param int flowinfo: Flow info, used only for IPv6. Defaults to 0.
+
+        :param int scope_id: Scope ID, used only for IPv6. Defaults to 0.
 
         :param callable callback: Callback to be called when the connection to the
             remote endpoint has been made.
@@ -69,11 +77,13 @@
 
     .. py:method:: getsockname
 
-        Return tuple containing IP address and port of the local socket.
+        Return tuple containing IP address and port of the local socket. In case of IPv6 sockets, it also returns
+        the flow info and scope ID (a 4 element tuple).
 
     .. py:method:: getpeername
 
-        Return tuple containing IP address and port of the remote endpoint's socket.
+        Return tuple containing IP address and port of the remote endpoint's socket. In case of IPv6 sockets, it also returns
+        the flow info and scope ID (a 4 element tuple).
 
     .. py:method:: shutdown([callback])
 
