@@ -218,10 +218,16 @@ Handle_tp_dealloc(Handle *self)
         resurrect_object((PyObject *)self);
         return;
     } else {
-        /* Refcount is increased in close(), so it's guaranteed that if we arrived here and the user had called close(),
-         * the callback was already executed and it's safe to free the handle */
-        /* TODO: or handle was resurrected and died again */
-        self->uv_handle->data = NULL;
+        /* There are a few cases why the code will take this path:
+         *   - A subclass of a handle didn't call it's parent's __init__
+         *   - Aclosed handle is deallocated. Refcount is increased in close(),
+         *     so it's guaranteed that if we arrived here and the user had called close(),
+         *     the callback was already executed.
+         *  - A handle goes out of scope and it's closed here in tp_dealloc and resurrected.
+         *    Once it's deallocated again it will take this path because the handle is now
+         *    closed.
+         */
+        ;
     }
     if (self->weakreflist != NULL) {
         PyObject_ClearWeakRefs((PyObject *)self);
