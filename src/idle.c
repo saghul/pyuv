@@ -9,8 +9,8 @@ on_idle_callback(uv_idle_t *handle, int status)
     ASSERT(handle);
     ASSERT(status == 0);
 
-    self = (Idle *)handle->data;
-    ASSERT(self);
+    self = PYUV_CONTAINER_OF(handle, Idle, idle_h);
+
     /* Object could go out of scope in the callback, increase refcount to avoid it */
     Py_INCREF(self);
 
@@ -45,7 +45,7 @@ Idle_func_start(Idle *self, PyObject *args)
         return NULL;
     }
 
-    r = uv_idle_start((uv_idle_t *)UV_HANDLE(self), on_idle_callback);
+    r = uv_idle_start(&self->idle_h, on_idle_callback);
     if (r != 0) {
         RAISE_UV_EXCEPTION(UV_HANDLE_LOOP(self), PyExc_IdleError);
         return NULL;
@@ -68,7 +68,7 @@ Idle_func_stop(Idle *self)
     RAISE_IF_HANDLE_NOT_INITIALIZED(self, NULL);
     RAISE_IF_HANDLE_CLOSED(self, PyExc_HandleClosedError, NULL);
 
-    r = uv_idle_stop((uv_idle_t *)UV_HANDLE(self));
+    r = uv_idle_stop(&self->idle_h);
     if (r != 0) {
         RAISE_UV_EXCEPTION(UV_HANDLE_LOOP(self), PyExc_IdleError);
         return NULL;
@@ -95,7 +95,7 @@ Idle_tp_init(Idle *self, PyObject *args, PyObject *kwargs)
         return -1;
     }
 
-    r = uv_idle_init(loop->uv_loop, (uv_idle_t *)UV_HANDLE(self));
+    r = uv_idle_init(loop->uv_loop, &self->idle_h);
     if (r != 0) {
         RAISE_UV_EXCEPTION(loop->uv_loop, PyExc_IdleError);
         return -1;
@@ -111,22 +111,14 @@ static PyObject *
 Idle_tp_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
 {
     Idle *self;
-    uv_idle_t *uv_idle;
-
-    uv_idle = PyMem_Malloc(sizeof *uv_idle);
-    if (!uv_idle) {
-        PyErr_NoMemory();
-        return NULL;
-    }
 
     self = (Idle *)HandleType.tp_new(type, args, kwargs);
     if (!self) {
-        PyMem_Free(uv_idle);
         return NULL;
     }
 
-    uv_idle->data = (void *)self;
-    UV_HANDLE(self) = (uv_handle_t *)uv_idle;
+    self->idle_h.data = self;
+    UV_HANDLE(self) = (uv_handle_t *)&self->idle_h;
 
     return (PyObject *)self;
 }

@@ -26,7 +26,7 @@ init_loop(Loop *loop, int is_default)
         PyErr_NoMemory();
         return -1;
     }
-    uv_loop->data = (void *)loop;
+    uv_loop->data = loop;
 
     loop->uv_loop = uv_loop;
     loop->is_default = is_default;
@@ -129,15 +129,16 @@ walk_cb(uv_handle_t* handle, void* arg)
     PyObject *result;
     PyObject *callback = (PyObject *)arg;
     PyObject *obj = (PyObject *)handle->data;
-    if (obj && Py_REFCNT(obj) > 0) {
-        Py_INCREF(obj);
-        result = PyObject_CallFunctionObjArgs(callback, obj, NULL);
-        if (result == NULL) {
-            handle_uncaught_exception(((Handle *)obj)->loop);
-        }
-        Py_DECREF(obj);
-        Py_XDECREF(result);
+
+    ASSERT(obj);
+
+    Py_INCREF(obj);
+    result = PyObject_CallFunctionObjArgs(callback, obj, NULL);
+    if (result == NULL) {
+        handle_uncaught_exception(((Handle *)obj)->loop);
     }
+    Py_DECREF(obj);
+    Py_XDECREF(result);
 }
 
 static PyObject *
@@ -155,7 +156,7 @@ Loop_func_walk(Loop *self, PyObject *args)
     }
 
     Py_INCREF(callback);
-    uv_walk(self->uv_loop, (uv_walk_cb)walk_cb, (void*)callback);
+    uv_walk(self->uv_loop, (uv_walk_cb)walk_cb, callback);
     Py_DECREF(callback);
 
     Py_RETURN_NONE;
@@ -180,13 +181,13 @@ static void
 threadpool_work_cb(uv_work_t *req)
 {
     PyGILState_STATE gstate = PyGILState_Ensure();
-    WorkRequest *pyreq;
+    WorkRequest *work_req;
     PyObject *result;
 
     ASSERT(req);
-    pyreq = (WorkRequest *)req->data;
+    work_req = PYUV_CONTAINER_OF(req, WorkRequest, req);
 
-    result = PyObject_CallFunctionObjArgs(pyreq->work_cb, NULL);
+    result = PyObject_CallFunctionObjArgs(work_req->work_cb, NULL);
     if (result == NULL) {
         ASSERT(PyErr_Occurred());
         PyErr_Print();
@@ -200,25 +201,25 @@ static void
 threadpool_done_cb(uv_work_t *req, int status)
 {
     PyGILState_STATE gstate = PyGILState_Ensure();
-    uv_err_t err;
-    WorkRequest *pyreq;
+    WorkRequest *work_req;
     Loop *loop;
     PyObject *result, *errorno;
 
     ASSERT(req);
-    loop = (Loop *)req->loop->data;
-    pyreq = (WorkRequest *)req->data;
 
-    if (pyreq->done_cb) {
+    work_req = PYUV_CONTAINER_OF(req, WorkRequest, req);
+    loop = REQUEST(work_req)->loop;
+
+    if (work_req->done_cb) {
         if (status < 0) {
-            err = uv_last_error(req->loop);
+            uv_err_t err = uv_last_error(req->loop);
             errorno = PyInt_FromLong((long)err.code);
         } else {
             errorno = Py_None;
             Py_INCREF(Py_None);
         }
 
-        result = PyObject_CallFunctionObjArgs(pyreq->done_cb, errorno, NULL);
+        result = PyObject_CallFunctionObjArgs(work_req->done_cb, errorno, NULL);
         if (result == NULL) {
             handle_uncaught_exception(loop);
         }
@@ -226,13 +227,11 @@ threadpool_done_cb(uv_work_t *req, int status)
         Py_DECREF(errorno);
     }
 
-    Py_DECREF(pyreq->work_cb);
-    Py_XDECREF(pyreq->done_cb);
-    pyreq->work_cb = NULL;
-    pyreq->done_cb = NULL;
-    ((Request *)pyreq)->req = NULL;
-    Py_DECREF(pyreq);
-    PyMem_Free(req);
+    Py_DECREF(work_req->work_cb);
+    Py_XDECREF(work_req->done_cb);
+    work_req->work_cb = NULL;
+    work_req->done_cb = NULL;
+    Py_DECREF(work_req);
 
     /* Refcount was increased in queue_work */
     Py_DECREF(loop);
@@ -244,12 +243,10 @@ static PyObject *
 Loop_func_queue_work(Loop *self, PyObject *args)
 {
     int r;
-    uv_work_t *req;
-    WorkRequest *pyreq;
+    WorkRequest *work_req;
     PyObject *work_cb, *done_cb;
 
-    req = NULL;
-    pyreq = NULL;
+    work_req = NULL;
     done_cb = NULL;
 
     if (!PyArg_ParseTuple(args, "O|O:queue_work", &work_cb, &done_cb)) {
@@ -266,41 +263,33 @@ Loop_func_queue_work(Loop *self, PyObject *args)
         return NULL;
     }
 
-    req = PyMem_Malloc(sizeof *req);
-    if (!req) {
+    work_req = (WorkRequest *)PyObject_CallObject((PyObject *)&WorkRequestType, NULL);
+    if (!work_req) {
         PyErr_NoMemory();
-        goto error;
+        return NULL;
     }
 
-    pyreq = (WorkRequest *)PyObject_CallObject((PyObject *)&WorkRequestType, NULL);
-    if (!pyreq) {
-        PyErr_NoMemory();
-        goto error;
-    }
-    ((Request *)pyreq)->req = (uv_req_t *)req;
-    pyreq->work_cb = work_cb;
-    pyreq->done_cb = done_cb;
-
+    work_req->work_cb = work_cb;
+    work_req->done_cb = done_cb;
+    REQUEST(work_req)->loop = self;
     Py_INCREF(work_cb);
     Py_XINCREF(done_cb);
-    req->data = (void *)pyreq;
+    Py_INCREF(self);
 
-    r = uv_queue_work(self->uv_loop, req, threadpool_work_cb, threadpool_done_cb);
+    r = uv_queue_work(self->uv_loop, &work_req->req, threadpool_work_cb, threadpool_done_cb);
     if (r != 0) {
         RAISE_UV_EXCEPTION(self->uv_loop, PyExc_Exception);
         goto error;
     }
 
-    Py_INCREF(self);
-
-    Py_INCREF(pyreq);
-    return (PyObject *)pyreq;
+    Py_INCREF(work_req);
+    return (PyObject *)work_req;
 
 error:
-    Py_XDECREF(pyreq);
+    Py_DECREF(work_req);
     Py_DECREF(work_cb);
     Py_XDECREF(done_cb);
-    PyMem_Free(req);
+    Py_DECREF(self);
     return NULL;
 }
 

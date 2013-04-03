@@ -33,6 +33,9 @@ typedef int Bool;
 #define PYUV_STRINGIFY_HELPER(x) #x
 #define PYUV_STRINGIFY(x) PYUV_STRINGIFY_HELPER(x)
 
+#define PYUV_CONTAINER_OF(ptr, type, field)                                  \
+      ((type *) ((char *) (ptr) - ((long) &((type *) 0)->field)))
+
 #define UNUSED_ARG(arg)  (void)arg
 
 #if defined(__MINGW32__) || defined(_MSC_VER)
@@ -62,6 +65,10 @@ typedef int Bool;
 #define UV_HANDLE(x) HANDLE(x)->uv_handle
 
 #define UV_HANDLE_LOOP(x) UV_LOOP(HANDLE(x))
+
+#define REQUEST(x) ((Request *)x)
+
+#define UV_REQUEST(x) REQUEST(x)->req_ptr
 
 #define RAISE_IF_INITIALIZED(obj, retval)                                           \
     do {                                                                            \
@@ -121,12 +128,12 @@ static PyTypeObject LoopType;
 /* Handle */
 typedef struct {
     PyObject_HEAD
+    uv_handle_t *uv_handle;
     Bool initialized;
     PyObject *weakreflist;
     PyObject *dict;
     Loop *loop;
     PyObject *on_close_cb;
-    uv_handle_t *uv_handle;
 } Handle;
 
 static PyTypeObject HandleType;
@@ -134,6 +141,7 @@ static PyTypeObject HandleType;
 /* Async */
 typedef struct {
     Handle handle;
+    uv_async_t async_h;
     PyObject *callback;
 } Async;
 
@@ -142,6 +150,7 @@ static PyTypeObject AsyncType;
 /* Timer */
 typedef struct {
     Handle handle;
+    uv_timer_t timer_h;
     PyObject *callback;
 } Timer;
 
@@ -150,6 +159,7 @@ static PyTypeObject TimerType;
 /* Prepare */
 typedef struct {
     Handle handle;
+    uv_prepare_t prepare_h;
     PyObject *callback;
 } Prepare;
 
@@ -158,6 +168,7 @@ static PyTypeObject PrepareType;
 /* Idle */
 typedef struct {
     Handle handle;
+    uv_idle_t idle_h;
     PyObject *callback;
 } Idle;
 
@@ -166,6 +177,7 @@ static PyTypeObject IdleType;
 /* Check */
 typedef struct {
     Handle handle;
+    uv_check_t check_h;
     PyObject *callback;
 } Check;
 
@@ -174,6 +186,7 @@ static PyTypeObject CheckType;
 /* Signal */
 typedef struct {
     Handle handle;
+    uv_signal_t signal_h;
     PyObject *callback;
 } Signal;
 
@@ -182,6 +195,7 @@ static PyTypeObject SignalType;
 /* SignalChecker */
 typedef struct {
     Handle handle;
+    uv_poll_t poll_h;
     long fd;
 } SignalChecker;
 
@@ -198,6 +212,7 @@ static PyTypeObject StreamType;
 /* TCP */
 typedef struct {
     Stream stream;
+    uv_tcp_t tcp_h;
     PyObject *on_new_connection_cb;
 } TCP;
 
@@ -206,6 +221,7 @@ static PyTypeObject TCPType;
 /* Pipe */
 typedef struct {
     Stream stream;
+    uv_pipe_t pipe_h;
     PyObject *on_new_connection_cb;
 } Pipe;
 
@@ -214,6 +230,7 @@ static PyTypeObject PipeType;
 /* TTY */
 typedef struct {
     Stream stream;
+    uv_tty_t tty_h;
 } TTY;
 
 static PyTypeObject TTYType;
@@ -221,6 +238,7 @@ static PyTypeObject TTYType;
 /* UDP */
 typedef struct {
     Handle handle;
+    uv_udp_t udp_h;
     PyObject *on_read_cb;
 } UDP;
 
@@ -229,6 +247,7 @@ static PyTypeObject UDPType;
 /* Poll */
 typedef struct {
     Handle handle;
+    uv_poll_t poll_h;
     PyObject *callback;
     long fd;
 } Poll;
@@ -248,6 +267,7 @@ static PyTypeObject StdIOType;
 typedef struct {
     Handle handle;
     Bool spawned;
+    uv_process_t process_h;
     PyObject *on_exit_cb;
     PyObject *stdio;
 } Process;
@@ -257,6 +277,7 @@ static PyTypeObject ProcessType;
 /* FSEvent */
 typedef struct {
     Handle handle;
+    uv_fs_event_t fsevent_h;
     PyObject *callback;
 } FSEvent;
 
@@ -265,6 +286,7 @@ static PyTypeObject FSEventType;
 /* FSPoll */
 typedef struct {
     Handle handle;
+    uv_fs_poll_t fspoll_h;
     PyObject *callback;
 } FSPoll;
 
@@ -318,7 +340,8 @@ static PyTypeObject SemaphoreType;
 /* Request */
 typedef struct {
     PyObject_HEAD
-    uv_req_t *req;
+    uv_req_t *req_ptr;
+    Loop *loop;
 } Request;
 
 static PyTypeObject RequestType;
@@ -326,6 +349,7 @@ static PyTypeObject RequestType;
 /* GAIRequest */
 typedef struct {
     Request request;
+    uv_getaddrinfo_t req;
     PyObject *callback;
 } GAIRequest;
 
@@ -334,6 +358,7 @@ static PyTypeObject GAIRequestType;
 /* WorkRequest */
 typedef struct {
     Request request;
+    uv_work_t req;
     PyObject *work_cb;
     PyObject *done_cb;
 } WorkRequest;
@@ -343,6 +368,7 @@ static PyTypeObject WorkRequestType;
 /* FSRequest */
 typedef struct {
     Request request;
+    uv_fs_t req;
     PyObject *callback;
 } FSRequest;
 

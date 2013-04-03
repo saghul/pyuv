@@ -184,17 +184,17 @@ getaddrinfo_cb(uv_getaddrinfo_t* req, int status, struct addrinfo* res)
 {
     PyGILState_STATE gstate = PyGILState_Ensure();
     struct addrinfo *ptr;
-    uv_err_t err;
     Loop *loop;
-    GAIRequest *pyreq;
+    GAIRequest *gai_req;
     PyObject *addr, *item, *errorno, *dns_result, *result;
 
     ASSERT(req);
-    pyreq = (GAIRequest *)req->data;
-    loop = (Loop *)req->loop->data;
+
+    gai_req = PYUV_CONTAINER_OF(req, GAIRequest, req);
+    loop = REQUEST(gai_req)->loop;
 
     if (status != 0) {
-        err = uv_last_error(loop->uv_loop);
+        uv_err_t err = uv_last_error(req->loop);
         errorno = PyInt_FromLong((long)err.code);
         dns_result = Py_None;
         Py_INCREF(Py_None);
@@ -234,7 +234,7 @@ getaddrinfo_cb(uv_getaddrinfo_t* req, int status, struct addrinfo* res)
     Py_INCREF(Py_None);
 
 callback:
-    result = PyObject_CallFunctionObjArgs(pyreq->callback, dns_result, errorno, NULL);
+    result = PyObject_CallFunctionObjArgs(gai_req->callback, dns_result, errorno, NULL);
     if (result == NULL) {
         handle_uncaught_exception(loop);
     }
@@ -243,13 +243,10 @@ callback:
     Py_DECREF(errorno);
 
     Py_DECREF(loop);
-    Py_DECREF(pyreq->callback);
-    pyreq->callback = NULL;
-    ((Request *)pyreq)->req = NULL;
-    Py_DECREF(pyreq);
+    Py_DECREF(gai_req->callback);
+    Py_DECREF(gai_req);
 
     uv_freeaddrinfo(res);
-    PyMem_Free(req);
 
     PyGILState_Release(gstate);
 }
@@ -261,16 +258,14 @@ Util_func_getaddrinfo(PyObject *obj, PyObject *args, PyObject *kwargs)
     char port_str[6];
     int port, family, socktype, protocol, flags, r;
     struct addrinfo hints;
-    uv_getaddrinfo_t* req;
     Loop *loop;
-    GAIRequest *pyreq;
+    GAIRequest *gai_req;
     PyObject *callback, *host, *idna;
 
     static char *kwlist[] = {"loop", "callback", "host", "port", "family", "socktype", "protocol", "flags", NULL};
 
     UNUSED_ARG(obj);
-    req = NULL;
-    pyreq = NULL;
+    gai_req = NULL;
     port = socktype = protocol = flags = 0;
     family = AF_UNSPEC;
 
@@ -303,23 +298,16 @@ Util_func_getaddrinfo(PyObject *obj, PyObject *args, PyObject *kwargs)
     }
     snprintf(port_str, sizeof(port_str), "%d", port);
 
-    req = PyMem_Malloc(sizeof *req);
-    if (!req) {
+    gai_req = (GAIRequest *)PyObject_CallObject((PyObject *)&GAIRequestType, NULL);
+    if (!gai_req) {
         PyErr_NoMemory();
-        goto error;
+        return NULL;
     }
 
-    pyreq = (GAIRequest *)PyObject_CallObject((PyObject *)&GAIRequestType, NULL);
-    if (!pyreq) {
-        PyErr_NoMemory();
-        goto error;
-    }
-    ((Request *)pyreq)->req = (uv_req_t *)req;
-    pyreq->callback = callback;
-
+    gai_req->callback = callback;
+    REQUEST(gai_req)->loop = loop;
     Py_INCREF(loop);
     Py_INCREF(callback);
-    req->data = (void *)pyreq;
 
     memset(&hints, 0, sizeof(hints));
     hints.ai_family = family;
@@ -327,18 +315,19 @@ Util_func_getaddrinfo(PyObject *obj, PyObject *args, PyObject *kwargs)
     hints.ai_protocol = protocol;
     hints.ai_flags = flags;
 
-    r = uv_getaddrinfo(loop->uv_loop, req, &getaddrinfo_cb, host_str, port_str, &hints);
+    r = uv_getaddrinfo(loop->uv_loop, &gai_req->req, &getaddrinfo_cb, host_str, port_str, &hints);
     if (r != 0) {
         RAISE_UV_EXCEPTION(loop->uv_loop, PyExc_UVError);
         goto error;
     }
 
-    Py_INCREF(pyreq);
-    return (PyObject *)pyreq;
+    Py_INCREF(gai_req);
+    return (PyObject *)gai_req;
 
 error:
-    Py_XDECREF(pyreq);
-    PyMem_Free(req);
+    Py_DECREF(gai_req);
+    Py_DECREF(loop);
+    Py_DECREF(callback);
     return NULL;
 }
 
@@ -394,9 +383,8 @@ check_signals(uv_poll_t *handle, int status, int events)
     SignalChecker *self;
 
     ASSERT(handle);
-    self = (SignalChecker *)handle->data;
 
-    Py_INCREF(self);
+    self = PYUV_CONTAINER_OF(handle, SignalChecker, poll_h);
 
     if (status == 0) {
         ASSERT(events == UV_READABLE);
@@ -427,7 +415,7 @@ SignalChecker_func_start(SignalChecker *self)
     RAISE_IF_HANDLE_NOT_INITIALIZED(self, NULL);
     RAISE_IF_HANDLE_CLOSED(self, PyExc_HandleClosedError, NULL);
 
-    r = uv_poll_start((uv_poll_t *)UV_HANDLE(self), UV_READABLE, check_signals);
+    r = uv_poll_start(&self->poll_h, UV_READABLE, check_signals);
     if (r != 0) {
         RAISE_UV_EXCEPTION(UV_HANDLE_LOOP(self), PyExc_UVError);
         return NULL;
@@ -445,7 +433,7 @@ SignalChecker_func_stop(SignalChecker *self)
     RAISE_IF_HANDLE_NOT_INITIALIZED(self, NULL);
     RAISE_IF_HANDLE_CLOSED(self, PyExc_HandleClosedError, NULL);
 
-    r = uv_poll_stop((uv_poll_t *)UV_HANDLE(self));
+    r = uv_poll_stop(&self->poll_h);
     if (r != 0) {
         RAISE_UV_EXCEPTION(UV_HANDLE_LOOP(self), PyExc_UVError);
         return NULL;
@@ -470,7 +458,7 @@ SignalChecker_tp_init(SignalChecker *self, PyObject *args, PyObject *kwargs)
         return -1;
     }
 
-    r = uv_poll_init_socket(loop->uv_loop, (uv_poll_t *)UV_HANDLE(self), (uv_os_sock_t)fd);
+    r = uv_poll_init_socket(loop->uv_loop, &self->poll_h, (uv_os_sock_t)fd);
     if (r != 0) {
         RAISE_UV_EXCEPTION(loop->uv_loop, PyExc_UVError);
         return -1;
@@ -488,22 +476,14 @@ static PyObject *
 SignalChecker_tp_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
 {
     SignalChecker *self;
-    uv_poll_t *uv_poll;
-
-    uv_poll = PyMem_Malloc(sizeof *uv_poll);
-    if (!uv_poll) {
-        PyErr_NoMemory();
-        return NULL;
-    }
 
     self = (SignalChecker *)HandleType.tp_new(type, args, kwargs);
     if (!self) {
-        PyMem_Free(uv_poll);
         return NULL;
     }
 
-    uv_poll->data = (void *)self;
-    UV_HANDLE(self) = (uv_handle_t *)uv_poll;
+    self->poll_h.data = self;
+    UV_HANDLE(self) = (uv_handle_t *)&self->poll_h;
 
     return (PyObject *)self;
 }
@@ -613,5 +593,4 @@ init_util(void)
 
     return module;
 }
-
 

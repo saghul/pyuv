@@ -185,15 +185,15 @@ static PyTypeObject StdIOType = {
     } while(0)                                                                      \
 
 static void
-on_process_exit(uv_process_t *process, int exit_status, int term_signal)
+on_process_exit(uv_process_t *handle, int exit_status, int term_signal)
 {
     PyGILState_STATE gstate = PyGILState_Ensure();
     Process *self;
     PyObject *result, *py_exit_status, *py_term_signal;
 
-    ASSERT(process);
-    self = (Process *)process->data;
-    ASSERT(self);
+    ASSERT(handle);
+
+    self = PYUV_CONTAINER_OF(handle, Process, process_h);
 
     py_exit_status = PyInt_FromLong(exit_status);
     py_term_signal = PyInt_FromLong(term_signal);
@@ -388,7 +388,7 @@ Process_func_spawn(Process *self, PyObject *args, PyObject *kwargs)
     options.stdio = stdio_container;
     options.stdio_count = stdio_count;
 
-    r = uv_spawn(UV_HANDLE_LOOP(self), (uv_process_t *)UV_HANDLE(self), options);
+    r = uv_spawn(UV_HANDLE_LOOP(self), &self->process_h, options);
     if (r != 0) {
         RAISE_UV_EXCEPTION(UV_HANDLE_LOOP(self), PyExc_ProcessError);
         ret = NULL;
@@ -449,7 +449,7 @@ Process_func_kill(Process *self, PyObject *args)
         return NULL;
     }
 
-    r = uv_process_kill((uv_process_t *)UV_HANDLE(self), signum);
+    r = uv_process_kill(&self->process_h, signum);
     if (r != 0) {
         RAISE_UV_EXCEPTION(UV_HANDLE_LOOP(self), PyExc_ProcessError);
         return NULL;
@@ -467,7 +467,7 @@ Process_pid_get(Process *self, void *closure)
     if (!HANDLE(self)->initialized || !self->spawned) {
         Py_RETURN_NONE;
     }
-    return PyInt_FromLong((long)((uv_process_t *)UV_HANDLE(self))->pid);
+    return PyInt_FromLong((long)self->process_h.pid);
 }
 
 
@@ -506,22 +506,14 @@ static PyObject *
 Process_tp_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
 {
     Process *self;
-    uv_process_t *uv_process;
-
-    uv_process = PyMem_Malloc(sizeof *uv_process);
-    if (!uv_process) {
-        PyErr_NoMemory();
-        return NULL;
-    }
 
     self = (Process *)HandleType.tp_new(type, args, kwargs);
     if (!self) {
-        PyMem_Free(uv_process);
         return NULL;
     }
 
-    uv_process->data = (void *)self;
-    UV_HANDLE(self) = (uv_handle_t *)uv_process;
+    self->process_h.data = self;
+    UV_HANDLE(self) = (uv_handle_t *)&self->process_h;
     self->spawned = False;
 
     return (PyObject *)self;
@@ -611,5 +603,4 @@ static PyTypeObject ProcessType = {
     0,                                                              /*tp_alloc*/
     Process_tp_new,                                                 /*tp_new*/
 };
-
 

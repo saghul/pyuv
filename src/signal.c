@@ -8,8 +8,8 @@ on_signal_callback(uv_signal_t *handle, int signum)
 
     ASSERT(handle);
 
-    self = (Signal *)handle->data;
-    ASSERT(self);
+    self = PYUV_CONTAINER_OF(handle, Signal, signal_h);
+
     /* Object could go out of scope in the callback, increase refcount to avoid it */
     Py_INCREF(self);
 
@@ -44,7 +44,7 @@ Signal_func_start(Signal *self, PyObject *args)
         return NULL;
     }
 
-    r = uv_signal_start((uv_signal_t *)UV_HANDLE(self), (uv_signal_cb)on_signal_callback, signum);
+    r = uv_signal_start(&self->signal_h, (uv_signal_cb)on_signal_callback, signum);
     if (r != 0) {
         RAISE_UV_EXCEPTION(UV_HANDLE_LOOP(self), PyExc_SignalError);
         return NULL;
@@ -67,7 +67,7 @@ Signal_func_stop(Signal *self)
     RAISE_IF_HANDLE_NOT_INITIALIZED(self, NULL);
     RAISE_IF_HANDLE_CLOSED(self, PyExc_HandleClosedError, NULL);
 
-    r = uv_signal_stop((uv_signal_t *)UV_HANDLE(self));
+    r = uv_signal_stop(&self->signal_h);
     if (r != 0) {
         RAISE_UV_EXCEPTION(UV_HANDLE_LOOP(self), PyExc_SignalError);
         return NULL;
@@ -91,7 +91,7 @@ Signal_tp_init(Signal *self, PyObject *args, PyObject *kwargs)
         return -1;
     }
 
-    r = uv_signal_init(loop->uv_loop, (uv_signal_t *)UV_HANDLE(self));
+    r = uv_signal_init(loop->uv_loop, &self->signal_h);
     if (r != 0) {
         RAISE_UV_EXCEPTION(loop->uv_loop, PyExc_SignalError);
         return -1;
@@ -107,22 +107,14 @@ static PyObject *
 Signal_tp_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
 {
     Signal *self;
-    uv_signal_t *uv_signal;
-
-    uv_signal = PyMem_Malloc(sizeof *uv_signal);
-    if (!uv_signal) {
-        PyErr_NoMemory();
-        return NULL;
-    }
 
     self = (Signal *)HandleType.tp_new(type, args, kwargs);
     if (!self) {
-        PyMem_Free(uv_signal);
         return NULL;
     }
 
-    uv_signal->data = (void *)self;
-    UV_HANDLE(self) = (uv_handle_t *)uv_signal;
+    self->signal_h.data = self;
+    UV_HANDLE(self) = (uv_handle_t *)&self->signal_h;
 
     return (PyObject *)self;
 }

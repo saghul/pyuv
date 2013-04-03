@@ -1,9 +1,42 @@
 
-static INLINE void
-free_handle(uv_handle_t *handle)
+/* Taken from http://bugs.python.org/issue8212
+ * A function to do the necessary adjustments if we find that code
+ * run during a tp_dealloc or tp_free has resurrected an
+ * object.  It adjusts the total reference count and adds a new
+ * reference to the type.
+ */
+static void
+resurrect_object(PyObject *self)
 {
-    ASSERT(handle);
-    PyMem_Free(handle);
+    /* The object lives again. We must now undo the _Py_ForgetReference
+     * done in _Py_Dealloc in object.c.
+     */
+    Py_ssize_t refcnt = Py_REFCNT(self);
+    ASSERT(Py_REFCNT(self) != 0);
+    _Py_NewReference(self);
+    Py_REFCNT(self) = refcnt;
+    /* If Py_REF_DEBUG, _Py_NewReference bumped _Py_RefTotal, so
+     * we need to undo that. */
+    _Py_DEC_REFTOTAL;
+    /* If Py_TRACE_REFS, _Py_NewReference re-added self to the object
+     * chain, so no more to do there.
+     * If COUNT_ALLOCS, the original decref bumped tp_frees, and
+     * _Py_NewReference bumped tp_allocs:  both of those need to be
+     * undone.
+     */
+#ifdef COUNT_ALLOCS
+    --Py_TYPE(self)->tp_frees;
+    --Py_TYPE(self)->tp_allocs;
+#endif
+
+     /* When called from a heap type's dealloc (subtype_dealloc avove), the type will be
+      * decref'ed on return.  This counteracts that.  There is no way to otherwise
+      * let subtype_dealloc know that calling a parent class' tp_dealloc slot caused
+      * the instance to be resurrected.
+      */
+    if (PyType_HasFeature(Py_TYPE(self), Py_TPFLAGS_HEAPTYPE))
+        Py_INCREF(Py_TYPE(self));
+    return;
 }
 
 
@@ -15,8 +48,8 @@ on_handle_close(uv_handle_t *handle)
     PyObject *result;
     ASSERT(handle);
 
+    /* Can't use container_of here */
     self = (Handle *)handle->data;
-    ASSERT(self);
 
     if (self->on_close_cb != Py_None) {
         result = PyObject_CallFunctionObjArgs(self->on_close_cb, self, NULL);
@@ -44,8 +77,13 @@ static void
 on_handle_dealloc_close(uv_handle_t *handle)
 {
     PyGILState_STATE gstate = PyGILState_Ensure();
+    Handle *self;
 
-    free_handle(handle);
+    ASSERT(handle);
+
+    /* Can't use container_of here */
+    self = (Handle *)handle->data;
+    Py_DECREF(self);
 
     PyGILState_Release(gstate);
 }
@@ -172,13 +210,24 @@ static void
 Handle_tp_dealloc(Handle *self)
 {
     ASSERT(self->uv_handle);
-    self->uv_handle->data = NULL;
     if (self->initialized && !uv_is_closing(self->uv_handle)) {
         uv_close(self->uv_handle, on_handle_dealloc_close);
+        ASSERT(uv_is_closing(self->uv_handle));
+        /* resurrect the Python object until the close callback is called */
+        Py_INCREF(self);
+        resurrect_object((PyObject *)self);
+        return;
     } else {
-        /* Refcount is increased in close(), so it's guaranteed that if we arrived here and the user had called close(),
-         * the callback was already executed and it's safe to free the handle */
-        free_handle(self->uv_handle);
+        /* There are a few cases why the code will take this path:
+         *   - A subclass of a handle didn't call it's parent's __init__
+         *   - Aclosed handle is deallocated. Refcount is increased in close(),
+         *     so it's guaranteed that if we arrived here and the user had called close(),
+         *     the callback was already executed.
+         *  - A handle goes out of scope and it's closed here in tp_dealloc and resurrected.
+         *    Once it's deallocated again it will take this path because the handle is now
+         *    closed.
+         */
+        ;
     }
     if (self->weakreflist != NULL) {
         PyObject_ClearWeakRefs((PyObject *)self);

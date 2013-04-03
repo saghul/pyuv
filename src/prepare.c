@@ -9,8 +9,8 @@ on_prepare_callback(uv_prepare_t *handle, int status)
     ASSERT(handle);
     ASSERT(status == 0);
 
-    self = (Prepare *)handle->data;
-    ASSERT(self);
+    self = PYUV_CONTAINER_OF(handle, Prepare, prepare_h);
+
     /* Object could go out of scope in the callback, increase refcount to avoid it */
     Py_INCREF(self);
 
@@ -45,7 +45,7 @@ Prepare_func_start(Prepare *self, PyObject *args)
         return NULL;
     }
 
-    r = uv_prepare_start((uv_prepare_t *)UV_HANDLE(self), on_prepare_callback);
+    r = uv_prepare_start(&self->prepare_h, on_prepare_callback);
     if (r != 0) {
         RAISE_UV_EXCEPTION(UV_HANDLE_LOOP(self), PyExc_PrepareError);
         return NULL;
@@ -68,7 +68,7 @@ Prepare_func_stop(Prepare *self)
     RAISE_IF_HANDLE_NOT_INITIALIZED(self, NULL);
     RAISE_IF_HANDLE_CLOSED(self, PyExc_HandleClosedError, NULL);
 
-    r = uv_prepare_stop((uv_prepare_t *)UV_HANDLE(self));
+    r = uv_prepare_stop(&self->prepare_h);
     if (r != 0) {
         RAISE_UV_EXCEPTION(UV_HANDLE_LOOP(self), PyExc_PrepareError);
         return NULL;
@@ -95,7 +95,7 @@ Prepare_tp_init(Prepare *self, PyObject *args, PyObject *kwargs)
         return -1;
     }
 
-    r = uv_prepare_init(loop->uv_loop, (uv_prepare_t *)UV_HANDLE(self));
+    r = uv_prepare_init(loop->uv_loop, &self->prepare_h);
     if (r != 0) {
         RAISE_UV_EXCEPTION(loop->uv_loop, PyExc_PrepareError);
         return -1;
@@ -111,22 +111,14 @@ static PyObject *
 Prepare_tp_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
 {
     Prepare *self;
-    uv_prepare_t *uv_prepare;
-
-    uv_prepare = PyMem_Malloc(sizeof *uv_prepare);
-    if (!uv_prepare) {
-        PyErr_NoMemory();
-        return NULL;
-    }
 
     self = (Prepare *)HandleType.tp_new(type, args, kwargs);
     if (!self) {
-        PyMem_Free(uv_prepare);
         return NULL;
     }
 
-    uv_prepare->data = (void *)self;
-    UV_HANDLE(self) = (uv_handle_t *)uv_prepare;
+    self->prepare_h.data = self;
+    UV_HANDLE(self) = (uv_handle_t *)&self->prepare_h;
 
     return (PyObject *)self;
 }
@@ -198,5 +190,4 @@ static PyTypeObject PrepareType = {
     0,                                                              /*tp_alloc*/
     Prepare_tp_new,                                                 /*tp_new*/
 };
-
 

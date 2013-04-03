@@ -153,14 +153,15 @@ static void
 stat_cb(uv_fs_t* req) {
     PyGILState_STATE gstate = PyGILState_Ensure();
     Loop *loop;
-    FSRequest *pyreq;
+    FSRequest *fs_req;
     PyObject *result, *errorno, *stat_data, *path;
 
     process_stat(req, &path, &stat_data, &errorno);
-    pyreq = (FSRequest *)req->data;
-    loop = (Loop *)req->loop->data;
 
-    result = PyObject_CallFunctionObjArgs(pyreq->callback, loop, path, stat_data, errorno, NULL);
+    fs_req = PYUV_CONTAINER_OF(req, FSRequest, req);
+    loop = REQUEST(fs_req)->loop;
+
+    result = PyObject_CallFunctionObjArgs(fs_req->callback, loop, path, stat_data, errorno, NULL);
     if (result == NULL) {
         handle_uncaught_exception(loop);
     }
@@ -170,12 +171,9 @@ stat_cb(uv_fs_t* req) {
     Py_DECREF(path);
     Py_DECREF(errorno);
     Py_DECREF(loop);
-    Py_DECREF(pyreq->callback);
-    pyreq->callback = NULL;
-    ((Request *)pyreq)->req = NULL;
-    Py_DECREF(pyreq);
+    Py_DECREF(fs_req->callback);
     uv_fs_req_cleanup(req);
-    PyMem_Free(req);
+    Py_DECREF(fs_req);
 
     PyGILState_Release(gstate);
 }
@@ -185,14 +183,14 @@ static void
 unlink_cb(uv_fs_t* req) {
     PyGILState_STATE gstate = PyGILState_Ensure();
     Loop *loop;
-    FSRequest *pyreq;
+    FSRequest *fs_req;
     PyObject *result, *errorno, *path;
 
     ASSERT(req);
     ASSERT(req->fs_type == UV_FS_UNLINK);
 
-    pyreq = (FSRequest *)req->data;
-    loop = (Loop *)req->loop->data;
+    fs_req = PYUV_CONTAINER_OF(req, FSRequest, req);
+    loop = REQUEST(fs_req)->loop;
 
     if (req->path != NULL) {
         path = Py_BuildValue("s", req->path);
@@ -208,7 +206,7 @@ unlink_cb(uv_fs_t* req) {
         Py_INCREF(Py_None);
     }
 
-    result = PyObject_CallFunctionObjArgs(pyreq->callback, loop, path, errorno, NULL);
+    result = PyObject_CallFunctionObjArgs(fs_req->callback, loop, path, errorno, NULL);
     if (result == NULL) {
         handle_uncaught_exception(loop);
     }
@@ -217,12 +215,9 @@ unlink_cb(uv_fs_t* req) {
     Py_DECREF(path);
     Py_DECREF(errorno);
     Py_DECREF(loop);
-    Py_DECREF(pyreq->callback);
-    pyreq->callback = NULL;
-    ((Request *)pyreq)->req = NULL;
-    Py_DECREF(pyreq);
+    Py_DECREF(fs_req->callback);
     uv_fs_req_cleanup(req);
-    PyMem_Free(req);
+    Py_DECREF(fs_req);
 
     PyGILState_Release(gstate);
 }
@@ -232,14 +227,14 @@ static void
 mkdir_cb(uv_fs_t* req) {
     PyGILState_STATE gstate = PyGILState_Ensure();
     Loop *loop;
-    FSRequest *pyreq;
+    FSRequest *fs_req;
     PyObject *result, *errorno, *path;
 
     ASSERT(req);
     ASSERT(req->fs_type == UV_FS_MKDIR);
 
-    pyreq = (FSRequest *)req->data;
-    loop = (Loop *)req->loop->data;
+    fs_req = PYUV_CONTAINER_OF(req, FSRequest, req);
+    loop = REQUEST(fs_req)->loop;
 
     if (req->path != NULL) {
         path = Py_BuildValue("s", req->path);
@@ -255,7 +250,7 @@ mkdir_cb(uv_fs_t* req) {
         Py_INCREF(Py_None);
     }
 
-    result = PyObject_CallFunctionObjArgs(pyreq->callback, loop, path, errorno, NULL);
+    result = PyObject_CallFunctionObjArgs(fs_req->callback, loop, path, errorno, NULL);
     if (result == NULL) {
         handle_uncaught_exception(loop);
     }
@@ -264,12 +259,9 @@ mkdir_cb(uv_fs_t* req) {
     Py_DECREF(path);
     Py_DECREF(errorno);
     Py_DECREF(loop);
-    Py_DECREF(pyreq->callback);
-    pyreq->callback = NULL;
-    ((Request *)pyreq)->req = NULL;
-    Py_DECREF(pyreq);
+    Py_DECREF(fs_req->callback);
     uv_fs_req_cleanup(req);
-    PyMem_Free(req);
+    Py_DECREF(fs_req);
 
     PyGILState_Release(gstate);
 }
@@ -279,14 +271,14 @@ static void
 rmdir_cb(uv_fs_t* req) {
     PyGILState_STATE gstate = PyGILState_Ensure();
     Loop *loop;
-    FSRequest *pyreq;
+    FSRequest *fs_req;
     PyObject *result, *errorno, *path;
 
     ASSERT(req);
     ASSERT(req->fs_type == UV_FS_RMDIR);
 
-    pyreq = (FSRequest *)req->data;
-    loop = (Loop *)req->loop->data;
+    fs_req = PYUV_CONTAINER_OF(req, FSRequest, req);
+    loop = REQUEST(fs_req)->loop;
 
     if (req->path != NULL) {
         path = Py_BuildValue("s", req->path);
@@ -302,7 +294,7 @@ rmdir_cb(uv_fs_t* req) {
         Py_INCREF(Py_None);
     }
 
-    result = PyObject_CallFunctionObjArgs(pyreq->callback, loop, path, errorno, NULL);
+    result = PyObject_CallFunctionObjArgs(fs_req->callback, loop, path, errorno, NULL);
     if (result == NULL) {
         handle_uncaught_exception(loop);
     }
@@ -311,12 +303,9 @@ rmdir_cb(uv_fs_t* req) {
     Py_DECREF(path);
     Py_DECREF(errorno);
     Py_DECREF(loop);
-    Py_DECREF(pyreq->callback);
-    pyreq->callback = NULL;
-    ((Request *)pyreq)->req = NULL;
-    Py_DECREF(pyreq);
+    Py_DECREF(fs_req->callback);
     uv_fs_req_cleanup(req);
-    PyMem_Free(req);
+    Py_DECREF(fs_req);
 
     PyGILState_Release(gstate);
 }
@@ -326,14 +315,14 @@ static void
 rename_cb(uv_fs_t* req) {
     PyGILState_STATE gstate = PyGILState_Ensure();
     Loop *loop;
-    FSRequest *pyreq;
+    FSRequest *fs_req;
     PyObject *result, *errorno, *path;
 
     ASSERT(req);
     ASSERT(req->fs_type == UV_FS_RENAME);
 
-    pyreq = (FSRequest *)req->data;
-    loop = (Loop *)req->loop->data;
+    fs_req = PYUV_CONTAINER_OF(req, FSRequest, req);
+    loop = REQUEST(fs_req)->loop;
 
     if (req->path != NULL) {
         path = Py_BuildValue("s", req->path);
@@ -349,7 +338,7 @@ rename_cb(uv_fs_t* req) {
         Py_INCREF(Py_None);
     }
 
-    result = PyObject_CallFunctionObjArgs(pyreq->callback, loop, path, errorno, NULL);
+    result = PyObject_CallFunctionObjArgs(fs_req->callback, loop, path, errorno, NULL);
     if (result == NULL) {
         handle_uncaught_exception(loop);
     }
@@ -358,12 +347,9 @@ rename_cb(uv_fs_t* req) {
     Py_DECREF(path);
     Py_DECREF(errorno);
     Py_DECREF(loop);
-    Py_DECREF(pyreq->callback);
-    pyreq->callback = NULL;
-    ((Request *)pyreq)->req = NULL;
-    Py_DECREF(pyreq);
+    Py_DECREF(fs_req->callback);
     uv_fs_req_cleanup(req);
-    PyMem_Free(req);
+    Py_DECREF(fs_req);
 
     PyGILState_Release(gstate);
 }
@@ -373,14 +359,14 @@ static void
 chmod_cb(uv_fs_t* req) {
     PyGILState_STATE gstate = PyGILState_Ensure();
     Loop *loop;
-    FSRequest *pyreq;
+    FSRequest *fs_req;
     PyObject *result, *errorno, *path;
 
     ASSERT(req);
     ASSERT(req->fs_type == UV_FS_CHMOD || req->fs_type == UV_FS_FCHMOD);
 
-    pyreq = (FSRequest *)req->data;
-    loop = (Loop *)req->loop->data;
+    fs_req = PYUV_CONTAINER_OF(req, FSRequest, req);
+    loop = REQUEST(fs_req)->loop;
 
     if (req->path != NULL) {
         path = Py_BuildValue("s", req->path);
@@ -396,7 +382,7 @@ chmod_cb(uv_fs_t* req) {
         Py_INCREF(Py_None);
     }
 
-    result = PyObject_CallFunctionObjArgs(pyreq->callback, loop, path, errorno, NULL);
+    result = PyObject_CallFunctionObjArgs(fs_req->callback, loop, path, errorno, NULL);
     if (result == NULL) {
         handle_uncaught_exception(loop);
     }
@@ -405,12 +391,9 @@ chmod_cb(uv_fs_t* req) {
     Py_DECREF(path);
     Py_DECREF(errorno);
     Py_DECREF(loop);
-    Py_DECREF(pyreq->callback);
-    pyreq->callback = NULL;
-    ((Request *)pyreq)->req = NULL;
-    Py_DECREF(pyreq);
+    Py_DECREF(fs_req->callback);
     uv_fs_req_cleanup(req);
-    PyMem_Free(req);
+    Py_DECREF(fs_req);
 
     PyGILState_Release(gstate);
 }
@@ -420,14 +403,14 @@ static void
 link_cb(uv_fs_t* req) {
     PyGILState_STATE gstate = PyGILState_Ensure();
     Loop *loop;
-    FSRequest *pyreq;
+    FSRequest *fs_req;
     PyObject *result, *errorno, *path;
 
     ASSERT(req);
     ASSERT(req->fs_type == UV_FS_LINK);
 
-    pyreq = (FSRequest *)req->data;
-    loop = (Loop *)req->loop->data;
+    fs_req = PYUV_CONTAINER_OF(req, FSRequest, req);
+    loop = REQUEST(fs_req)->loop;
 
     if (req->path != NULL) {
         path = Py_BuildValue("s", req->path);
@@ -443,7 +426,7 @@ link_cb(uv_fs_t* req) {
         Py_INCREF(Py_None);
     }
 
-    result = PyObject_CallFunctionObjArgs(pyreq->callback, loop, path, errorno, NULL);
+    result = PyObject_CallFunctionObjArgs(fs_req->callback, loop, path, errorno, NULL);
     if (result == NULL) {
         handle_uncaught_exception(loop);
     }
@@ -452,12 +435,9 @@ link_cb(uv_fs_t* req) {
     Py_DECREF(path);
     Py_DECREF(errorno);
     Py_DECREF(loop);
-    Py_DECREF(pyreq->callback);
-    pyreq->callback = NULL;
-    ((Request *)pyreq)->req = NULL;
-    Py_DECREF(pyreq);
+    Py_DECREF(fs_req->callback);
     uv_fs_req_cleanup(req);
-    PyMem_Free(req);
+    Py_DECREF(fs_req);
 
     PyGILState_Release(gstate);
 }
@@ -467,14 +447,14 @@ static void
 symlink_cb(uv_fs_t* req) {
     PyGILState_STATE gstate = PyGILState_Ensure();
     Loop *loop;
-    FSRequest *pyreq;
+    FSRequest *fs_req;
     PyObject *result, *errorno, *path;
 
     ASSERT(req);
     ASSERT(req->fs_type == UV_FS_SYMLINK);
 
-    pyreq = (FSRequest *)req->data;
-    loop = (Loop *)req->loop->data;
+    fs_req = PYUV_CONTAINER_OF(req, FSRequest, req);
+    loop = REQUEST(fs_req)->loop;
 
     if (req->path != NULL) {
         path = Py_BuildValue("s", req->path);
@@ -490,7 +470,7 @@ symlink_cb(uv_fs_t* req) {
         Py_INCREF(Py_None);
     }
 
-    result = PyObject_CallFunctionObjArgs(pyreq->callback, loop, path, errorno, NULL);
+    result = PyObject_CallFunctionObjArgs(fs_req->callback, loop, path, errorno, NULL);
     if (result == NULL) {
         handle_uncaught_exception(loop);
     }
@@ -499,12 +479,9 @@ symlink_cb(uv_fs_t* req) {
     Py_DECREF(path);
     Py_DECREF(errorno);
     Py_DECREF(loop);
-    Py_DECREF(pyreq->callback);
-    pyreq->callback = NULL;
-    ((Request *)pyreq)->req = NULL;
-    Py_DECREF(pyreq);
+    Py_DECREF(fs_req->callback);
     uv_fs_req_cleanup(req);
-    PyMem_Free(req);
+    Py_DECREF(fs_req);
 
     PyGILState_Release(gstate);
 }
@@ -531,14 +508,15 @@ static void
 readlink_cb(uv_fs_t* req) {
     PyGILState_STATE gstate = PyGILState_Ensure();
     Loop *loop;
-    FSRequest *pyreq;
+    FSRequest *fs_req;
     PyObject *result, *errorno, *path;
 
     process_readlink(req, &path, &errorno);
-    pyreq = (FSRequest *)req->data;
-    loop = (Loop *)req->loop->data;
 
-    result = PyObject_CallFunctionObjArgs(pyreq->callback, loop, path, errorno, NULL);
+    fs_req = PYUV_CONTAINER_OF(req, FSRequest, req);
+    loop = REQUEST(fs_req)->loop;
+
+    result = PyObject_CallFunctionObjArgs(fs_req->callback, loop, path, errorno, NULL);
     if (result == NULL) {
         handle_uncaught_exception(loop);
     }
@@ -547,12 +525,9 @@ readlink_cb(uv_fs_t* req) {
     Py_DECREF(path);
     Py_DECREF(errorno);
     Py_DECREF(loop);
-    Py_DECREF(pyreq->callback);
-    pyreq->callback = NULL;
-    ((Request *)pyreq)->req = NULL;
-    Py_DECREF(pyreq);
+    Py_DECREF(fs_req->callback);
     uv_fs_req_cleanup(req);
-    PyMem_Free(req);
+    Py_DECREF(fs_req);
 
     PyGILState_Release(gstate);
 }
@@ -562,14 +537,14 @@ static void
 chown_cb(uv_fs_t* req) {
     PyGILState_STATE gstate = PyGILState_Ensure();
     Loop *loop;
-    FSRequest *pyreq;
+    FSRequest *fs_req;
     PyObject *result, *errorno, *path;
 
     ASSERT(req);
     ASSERT(req->fs_type == UV_FS_CHOWN || req->fs_type == UV_FS_FCHOWN);
 
-    pyreq = (FSRequest *)req->data;
-    loop = (Loop *)req->loop->data;
+    fs_req = PYUV_CONTAINER_OF(req, FSRequest, req);
+    loop = REQUEST(fs_req)->loop;
 
     if (req->path != NULL) {
         path = Py_BuildValue("s", req->path);
@@ -585,7 +560,7 @@ chown_cb(uv_fs_t* req) {
         Py_INCREF(Py_None);
     }
 
-    result = PyObject_CallFunctionObjArgs(pyreq->callback, loop, path, errorno, NULL);
+    result = PyObject_CallFunctionObjArgs(fs_req->callback, loop, path, errorno, NULL);
     if (result == NULL) {
         handle_uncaught_exception(loop);
     }
@@ -594,12 +569,9 @@ chown_cb(uv_fs_t* req) {
     Py_DECREF(path);
     Py_DECREF(errorno);
     Py_DECREF(loop);
-    Py_DECREF(pyreq->callback);
-    pyreq->callback = NULL;
-    ((Request *)pyreq)->req = NULL;
-    Py_DECREF(pyreq);
+    Py_DECREF(fs_req->callback);
     uv_fs_req_cleanup(req);
-    PyMem_Free(req);
+    Py_DECREF(fs_req);
 
     PyGILState_Release(gstate);
 }
@@ -633,14 +605,15 @@ static void
 open_cb(uv_fs_t* req) {
     PyGILState_STATE gstate = PyGILState_Ensure();
     Loop *loop;
-    FSRequest *pyreq;
+    FSRequest *fs_req;
     PyObject *result, *fd, *errorno, *path;
 
     process_open(req, &path, &fd, &errorno);
-    pyreq = (FSRequest *)req->data;
-    loop = (Loop *)req->loop->data;
 
-    result = PyObject_CallFunctionObjArgs(pyreq->callback, loop, path, fd, errorno, NULL);
+    fs_req = PYUV_CONTAINER_OF(req, FSRequest, req);
+    loop = REQUEST(fs_req)->loop;
+
+    result = PyObject_CallFunctionObjArgs(fs_req->callback, loop, path, fd, errorno, NULL);
     if (result == NULL) {
         handle_uncaught_exception(loop);
     }
@@ -650,12 +623,9 @@ open_cb(uv_fs_t* req) {
     Py_DECREF(path);
     Py_DECREF(errorno);
     Py_DECREF(loop);
-    Py_DECREF(pyreq->callback);
-    pyreq->callback = NULL;
-    ((Request *)pyreq)->req = NULL;
-    Py_DECREF(pyreq);
+    Py_DECREF(fs_req->callback);
     uv_fs_req_cleanup(req);
-    PyMem_Free(req);
+    Py_DECREF(fs_req);
 
     PyGILState_Release(gstate);
 }
@@ -665,14 +635,14 @@ static void
 close_cb(uv_fs_t* req) {
     PyGILState_STATE gstate = PyGILState_Ensure();
     Loop *loop;
-    FSRequest *pyreq;
+    FSRequest *fs_req;
     PyObject *result, *errorno, *path;
 
     ASSERT(req);
     ASSERT(req->fs_type == UV_FS_CLOSE);
 
-    pyreq = (FSRequest *)req->data;
-    loop = (Loop *)req->loop->data;
+    fs_req = PYUV_CONTAINER_OF(req, FSRequest, req);
+    loop = REQUEST(fs_req)->loop;
 
     if (req->path != NULL) {
         path = Py_BuildValue("s", req->path);
@@ -688,7 +658,7 @@ close_cb(uv_fs_t* req) {
         Py_INCREF(Py_None);
     }
 
-    result = PyObject_CallFunctionObjArgs(pyreq->callback, loop, path, errorno, NULL);
+    result = PyObject_CallFunctionObjArgs(fs_req->callback, loop, path, errorno, NULL);
     if (result == NULL) {
         handle_uncaught_exception(loop);
     }
@@ -697,12 +667,9 @@ close_cb(uv_fs_t* req) {
     Py_DECREF(path);
     Py_DECREF(errorno);
     Py_DECREF(loop);
-    Py_DECREF(pyreq->callback);
-    pyreq->callback = NULL;
-    ((Request *)pyreq)->req = NULL;
-    Py_DECREF(pyreq);
+    Py_DECREF(fs_req->callback);
     uv_fs_req_cleanup(req);
-    PyMem_Free(req);
+    Py_DECREF(fs_req);
 
     PyGILState_Release(gstate);
 }
@@ -736,14 +703,15 @@ static void
 read_cb(uv_fs_t* req) {
     PyGILState_STATE gstate = PyGILState_Ensure();
     Loop *loop;
-    FSRequest *pyreq;
+    FSRequest *fs_req;
     PyObject *result, *errorno, *read_data, *path;
 
     process_read(req, &path, &read_data, &errorno);
-    pyreq = (FSRequest *)req->data;
-    loop = (Loop *)req->loop->data;
 
-    result = PyObject_CallFunctionObjArgs(pyreq->callback, loop, path, read_data, errorno, NULL);
+    fs_req = PYUV_CONTAINER_OF(req, FSRequest, req);
+    loop = REQUEST(fs_req)->loop;
+
+    result = PyObject_CallFunctionObjArgs(fs_req->callback, loop, path, read_data, errorno, NULL);
     if (result == NULL) {
         handle_uncaught_exception(loop);
     }
@@ -753,13 +721,10 @@ read_cb(uv_fs_t* req) {
     Py_DECREF(path);
     Py_DECREF(errorno);
     Py_DECREF(loop);
-    Py_DECREF(pyreq->callback);
-    pyreq->callback = NULL;
-    ((Request *)pyreq)->req = NULL;
-    Py_DECREF(pyreq);
+    Py_DECREF(fs_req->callback);
     PyMem_Free(req->buf);
     uv_fs_req_cleanup(req);
-    PyMem_Free(req);
+    Py_DECREF(fs_req);
 
     PyGILState_Release(gstate);
 }
@@ -791,17 +756,18 @@ static void
 write_cb(uv_fs_t* req) {
     PyGILState_STATE gstate = PyGILState_Ensure();
     Loop *loop;
-    FSRequest *pyreq;
+    FSRequest *fs_req;
     PyObject *result, *errorno, *bytes_written, *path;
 
     ASSERT(req);
     ASSERT(req->fs_type == UV_FS_WRITE);
 
     process_write(req, &path, &bytes_written, &errorno);
-    pyreq = (FSRequest *)req->data;
-    loop = (Loop *)req->loop->data;
 
-    result = PyObject_CallFunctionObjArgs(pyreq->callback, loop, path, bytes_written, errorno, NULL);
+    fs_req = PYUV_CONTAINER_OF(req, FSRequest, req);
+    loop = REQUEST(fs_req)->loop;
+
+    result = PyObject_CallFunctionObjArgs(fs_req->callback, loop, path, bytes_written, errorno, NULL);
     if (result == NULL) {
         handle_uncaught_exception(loop);
     }
@@ -811,13 +777,10 @@ write_cb(uv_fs_t* req) {
     Py_DECREF(path);
     Py_DECREF(errorno);
     Py_DECREF(loop);
-    Py_DECREF(pyreq->callback);
-    pyreq->callback = NULL;
-    ((Request *)pyreq)->req = NULL;
-    Py_DECREF(pyreq);
+    Py_DECREF(fs_req->callback);
     PyMem_Free(req->buf);
     uv_fs_req_cleanup(req);
-    PyMem_Free(req);
+    Py_DECREF(fs_req);
 
     PyGILState_Release(gstate);
 }
@@ -827,14 +790,14 @@ static void
 fsync_cb(uv_fs_t* req) {
     PyGILState_STATE gstate = PyGILState_Ensure();
     Loop *loop;
-    FSRequest *pyreq;
+    FSRequest *fs_req;
     PyObject *result, *errorno, *path;
 
     ASSERT(req);
     ASSERT(req->fs_type == UV_FS_FSYNC || req->fs_type == UV_FS_FDATASYNC);
 
-    pyreq = (FSRequest *)req->data;
-    loop = (Loop *)req->loop->data;
+    fs_req = PYUV_CONTAINER_OF(req, FSRequest, req);
+    loop = REQUEST(fs_req)->loop;
 
     if (req->path != NULL) {
         path = Py_BuildValue("s", req->path);
@@ -850,7 +813,7 @@ fsync_cb(uv_fs_t* req) {
         Py_INCREF(Py_None);
     }
 
-    result = PyObject_CallFunctionObjArgs(pyreq->callback, loop, path, errorno, NULL);
+    result = PyObject_CallFunctionObjArgs(fs_req->callback, loop, path, errorno, NULL);
     if (result == NULL) {
         handle_uncaught_exception(loop);
     }
@@ -859,12 +822,9 @@ fsync_cb(uv_fs_t* req) {
     Py_DECREF(path);
     Py_DECREF(errorno);
     Py_DECREF(loop);
-    Py_DECREF(pyreq->callback);
-    pyreq->callback = NULL;
-    ((Request *)pyreq)->req = NULL;
-    Py_DECREF(pyreq);
+    Py_DECREF(fs_req->callback);
     uv_fs_req_cleanup(req);
-    PyMem_Free(req);
+    Py_DECREF(fs_req);
 
     PyGILState_Release(gstate);
 }
@@ -874,14 +834,14 @@ static void
 ftruncate_cb(uv_fs_t* req) {
     PyGILState_STATE gstate = PyGILState_Ensure();
     Loop *loop;
-    FSRequest *pyreq;
+    FSRequest *fs_req;
     PyObject *result, *errorno, *path;
 
     ASSERT(req);
     ASSERT(req->fs_type == UV_FS_FTRUNCATE);
 
-    pyreq = (FSRequest *)req->data;
-    loop = (Loop *)req->loop->data;
+    fs_req = PYUV_CONTAINER_OF(req, FSRequest, req);
+    loop = REQUEST(fs_req)->loop;
 
     if (req->path != NULL) {
         path = Py_BuildValue("s", req->path);
@@ -897,7 +857,7 @@ ftruncate_cb(uv_fs_t* req) {
         Py_INCREF(Py_None);
     }
 
-    result = PyObject_CallFunctionObjArgs(pyreq->callback, loop, path, errorno, NULL);
+    result = PyObject_CallFunctionObjArgs(fs_req->callback, loop, path, errorno, NULL);
     if (result == NULL) {
         handle_uncaught_exception(loop);
     }
@@ -906,12 +866,9 @@ ftruncate_cb(uv_fs_t* req) {
     Py_DECREF(path);
     Py_DECREF(errorno);
     Py_DECREF(loop);
-    Py_DECREF(pyreq->callback);
-    pyreq->callback = NULL;
-    ((Request *)pyreq)->req = NULL;
-    Py_DECREF(pyreq);
+    Py_DECREF(fs_req->callback);
     uv_fs_req_cleanup(req);
-    PyMem_Free(req);
+    Py_DECREF(fs_req);
 
     PyGILState_Release(gstate);
 }
@@ -964,14 +921,15 @@ static void
 readdir_cb(uv_fs_t* req) {
     PyGILState_STATE gstate = PyGILState_Ensure();
     Loop *loop;
-    FSRequest *pyreq;
+    FSRequest *fs_req;
     PyObject *result, *errorno, *files, *path;
 
     process_readdir(req, &path, &files, &errorno);
-    pyreq = (FSRequest *)req->data;
-    loop = (Loop *)req->loop->data;
 
-    result = PyObject_CallFunctionObjArgs(pyreq->callback, loop, path, files, errorno, NULL);
+    fs_req = PYUV_CONTAINER_OF(req, FSRequest, req);
+    loop = REQUEST(fs_req)->loop;
+
+    result = PyObject_CallFunctionObjArgs(fs_req->callback, loop, path, files, errorno, NULL);
     if (result == NULL) {
         handle_uncaught_exception(loop);
     }
@@ -981,12 +939,9 @@ readdir_cb(uv_fs_t* req) {
     Py_DECREF(path);
     Py_DECREF(errorno);
     Py_DECREF(loop);
-    Py_DECREF(pyreq->callback);
-    pyreq->callback = NULL;
-    ((Request *)pyreq)->req = NULL;
-    Py_DECREF(pyreq);
+    Py_DECREF(fs_req->callback);
     uv_fs_req_cleanup(req);
-    PyMem_Free(req);
+    Py_DECREF(fs_req);
 
     PyGILState_Release(gstate);
 }
@@ -1019,14 +974,15 @@ static void
 sendfile_cb(uv_fs_t* req) {
     PyGILState_STATE gstate = PyGILState_Ensure();
     Loop *loop;
-    FSRequest *pyreq;
+    FSRequest *fs_req;
     PyObject *result, *errorno, *bytes_written, *path;
 
     process_sendfile(req, &path, &bytes_written, &errorno);
-    pyreq = (FSRequest *)req->data;
-    loop = (Loop *)req->loop->data;
 
-    result = PyObject_CallFunctionObjArgs(pyreq->callback, loop, path, bytes_written, errorno, NULL);
+    fs_req = PYUV_CONTAINER_OF(req, FSRequest, req);
+    loop = REQUEST(fs_req)->loop;
+
+    result = PyObject_CallFunctionObjArgs(fs_req->callback, loop, path, bytes_written, errorno, NULL);
     if (result == NULL) {
         handle_uncaught_exception(loop);
     }
@@ -1036,12 +992,9 @@ sendfile_cb(uv_fs_t* req) {
     Py_DECREF(path);
     Py_DECREF(errorno);
     Py_DECREF(loop);
-    Py_DECREF(pyreq->callback);
-    pyreq->callback = NULL;
-    ((Request *)pyreq)->req = NULL;
-    Py_DECREF(pyreq);
+    Py_DECREF(fs_req->callback);
     uv_fs_req_cleanup(req);
-    PyMem_Free(req);
+    Py_DECREF(fs_req);
 
     PyGILState_Release(gstate);
 }
@@ -1051,14 +1004,14 @@ static void
 utime_cb(uv_fs_t* req) {
     PyGILState_STATE gstate = PyGILState_Ensure();
     Loop *loop;
-    FSRequest *pyreq;
+    FSRequest *fs_req;
     PyObject *result, *errorno, *path;
 
     ASSERT(req);
     ASSERT(req->fs_type == UV_FS_UTIME || req->fs_type == UV_FS_FUTIME);
 
-    pyreq = (FSRequest *)req->data;
-    loop = (Loop *)req->loop->data;
+    fs_req = PYUV_CONTAINER_OF(req, FSRequest, req);
+    loop = REQUEST(fs_req)->loop;
 
     if (req->path != NULL) {
         path = Py_BuildValue("s", req->path);
@@ -1074,7 +1027,7 @@ utime_cb(uv_fs_t* req) {
         Py_INCREF(Py_None);
     }
 
-    result = PyObject_CallFunctionObjArgs(pyreq->callback, loop, path, errorno, NULL);
+    result = PyObject_CallFunctionObjArgs(fs_req->callback, loop, path, errorno, NULL);
     if (result == NULL) {
         handle_uncaught_exception(loop);
     }
@@ -1083,12 +1036,9 @@ utime_cb(uv_fs_t* req) {
     Py_DECREF(path);
     Py_DECREF(errorno);
     Py_DECREF(loop);
-    Py_DECREF(pyreq->callback);
-    pyreq->callback = NULL;
-    ((Request *)pyreq)->req = NULL;
-    Py_DECREF(pyreq);
+    Py_DECREF(fs_req->callback);
     uv_fs_req_cleanup(req);
-    PyMem_Free(req);
+    Py_DECREF(fs_req);
 
     PyGILState_Release(gstate);
 }
@@ -1099,15 +1049,13 @@ stat_func(PyObject *args, PyObject *kwargs, int type)
 {
     int r;
     char *path;
-    uv_fs_t *req;
     Loop *loop;
-    FSRequest *pyreq;
+    FSRequest *fs_req;
     PyObject *callback, *py_path, *stat_data, *py_errorno, *ret;
 
     static char *kwlist[] = {"loop", "path", "callback", NULL};
 
-    req = NULL;
-    pyreq = NULL;
+    fs_req = NULL;
     callback = NULL;
 
     if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!s|O:stat", kwlist, &LoopType, &loop, &path, &callback)) {
@@ -1119,29 +1067,21 @@ stat_func(PyObject *args, PyObject *kwargs, int type)
         return NULL;
     }
 
-    Py_INCREF(loop);
-    Py_XINCREF(callback);
+    fs_req = (FSRequest *)PyObject_CallObject((PyObject *)&FSRequestType, NULL);
+    if (!fs_req) {
+        PyErr_NoMemory();
+        return NULL;
+    }
 
-    req = PyMem_Malloc(sizeof *req);
-    if (!req) {
-        PyErr_NoMemory();
-        ret = NULL;
-        goto end;
-    }
-    pyreq = (FSRequest *)PyObject_CallObject((PyObject *)&FSRequestType, NULL);
-    if (!pyreq) {
-        PyErr_NoMemory();
-        ret = NULL;
-        goto end;
-    }
-    ((Request *)pyreq)->req = (uv_req_t *)req;
-    pyreq->callback = callback;
-    req->data = (void *)pyreq;
+    fs_req->callback = callback;
+    REQUEST(fs_req)->loop = loop;
+    Py_XINCREF(callback);
+    Py_INCREF(loop);
 
     if (type == UV_FS_STAT) {
-        r = uv_fs_stat(loop->uv_loop, req, path, (callback != NULL) ? stat_cb : NULL);
+        r = uv_fs_stat(loop->uv_loop, &fs_req->req, path, (callback != NULL) ? stat_cb : NULL);
     } else {
-        r = uv_fs_lstat(loop->uv_loop, req, path, (callback != NULL) ? stat_cb : NULL);
+        r = uv_fs_lstat(loop->uv_loop, &fs_req->req, path, (callback != NULL) ? stat_cb : NULL);
     }
     if (r < 0) {
         RAISE_UV_EXCEPTION(loop->uv_loop, PyExc_FSError);
@@ -1151,20 +1091,19 @@ stat_func(PyObject *args, PyObject *kwargs, int type)
 
     if (callback != NULL) {
         /* No need to cleanup, it will be done in the callback */
-        Py_INCREF(pyreq);
-        return (PyObject *)pyreq;
+        Py_INCREF(fs_req);
+        return (PyObject *)fs_req;
     } else {
-        process_stat(req, &py_path, &stat_data, &py_errorno);
+        process_stat(&fs_req->req, &py_path, &stat_data, &py_errorno);
         Py_DECREF(py_path);
         Py_DECREF(py_errorno);
         ret = stat_data;
     }
 
 end:
-    Py_XDECREF(pyreq);
     Py_DECREF(loop);
     Py_XDECREF(callback);
-    PyMem_Free(req);
+    Py_DECREF(fs_req);
     return ret;
 }
 
@@ -1189,16 +1128,14 @@ static PyObject *
 FS_func_fstat(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
     int r, fd;
-    uv_fs_t *req;
     Loop *loop;
-    FSRequest *pyreq;
+    FSRequest *fs_req;
     PyObject *callback, *py_path, *stat_data, *py_errorno, *ret;
 
     static char *kwlist[] = {"loop", "fd", "callback", NULL};
 
     UNUSED_ARG(obj);
-    req = NULL;
-    pyreq = NULL;
+    fs_req = NULL;
     callback = NULL;
 
     if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!i|O:fstat", kwlist, &LoopType, &loop, &fd, &callback)) {
@@ -1210,26 +1147,18 @@ FS_func_fstat(PyObject *obj, PyObject *args, PyObject *kwargs)
         return NULL;
     }
 
-    Py_INCREF(loop);
+    fs_req = (FSRequest *)PyObject_CallObject((PyObject *)&FSRequestType, NULL);
+    if (!fs_req) {
+        PyErr_NoMemory();
+        return NULL;
+    }
+
+    fs_req->callback = callback;
+    REQUEST(fs_req)->loop = loop;
     Py_XINCREF(callback);
+    Py_INCREF(loop);
 
-    req = PyMem_Malloc(sizeof *req);
-    if (!req) {
-        PyErr_NoMemory();
-        ret = NULL;
-        goto end;
-    }
-    pyreq = (FSRequest *)PyObject_CallObject((PyObject *)&FSRequestType, NULL);
-    if (!pyreq) {
-        PyErr_NoMemory();
-        ret = NULL;
-        goto end;
-    }
-    ((Request *)pyreq)->req = (uv_req_t *)req;
-    pyreq->callback = callback;
-    req->data = (void *)pyreq;
-
-    r = uv_fs_fstat(loop->uv_loop, req, fd, (callback != NULL) ? stat_cb : NULL);
+    r = uv_fs_fstat(loop->uv_loop, &fs_req->req, fd, (callback != NULL) ? stat_cb : NULL);
     if (r < 0) {
         RAISE_UV_EXCEPTION(loop->uv_loop, PyExc_FSError);
         ret = NULL;
@@ -1238,20 +1167,19 @@ FS_func_fstat(PyObject *obj, PyObject *args, PyObject *kwargs)
 
     if (callback != NULL) {
         /* No need to cleanup, it will be done in the callback */
-        Py_INCREF(pyreq);
-        return (PyObject *)pyreq;
+        Py_INCREF(fs_req);
+        return (PyObject *)fs_req;
     } else {
-        process_stat(req, &py_path, &stat_data, &py_errorno);
+        process_stat(&fs_req->req, &py_path, &stat_data, &py_errorno);
         Py_DECREF(py_path);
         Py_DECREF(py_errorno);
         ret = stat_data;
     }
 
 end:
-    Py_XDECREF(pyreq);
     Py_DECREF(loop);
     Py_XDECREF(callback);
-    PyMem_Free(req);
+    Py_DECREF(fs_req);
     return ret;
 }
 
@@ -1261,16 +1189,14 @@ FS_func_unlink(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
     int r;
     char *path;
-    uv_fs_t *req;
     Loop *loop;
-    FSRequest *pyreq;
+    FSRequest *fs_req;
     PyObject *callback;
 
     static char *kwlist[] = {"loop", "path", "callback", NULL};
 
     UNUSED_ARG(obj);
-    req = NULL;
-    pyreq = NULL;
+    fs_req = NULL;
     callback = NULL;
 
     if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!s|O:unlink", kwlist, &LoopType, &loop, &path, &callback)) {
@@ -1282,41 +1208,34 @@ FS_func_unlink(PyObject *obj, PyObject *args, PyObject *kwargs)
         return NULL;
     }
 
-    Py_INCREF(loop);
+    fs_req = (FSRequest *)PyObject_CallObject((PyObject *)&FSRequestType, NULL);
+    if (!fs_req) {
+        PyErr_NoMemory();
+        return NULL;
+    }
+
+    fs_req->callback = callback;
+    REQUEST(fs_req)->loop = loop;
     Py_XINCREF(callback);
+    Py_INCREF(loop);
 
-    req = PyMem_Malloc(sizeof *req);
-    if (!req) {
-        PyErr_NoMemory();
-        goto end;
-    }
-    pyreq = (FSRequest *)PyObject_CallObject((PyObject *)&FSRequestType, NULL);
-    if (!pyreq) {
-        PyErr_NoMemory();
-        goto end;
-    }
-    ((Request *)pyreq)->req = (uv_req_t *)req;
-    pyreq->callback = callback;
-    req->data = (void *)pyreq;
-
-    r = uv_fs_unlink(loop->uv_loop, req, path, (callback != NULL) ? unlink_cb : NULL);
+    r = uv_fs_unlink(loop->uv_loop, &fs_req->req, path, (callback != NULL) ? unlink_cb : NULL);
     if (r < 0) {
         RAISE_UV_EXCEPTION(loop->uv_loop, PyExc_FSError);
         goto end;
     }
 
     if (callback != NULL) {
-        Py_INCREF(pyreq);
-        return (PyObject *)pyreq;
+        Py_INCREF(fs_req);
+        return (PyObject *)fs_req;
     } else {
         Py_RETURN_NONE;
     }
 
 end:
-    Py_XDECREF(pyreq);
     Py_DECREF(loop);
     Py_XDECREF(callback);
-    PyMem_Free(req);
+    Py_DECREF(fs_req);
     return NULL;
 }
 
@@ -1326,16 +1245,14 @@ FS_func_mkdir(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
     int r, mode;
     char *path;
-    uv_fs_t *req;
     Loop *loop;
-    FSRequest *pyreq;
+    FSRequest *fs_req;
     PyObject *callback;
 
     static char *kwlist[] = {"loop", "path", "mode", "callback", NULL};
 
     UNUSED_ARG(obj);
-    req = NULL;
-    pyreq = NULL;
+    fs_req = NULL;
     callback = NULL;
 
     if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!si|O:mkdir", kwlist, &LoopType, &loop, &path, &mode, &callback)) {
@@ -1347,41 +1264,34 @@ FS_func_mkdir(PyObject *obj, PyObject *args, PyObject *kwargs)
         return NULL;
     }
 
-    Py_INCREF(loop);
+    fs_req = (FSRequest *)PyObject_CallObject((PyObject *)&FSRequestType, NULL);
+    if (!fs_req) {
+        PyErr_NoMemory();
+        return NULL;
+    }
+
+    fs_req->callback = callback;
+    REQUEST(fs_req)->loop = loop;
     Py_XINCREF(callback);
+    Py_INCREF(loop);
 
-    req = PyMem_Malloc(sizeof *req);
-    if (!req) {
-        PyErr_NoMemory();
-        goto end;
-    }
-    pyreq = (FSRequest *)PyObject_CallObject((PyObject *)&FSRequestType, NULL);
-    if (!pyreq) {
-        PyErr_NoMemory();
-        goto end;
-    }
-    ((Request *)pyreq)->req = (uv_req_t *)req;
-    pyreq->callback = callback;
-    req->data = (void *)pyreq;
-
-    r = uv_fs_mkdir(loop->uv_loop, req, path, mode, (callback != NULL) ? mkdir_cb : NULL);
+    r = uv_fs_mkdir(loop->uv_loop, &fs_req->req, path, mode, (callback != NULL) ? mkdir_cb : NULL);
     if (r < 0) {
         RAISE_UV_EXCEPTION(loop->uv_loop, PyExc_FSError);
         goto end;
     }
 
     if (callback != NULL) {
-        Py_INCREF(pyreq);
-        return (PyObject *)pyreq;
+        Py_INCREF(fs_req);
+        return (PyObject *)fs_req;
     } else {
         Py_RETURN_NONE;
     }
 
 end:
-    Py_XDECREF(pyreq);
     Py_DECREF(loop);
     Py_XDECREF(callback);
-    PyMem_Free(req);
+    Py_DECREF(fs_req);
     return NULL;
 }
 
@@ -1391,16 +1301,14 @@ FS_func_rmdir(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
     int r;
     char *path;
-    uv_fs_t *req;
     Loop *loop;
-    FSRequest *pyreq;
+    FSRequest *fs_req;
     PyObject *callback;
 
     static char *kwlist[] = {"loop", "path", "callback", NULL};
 
     UNUSED_ARG(obj);
-    req = NULL;
-    pyreq = NULL;
+    fs_req = NULL;
     callback = NULL;
 
     if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!s|O:rmdir", kwlist, &LoopType, &loop, &path, &callback)) {
@@ -1412,41 +1320,34 @@ FS_func_rmdir(PyObject *obj, PyObject *args, PyObject *kwargs)
         return NULL;
     }
 
-    Py_INCREF(loop);
+    fs_req = (FSRequest *)PyObject_CallObject((PyObject *)&FSRequestType, NULL);
+    if (!fs_req) {
+        PyErr_NoMemory();
+        return NULL;
+    }
+
+    fs_req->callback = callback;
+    REQUEST(fs_req)->loop = loop;
     Py_XINCREF(callback);
+    Py_INCREF(loop);
 
-    req = PyMem_Malloc(sizeof *req);
-    if (!req) {
-        PyErr_NoMemory();
-        goto end;
-    }
-    pyreq = (FSRequest *)PyObject_CallObject((PyObject *)&FSRequestType, NULL);
-    if (!pyreq) {
-        PyErr_NoMemory();
-        goto end;
-    }
-    ((Request *)pyreq)->req = (uv_req_t *)req;
-    pyreq->callback = callback;
-    req->data = (void *)pyreq;
-
-    r = uv_fs_rmdir(loop->uv_loop, req, path, (callback != NULL) ? rmdir_cb : NULL);
+    r = uv_fs_rmdir(loop->uv_loop, &fs_req->req, path, (callback != NULL) ? rmdir_cb : NULL);
     if (r < 0) {
         RAISE_UV_EXCEPTION(loop->uv_loop, PyExc_FSError);
         goto end;
     }
 
     if (callback != NULL) {
-        Py_INCREF(pyreq);
-        return (PyObject *)pyreq;
+        Py_INCREF(fs_req);
+        return (PyObject *)fs_req;
     } else {
         Py_RETURN_NONE;
     }
 
 end:
-    Py_XDECREF(pyreq);
     Py_DECREF(loop);
     Py_XDECREF(callback);
-    PyMem_Free(req);
+    Py_DECREF(fs_req);
     return NULL;
 }
 
@@ -1456,16 +1357,14 @@ FS_func_rename(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
     int r;
     char *path, *new_path;
-    uv_fs_t *req;
     Loop *loop;
-    FSRequest *pyreq;
+    FSRequest *fs_req;
     PyObject *callback;
 
     static char *kwlist[] = {"loop", "path", "new_path", "callback", NULL};
 
     UNUSED_ARG(obj);
-    req = NULL;
-    pyreq = NULL;
+    fs_req = NULL;
     callback = NULL;
 
     if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!ss|O:rename", kwlist, &LoopType, &loop, &path, &new_path, &callback)) {
@@ -1477,41 +1376,34 @@ FS_func_rename(PyObject *obj, PyObject *args, PyObject *kwargs)
         return NULL;
     }
 
-    Py_INCREF(loop);
+    fs_req = (FSRequest *)PyObject_CallObject((PyObject *)&FSRequestType, NULL);
+    if (!fs_req) {
+        PyErr_NoMemory();
+        return NULL;
+    }
+
+    fs_req->callback = callback;
+    REQUEST(fs_req)->loop = loop;
     Py_XINCREF(callback);
+    Py_INCREF(loop);
 
-    req = PyMem_Malloc(sizeof *req);
-    if (!req) {
-        PyErr_NoMemory();
-        goto end;
-    }
-    pyreq = (FSRequest *)PyObject_CallObject((PyObject *)&FSRequestType, NULL);
-    if (!pyreq) {
-        PyErr_NoMemory();
-        goto end;
-    }
-    ((Request *)pyreq)->req = (uv_req_t *)req;
-    pyreq->callback = callback;
-    req->data = (void *)pyreq;
-
-    r = uv_fs_rename(loop->uv_loop, req, path, new_path, (callback != NULL) ? rename_cb : NULL);
+    r = uv_fs_rename(loop->uv_loop, &fs_req->req, path, new_path, (callback != NULL) ? rename_cb : NULL);
     if (r < 0) {
         RAISE_UV_EXCEPTION(loop->uv_loop, PyExc_FSError);
         goto end;
     }
 
     if (callback != NULL) {
-        Py_INCREF(pyreq);
-        return (PyObject *)pyreq;
+        Py_INCREF(fs_req);
+        return (PyObject *)fs_req;
     } else {
         Py_RETURN_NONE;
     }
 
 end:
-    Py_XDECREF(pyreq);
     Py_DECREF(loop);
     Py_XDECREF(callback);
-    PyMem_Free(req);
+    Py_DECREF(fs_req);
     return NULL;
 }
 
@@ -1521,16 +1413,14 @@ FS_func_chmod(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
     int r, mode;
     char *path;
-    uv_fs_t *req;
     Loop *loop;
-    FSRequest *pyreq;
+    FSRequest *fs_req;
     PyObject *callback;
 
     static char *kwlist[] = {"loop", "path", "mode", "callback", NULL};
 
     UNUSED_ARG(obj);
-    req = NULL;
-    pyreq = NULL;
+    fs_req = NULL;
     callback = NULL;
 
     if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!si|O:chmod", kwlist, &LoopType, &loop, &path, &mode, &callback)) {
@@ -1542,41 +1432,34 @@ FS_func_chmod(PyObject *obj, PyObject *args, PyObject *kwargs)
         return NULL;
     }
 
-    Py_INCREF(loop);
+    fs_req = (FSRequest *)PyObject_CallObject((PyObject *)&FSRequestType, NULL);
+    if (!fs_req) {
+        PyErr_NoMemory();
+        return NULL;
+    }
+
+    fs_req->callback = callback;
+    REQUEST(fs_req)->loop = loop;
     Py_XINCREF(callback);
+    Py_INCREF(loop);
 
-    req = PyMem_Malloc(sizeof *req);
-    if (!req) {
-        PyErr_NoMemory();
-        goto end;
-    }
-    pyreq = (FSRequest *)PyObject_CallObject((PyObject *)&FSRequestType, NULL);
-    if (!pyreq) {
-        PyErr_NoMemory();
-        goto end;
-    }
-    ((Request *)pyreq)->req = (uv_req_t *)req;
-    pyreq->callback = callback;
-    req->data = (void *)pyreq;
-
-    r = uv_fs_chmod(loop->uv_loop, req, path, mode, (callback != NULL) ? chmod_cb : NULL);
+    r = uv_fs_chmod(loop->uv_loop, &fs_req->req, path, mode, (callback != NULL) ? chmod_cb : NULL);
     if (r < 0) {
         RAISE_UV_EXCEPTION(loop->uv_loop, PyExc_FSError);
         goto end;
     }
 
     if (callback != NULL) {
-        Py_INCREF(pyreq);
-        return (PyObject *)pyreq;
+        Py_INCREF(fs_req);
+        return (PyObject *)fs_req;
     } else {
         Py_RETURN_NONE;
     }
 
 end:
-    Py_XDECREF(pyreq);
     Py_DECREF(loop);
     Py_XDECREF(callback);
-    PyMem_Free(req);
+    Py_DECREF(fs_req);
     return NULL;
 }
 
@@ -1585,16 +1468,14 @@ static PyObject *
 FS_func_fchmod(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
     int r, mode, fd;
-    uv_fs_t *req;
     Loop *loop;
-    FSRequest *pyreq;
+    FSRequest *fs_req;
     PyObject *callback;
 
     static char *kwlist[] = {"loop", "fd", "mode", "callback", NULL};
 
     UNUSED_ARG(obj);
-    req = NULL;
-    pyreq = NULL;
+    fs_req = NULL;
     callback = NULL;
 
     if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!ii|O:fchmod", kwlist, &LoopType, &loop, &fd, &mode, &callback)) {
@@ -1606,41 +1487,34 @@ FS_func_fchmod(PyObject *obj, PyObject *args, PyObject *kwargs)
         return NULL;
     }
 
-    Py_INCREF(loop);
+    fs_req = (FSRequest *)PyObject_CallObject((PyObject *)&FSRequestType, NULL);
+    if (!fs_req) {
+        PyErr_NoMemory();
+        return NULL;
+    }
+
+    fs_req->callback = callback;
+    REQUEST(fs_req)->loop = loop;
     Py_XINCREF(callback);
+    Py_INCREF(loop);
 
-    req = PyMem_Malloc(sizeof *req);
-    if (!req) {
-        PyErr_NoMemory();
-        goto end;
-    }
-    pyreq = (FSRequest *)PyObject_CallObject((PyObject *)&FSRequestType, NULL);
-    if (!pyreq) {
-        PyErr_NoMemory();
-        goto end;
-    }
-    ((Request *)pyreq)->req = (uv_req_t *)req;
-    pyreq->callback = callback;
-    req->data = (void *)pyreq;
-
-    r = uv_fs_fchmod(loop->uv_loop, req, fd, mode, (callback != NULL) ? chmod_cb : NULL);
+    r = uv_fs_fchmod(loop->uv_loop, &fs_req->req, fd, mode, (callback != NULL) ? chmod_cb : NULL);
     if (r < 0) {
         RAISE_UV_EXCEPTION(loop->uv_loop, PyExc_FSError);
         goto end;
     }
 
     if (callback != NULL) {
-        Py_INCREF(pyreq);
-        return (PyObject *)pyreq;
+        Py_INCREF(fs_req);
+        return (PyObject *)fs_req;
     } else {
         Py_RETURN_NONE;
     }
 
 end:
-    Py_XDECREF(pyreq);
     Py_DECREF(loop);
     Py_XDECREF(callback);
-    PyMem_Free(req);
+    Py_DECREF(fs_req);
     return NULL;
 }
 
@@ -1650,16 +1524,14 @@ FS_func_link(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
     int r;
     char *path, *new_path;
-    uv_fs_t *req;
     Loop *loop;
-    FSRequest *pyreq;
+    FSRequest *fs_req;
     PyObject *callback;
 
     static char *kwlist[] = {"loop", "path", "new_path", "callback", NULL};
 
     UNUSED_ARG(obj);
-    req = NULL;
-    pyreq = NULL;
+    fs_req = NULL;
     callback = NULL;
 
     if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!ss|O:link", kwlist, &LoopType, &loop, &path, &new_path, &callback)) {
@@ -1671,41 +1543,34 @@ FS_func_link(PyObject *obj, PyObject *args, PyObject *kwargs)
         return NULL;
     }
 
-    Py_INCREF(loop);
+    fs_req = (FSRequest *)PyObject_CallObject((PyObject *)&FSRequestType, NULL);
+    if (!fs_req) {
+        PyErr_NoMemory();
+        return NULL;
+    }
+
+    fs_req->callback = callback;
+    REQUEST(fs_req)->loop = loop;
     Py_XINCREF(callback);
+    Py_INCREF(loop);
 
-    req = PyMem_Malloc(sizeof *req);
-    if (!req) {
-        PyErr_NoMemory();
-        goto end;
-    }
-    pyreq = (FSRequest *)PyObject_CallObject((PyObject *)&FSRequestType, NULL);
-    if (!pyreq) {
-        PyErr_NoMemory();
-        goto end;
-    }
-    ((Request *)pyreq)->req = (uv_req_t *)req;
-    pyreq->callback = callback;
-    req->data = (void *)pyreq;
-
-    r = uv_fs_link(loop->uv_loop, req, path, new_path, (callback != NULL) ? link_cb : NULL);
+    r = uv_fs_link(loop->uv_loop, &fs_req->req, path, new_path, (callback != NULL) ? link_cb : NULL);
     if (r < 0) {
         RAISE_UV_EXCEPTION(loop->uv_loop, PyExc_FSError);
         goto end;
     }
 
     if (callback != NULL) {
-        Py_INCREF(pyreq);
-        return (PyObject *)pyreq;
+        Py_INCREF(fs_req);
+        return (PyObject *)fs_req;
     } else {
         Py_RETURN_NONE;
     }
 
 end:
-    Py_XDECREF(pyreq);
     Py_DECREF(loop);
     Py_XDECREF(callback);
-    PyMem_Free(req);
+    Py_DECREF(fs_req);
     return NULL;
 }
 
@@ -1715,16 +1580,14 @@ FS_func_symlink(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
     int r, flags;
     char *path, *new_path;
-    uv_fs_t *req;
     Loop *loop;
-    FSRequest *pyreq;
+    FSRequest *fs_req;
     PyObject *callback;
 
     static char *kwlist[] = {"loop", "path", "new_path", "flags", "callback", NULL};
 
     UNUSED_ARG(obj);
-    req = NULL;
-    pyreq = NULL;
+    fs_req = NULL;
     callback = NULL;
 
     if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!ssi|O:symlink", kwlist, &LoopType, &loop, &path, &new_path, &flags, &callback)) {
@@ -1736,41 +1599,34 @@ FS_func_symlink(PyObject *obj, PyObject *args, PyObject *kwargs)
         return NULL;
     }
 
-    Py_INCREF(loop);
+    fs_req = (FSRequest *)PyObject_CallObject((PyObject *)&FSRequestType, NULL);
+    if (!fs_req) {
+        PyErr_NoMemory();
+        return NULL;
+    }
+
+    fs_req->callback = callback;
+    REQUEST(fs_req)->loop = loop;
     Py_XINCREF(callback);
+    Py_INCREF(loop);
 
-    req = PyMem_Malloc(sizeof *req);
-    if (!req) {
-        PyErr_NoMemory();
-        goto end;
-    }
-    pyreq = (FSRequest *)PyObject_CallObject((PyObject *)&FSRequestType, NULL);
-    if (!pyreq) {
-        PyErr_NoMemory();
-        goto end;
-    }
-    ((Request *)pyreq)->req = (uv_req_t *)req;
-    pyreq->callback = callback;
-    req->data = (void *)pyreq;
-
-    r = uv_fs_symlink(loop->uv_loop, req, path, new_path, flags, (callback != NULL) ? symlink_cb : NULL);
+    r = uv_fs_symlink(loop->uv_loop, &fs_req->req, path, new_path, flags, (callback != NULL) ? symlink_cb : NULL);
     if (r < 0) {
         RAISE_UV_EXCEPTION(loop->uv_loop, PyExc_FSError);
         goto end;
     }
 
     if (callback != NULL) {
-        Py_INCREF(pyreq);
-        return (PyObject *)pyreq;
+        Py_INCREF(fs_req);
+        return (PyObject *)fs_req;
     } else {
         Py_RETURN_NONE;
     }
 
 end:
-    Py_XDECREF(pyreq);
     Py_DECREF(loop);
     Py_XDECREF(callback);
-    PyMem_Free(req);
+    Py_DECREF(fs_req);
     return NULL;
 }
 
@@ -1780,16 +1636,14 @@ FS_func_readlink(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
     int r;
     char *path;
-    uv_fs_t *req;
     Loop *loop;
-    FSRequest *pyreq;
+    FSRequest *fs_req;
     PyObject *callback, *py_path, *py_errorno, *ret;
 
     static char *kwlist[] = {"loop", "path", "callback", NULL};
 
     UNUSED_ARG(obj);
-    req = NULL;
-    pyreq = NULL;
+    fs_req = NULL;
     callback = NULL;
 
     if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!s|O:readlink", kwlist, &LoopType, &loop, &path, &callback)) {
@@ -1801,26 +1655,18 @@ FS_func_readlink(PyObject *obj, PyObject *args, PyObject *kwargs)
         return NULL;
     }
 
-    Py_INCREF(loop);
+    fs_req = (FSRequest *)PyObject_CallObject((PyObject *)&FSRequestType, NULL);
+    if (!fs_req) {
+        PyErr_NoMemory();
+        return NULL;
+    }
+
+    fs_req->callback = callback;
+    REQUEST(fs_req)->loop = loop;
     Py_XINCREF(callback);
+    Py_INCREF(loop);
 
-    req = PyMem_Malloc(sizeof *req);
-    if (!req) {
-        PyErr_NoMemory();
-        ret = NULL;
-        goto end;
-    }
-    pyreq = (FSRequest *)PyObject_CallObject((PyObject *)&FSRequestType, NULL);
-    if (!pyreq) {
-        PyErr_NoMemory();
-        ret = NULL;
-        goto end;
-    }
-    ((Request *)pyreq)->req = (uv_req_t *)req;
-    pyreq->callback = callback;
-    req->data = (void *)pyreq;
-
-    r = uv_fs_readlink(loop->uv_loop, req, path, (callback != NULL) ? readlink_cb : NULL);
+    r = uv_fs_readlink(loop->uv_loop, &fs_req->req, path, (callback != NULL) ? readlink_cb : NULL);
     if (r < 0) {
         RAISE_UV_EXCEPTION(loop->uv_loop, PyExc_FSError);
         ret = NULL;
@@ -1829,19 +1675,18 @@ FS_func_readlink(PyObject *obj, PyObject *args, PyObject *kwargs)
 
     if (callback != NULL) {
         /* No need to cleanup, it will be done in the callback */
-        Py_INCREF(pyreq);
-        return (PyObject *)pyreq;
+        Py_INCREF(fs_req);
+        return (PyObject *)fs_req;
     } else {
-        process_readlink(req, &py_path, &py_errorno);
+        process_readlink(&fs_req->req, &py_path, &py_errorno);
         Py_DECREF(py_errorno);
         ret = py_path;
     }
 
 end:
-    Py_XDECREF(pyreq);
     Py_DECREF(loop);
     Py_XDECREF(callback);
-    PyMem_Free(req);
+    Py_DECREF(fs_req);
     return ret;
 }
 
@@ -1851,16 +1696,14 @@ FS_func_chown(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
     int r, uid, gid;
     char *path;
-    uv_fs_t *req;
     Loop *loop;
-    FSRequest *pyreq;
+    FSRequest *fs_req;
     PyObject *callback;
 
     static char *kwlist[] = {"loop", "path", "uid", "gid", "callback", NULL};
 
     UNUSED_ARG(obj);
-    req = NULL;
-    pyreq = NULL;
+    fs_req = NULL;
     callback = NULL;
 
     if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!sii|O:chown", kwlist, &LoopType, &loop, &path, &uid, &gid, &callback)) {
@@ -1872,41 +1715,34 @@ FS_func_chown(PyObject *obj, PyObject *args, PyObject *kwargs)
         return NULL;
     }
 
-    Py_INCREF(loop);
+    fs_req = (FSRequest *)PyObject_CallObject((PyObject *)&FSRequestType, NULL);
+    if (!fs_req) {
+        PyErr_NoMemory();
+        return NULL;
+    }
+
+    fs_req->callback = callback;
+    REQUEST(fs_req)->loop = loop;
     Py_XINCREF(callback);
+    Py_INCREF(loop);
 
-    req = PyMem_Malloc(sizeof *req);
-    if (!req) {
-        PyErr_NoMemory();
-        goto end;
-    }
-    pyreq = (FSRequest *)PyObject_CallObject((PyObject *)&FSRequestType, NULL);
-    if (!pyreq) {
-        PyErr_NoMemory();
-        goto end;
-    }
-    ((Request *)pyreq)->req = (uv_req_t *)req;
-    pyreq->callback = callback;
-    req->data = (void *)pyreq;
-
-    r = uv_fs_chown(loop->uv_loop, req, path, uid, gid, (callback != NULL) ? chown_cb : NULL);
+    r = uv_fs_chown(loop->uv_loop, &fs_req->req, path, uid, gid, (callback != NULL) ? chown_cb : NULL);
     if (r < 0) {
         RAISE_UV_EXCEPTION(loop->uv_loop, PyExc_FSError);
         goto end;
     }
 
     if (callback != NULL) {
-        Py_INCREF(pyreq);
-        return (PyObject *)pyreq;
+        Py_INCREF(fs_req);
+        return (PyObject *)fs_req;
     } else {
         Py_RETURN_NONE;
     }
 
 end:
-    Py_XDECREF(pyreq);
     Py_DECREF(loop);
     Py_XDECREF(callback);
-    PyMem_Free(req);
+    Py_DECREF(fs_req);
     return NULL;
 }
 
@@ -1915,16 +1751,14 @@ static PyObject *
 FS_func_fchown(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
     int r, fd, uid, gid;
-    uv_fs_t *req;
     Loop *loop;
-    FSRequest *pyreq;
+    FSRequest *fs_req;
     PyObject *callback;
 
     static char *kwlist[] = {"loop", "fd", "uid", "gid", "callback", NULL};
 
     UNUSED_ARG(obj);
-    req = NULL;
-    pyreq = NULL;
+    fs_req = NULL;
     callback = NULL;
 
     if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!iii|O:fchown", kwlist, &LoopType, &loop, &fd, &uid, &gid, &callback)) {
@@ -1936,41 +1770,34 @@ FS_func_fchown(PyObject *obj, PyObject *args, PyObject *kwargs)
         return NULL;
     }
 
-    Py_INCREF(loop);
+    fs_req = (FSRequest *)PyObject_CallObject((PyObject *)&FSRequestType, NULL);
+    if (!fs_req) {
+        PyErr_NoMemory();
+        return NULL;
+    }
+
+    fs_req->callback = callback;
+    REQUEST(fs_req)->loop = loop;
     Py_XINCREF(callback);
+    Py_INCREF(loop);
 
-    req = PyMem_Malloc(sizeof *req);
-    if (!req) {
-        PyErr_NoMemory();
-        goto end;
-    }
-    pyreq = (FSRequest *)PyObject_CallObject((PyObject *)&FSRequestType, NULL);
-    if (!pyreq) {
-        PyErr_NoMemory();
-        goto end;
-    }
-    ((Request *)pyreq)->req = (uv_req_t *)req;
-    pyreq->callback = callback;
-    req->data = (void *)pyreq;
-
-    r = uv_fs_fchown(loop->uv_loop, req, fd, uid, gid, (callback != NULL) ? chown_cb : NULL);
+    r = uv_fs_fchown(loop->uv_loop, &fs_req->req, fd, uid, gid, (callback != NULL) ? chown_cb : NULL);
     if (r != 0) {
         RAISE_UV_EXCEPTION(loop->uv_loop, PyExc_FSError);
         goto end;
     }
 
     if (callback != NULL) {
-        Py_INCREF(pyreq);
-        return (PyObject *)pyreq;
+        Py_INCREF(fs_req);
+        return (PyObject *)fs_req;
     } else {
         Py_RETURN_NONE;
     }
 
 end:
-    Py_XDECREF(pyreq);
     Py_DECREF(loop);
     Py_XDECREF(callback);
-    PyMem_Free(req);
+    Py_DECREF(fs_req);
     return NULL;
 }
 
@@ -1980,16 +1807,14 @@ FS_func_open(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
     int r, flags, mode;
     char *path;
-    uv_fs_t *req;
     Loop *loop;
-    FSRequest *pyreq;
+    FSRequest *fs_req;
     PyObject *callback, *py_path, *py_errorno, *fd, *ret;
 
     static char *kwlist[] = {"loop", "path", "flags", "mode", "callback", NULL};
 
     UNUSED_ARG(obj);
-    req = NULL;
-    pyreq = NULL;
+    fs_req = NULL;
     callback = NULL;
 
     if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!sii|O:open", kwlist, &LoopType, &loop, &path, &flags, &mode, &callback)) {
@@ -2001,26 +1826,18 @@ FS_func_open(PyObject *obj, PyObject *args, PyObject *kwargs)
         return NULL;
     }
 
-    Py_INCREF(loop);
+    fs_req = (FSRequest *)PyObject_CallObject((PyObject *)&FSRequestType, NULL);
+    if (!fs_req) {
+        PyErr_NoMemory();
+        return NULL;
+    }
+
+    fs_req->callback = callback;
+    REQUEST(fs_req)->loop = loop;
     Py_XINCREF(callback);
+    Py_INCREF(loop);
 
-    req = PyMem_Malloc(sizeof *req);
-    if (!req) {
-        PyErr_NoMemory();
-        ret = NULL;
-        goto end;
-    }
-    pyreq = (FSRequest *)PyObject_CallObject((PyObject *)&FSRequestType, NULL);
-    if (!pyreq) {
-        PyErr_NoMemory();
-        ret = NULL;
-        goto end;
-    }
-    ((Request *)pyreq)->req = (uv_req_t *)req;
-    pyreq->callback = callback;
-    req->data = (void *)pyreq;
-
-    r = uv_fs_open(loop->uv_loop, req, path, flags, mode, (callback != NULL) ? open_cb : NULL);
+    r = uv_fs_open(loop->uv_loop, &fs_req->req, path, flags, mode, (callback != NULL) ? open_cb : NULL);
     if (r < 0) {
         RAISE_UV_EXCEPTION(loop->uv_loop, PyExc_FSError);
         ret = NULL;
@@ -2029,20 +1846,19 @@ FS_func_open(PyObject *obj, PyObject *args, PyObject *kwargs)
 
     if (callback != NULL) {
         /* No need to cleanup, it will be done in the callback */
-        Py_INCREF(pyreq);
-        return (PyObject *)pyreq;
+        Py_INCREF(fs_req);
+        return (PyObject *)fs_req;
     } else {
-        process_open(req, &py_path, &fd, &py_errorno);
+        process_open(&fs_req->req, &py_path, &fd, &py_errorno);
         Py_DECREF(py_path);
         Py_DECREF(py_errorno);
         ret = fd;
     }
 
 end:
-    Py_XDECREF(pyreq);
     Py_DECREF(loop);
     Py_XDECREF(callback);
-    PyMem_Free(req);
+    Py_DECREF(fs_req);
     return ret;
 }
 
@@ -2051,16 +1867,14 @@ static PyObject *
 FS_func_close(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
     int r, fd;
-    uv_fs_t *req;
     Loop *loop;
-    FSRequest *pyreq;
+    FSRequest *fs_req;
     PyObject *callback;
 
     static char *kwlist[] = {"loop", "fd", "callback", NULL};
 
     UNUSED_ARG(obj);
-    req = NULL;
-    pyreq = NULL;
+    fs_req = NULL;
     callback = NULL;
 
     if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!i|O:close", kwlist, &LoopType, &loop, &fd, &callback)) {
@@ -2072,41 +1886,34 @@ FS_func_close(PyObject *obj, PyObject *args, PyObject *kwargs)
         return NULL;
     }
 
-    Py_INCREF(loop);
+    fs_req = (FSRequest *)PyObject_CallObject((PyObject *)&FSRequestType, NULL);
+    if (!fs_req) {
+        PyErr_NoMemory();
+        return NULL;
+    }
+
+    fs_req->callback = callback;
+    REQUEST(fs_req)->loop = loop;
     Py_XINCREF(callback);
+    Py_INCREF(loop);
 
-    req = PyMem_Malloc(sizeof *req);
-    if (!req) {
-        PyErr_NoMemory();
-        goto end;
-    }
-    pyreq = (FSRequest *)PyObject_CallObject((PyObject *)&FSRequestType, NULL);
-    if (!pyreq) {
-        PyErr_NoMemory();
-        goto end;
-    }
-    ((Request *)pyreq)->req = (uv_req_t *)req;
-    pyreq->callback = callback;
-    req->data = (void *)pyreq;
-
-    r = uv_fs_close(loop->uv_loop, req, fd, (callback != NULL) ? close_cb : NULL);
+    r = uv_fs_close(loop->uv_loop, &fs_req->req, fd, (callback != NULL) ? close_cb : NULL);
     if (r < 0) {
         RAISE_UV_EXCEPTION(loop->uv_loop, PyExc_FSError);
         goto end;
     }
 
     if (callback != NULL) {
-        Py_INCREF(pyreq);
-        return (PyObject *)pyreq;
+        Py_INCREF(fs_req);
+        return (PyObject *)fs_req;
     } else {
         Py_RETURN_NONE;
     }
 
 end:
-    Py_XDECREF(pyreq);
     Py_DECREF(loop);
     Py_XDECREF(callback);
-    PyMem_Free(req);
+    Py_DECREF(fs_req);
     return NULL;
 }
 
@@ -2116,16 +1923,14 @@ FS_func_read(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
     int r, fd, length, offset;
     char *buf;
-    uv_fs_t *req;
     Loop *loop;
-    FSRequest *pyreq;
+    FSRequest *fs_req;
     PyObject *callback, *py_path, *py_errorno, *read_data, *ret;
 
     static char *kwlist[] = {"loop", "fd", "length", "offset", "callback", NULL};
 
     UNUSED_ARG(obj);
-    req = NULL;
-    pyreq = NULL;
+    fs_req = NULL;
     buf = NULL;
     callback = NULL;
 
@@ -2138,24 +1943,16 @@ FS_func_read(PyObject *obj, PyObject *args, PyObject *kwargs)
         return NULL;
     }
 
-    Py_INCREF(loop);
-    Py_XINCREF(callback);
+    fs_req = (FSRequest *)PyObject_CallObject((PyObject *)&FSRequestType, NULL);
+    if (!fs_req) {
+        PyErr_NoMemory();
+        return NULL;
+    }
 
-    req = PyMem_Malloc(sizeof *req);
-    if (!req) {
-        PyErr_NoMemory();
-        ret = NULL;
-        goto end;
-    }
-    pyreq = (FSRequest *)PyObject_CallObject((PyObject *)&FSRequestType, NULL);
-    if (!pyreq) {
-        PyErr_NoMemory();
-        ret = NULL;
-        goto end;
-    }
-    ((Request *)pyreq)->req = (uv_req_t *)req;
-    pyreq->callback = callback;
-    req->data = (void *)pyreq;
+    fs_req->callback = callback;
+    REQUEST(fs_req)->loop = loop;
+    Py_XINCREF(callback);
+    Py_INCREF(loop);
 
     buf = PyMem_Malloc(length);
     if (!buf) {
@@ -2164,7 +1961,7 @@ FS_func_read(PyObject *obj, PyObject *args, PyObject *kwargs)
         goto end;
     }
 
-    r = uv_fs_read(loop->uv_loop, req, fd, buf, length, offset, (callback != NULL) ? read_cb : NULL);
+    r = uv_fs_read(loop->uv_loop, &fs_req->req, fd, buf, length, offset, (callback != NULL) ? read_cb : NULL);
     if (r < 0) {
         RAISE_UV_EXCEPTION(loop->uv_loop, PyExc_FSError);
         ret = NULL;
@@ -2173,21 +1970,20 @@ FS_func_read(PyObject *obj, PyObject *args, PyObject *kwargs)
 
     if (callback != NULL) {
         /* No need to cleanup, it will be done in the callback */
-        Py_INCREF(pyreq);
-        return (PyObject *)pyreq;
+        Py_INCREF(fs_req);
+        return (PyObject *)fs_req;
     } else {
-        process_read(req, &py_path, &read_data, &py_errorno);
+        process_read(&fs_req->req, &py_path, &read_data, &py_errorno);
         Py_DECREF(py_path);
         Py_DECREF(py_errorno);
         ret = read_data;
     }
 
 end:
-    Py_XDECREF(pyreq);
     Py_DECREF(loop);
     Py_XDECREF(callback);
+    Py_DECREF(fs_req);
     PyMem_Free(buf);
-    PyMem_Free(req);
     return ret;
 }
 
@@ -2197,17 +1993,15 @@ FS_func_write(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
     int r, fd, offset;
     char *pbuf, *buf;
-    uv_fs_t *req;
     Loop *loop;
-    FSRequest *pyreq;
+    FSRequest *fs_req;
     Py_ssize_t length;
     PyObject *callback, *py_path, *py_errorno, *written_bytes, *ret;
 
     static char *kwlist[] = {"loop", "fd", "write_data", "offset", "callback", NULL};
 
     UNUSED_ARG(obj);
-    req = NULL;
-    pyreq = NULL;
+    fs_req = NULL;
     buf = NULL;
     callback = NULL;
 
@@ -2220,24 +2014,16 @@ FS_func_write(PyObject *obj, PyObject *args, PyObject *kwargs)
         return NULL;
     }
 
-    Py_INCREF(loop);
-    Py_XINCREF(callback);
+    fs_req = (FSRequest *)PyObject_CallObject((PyObject *)&FSRequestType, NULL);
+    if (!fs_req) {
+        PyErr_NoMemory();
+        return NULL;
+    }
 
-    req = PyMem_Malloc(sizeof *req);
-    if (!req) {
-        PyErr_NoMemory();
-        ret = NULL;
-        goto end;
-    }
-    pyreq = (FSRequest *)PyObject_CallObject((PyObject *)&FSRequestType, NULL);
-    if (!pyreq) {
-        PyErr_NoMemory();
-        ret = NULL;
-        goto end;
-    }
-    ((Request *)pyreq)->req = (uv_req_t *)req;
-    pyreq->callback = callback;
-    req->data = (void *)pyreq;
+    fs_req->callback = callback;
+    REQUEST(fs_req)->loop = loop;
+    Py_XINCREF(callback);
+    Py_INCREF(loop);
 
     buf = PyMem_Malloc(length);
     if (!buf) {
@@ -2247,7 +2033,7 @@ FS_func_write(PyObject *obj, PyObject *args, PyObject *kwargs)
     }
     memcpy(buf, pbuf, length);
 
-    r = uv_fs_write(loop->uv_loop, req, fd, buf, length, offset, (callback != NULL) ? write_cb : NULL);
+    r = uv_fs_write(loop->uv_loop, &fs_req->req, fd, buf, length, offset, (callback != NULL) ? write_cb : NULL);
     if (r < 0) {
         RAISE_UV_EXCEPTION(loop->uv_loop, PyExc_FSError);
         ret = NULL;
@@ -2256,21 +2042,20 @@ FS_func_write(PyObject *obj, PyObject *args, PyObject *kwargs)
 
     if (callback != NULL) {
         /* No need to cleanup, it will be done in the callback */
-        Py_INCREF(pyreq);
-        return (PyObject *)pyreq;
+        Py_INCREF(fs_req);
+        return (PyObject *)fs_req;
     } else {
-        process_write(req, &py_path, &written_bytes, &py_errorno);
+        process_write(&fs_req->req, &py_path, &written_bytes, &py_errorno);
         Py_DECREF(py_path);
         Py_DECREF(py_errorno);
         ret = written_bytes;
     }
 
 end:
-    Py_XDECREF(pyreq);
     Py_DECREF(loop);
     Py_XDECREF(callback);
+    Py_DECREF(fs_req);
     PyMem_Free(buf);
-    PyMem_Free(req);
     return ret;
 }
 
@@ -2279,16 +2064,14 @@ static PyObject *
 FS_func_fsync(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
     int r, fd;
-    uv_fs_t *req;
     Loop *loop;
-    FSRequest *pyreq;
+    FSRequest *fs_req;
     PyObject *callback;
 
     static char *kwlist[] = {"loop", "fd", "callback", NULL};
 
     UNUSED_ARG(obj);
-    req = NULL;
-    pyreq = NULL;
+    fs_req = NULL;
     callback = NULL;
 
     if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!i|O:fsync", kwlist, &LoopType, &loop, &fd, &callback)) {
@@ -2300,41 +2083,34 @@ FS_func_fsync(PyObject *obj, PyObject *args, PyObject *kwargs)
         return NULL;
     }
 
-    Py_INCREF(loop);
+    fs_req = (FSRequest *)PyObject_CallObject((PyObject *)&FSRequestType, NULL);
+    if (!fs_req) {
+        PyErr_NoMemory();
+        return NULL;
+    }
+
+    fs_req->callback = callback;
+    REQUEST(fs_req)->loop = loop;
     Py_XINCREF(callback);
+    Py_INCREF(loop);
 
-    req = PyMem_Malloc(sizeof *req);
-    if (!req) {
-        PyErr_NoMemory();
-        goto end;
-    }
-    pyreq = (FSRequest *)PyObject_CallObject((PyObject *)&FSRequestType, NULL);
-    if (!pyreq) {
-        PyErr_NoMemory();
-        goto end;
-    }
-    ((Request *)pyreq)->req = (uv_req_t *)req;
-    pyreq->callback = callback;
-    req->data = (void *)pyreq;
-
-    r = uv_fs_fsync(loop->uv_loop, req, fd, (callback != NULL) ? fsync_cb : NULL);
+    r = uv_fs_fsync(loop->uv_loop, &fs_req->req, fd, (callback != NULL) ? fsync_cb : NULL);
     if (r < 0) {
         RAISE_UV_EXCEPTION(loop->uv_loop, PyExc_FSError);
         goto end;
     }
 
     if (callback != NULL) {
-        Py_INCREF(pyreq);
-        return (PyObject *)pyreq;
+        Py_INCREF(fs_req);
+        return (PyObject *)fs_req;
     } else {
         Py_RETURN_NONE;
     }
 
 end:
-    Py_XDECREF(pyreq);
     Py_DECREF(loop);
     Py_XDECREF(callback);
-    PyMem_Free(req);
+    Py_DECREF(fs_req);
     return NULL;
 }
 
@@ -2343,16 +2119,14 @@ static PyObject *
 FS_func_fdatasync(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
     int r, fd;
-    uv_fs_t *req;
     Loop *loop;
-    FSRequest *pyreq;
+    FSRequest *fs_req;
     PyObject *callback;
 
     static char *kwlist[] = {"loop", "fd", "callback", NULL};
 
     UNUSED_ARG(obj);
-    req = NULL;
-    pyreq = NULL;
+    fs_req = NULL;
     callback = NULL;
 
     if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!i|O:fdatasync", kwlist, &LoopType, &loop, &fd, &callback)) {
@@ -2364,41 +2138,34 @@ FS_func_fdatasync(PyObject *obj, PyObject *args, PyObject *kwargs)
         return NULL;
     }
 
-    Py_INCREF(loop);
+    fs_req = (FSRequest *)PyObject_CallObject((PyObject *)&FSRequestType, NULL);
+    if (!fs_req) {
+        PyErr_NoMemory();
+        return NULL;
+    }
+
+    fs_req->callback = callback;
+    REQUEST(fs_req)->loop = loop;
     Py_XINCREF(callback);
+    Py_INCREF(loop);
 
-    req = PyMem_Malloc(sizeof *req);
-    if (!req) {
-        PyErr_NoMemory();
-        goto end;
-    }
-    pyreq = (FSRequest *)PyObject_CallObject((PyObject *)&FSRequestType, NULL);
-    if (!pyreq) {
-        PyErr_NoMemory();
-        goto end;
-    }
-    ((Request *)pyreq)->req = (uv_req_t *)req;
-    pyreq->callback = callback;
-    req->data = (void *)pyreq;
-
-    r = uv_fs_fdatasync(loop->uv_loop, req, fd, (callback != NULL) ? fsync_cb : NULL);
+    r = uv_fs_fdatasync(loop->uv_loop, &fs_req->req, fd, (callback != NULL) ? fsync_cb : NULL);
     if (r != 0) {
         RAISE_UV_EXCEPTION(loop->uv_loop, PyExc_FSError);
         goto end;
     }
 
     if (callback != NULL) {
-        Py_INCREF(pyreq);
-        return (PyObject *)pyreq;
+        Py_INCREF(fs_req);
+        return (PyObject *)fs_req;
     } else {
         Py_RETURN_NONE;
     }
 
 end:
-    Py_XDECREF(pyreq);
     Py_DECREF(loop);
     Py_XDECREF(callback);
-    PyMem_Free(req);
+    Py_DECREF(fs_req);
     return NULL;
 }
 
@@ -2407,16 +2174,14 @@ static PyObject *
 FS_func_ftruncate(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
     int r, fd, offset;
-    uv_fs_t *req;
     Loop *loop;
-    FSRequest *pyreq;
+    FSRequest *fs_req;
     PyObject *callback;
 
     static char *kwlist[] = {"loop", "fd", "offset", "callback", NULL};
 
     UNUSED_ARG(obj);
-    req = NULL;
-    pyreq = NULL;
+    fs_req = NULL;
     callback = NULL;
 
     if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!ii|O:ftruncate", kwlist, &LoopType, &loop, &fd, &offset, &callback)) {
@@ -2428,41 +2193,34 @@ FS_func_ftruncate(PyObject *obj, PyObject *args, PyObject *kwargs)
         return NULL;
     }
 
-    Py_INCREF(loop);
+    fs_req = (FSRequest *)PyObject_CallObject((PyObject *)&FSRequestType, NULL);
+    if (!fs_req) {
+        PyErr_NoMemory();
+        return NULL;
+    }
+
+    fs_req->callback = callback;
+    REQUEST(fs_req)->loop = loop;
     Py_XINCREF(callback);
+    Py_INCREF(loop);
 
-    req = PyMem_Malloc(sizeof *req);
-    if (!req) {
-        PyErr_NoMemory();
-        goto end;
-    }
-    pyreq = (FSRequest *)PyObject_CallObject((PyObject *)&FSRequestType, NULL);
-    if (!pyreq) {
-        PyErr_NoMemory();
-        goto end;
-    }
-    ((Request *)pyreq)->req = (uv_req_t *)req;
-    pyreq->callback = callback;
-    req->data = (void *)pyreq;
-
-    r = uv_fs_ftruncate(loop->uv_loop, req, fd, offset, (callback != NULL) ? ftruncate_cb : NULL);
+    r = uv_fs_ftruncate(loop->uv_loop, &fs_req->req, fd, offset, (callback != NULL) ? ftruncate_cb : NULL);
     if (r < 0) {
         RAISE_UV_EXCEPTION(loop->uv_loop, PyExc_FSError);
         goto end;
     }
 
     if (callback != NULL) {
-        Py_INCREF(pyreq);
-        return (PyObject *)pyreq;
+        Py_INCREF(fs_req);
+        return (PyObject *)fs_req;
     } else {
         Py_RETURN_NONE;
     }
 
 end:
-    Py_XDECREF(pyreq);
     Py_DECREF(loop);
     Py_XDECREF(callback);
-    PyMem_Free(req);
+    Py_DECREF(fs_req);
     return NULL;
 }
 
@@ -2472,16 +2230,14 @@ FS_func_readdir(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
     int r, flags;
     char *path;
-    uv_fs_t *req;
     Loop *loop;
-    FSRequest *pyreq;
+    FSRequest *fs_req;
     PyObject *callback, *py_path, *py_errorno, *files, *ret;
 
     static char *kwlist[] = {"loop", "path", "flags", "callback", NULL};
 
     UNUSED_ARG(obj);
-    req = NULL;
-    pyreq = NULL;
+    fs_req = NULL;
     callback = NULL;
 
     if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!si|O:readdir", kwlist, &LoopType, &loop, &path, &flags, &callback)) {
@@ -2493,26 +2249,18 @@ FS_func_readdir(PyObject *obj, PyObject *args, PyObject *kwargs)
         return NULL;
     }
 
-    Py_INCREF(loop);
+    fs_req = (FSRequest *)PyObject_CallObject((PyObject *)&FSRequestType, NULL);
+    if (!fs_req) {
+        PyErr_NoMemory();
+        return NULL;
+    }
+
+    fs_req->callback = callback;
+    REQUEST(fs_req)->loop = loop;
     Py_XINCREF(callback);
+    Py_INCREF(loop);
 
-    req = PyMem_Malloc(sizeof *req);
-    if (!req) {
-        PyErr_NoMemory();
-        ret = NULL;
-        goto end;
-    }
-    pyreq = (FSRequest *)PyObject_CallObject((PyObject *)&FSRequestType, NULL);
-    if (!pyreq) {
-        PyErr_NoMemory();
-        ret = NULL;
-        goto end;
-    }
-    ((Request *)pyreq)->req = (uv_req_t *)req;
-    pyreq->callback = callback;
-    req->data = (void *)pyreq;
-
-    r = uv_fs_readdir(loop->uv_loop, req, path, flags, (callback != NULL) ? readdir_cb : NULL);
+    r = uv_fs_readdir(loop->uv_loop, &fs_req->req, path, flags, (callback != NULL) ? readdir_cb : NULL);
     if (r < 0) {
         RAISE_UV_EXCEPTION(loop->uv_loop, PyExc_FSError);
         ret = NULL;
@@ -2521,20 +2269,19 @@ FS_func_readdir(PyObject *obj, PyObject *args, PyObject *kwargs)
 
     if (callback != NULL) {
         /* No need to cleanup, it will be done in the callback */
-        Py_INCREF(pyreq);
-        return (PyObject *)pyreq;
+        Py_INCREF(fs_req);
+        return (PyObject *)fs_req;
     } else {
-        process_readdir(req, &py_path, &files, &py_errorno);
+        process_readdir(&fs_req->req, &py_path, &files, &py_errorno);
         Py_DECREF(py_path);
         Py_DECREF(py_errorno);
         ret = files;
     }
 
 end:
-    Py_XDECREF(pyreq);
     Py_DECREF(loop);
     Py_XDECREF(callback);
-    PyMem_Free(req);
+    Py_DECREF(fs_req);
     return ret;
 }
 
@@ -2543,16 +2290,14 @@ static PyObject *
 FS_func_sendfile(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
     int r, out_fd, in_fd, in_offset, length;
-    uv_fs_t *req;
     Loop *loop;
-    FSRequest *pyreq;
+    FSRequest *fs_req;
     PyObject *callback, *py_path, *py_errorno, *bytes_written, *ret;
 
     static char *kwlist[] = {"loop", "out_fd", "in_fd", "in_offset", "length", "callback", NULL};
 
     UNUSED_ARG(obj);
-    req = NULL;
-    pyreq = NULL;
+    fs_req = NULL;
     callback = NULL;
 
     if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!iiii|O:sendfile", kwlist, &LoopType, &loop, &out_fd, &in_fd, &in_offset, &length, &callback)) {
@@ -2564,26 +2309,18 @@ FS_func_sendfile(PyObject *obj, PyObject *args, PyObject *kwargs)
         return NULL;
     }
 
-    Py_INCREF(loop);
+    fs_req = (FSRequest *)PyObject_CallObject((PyObject *)&FSRequestType, NULL);
+    if (!fs_req) {
+        PyErr_NoMemory();
+        return NULL;
+    }
+
+    fs_req->callback = callback;
+    REQUEST(fs_req)->loop = loop;
     Py_XINCREF(callback);
+    Py_INCREF(loop);
 
-    req = PyMem_Malloc(sizeof *req);
-    if (!req) {
-        PyErr_NoMemory();
-        ret = NULL;
-        goto end;
-    }
-    pyreq = (FSRequest *)PyObject_CallObject((PyObject *)&FSRequestType, NULL);
-    if (!pyreq) {
-        PyErr_NoMemory();
-        ret = NULL;
-        goto end;
-    }
-    ((Request *)pyreq)->req = (uv_req_t *)req;
-    pyreq->callback = callback;
-    req->data = (void *)pyreq;
-
-    r = uv_fs_sendfile(loop->uv_loop, req, out_fd, in_fd, in_offset, length, (callback != NULL) ? sendfile_cb : NULL);
+    r = uv_fs_sendfile(loop->uv_loop, &fs_req->req, out_fd, in_fd, in_offset, length, (callback != NULL) ? sendfile_cb : NULL);
     if (r < 0) {
         RAISE_UV_EXCEPTION(loop->uv_loop, PyExc_FSError);
         ret = NULL;
@@ -2592,20 +2329,19 @@ FS_func_sendfile(PyObject *obj, PyObject *args, PyObject *kwargs)
 
     if (callback != NULL) {
         /* No need to cleanup, it will be done in the callback */
-        Py_INCREF(pyreq);
-        return (PyObject *)pyreq;
+        Py_INCREF(fs_req);
+        return (PyObject *)fs_req;
     } else {
-        process_sendfile(req, &py_path, &bytes_written, &py_errorno);
+        process_sendfile(&fs_req->req, &py_path, &bytes_written, &py_errorno);
         Py_DECREF(py_path);
         Py_DECREF(py_errorno);
         ret = bytes_written;
     }
 
 end:
-    Py_XDECREF(pyreq);
     Py_DECREF(loop);
     Py_XDECREF(callback);
-    PyMem_Free(req);
+    Py_DECREF(fs_req);
     return ret;
 }
 
@@ -2616,16 +2352,14 @@ FS_func_utime(PyObject *obj, PyObject *args, PyObject *kwargs)
     int r;
     double atime, mtime;
     char *path;
-    uv_fs_t *req;
     Loop *loop;
-    FSRequest *pyreq;
+    FSRequest *fs_req;
     PyObject *callback;
 
     static char *kwlist[] = {"loop", "path", "atime", "mtime", "callback", NULL};
 
     UNUSED_ARG(obj);
-    req = NULL;
-    pyreq = NULL;
+    fs_req = NULL;
     callback = NULL;
 
     if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!sdd|O:utime", kwlist, &LoopType, &loop, &path, &atime, &mtime, &callback)) {
@@ -2637,41 +2371,34 @@ FS_func_utime(PyObject *obj, PyObject *args, PyObject *kwargs)
         return NULL;
     }
 
-    Py_INCREF(loop);
+    fs_req = (FSRequest *)PyObject_CallObject((PyObject *)&FSRequestType, NULL);
+    if (!fs_req) {
+        PyErr_NoMemory();
+        return NULL;
+    }
+
+    fs_req->callback = callback;
+    REQUEST(fs_req)->loop = loop;
     Py_XINCREF(callback);
+    Py_INCREF(loop);
 
-    req = PyMem_Malloc(sizeof *req);
-    if (!req) {
-        PyErr_NoMemory();
-        goto end;
-    }
-    pyreq = (FSRequest *)PyObject_CallObject((PyObject *)&FSRequestType, NULL);
-    if (!pyreq) {
-        PyErr_NoMemory();
-        goto end;
-    }
-    ((Request *)pyreq)->req = (uv_req_t *)req;
-    pyreq->callback = callback;
-    req->data = (void *)pyreq;
-
-    r = uv_fs_utime(loop->uv_loop, req, path, atime, mtime, (callback != NULL) ? utime_cb : NULL);
+    r = uv_fs_utime(loop->uv_loop, &fs_req->req, path, atime, mtime, (callback != NULL) ? utime_cb : NULL);
     if (r < 0) {
         RAISE_UV_EXCEPTION(loop->uv_loop, PyExc_FSError);
         goto end;
     }
 
     if (callback != NULL) {
-        Py_INCREF(pyreq);
-        return (PyObject *)pyreq;
+        Py_INCREF(fs_req);
+        return (PyObject *)fs_req;
     } else {
         Py_RETURN_NONE;
     }
 
 end:
-    Py_XDECREF(pyreq);
     Py_DECREF(loop);
     Py_XDECREF(callback);
-    PyMem_Free(req);
+    Py_DECREF(fs_req);
     return NULL;
 }
 
@@ -2681,16 +2408,14 @@ FS_func_futime(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
     int r, fd;
     double atime, mtime;
-    uv_fs_t *req;
     Loop *loop;
-    FSRequest *pyreq;
+    FSRequest *fs_req;
     PyObject *callback;
 
     static char *kwlist[] = {"loop", "fd", "atime", "mtime", "callback", NULL};
 
     UNUSED_ARG(obj);
-    req = NULL;
-    pyreq = NULL;
+    fs_req = NULL;
     callback = NULL;
 
     if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!idd|O:futime", kwlist, &LoopType, &loop, &fd, &atime, &mtime, &callback)) {
@@ -2702,41 +2427,34 @@ FS_func_futime(PyObject *obj, PyObject *args, PyObject *kwargs)
         return NULL;
     }
 
-    Py_INCREF(loop);
+    fs_req = (FSRequest *)PyObject_CallObject((PyObject *)&FSRequestType, NULL);
+    if (!fs_req) {
+        PyErr_NoMemory();
+        return NULL;
+    }
+
+    fs_req->callback = callback;
+    REQUEST(fs_req)->loop = loop;
     Py_XINCREF(callback);
+    Py_INCREF(loop);
 
-    req = PyMem_Malloc(sizeof *req);
-    if (!req) {
-        PyErr_NoMemory();
-        goto end;
-    }
-    pyreq = (FSRequest *)PyObject_CallObject((PyObject *)&FSRequestType, NULL);
-    if (!pyreq) {
-        PyErr_NoMemory();
-        goto end;
-    }
-    ((Request *)pyreq)->req = (uv_req_t *)req;
-    pyreq->callback = callback;
-    req->data = (void *)pyreq;
-
-    r = uv_fs_futime(loop->uv_loop, req, fd, atime, mtime, (callback != NULL) ? utime_cb : NULL);
+    r = uv_fs_futime(loop->uv_loop, &fs_req->req, fd, atime, mtime, (callback != NULL) ? utime_cb : NULL);
     if (r < 0) {
         RAISE_UV_EXCEPTION(loop->uv_loop, PyExc_FSError);
         goto end;
     }
 
     if (callback != NULL) {
-        Py_INCREF(pyreq);
-        return (PyObject *)pyreq;
+        Py_INCREF(fs_req);
+        return (PyObject *)fs_req;
     } else {
         Py_RETURN_NONE;
     }
 
 end:
-    Py_XDECREF(pyreq);
     Py_DECREF(loop);
     Py_XDECREF(callback);
-    PyMem_Free(req);
+    Py_DECREF(fs_req);
     return NULL;
 }
 
@@ -2783,8 +2501,8 @@ on_fsevent_callback(uv_fs_event_t *handle, const char *filename, int events, int
 
     ASSERT(handle);
 
-    self = (FSEvent *)handle->data;
-    ASSERT(self);
+    self = PYUV_CONTAINER_OF(handle, FSEvent, fsevent_h);
+
     /* Object could go out of scope in the callback, increase refcount to avoid it */
     Py_INCREF(self);
 
@@ -2826,7 +2544,7 @@ FSEvent_filename_get(FSEvent *self, void *closure)
 
     RAISE_IF_HANDLE_NOT_INITIALIZED(self, NULL);
 
-    return Py_BuildValue("s", ((uv_fs_event_t *)UV_HANDLE(self))->filename);
+    return Py_BuildValue("s", self->fsevent_h.filename);
 }
 
 
@@ -2853,7 +2571,7 @@ FSEvent_tp_init(FSEvent *self, PyObject *args, PyObject *kwargs)
         return -1;
     }
 
-    r = uv_fs_event_init(loop->uv_loop, (uv_fs_event_t *)UV_HANDLE(self), path, on_fsevent_callback, flags);
+    r = uv_fs_event_init(loop->uv_loop, &self->fsevent_h, path, on_fsevent_callback, flags);
     if (r != 0) {
         RAISE_UV_EXCEPTION(loop->uv_loop, PyExc_FSEventError);
         return -1;
@@ -2874,22 +2592,14 @@ static PyObject *
 FSEvent_tp_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
 {
     FSEvent *self;
-    uv_fs_event_t *fs_event;
-
-    fs_event = PyMem_Malloc(sizeof *fs_event);
-    if (!fs_event) {
-        PyErr_NoMemory();
-        return NULL;
-    }
 
     self = (FSEvent *)HandleType.tp_new(type, args, kwargs);
     if (!self) {
-        PyMem_Free(fs_event);
         return NULL;
     }
 
-    fs_event->data = (void *)self;
-    UV_HANDLE(self) = (uv_handle_t *)fs_event;
+    self->fsevent_h.data = self;
+    UV_HANDLE(self) = (uv_handle_t *)&self->fsevent_h;
 
     return (PyObject *)self;
 }
@@ -2972,8 +2682,8 @@ on_fspoll_callback(uv_fs_poll_t *handle, int status, const uv_statbuf_t *prev, c
 
     ASSERT(handle);
 
-    self = (FSPoll *)handle->data;
-    ASSERT(self);
+    self = PYUV_CONTAINER_OF(handle, FSPoll, fspoll_h);
+
     /* Object could go out of scope in the callback, increase refcount to avoid it */
     Py_INCREF(self);
 
@@ -3045,7 +2755,7 @@ FSPoll_func_start(FSPoll *self, PyObject *args, PyObject *kwargs)
         return NULL;
     }
 
-    r = uv_fs_poll_start((uv_fs_poll_t *)UV_HANDLE(self), on_fspoll_callback, path, (unsigned int)interval*1000);
+    r = uv_fs_poll_start(&self->fspoll_h, on_fspoll_callback, path, (unsigned int)interval*1000);
     if (r != 0) {
         RAISE_UV_EXCEPTION(UV_HANDLE_LOOP(self), PyExc_FSPollError);
         return NULL;
@@ -3068,7 +2778,7 @@ FSPoll_func_stop(FSPoll *self)
     RAISE_IF_HANDLE_NOT_INITIALIZED(self, NULL);
     RAISE_IF_HANDLE_CLOSED(self, PyExc_HandleClosedError, NULL);
 
-    r = uv_fs_poll_stop((uv_fs_poll_t *)UV_HANDLE(self));
+    r = uv_fs_poll_stop(&self->fspoll_h);
     if (r != 0) {
         RAISE_UV_EXCEPTION(UV_HANDLE_LOOP(self), PyExc_FSPollError);
         return NULL;
@@ -3095,7 +2805,7 @@ FSPoll_tp_init(FSPoll *self, PyObject *args, PyObject *kwargs)
         return -1;
     }
 
-    r = uv_fs_poll_init(loop->uv_loop, (uv_fs_poll_t *)UV_HANDLE(self));
+    r = uv_fs_poll_init(loop->uv_loop, &self->fspoll_h);
     if (r != 0) {
         RAISE_UV_EXCEPTION(loop->uv_loop, PyExc_FSPollError);
         return -1;
@@ -3111,22 +2821,14 @@ static PyObject *
 FSPoll_tp_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
 {
     FSPoll *self;
-    uv_fs_poll_t *uv_fspoll;
-
-    uv_fspoll = PyMem_Malloc(sizeof *uv_fspoll);
-    if (!uv_fspoll) {
-        PyErr_NoMemory();
-        return NULL;
-    }
 
     self = (FSPoll *)HandleType.tp_new(type, args, kwargs);
     if (!self) {
-        PyMem_Free(uv_fspoll);
         return NULL;
     }
 
-    uv_fspoll->data = (void *)self;
-    UV_HANDLE(self) = (uv_handle_t *)uv_fspoll;
+    self->fspoll_h.data = self;
+    UV_HANDLE(self) = (uv_handle_t *)&self->fspoll_h;
 
     return (PyObject *)self;
 }

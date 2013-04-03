@@ -2,9 +2,7 @@
 static PyObject *
 Request_func_cancel(Request *self)
 {
-    if (self->req == NULL) {
-        Py_RETURN_FALSE;
-    } else if (uv_cancel(self->req) == 0) {
+    if (self->req_ptr && uv_cancel(self->req_ptr) == 0) {
          Py_RETURN_TRUE;
     } else {
         Py_RETURN_FALSE;
@@ -19,7 +17,7 @@ Request_tp_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
     if (!self) {
         return NULL;
     }
-    self->req = NULL;
+    self->req_ptr = NULL;
     return (PyObject *)self;
 }
 
@@ -80,6 +78,7 @@ GAIRequest_tp_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
     if (!self) {
         return NULL;
     }
+    UV_REQUEST(self) = (uv_req_t *)&self->req;
     return (PyObject *)self;
 }
 
@@ -133,6 +132,7 @@ WorkRequest_tp_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
     if (!self) {
         return NULL;
     }
+    UV_REQUEST(self) = (uv_req_t *)&self->req;
     return (PyObject *)self;
 }
 
@@ -186,6 +186,7 @@ FSRequest_tp_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
     if (!self) {
         return NULL;
     }
+    UV_REQUEST(self) = (uv_req_t *)&self->req;
     return (PyObject *)self;
 }
 
@@ -230,5 +231,4 @@ static PyTypeObject FSRequestType = {
     0,                                                              /*tp_alloc*/
     FSRequest_tp_new,                                               /*tp_new*/
 };
-
 

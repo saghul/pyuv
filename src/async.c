@@ -1,16 +1,16 @@
 
 static void
-on_async_callback(uv_async_t *async, int status)
+on_async_callback(uv_async_t *handle, int status)
 {
     PyGILState_STATE gstate = PyGILState_Ensure();
     Async *self;
     PyObject *result;
 
-    ASSERT(async);
+    ASSERT(handle);
     ASSERT(status == 0);
 
-    self = (Async *)async->data;
-    ASSERT(self);
+    self = PYUV_CONTAINER_OF(handle, Async, async_h);
+
     /* Object could go out of scope in the callback, increase refcount to avoid it */
     Py_INCREF(self);
 
@@ -33,7 +33,7 @@ Async_func_send(Async *self)
     RAISE_IF_HANDLE_NOT_INITIALIZED(self, NULL);
     RAISE_IF_HANDLE_CLOSED(self, PyExc_HandleClosedError, NULL);
 
-    r = uv_async_send((uv_async_t *)UV_HANDLE(self));
+    r = uv_async_send(&self->async_h);
     if (r != 0) {
         RAISE_UV_EXCEPTION(UV_HANDLE_LOOP(self), PyExc_AsyncError);
         return NULL;
@@ -63,7 +63,7 @@ Async_tp_init(Async *self, PyObject *args, PyObject *kwargs)
         return -1;
     }
 
-    r = uv_async_init(loop->uv_loop, (uv_async_t *)UV_HANDLE(self), on_async_callback);
+    r = uv_async_init(loop->uv_loop, &self->async_h, on_async_callback);
     if (r != 0) {
         RAISE_UV_EXCEPTION(loop->uv_loop, PyExc_AsyncError);
         return -1;
@@ -84,22 +84,14 @@ static PyObject *
 Async_tp_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
 {
     Async *self;
-    uv_async_t *uv_async;
-
-    uv_async = PyMem_Malloc(sizeof *uv_async);
-    if (!uv_async) {
-        PyErr_NoMemory();
-        return NULL;
-    }
 
     self = (Async *)HandleType.tp_new(type, args, kwargs);
     if (!self) {
-        PyMem_Free(uv_async);
         return NULL;
     }
 
-    uv_async->data = (void *)self;
-    UV_HANDLE(self) = (uv_handle_t *)uv_async;
+    self->async_h.data = self;
+    UV_HANDLE(self) = (uv_handle_t *)&self->async_h;
 
     return (PyObject *)self;
 }
