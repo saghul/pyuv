@@ -8,8 +8,8 @@ asynchronous networking library, used as the platform layer for
 `NodeJS <http://nodejs.org>`_.
 
 libuv is written and maintained by Joyent Inc. and contributors.
-It’s built on top of libev and libeio on Unix and IOCP on Windows systems
-providing a consistent API on top of them.
+It’s built on top of epoll/kequeue/event ports/etc on Unix and
+IOCP on Windows systems providing a consistent API on top of them.
 
 pyuv's features:
 
