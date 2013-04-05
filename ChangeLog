@@ -3,7 +3,7 @@ Version 0.10.1
  - Added better libuv version information
  - Fixed building IPv6 address information on getaddrinfo
  - Enhanced support for IPv6 addresses
- - Rdeuced number of required memory allocations in several places
+ - Reduced number of required memory allocations in several places
    to the minimum possible
  - Embed libuv handles into Python object structures
  - Embed libuv requests in pyuv Request objects
