@@ -242,11 +242,9 @@ callback:
     Py_DECREF(dns_result);
     Py_DECREF(errorno);
 
-    Py_DECREF(loop);
-    Py_DECREF(gai_req->callback);
-    Py_DECREF(gai_req);
-
     uv_freeaddrinfo(res);
+    UV_REQUEST(gai_req) = NULL;
+    Py_DECREF(gai_req);
 
     PyGILState_Release(gstate);
 }
@@ -298,16 +296,11 @@ Util_func_getaddrinfo(PyObject *obj, PyObject *args, PyObject *kwargs)
     }
     snprintf(port_str, sizeof(port_str), "%d", port);
 
-    gai_req = (GAIRequest *)PyObject_CallObject((PyObject *)&GAIRequestType, NULL);
+    gai_req = (GAIRequest *)PyObject_CallFunctionObjArgs((PyObject *)&GAIRequestType, loop, callback, NULL);
     if (!gai_req) {
         PyErr_NoMemory();
         return NULL;
     }
-
-    gai_req->callback = callback;
-    REQUEST(gai_req)->loop = loop;
-    Py_INCREF(loop);
-    Py_INCREF(callback);
 
     memset(&hints, 0, sizeof(hints));
     hints.ai_family = family;
@@ -326,8 +319,6 @@ Util_func_getaddrinfo(PyObject *obj, PyObject *args, PyObject *kwargs)
 
 error:
     Py_DECREF(gai_req);
-    Py_DECREF(loop);
-    Py_DECREF(callback);
     return NULL;
 }
 
