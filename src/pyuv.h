@@ -340,6 +340,7 @@ static PyTypeObject SemaphoreType;
 /* Request */
 typedef struct {
     PyObject_HEAD
+    Bool initialized;
     uv_req_t *req_ptr;
     Loop *loop;
 } Request;

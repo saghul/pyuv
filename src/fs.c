@@ -170,9 +170,9 @@ stat_cb(uv_fs_t* req) {
     Py_DECREF(stat_data);
     Py_DECREF(path);
     Py_DECREF(errorno);
-    Py_DECREF(loop);
-    Py_DECREF(fs_req->callback);
+
     uv_fs_req_cleanup(req);
+    UV_REQUEST(fs_req) = NULL;
     Py_DECREF(fs_req);
 
     PyGILState_Release(gstate);
@@ -214,9 +214,9 @@ unlink_cb(uv_fs_t* req) {
     Py_XDECREF(result);
     Py_DECREF(path);
     Py_DECREF(errorno);
-    Py_DECREF(loop);
-    Py_DECREF(fs_req->callback);
+
     uv_fs_req_cleanup(req);
+    UV_REQUEST(fs_req) = NULL;
     Py_DECREF(fs_req);
 
     PyGILState_Release(gstate);
@@ -258,9 +258,9 @@ mkdir_cb(uv_fs_t* req) {
     Py_XDECREF(result);
     Py_DECREF(path);
     Py_DECREF(errorno);
-    Py_DECREF(loop);
-    Py_DECREF(fs_req->callback);
+
     uv_fs_req_cleanup(req);
+    UV_REQUEST(fs_req) = NULL;
     Py_DECREF(fs_req);
 
     PyGILState_Release(gstate);
@@ -302,9 +302,9 @@ rmdir_cb(uv_fs_t* req) {
     Py_XDECREF(result);
     Py_DECREF(path);
     Py_DECREF(errorno);
-    Py_DECREF(loop);
-    Py_DECREF(fs_req->callback);
+
     uv_fs_req_cleanup(req);
+    UV_REQUEST(fs_req) = NULL;
     Py_DECREF(fs_req);
 
     PyGILState_Release(gstate);
@@ -346,9 +346,9 @@ rename_cb(uv_fs_t* req) {
     Py_XDECREF(result);
     Py_DECREF(path);
     Py_DECREF(errorno);
-    Py_DECREF(loop);
-    Py_DECREF(fs_req->callback);
+
     uv_fs_req_cleanup(req);
+    UV_REQUEST(fs_req) = NULL;
     Py_DECREF(fs_req);
 
     PyGILState_Release(gstate);
@@ -390,9 +390,9 @@ chmod_cb(uv_fs_t* req) {
     Py_XDECREF(result);
     Py_DECREF(path);
     Py_DECREF(errorno);
-    Py_DECREF(loop);
-    Py_DECREF(fs_req->callback);
+
     uv_fs_req_cleanup(req);
+    UV_REQUEST(fs_req) = NULL;
     Py_DECREF(fs_req);
 
     PyGILState_Release(gstate);
@@ -434,9 +434,9 @@ link_cb(uv_fs_t* req) {
     Py_XDECREF(result);
     Py_DECREF(path);
     Py_DECREF(errorno);
-    Py_DECREF(loop);
-    Py_DECREF(fs_req->callback);
+
     uv_fs_req_cleanup(req);
+    UV_REQUEST(fs_req) = NULL;
     Py_DECREF(fs_req);
 
     PyGILState_Release(gstate);
@@ -478,9 +478,9 @@ symlink_cb(uv_fs_t* req) {
     Py_XDECREF(result);
     Py_DECREF(path);
     Py_DECREF(errorno);
-    Py_DECREF(loop);
-    Py_DECREF(fs_req->callback);
+
     uv_fs_req_cleanup(req);
+    UV_REQUEST(fs_req) = NULL;
     Py_DECREF(fs_req);
 
     PyGILState_Release(gstate);
@@ -524,9 +524,9 @@ readlink_cb(uv_fs_t* req) {
     Py_XDECREF(result);
     Py_DECREF(path);
     Py_DECREF(errorno);
-    Py_DECREF(loop);
-    Py_DECREF(fs_req->callback);
+
     uv_fs_req_cleanup(req);
+    UV_REQUEST(fs_req) = NULL;
     Py_DECREF(fs_req);
 
     PyGILState_Release(gstate);
@@ -568,9 +568,9 @@ chown_cb(uv_fs_t* req) {
     Py_XDECREF(result);
     Py_DECREF(path);
     Py_DECREF(errorno);
-    Py_DECREF(loop);
-    Py_DECREF(fs_req->callback);
+
     uv_fs_req_cleanup(req);
+    UV_REQUEST(fs_req) = NULL;
     Py_DECREF(fs_req);
 
     PyGILState_Release(gstate);
@@ -622,9 +622,9 @@ open_cb(uv_fs_t* req) {
     Py_DECREF(fd);
     Py_DECREF(path);
     Py_DECREF(errorno);
-    Py_DECREF(loop);
-    Py_DECREF(fs_req->callback);
+
     uv_fs_req_cleanup(req);
+    UV_REQUEST(fs_req) = NULL;
     Py_DECREF(fs_req);
 
     PyGILState_Release(gstate);
@@ -667,8 +667,9 @@ close_cb(uv_fs_t* req) {
     Py_DECREF(path);
     Py_DECREF(errorno);
     Py_DECREF(loop);
-    Py_DECREF(fs_req->callback);
+
     uv_fs_req_cleanup(req);
+    UV_REQUEST(fs_req) = NULL;
     Py_DECREF(fs_req);
 
     PyGILState_Release(gstate);
@@ -720,10 +721,10 @@ read_cb(uv_fs_t* req) {
     Py_DECREF(read_data);
     Py_DECREF(path);
     Py_DECREF(errorno);
-    Py_DECREF(loop);
-    Py_DECREF(fs_req->callback);
+
     PyMem_Free(req->buf);
     uv_fs_req_cleanup(req);
+    UV_REQUEST(fs_req) = NULL;
     Py_DECREF(fs_req);
 
     PyGILState_Release(gstate);
@@ -776,10 +777,10 @@ write_cb(uv_fs_t* req) {
     Py_DECREF(bytes_written);
     Py_DECREF(path);
     Py_DECREF(errorno);
-    Py_DECREF(loop);
-    Py_DECREF(fs_req->callback);
+
     PyMem_Free(req->buf);
     uv_fs_req_cleanup(req);
+    UV_REQUEST(fs_req) = NULL;
     Py_DECREF(fs_req);
 
     PyGILState_Release(gstate);
@@ -821,9 +822,9 @@ fsync_cb(uv_fs_t* req) {
     Py_XDECREF(result);
     Py_DECREF(path);
     Py_DECREF(errorno);
-    Py_DECREF(loop);
-    Py_DECREF(fs_req->callback);
+
     uv_fs_req_cleanup(req);
+    UV_REQUEST(fs_req) = NULL;
     Py_DECREF(fs_req);
 
     PyGILState_Release(gstate);
@@ -865,9 +866,9 @@ ftruncate_cb(uv_fs_t* req) {
     Py_XDECREF(result);
     Py_DECREF(path);
     Py_DECREF(errorno);
-    Py_DECREF(loop);
-    Py_DECREF(fs_req->callback);
+
     uv_fs_req_cleanup(req);
+    UV_REQUEST(fs_req) = NULL;
     Py_DECREF(fs_req);
 
     PyGILState_Release(gstate);
@@ -938,9 +939,9 @@ readdir_cb(uv_fs_t* req) {
     Py_DECREF(files);
     Py_DECREF(path);
     Py_DECREF(errorno);
-    Py_DECREF(loop);
-    Py_DECREF(fs_req->callback);
+
     uv_fs_req_cleanup(req);
+    UV_REQUEST(fs_req) = NULL;
     Py_DECREF(fs_req);
 
     PyGILState_Release(gstate);
@@ -991,9 +992,9 @@ sendfile_cb(uv_fs_t* req) {
     Py_DECREF(bytes_written);
     Py_DECREF(path);
     Py_DECREF(errorno);
-    Py_DECREF(loop);
-    Py_DECREF(fs_req->callback);
+
     uv_fs_req_cleanup(req);
+    UV_REQUEST(fs_req) = NULL;
     Py_DECREF(fs_req);
 
     PyGILState_Release(gstate);
@@ -1035,9 +1036,9 @@ utime_cb(uv_fs_t* req) {
     Py_XDECREF(result);
     Py_DECREF(path);
     Py_DECREF(errorno);
-    Py_DECREF(loop);
-    Py_DECREF(fs_req->callback);
+
     uv_fs_req_cleanup(req);
+    UV_REQUEST(fs_req) = NULL;
     Py_DECREF(fs_req);
 
     PyGILState_Release(gstate);
@@ -1056,32 +1057,26 @@ stat_func(PyObject *args, PyObject *kwargs, int type)
     static char *kwlist[] = {"loop", "path", "callback", NULL};
 
     fs_req = NULL;
-    callback = NULL;
+    callback = Py_None;
 
     if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!s|O:stat", kwlist, &LoopType, &loop, &path, &callback)) {
         return NULL;
     }
 
-    if (callback != NULL && !PyCallable_Check(callback)) {
+    if (callback != Py_None && !PyCallable_Check(callback)) {
         PyErr_SetString(PyExc_TypeError, "a callable is required");
         return NULL;
     }
 
-    fs_req = (FSRequest *)PyObject_CallObject((PyObject *)&FSRequestType, NULL);
+    fs_req = (FSRequest *)PyObject_CallFunctionObjArgs((PyObject *)&FSRequestType, loop, callback, NULL);
     if (!fs_req) {
-        PyErr_NoMemory();
         return NULL;
     }
 
-    fs_req->callback = callback;
-    REQUEST(fs_req)->loop = loop;
-    Py_XINCREF(callback);
-    Py_INCREF(loop);
-
     if (type == UV_FS_STAT) {
-        r = uv_fs_stat(loop->uv_loop, &fs_req->req, path, (callback != NULL) ? stat_cb : NULL);
+        r = uv_fs_stat(loop->uv_loop, &fs_req->req, path, (callback != Py_None) ? stat_cb : NULL);
     } else {
-        r = uv_fs_lstat(loop->uv_loop, &fs_req->req, path, (callback != NULL) ? stat_cb : NULL);
+        r = uv_fs_lstat(loop->uv_loop, &fs_req->req, path, (callback != Py_None) ? stat_cb : NULL);
     }
     if (r < 0) {
         RAISE_UV_EXCEPTION(loop->uv_loop, PyExc_FSError);
@@ -1089,7 +1084,7 @@ stat_func(PyObject *args, PyObject *kwargs, int type)
         goto end;
     }
 
-    if (callback != NULL) {
+    if (callback != Py_None) {
         /* No need to cleanup, it will be done in the callback */
         Py_INCREF(fs_req);
         return (PyObject *)fs_req;
@@ -1101,8 +1096,6 @@ stat_func(PyObject *args, PyObject *kwargs, int type)
     }
 
 end:
-    Py_DECREF(loop);
-    Py_XDECREF(callback);
     Py_DECREF(fs_req);
     return ret;
 }
@@ -1136,36 +1129,30 @@ FS_func_fstat(PyObject *obj, PyObject *args, PyObject *kwargs)
 
     UNUSED_ARG(obj);
     fs_req = NULL;
-    callback = NULL;
+    callback = Py_None;
 
     if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!i|O:fstat", kwlist, &LoopType, &loop, &fd, &callback)) {
         return NULL;
     }
 
-    if (callback != NULL && !PyCallable_Check(callback)) {
+    if (callback != Py_None && !PyCallable_Check(callback)) {
         PyErr_SetString(PyExc_TypeError, "a callable is required");
         return NULL;
     }
 
-    fs_req = (FSRequest *)PyObject_CallObject((PyObject *)&FSRequestType, NULL);
+    fs_req = (FSRequest *)PyObject_CallFunctionObjArgs((PyObject *)&FSRequestType, loop, callback, NULL);
     if (!fs_req) {
-        PyErr_NoMemory();
         return NULL;
     }
 
-    fs_req->callback = callback;
-    REQUEST(fs_req)->loop = loop;
-    Py_XINCREF(callback);
-    Py_INCREF(loop);
-
-    r = uv_fs_fstat(loop->uv_loop, &fs_req->req, fd, (callback != NULL) ? stat_cb : NULL);
+    r = uv_fs_fstat(loop->uv_loop, &fs_req->req, fd, (callback != Py_None) ? stat_cb : NULL);
     if (r < 0) {
         RAISE_UV_EXCEPTION(loop->uv_loop, PyExc_FSError);
         ret = NULL;
         goto end;
     }
 
-    if (callback != NULL) {
+    if (callback != Py_None) {
         /* No need to cleanup, it will be done in the callback */
         Py_INCREF(fs_req);
         return (PyObject *)fs_req;
@@ -1177,8 +1164,6 @@ FS_func_fstat(PyObject *obj, PyObject *args, PyObject *kwargs)
     }
 
 end:
-    Py_DECREF(loop);
-    Py_XDECREF(callback);
     Py_DECREF(fs_req);
     return ret;
 }
@@ -1197,35 +1182,29 @@ FS_func_unlink(PyObject *obj, PyObject *args, PyObject *kwargs)
 
     UNUSED_ARG(obj);
     fs_req = NULL;
-    callback = NULL;
+    callback = Py_None;
 
     if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!s|O:unlink", kwlist, &LoopType, &loop, &path, &callback)) {
         return NULL;
     }
 
-    if (callback != NULL && !PyCallable_Check(callback)) {
+    if (callback != Py_None && !PyCallable_Check(callback)) {
         PyErr_SetString(PyExc_TypeError, "a callable is required");
         return NULL;
     }
 
-    fs_req = (FSRequest *)PyObject_CallObject((PyObject *)&FSRequestType, NULL);
+    fs_req = (FSRequest *)PyObject_CallFunctionObjArgs((PyObject *)&FSRequestType, loop, callback, NULL);
     if (!fs_req) {
-        PyErr_NoMemory();
         return NULL;
     }
 
-    fs_req->callback = callback;
-    REQUEST(fs_req)->loop = loop;
-    Py_XINCREF(callback);
-    Py_INCREF(loop);
-
-    r = uv_fs_unlink(loop->uv_loop, &fs_req->req, path, (callback != NULL) ? unlink_cb : NULL);
+    r = uv_fs_unlink(loop->uv_loop, &fs_req->req, path, (callback != Py_None) ? unlink_cb : NULL);
     if (r < 0) {
         RAISE_UV_EXCEPTION(loop->uv_loop, PyExc_FSError);
         goto end;
     }
 
-    if (callback != NULL) {
+    if (callback != Py_None) {
         Py_INCREF(fs_req);
         return (PyObject *)fs_req;
     } else {
@@ -1233,8 +1212,6 @@ FS_func_unlink(PyObject *obj, PyObject *args, PyObject *kwargs)
     }
 
 end:
-    Py_DECREF(loop);
-    Py_XDECREF(callback);
     Py_DECREF(fs_req);
     return NULL;
 }
@@ -1253,35 +1230,29 @@ FS_func_mkdir(PyObject *obj, PyObject *args, PyObject *kwargs)
 
     UNUSED_ARG(obj);
     fs_req = NULL;
-    callback = NULL;
+    callback = Py_None;
 
     if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!si|O:mkdir", kwlist, &LoopType, &loop, &path, &mode, &callback)) {
         return NULL;
     }
 
-    if (callback != NULL && !PyCallable_Check(callback)) {
+    if (callback != Py_None && !PyCallable_Check(callback)) {
         PyErr_SetString(PyExc_TypeError, "a callable is required");
         return NULL;
     }
 
-    fs_req = (FSRequest *)PyObject_CallObject((PyObject *)&FSRequestType, NULL);
+    fs_req = (FSRequest *)PyObject_CallFunctionObjArgs((PyObject *)&FSRequestType, loop, callback, NULL);
     if (!fs_req) {
-        PyErr_NoMemory();
         return NULL;
     }
 
-    fs_req->callback = callback;
-    REQUEST(fs_req)->loop = loop;
-    Py_XINCREF(callback);
-    Py_INCREF(loop);
-
-    r = uv_fs_mkdir(loop->uv_loop, &fs_req->req, path, mode, (callback != NULL) ? mkdir_cb : NULL);
+    r = uv_fs_mkdir(loop->uv_loop, &fs_req->req, path, mode, (callback != Py_None) ? mkdir_cb : NULL);
     if (r < 0) {
         RAISE_UV_EXCEPTION(loop->uv_loop, PyExc_FSError);
         goto end;
     }
 
-    if (callback != NULL) {
+    if (callback != Py_None) {
         Py_INCREF(fs_req);
         return (PyObject *)fs_req;
     } else {
@@ -1289,8 +1260,6 @@ FS_func_mkdir(PyObject *obj, PyObject *args, PyObject *kwargs)
     }
 
 end:
-    Py_DECREF(loop);
-    Py_XDECREF(callback);
     Py_DECREF(fs_req);
     return NULL;
 }
@@ -1309,35 +1278,29 @@ FS_func_rmdir(PyObject *obj, PyObject *args, PyObject *kwargs)
 
     UNUSED_ARG(obj);
     fs_req = NULL;
-    callback = NULL;
+    callback = Py_None;
 
     if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!s|O:rmdir", kwlist, &LoopType, &loop, &path, &callback)) {
         return NULL;
     }
 
-    if (callback != NULL && !PyCallable_Check(callback)) {
+    if (callback != Py_None && !PyCallable_Check(callback)) {
         PyErr_SetString(PyExc_TypeError, "a callable is required");
         return NULL;
     }
 
-    fs_req = (FSRequest *)PyObject_CallObject((PyObject *)&FSRequestType, NULL);
+    fs_req = (FSRequest *)PyObject_CallFunctionObjArgs((PyObject *)&FSRequestType, loop, callback, NULL);
     if (!fs_req) {
-        PyErr_NoMemory();
         return NULL;
     }
 
-    fs_req->callback = callback;
-    REQUEST(fs_req)->loop = loop;
-    Py_XINCREF(callback);
-    Py_INCREF(loop);
-
-    r = uv_fs_rmdir(loop->uv_loop, &fs_req->req, path, (callback != NULL) ? rmdir_cb : NULL);
+    r = uv_fs_rmdir(loop->uv_loop, &fs_req->req, path, (callback != Py_None) ? rmdir_cb : NULL);
     if (r < 0) {
         RAISE_UV_EXCEPTION(loop->uv_loop, PyExc_FSError);
         goto end;
     }
 
-    if (callback != NULL) {
+    if (callback != Py_None) {
         Py_INCREF(fs_req);
         return (PyObject *)fs_req;
     } else {
@@ -1345,8 +1308,6 @@ FS_func_rmdir(PyObject *obj, PyObject *args, PyObject *kwargs)
     }
 
 end:
-    Py_DECREF(loop);
-    Py_XDECREF(callback);
     Py_DECREF(fs_req);
     return NULL;
 }
@@ -1365,35 +1326,29 @@ FS_func_rename(PyObject *obj, PyObject *args, PyObject *kwargs)
 
     UNUSED_ARG(obj);
     fs_req = NULL;
-    callback = NULL;
+    callback = Py_None;
 
     if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!ss|O:rename", kwlist, &LoopType, &loop, &path, &new_path, &callback)) {
         return NULL;
     }
 
-    if (callback != NULL && !PyCallable_Check(callback)) {
+    if (callback != Py_None && !PyCallable_Check(callback)) {
         PyErr_SetString(PyExc_TypeError, "a callable is required");
         return NULL;
     }
 
-    fs_req = (FSRequest *)PyObject_CallObject((PyObject *)&FSRequestType, NULL);
+    fs_req = (FSRequest *)PyObject_CallFunctionObjArgs((PyObject *)&FSRequestType, loop, callback, NULL);
     if (!fs_req) {
-        PyErr_NoMemory();
         return NULL;
     }
 
-    fs_req->callback = callback;
-    REQUEST(fs_req)->loop = loop;
-    Py_XINCREF(callback);
-    Py_INCREF(loop);
-
-    r = uv_fs_rename(loop->uv_loop, &fs_req->req, path, new_path, (callback != NULL) ? rename_cb : NULL);
+    r = uv_fs_rename(loop->uv_loop, &fs_req->req, path, new_path, (callback != Py_None) ? rename_cb : NULL);
     if (r < 0) {
         RAISE_UV_EXCEPTION(loop->uv_loop, PyExc_FSError);
         goto end;
     }
 
-    if (callback != NULL) {
+    if (callback != Py_None) {
         Py_INCREF(fs_req);
         return (PyObject *)fs_req;
     } else {
@@ -1401,8 +1356,6 @@ FS_func_rename(PyObject *obj, PyObject *args, PyObject *kwargs)
     }
 
 end:
-    Py_DECREF(loop);
-    Py_XDECREF(callback);
     Py_DECREF(fs_req);
     return NULL;
 }
@@ -1421,35 +1374,29 @@ FS_func_chmod(PyObject *obj, PyObject *args, PyObject *kwargs)
 
     UNUSED_ARG(obj);
     fs_req = NULL;
-    callback = NULL;
+    callback = Py_None;
 
     if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!si|O:chmod", kwlist, &LoopType, &loop, &path, &mode, &callback)) {
         return NULL;
     }
 
-    if (callback != NULL && !PyCallable_Check(callback)) {
+    if (callback != Py_None && !PyCallable_Check(callback)) {
         PyErr_SetString(PyExc_TypeError, "a callable is required");
         return NULL;
     }
 
-    fs_req = (FSRequest *)PyObject_CallObject((PyObject *)&FSRequestType, NULL);
+    fs_req = (FSRequest *)PyObject_CallFunctionObjArgs((PyObject *)&FSRequestType, loop, callback, NULL);
     if (!fs_req) {
-        PyErr_NoMemory();
         return NULL;
     }
 
-    fs_req->callback = callback;
-    REQUEST(fs_req)->loop = loop;
-    Py_XINCREF(callback);
-    Py_INCREF(loop);
-
-    r = uv_fs_chmod(loop->uv_loop, &fs_req->req, path, mode, (callback != NULL) ? chmod_cb : NULL);
+    r = uv_fs_chmod(loop->uv_loop, &fs_req->req, path, mode, (callback != Py_None) ? chmod_cb : NULL);
     if (r < 0) {
         RAISE_UV_EXCEPTION(loop->uv_loop, PyExc_FSError);
         goto end;
     }
 
-    if (callback != NULL) {
+    if (callback != Py_None) {
         Py_INCREF(fs_req);
         return (PyObject *)fs_req;
     } else {
@@ -1457,8 +1404,6 @@ FS_func_chmod(PyObject *obj, PyObject *args, PyObject *kwargs)
     }
 
 end:
-    Py_DECREF(loop);
-    Py_XDECREF(callback);
     Py_DECREF(fs_req);
     return NULL;
 }
@@ -1476,35 +1421,29 @@ FS_func_fchmod(PyObject *obj, PyObject *args, PyObject *kwargs)
 
     UNUSED_ARG(obj);
     fs_req = NULL;
-    callback = NULL;
+    callback = Py_None;
 
     if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!ii|O:fchmod", kwlist, &LoopType, &loop, &fd, &mode, &callback)) {
         return NULL;
     }
 
-    if (callback != NULL && !PyCallable_Check(callback)) {
+    if (callback != Py_None && !PyCallable_Check(callback)) {
         PyErr_SetString(PyExc_TypeError, "a callable is required");
         return NULL;
     }
 
-    fs_req = (FSRequest *)PyObject_CallObject((PyObject *)&FSRequestType, NULL);
+    fs_req = (FSRequest *)PyObject_CallFunctionObjArgs((PyObject *)&FSRequestType, loop, callback, NULL);
     if (!fs_req) {
-        PyErr_NoMemory();
         return NULL;
     }
 
-    fs_req->callback = callback;
-    REQUEST(fs_req)->loop = loop;
-    Py_XINCREF(callback);
-    Py_INCREF(loop);
-
-    r = uv_fs_fchmod(loop->uv_loop, &fs_req->req, fd, mode, (callback != NULL) ? chmod_cb : NULL);
+    r = uv_fs_fchmod(loop->uv_loop, &fs_req->req, fd, mode, (callback != Py_None) ? chmod_cb : NULL);
     if (r < 0) {
         RAISE_UV_EXCEPTION(loop->uv_loop, PyExc_FSError);
         goto end;
     }
 
-    if (callback != NULL) {
+    if (callback != Py_None) {
         Py_INCREF(fs_req);
         return (PyObject *)fs_req;
     } else {
@@ -1512,8 +1451,6 @@ FS_func_fchmod(PyObject *obj, PyObject *args, PyObject *kwargs)
     }
 
 end:
-    Py_DECREF(loop);
-    Py_XDECREF(callback);
     Py_DECREF(fs_req);
     return NULL;
 }
@@ -1532,35 +1469,29 @@ FS_func_link(PyObject *obj, PyObject *args, PyObject *kwargs)
 
     UNUSED_ARG(obj);
     fs_req = NULL;
-    callback = NULL;
+    callback = Py_None;
 
     if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!ss|O:link", kwlist, &LoopType, &loop, &path, &new_path, &callback)) {
         return NULL;
     }
 
-    if (callback != NULL && !PyCallable_Check(callback)) {
+    if (callback != Py_None && !PyCallable_Check(callback)) {
         PyErr_SetString(PyExc_TypeError, "a callable is required");
         return NULL;
     }
 
-    fs_req = (FSRequest *)PyObject_CallObject((PyObject *)&FSRequestType, NULL);
+    fs_req = (FSRequest *)PyObject_CallFunctionObjArgs((PyObject *)&FSRequestType, loop, callback, NULL);
     if (!fs_req) {
-        PyErr_NoMemory();
         return NULL;
     }
 
-    fs_req->callback = callback;
-    REQUEST(fs_req)->loop = loop;
-    Py_XINCREF(callback);
-    Py_INCREF(loop);
-
-    r = uv_fs_link(loop->uv_loop, &fs_req->req, path, new_path, (callback != NULL) ? link_cb : NULL);
+    r = uv_fs_link(loop->uv_loop, &fs_req->req, path, new_path, (callback != Py_None) ? link_cb : NULL);
     if (r < 0) {
         RAISE_UV_EXCEPTION(loop->uv_loop, PyExc_FSError);
         goto end;
     }
 
-    if (callback != NULL) {
+    if (callback != Py_None) {
         Py_INCREF(fs_req);
         return (PyObject *)fs_req;
     } else {
@@ -1568,8 +1499,6 @@ FS_func_link(PyObject *obj, PyObject *args, PyObject *kwargs)
     }
 
 end:
-    Py_DECREF(loop);
-    Py_XDECREF(callback);
     Py_DECREF(fs_req);
     return NULL;
 }
@@ -1588,35 +1517,29 @@ FS_func_symlink(PyObject *obj, PyObject *args, PyObject *kwargs)
 
     UNUSED_ARG(obj);
     fs_req = NULL;
-    callback = NULL;
+    callback = Py_None;
 
     if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!ssi|O:symlink", kwlist, &LoopType, &loop, &path, &new_path, &flags, &callback)) {
         return NULL;
     }
 
-    if (callback != NULL && !PyCallable_Check(callback)) {
+    if (callback != Py_None && !PyCallable_Check(callback)) {
         PyErr_SetString(PyExc_TypeError, "a callable is required");
         return NULL;
     }
 
-    fs_req = (FSRequest *)PyObject_CallObject((PyObject *)&FSRequestType, NULL);
+    fs_req = (FSRequest *)PyObject_CallFunctionObjArgs((PyObject *)&FSRequestType, loop, callback, NULL);
     if (!fs_req) {
-        PyErr_NoMemory();
         return NULL;
     }
 
-    fs_req->callback = callback;
-    REQUEST(fs_req)->loop = loop;
-    Py_XINCREF(callback);
-    Py_INCREF(loop);
-
-    r = uv_fs_symlink(loop->uv_loop, &fs_req->req, path, new_path, flags, (callback != NULL) ? symlink_cb : NULL);
+    r = uv_fs_symlink(loop->uv_loop, &fs_req->req, path, new_path, flags, (callback != Py_None) ? symlink_cb : NULL);
     if (r < 0) {
         RAISE_UV_EXCEPTION(loop->uv_loop, PyExc_FSError);
         goto end;
     }
 
-    if (callback != NULL) {
+    if (callback != Py_None) {
         Py_INCREF(fs_req);
         return (PyObject *)fs_req;
     } else {
@@ -1624,8 +1547,6 @@ FS_func_symlink(PyObject *obj, PyObject *args, PyObject *kwargs)
     }
 
 end:
-    Py_DECREF(loop);
-    Py_XDECREF(callback);
     Py_DECREF(fs_req);
     return NULL;
 }
@@ -1644,36 +1565,30 @@ FS_func_readlink(PyObject *obj, PyObject *args, PyObject *kwargs)
 
     UNUSED_ARG(obj);
     fs_req = NULL;
-    callback = NULL;
+    callback = Py_None;
 
     if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!s|O:readlink", kwlist, &LoopType, &loop, &path, &callback)) {
         return NULL;
     }
 
-    if (callback != NULL && !PyCallable_Check(callback)) {
+    if (callback != Py_None && !PyCallable_Check(callback)) {
         PyErr_SetString(PyExc_TypeError, "a callable is required");
         return NULL;
     }
 
-    fs_req = (FSRequest *)PyObject_CallObject((PyObject *)&FSRequestType, NULL);
+    fs_req = (FSRequest *)PyObject_CallFunctionObjArgs((PyObject *)&FSRequestType, loop, callback, NULL);
     if (!fs_req) {
-        PyErr_NoMemory();
         return NULL;
     }
 
-    fs_req->callback = callback;
-    REQUEST(fs_req)->loop = loop;
-    Py_XINCREF(callback);
-    Py_INCREF(loop);
-
-    r = uv_fs_readlink(loop->uv_loop, &fs_req->req, path, (callback != NULL) ? readlink_cb : NULL);
+    r = uv_fs_readlink(loop->uv_loop, &fs_req->req, path, (callback != Py_None) ? readlink_cb : NULL);
     if (r < 0) {
         RAISE_UV_EXCEPTION(loop->uv_loop, PyExc_FSError);
         ret = NULL;
         goto end;
     }
 
-    if (callback != NULL) {
+    if (callback != Py_None) {
         /* No need to cleanup, it will be done in the callback */
         Py_INCREF(fs_req);
         return (PyObject *)fs_req;
@@ -1684,8 +1599,6 @@ FS_func_readlink(PyObject *obj, PyObject *args, PyObject *kwargs)
     }
 
 end:
-    Py_DECREF(loop);
-    Py_XDECREF(callback);
     Py_DECREF(fs_req);
     return ret;
 }
@@ -1704,35 +1617,29 @@ FS_func_chown(PyObject *obj, PyObject *args, PyObject *kwargs)
 
     UNUSED_ARG(obj);
     fs_req = NULL;
-    callback = NULL;
+    callback = Py_None;
 
     if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!sii|O:chown", kwlist, &LoopType, &loop, &path, &uid, &gid, &callback)) {
         return NULL;
     }
 
-    if (callback != NULL && !PyCallable_Check(callback)) {
+    if (callback != Py_None && !PyCallable_Check(callback)) {
         PyErr_SetString(PyExc_TypeError, "a callable is required");
         return NULL;
     }
 
-    fs_req = (FSRequest *)PyObject_CallObject((PyObject *)&FSRequestType, NULL);
+    fs_req = (FSRequest *)PyObject_CallFunctionObjArgs((PyObject *)&FSRequestType, loop, callback, NULL);
     if (!fs_req) {
-        PyErr_NoMemory();
         return NULL;
     }
 
-    fs_req->callback = callback;
-    REQUEST(fs_req)->loop = loop;
-    Py_XINCREF(callback);
-    Py_INCREF(loop);
-
-    r = uv_fs_chown(loop->uv_loop, &fs_req->req, path, uid, gid, (callback != NULL) ? chown_cb : NULL);
+    r = uv_fs_chown(loop->uv_loop, &fs_req->req, path, uid, gid, (callback != Py_None) ? chown_cb : NULL);
     if (r < 0) {
         RAISE_UV_EXCEPTION(loop->uv_loop, PyExc_FSError);
         goto end;
     }
 
-    if (callback != NULL) {
+    if (callback != Py_None) {
         Py_INCREF(fs_req);
         return (PyObject *)fs_req;
     } else {
@@ -1740,8 +1647,6 @@ FS_func_chown(PyObject *obj, PyObject *args, PyObject *kwargs)
     }
 
 end:
-    Py_DECREF(loop);
-    Py_XDECREF(callback);
     Py_DECREF(fs_req);
     return NULL;
 }
@@ -1759,35 +1664,29 @@ FS_func_fchown(PyObject *obj, PyObject *args, PyObject *kwargs)
 
     UNUSED_ARG(obj);
     fs_req = NULL;
-    callback = NULL;
+    callback = Py_None;
 
     if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!iii|O:fchown", kwlist, &LoopType, &loop, &fd, &uid, &gid, &callback)) {
         return NULL;
     }
 
-    if (callback != NULL && !PyCallable_Check(callback)) {
+    if (callback != Py_None && !PyCallable_Check(callback)) {
         PyErr_SetString(PyExc_TypeError, "a callable is required");
         return NULL;
     }
 
-    fs_req = (FSRequest *)PyObject_CallObject((PyObject *)&FSRequestType, NULL);
+    fs_req = (FSRequest *)PyObject_CallFunctionObjArgs((PyObject *)&FSRequestType, loop, callback, NULL);
     if (!fs_req) {
-        PyErr_NoMemory();
         return NULL;
     }
 
-    fs_req->callback = callback;
-    REQUEST(fs_req)->loop = loop;
-    Py_XINCREF(callback);
-    Py_INCREF(loop);
-
-    r = uv_fs_fchown(loop->uv_loop, &fs_req->req, fd, uid, gid, (callback != NULL) ? chown_cb : NULL);
+    r = uv_fs_fchown(loop->uv_loop, &fs_req->req, fd, uid, gid, (callback != Py_None) ? chown_cb : NULL);
     if (r != 0) {
         RAISE_UV_EXCEPTION(loop->uv_loop, PyExc_FSError);
         goto end;
     }
 
-    if (callback != NULL) {
+    if (callback != Py_None) {
         Py_INCREF(fs_req);
         return (PyObject *)fs_req;
     } else {
@@ -1795,8 +1694,6 @@ FS_func_fchown(PyObject *obj, PyObject *args, PyObject *kwargs)
     }
 
 end:
-    Py_DECREF(loop);
-    Py_XDECREF(callback);
     Py_DECREF(fs_req);
     return NULL;
 }
@@ -1815,36 +1712,30 @@ FS_func_open(PyObject *obj, PyObject *args, PyObject *kwargs)
 
     UNUSED_ARG(obj);
     fs_req = NULL;
-    callback = NULL;
+    callback = Py_None;
 
     if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!sii|O:open", kwlist, &LoopType, &loop, &path, &flags, &mode, &callback)) {
         return NULL;
     }
 
-    if (callback != NULL && !PyCallable_Check(callback)) {
+    if (callback != Py_None && !PyCallable_Check(callback)) {
         PyErr_SetString(PyExc_TypeError, "a callable is required");
         return NULL;
     }
 
-    fs_req = (FSRequest *)PyObject_CallObject((PyObject *)&FSRequestType, NULL);
+    fs_req = (FSRequest *)PyObject_CallFunctionObjArgs((PyObject *)&FSRequestType, loop, callback, NULL);
     if (!fs_req) {
-        PyErr_NoMemory();
         return NULL;
     }
 
-    fs_req->callback = callback;
-    REQUEST(fs_req)->loop = loop;
-    Py_XINCREF(callback);
-    Py_INCREF(loop);
-
-    r = uv_fs_open(loop->uv_loop, &fs_req->req, path, flags, mode, (callback != NULL) ? open_cb : NULL);
+    r = uv_fs_open(loop->uv_loop, &fs_req->req, path, flags, mode, (callback != Py_None) ? open_cb : NULL);
     if (r < 0) {
         RAISE_UV_EXCEPTION(loop->uv_loop, PyExc_FSError);
         ret = NULL;
         goto end;
     }
 
-    if (callback != NULL) {
+    if (callback != Py_None) {
         /* No need to cleanup, it will be done in the callback */
         Py_INCREF(fs_req);
         return (PyObject *)fs_req;
@@ -1856,8 +1747,6 @@ FS_func_open(PyObject *obj, PyObject *args, PyObject *kwargs)
     }
 
 end:
-    Py_DECREF(loop);
-    Py_XDECREF(callback);
     Py_DECREF(fs_req);
     return ret;
 }
@@ -1875,35 +1764,29 @@ FS_func_close(PyObject *obj, PyObject *args, PyObject *kwargs)
 
     UNUSED_ARG(obj);
     fs_req = NULL;
-    callback = NULL;
+    callback = Py_None;
 
     if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!i|O:close", kwlist, &LoopType, &loop, &fd, &callback)) {
         return NULL;
     }
 
-    if (callback != NULL && !PyCallable_Check(callback)) {
+    if (callback != Py_None && !PyCallable_Check(callback)) {
         PyErr_SetString(PyExc_TypeError, "a callable is required");
         return NULL;
     }
 
-    fs_req = (FSRequest *)PyObject_CallObject((PyObject *)&FSRequestType, NULL);
+    fs_req = (FSRequest *)PyObject_CallFunctionObjArgs((PyObject *)&FSRequestType, loop, callback, NULL);
     if (!fs_req) {
-        PyErr_NoMemory();
         return NULL;
     }
 
-    fs_req->callback = callback;
-    REQUEST(fs_req)->loop = loop;
-    Py_XINCREF(callback);
-    Py_INCREF(loop);
-
-    r = uv_fs_close(loop->uv_loop, &fs_req->req, fd, (callback != NULL) ? close_cb : NULL);
+    r = uv_fs_close(loop->uv_loop, &fs_req->req, fd, (callback != Py_None) ? close_cb : NULL);
     if (r < 0) {
         RAISE_UV_EXCEPTION(loop->uv_loop, PyExc_FSError);
         goto end;
     }
 
-    if (callback != NULL) {
+    if (callback != Py_None) {
         Py_INCREF(fs_req);
         return (PyObject *)fs_req;
     } else {
@@ -1911,8 +1794,6 @@ FS_func_close(PyObject *obj, PyObject *args, PyObject *kwargs)
     }
 
 end:
-    Py_DECREF(loop);
-    Py_XDECREF(callback);
     Py_DECREF(fs_req);
     return NULL;
 }
@@ -1932,27 +1813,21 @@ FS_func_read(PyObject *obj, PyObject *args, PyObject *kwargs)
     UNUSED_ARG(obj);
     fs_req = NULL;
     buf = NULL;
-    callback = NULL;
+    callback = Py_None;
 
     if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!iii|O:read", kwlist, &LoopType, &loop, &fd, &length, &offset, &callback)) {
         return NULL;
     }
 
-    if (callback != NULL && !PyCallable_Check(callback)) {
+    if (callback != Py_None && !PyCallable_Check(callback)) {
         PyErr_SetString(PyExc_TypeError, "a callable is required");
         return NULL;
     }
 
-    fs_req = (FSRequest *)PyObject_CallObject((PyObject *)&FSRequestType, NULL);
+    fs_req = (FSRequest *)PyObject_CallFunctionObjArgs((PyObject *)&FSRequestType, loop, callback, NULL);
     if (!fs_req) {
-        PyErr_NoMemory();
         return NULL;
     }
-
-    fs_req->callback = callback;
-    REQUEST(fs_req)->loop = loop;
-    Py_XINCREF(callback);
-    Py_INCREF(loop);
 
     buf = PyMem_Malloc(length);
     if (!buf) {
@@ -1961,14 +1836,14 @@ FS_func_read(PyObject *obj, PyObject *args, PyObject *kwargs)
         goto end;
     }
 
-    r = uv_fs_read(loop->uv_loop, &fs_req->req, fd, buf, length, offset, (callback != NULL) ? read_cb : NULL);
+    r = uv_fs_read(loop->uv_loop, &fs_req->req, fd, buf, length, offset, (callback != Py_None) ? read_cb : NULL);
     if (r < 0) {
         RAISE_UV_EXCEPTION(loop->uv_loop, PyExc_FSError);
         ret = NULL;
         goto end;
     }
 
-    if (callback != NULL) {
+    if (callback != Py_None) {
         /* No need to cleanup, it will be done in the callback */
         Py_INCREF(fs_req);
         return (PyObject *)fs_req;
@@ -1980,10 +1855,8 @@ FS_func_read(PyObject *obj, PyObject *args, PyObject *kwargs)
     }
 
 end:
-    Py_DECREF(loop);
-    Py_XDECREF(callback);
-    Py_DECREF(fs_req);
     PyMem_Free(buf);
+    Py_DECREF(fs_req);
     return ret;
 }
 
@@ -2003,27 +1876,21 @@ FS_func_write(PyObject *obj, PyObject *args, PyObject *kwargs)
     UNUSED_ARG(obj);
     fs_req = NULL;
     buf = NULL;
-    callback = NULL;
+    callback = Py_None;
 
     if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!is#i|O:write", kwlist, &LoopType, &loop, &fd, &pbuf, &length, &offset, &callback)) {
         return NULL;
     }
 
-    if (callback != NULL && !PyCallable_Check(callback)) {
+    if (callback != Py_None && !PyCallable_Check(callback)) {
         PyErr_SetString(PyExc_TypeError, "a callable is required");
         return NULL;
     }
 
-    fs_req = (FSRequest *)PyObject_CallObject((PyObject *)&FSRequestType, NULL);
+    fs_req = (FSRequest *)PyObject_CallFunctionObjArgs((PyObject *)&FSRequestType, loop, callback, NULL);
     if (!fs_req) {
-        PyErr_NoMemory();
         return NULL;
     }
-
-    fs_req->callback = callback;
-    REQUEST(fs_req)->loop = loop;
-    Py_XINCREF(callback);
-    Py_INCREF(loop);
 
     buf = PyMem_Malloc(length);
     if (!buf) {
@@ -2033,14 +1900,14 @@ FS_func_write(PyObject *obj, PyObject *args, PyObject *kwargs)
     }
     memcpy(buf, pbuf, length);
 
-    r = uv_fs_write(loop->uv_loop, &fs_req->req, fd, buf, length, offset, (callback != NULL) ? write_cb : NULL);
+    r = uv_fs_write(loop->uv_loop, &fs_req->req, fd, buf, length, offset, (callback != Py_None) ? write_cb : NULL);
     if (r < 0) {
         RAISE_UV_EXCEPTION(loop->uv_loop, PyExc_FSError);
         ret = NULL;
         goto end;
     }
 
-    if (callback != NULL) {
+    if (callback != Py_None) {
         /* No need to cleanup, it will be done in the callback */
         Py_INCREF(fs_req);
         return (PyObject *)fs_req;
@@ -2052,10 +1919,8 @@ FS_func_write(PyObject *obj, PyObject *args, PyObject *kwargs)
     }
 
 end:
-    Py_DECREF(loop);
-    Py_XDECREF(callback);
-    Py_DECREF(fs_req);
     PyMem_Free(buf);
+    Py_DECREF(fs_req);
     return ret;
 }
 
@@ -2072,35 +1937,29 @@ FS_func_fsync(PyObject *obj, PyObject *args, PyObject *kwargs)
 
     UNUSED_ARG(obj);
     fs_req = NULL;
-    callback = NULL;
+    callback = Py_None;
 
     if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!i|O:fsync", kwlist, &LoopType, &loop, &fd, &callback)) {
         return NULL;
     }
 
-    if (callback != NULL && !PyCallable_Check(callback)) {
+    if (callback != Py_None && !PyCallable_Check(callback)) {
         PyErr_SetString(PyExc_TypeError, "a callable is required");
         return NULL;
     }
 
-    fs_req = (FSRequest *)PyObject_CallObject((PyObject *)&FSRequestType, NULL);
+    fs_req = (FSRequest *)PyObject_CallFunctionObjArgs((PyObject *)&FSRequestType, loop, callback, NULL);
     if (!fs_req) {
-        PyErr_NoMemory();
         return NULL;
     }
 
-    fs_req->callback = callback;
-    REQUEST(fs_req)->loop = loop;
-    Py_XINCREF(callback);
-    Py_INCREF(loop);
-
-    r = uv_fs_fsync(loop->uv_loop, &fs_req->req, fd, (callback != NULL) ? fsync_cb : NULL);
+    r = uv_fs_fsync(loop->uv_loop, &fs_req->req, fd, (callback != Py_None) ? fsync_cb : NULL);
     if (r < 0) {
         RAISE_UV_EXCEPTION(loop->uv_loop, PyExc_FSError);
         goto end;
     }
 
-    if (callback != NULL) {
+    if (callback != Py_None) {
         Py_INCREF(fs_req);
         return (PyObject *)fs_req;
     } else {
@@ -2108,8 +1967,6 @@ FS_func_fsync(PyObject *obj, PyObject *args, PyObject *kwargs)
     }
 
 end:
-    Py_DECREF(loop);
-    Py_XDECREF(callback);
     Py_DECREF(fs_req);
     return NULL;
 }
@@ -2127,35 +1984,29 @@ FS_func_fdatasync(PyObject *obj, PyObject *args, PyObject *kwargs)
 
     UNUSED_ARG(obj);
     fs_req = NULL;
-    callback = NULL;
+    callback = Py_None;
 
     if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!i|O:fdatasync", kwlist, &LoopType, &loop, &fd, &callback)) {
         return NULL;
     }
 
-    if (callback != NULL && !PyCallable_Check(callback)) {
+    if (callback != Py_None && !PyCallable_Check(callback)) {
         PyErr_SetString(PyExc_TypeError, "a callable is required");
         return NULL;
     }
 
-    fs_req = (FSRequest *)PyObject_CallObject((PyObject *)&FSRequestType, NULL);
+    fs_req = (FSRequest *)PyObject_CallFunctionObjArgs((PyObject *)&FSRequestType, loop, callback, NULL);
     if (!fs_req) {
-        PyErr_NoMemory();
         return NULL;
     }
 
-    fs_req->callback = callback;
-    REQUEST(fs_req)->loop = loop;
-    Py_XINCREF(callback);
-    Py_INCREF(loop);
-
-    r = uv_fs_fdatasync(loop->uv_loop, &fs_req->req, fd, (callback != NULL) ? fsync_cb : NULL);
+    r = uv_fs_fdatasync(loop->uv_loop, &fs_req->req, fd, (callback != Py_None) ? fsync_cb : NULL);
     if (r != 0) {
         RAISE_UV_EXCEPTION(loop->uv_loop, PyExc_FSError);
         goto end;
     }
 
-    if (callback != NULL) {
+    if (callback != Py_None) {
         Py_INCREF(fs_req);
         return (PyObject *)fs_req;
     } else {
@@ -2163,8 +2014,6 @@ FS_func_fdatasync(PyObject *obj, PyObject *args, PyObject *kwargs)
     }
 
 end:
-    Py_DECREF(loop);
-    Py_XDECREF(callback);
     Py_DECREF(fs_req);
     return NULL;
 }
@@ -2182,35 +2031,29 @@ FS_func_ftruncate(PyObject *obj, PyObject *args, PyObject *kwargs)
 
     UNUSED_ARG(obj);
     fs_req = NULL;
-    callback = NULL;
+    callback = Py_None;
 
     if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!ii|O:ftruncate", kwlist, &LoopType, &loop, &fd, &offset, &callback)) {
         return NULL;
     }
 
-    if (callback != NULL && !PyCallable_Check(callback)) {
+    if (callback != Py_None && !PyCallable_Check(callback)) {
         PyErr_SetString(PyExc_TypeError, "a callable is required");
         return NULL;
     }
 
-    fs_req = (FSRequest *)PyObject_CallObject((PyObject *)&FSRequestType, NULL);
+    fs_req = (FSRequest *)PyObject_CallFunctionObjArgs((PyObject *)&FSRequestType, loop, callback, NULL);
     if (!fs_req) {
-        PyErr_NoMemory();
         return NULL;
     }
 
-    fs_req->callback = callback;
-    REQUEST(fs_req)->loop = loop;
-    Py_XINCREF(callback);
-    Py_INCREF(loop);
-
-    r = uv_fs_ftruncate(loop->uv_loop, &fs_req->req, fd, offset, (callback != NULL) ? ftruncate_cb : NULL);
+    r = uv_fs_ftruncate(loop->uv_loop, &fs_req->req, fd, offset, (callback != Py_None) ? ftruncate_cb : NULL);
     if (r < 0) {
         RAISE_UV_EXCEPTION(loop->uv_loop, PyExc_FSError);
         goto end;
     }
 
-    if (callback != NULL) {
+    if (callback != Py_None) {
         Py_INCREF(fs_req);
         return (PyObject *)fs_req;
     } else {
@@ -2218,8 +2061,6 @@ FS_func_ftruncate(PyObject *obj, PyObject *args, PyObject *kwargs)
     }
 
 end:
-    Py_DECREF(loop);
-    Py_XDECREF(callback);
     Py_DECREF(fs_req);
     return NULL;
 }
@@ -2238,36 +2079,30 @@ FS_func_readdir(PyObject *obj, PyObject *args, PyObject *kwargs)
 
     UNUSED_ARG(obj);
     fs_req = NULL;
-    callback = NULL;
+    callback = Py_None;
 
     if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!si|O:readdir", kwlist, &LoopType, &loop, &path, &flags, &callback)) {
         return NULL;
     }
 
-    if (callback !=NULL && !PyCallable_Check(callback)) {
+    if (callback != Py_None && !PyCallable_Check(callback)) {
         PyErr_SetString(PyExc_TypeError, "a callable is required");
         return NULL;
     }
 
-    fs_req = (FSRequest *)PyObject_CallObject((PyObject *)&FSRequestType, NULL);
+    fs_req = (FSRequest *)PyObject_CallFunctionObjArgs((PyObject *)&FSRequestType, loop, callback, NULL);
     if (!fs_req) {
-        PyErr_NoMemory();
         return NULL;
     }
 
-    fs_req->callback = callback;
-    REQUEST(fs_req)->loop = loop;
-    Py_XINCREF(callback);
-    Py_INCREF(loop);
-
-    r = uv_fs_readdir(loop->uv_loop, &fs_req->req, path, flags, (callback != NULL) ? readdir_cb : NULL);
+    r = uv_fs_readdir(loop->uv_loop, &fs_req->req, path, flags, (callback != Py_None) ? readdir_cb : NULL);
     if (r < 0) {
         RAISE_UV_EXCEPTION(loop->uv_loop, PyExc_FSError);
         ret = NULL;
         goto end;
     }
 
-    if (callback != NULL) {
+    if (callback != Py_None) {
         /* No need to cleanup, it will be done in the callback */
         Py_INCREF(fs_req);
         return (PyObject *)fs_req;
@@ -2279,8 +2114,6 @@ FS_func_readdir(PyObject *obj, PyObject *args, PyObject *kwargs)
     }
 
 end:
-    Py_DECREF(loop);
-    Py_XDECREF(callback);
     Py_DECREF(fs_req);
     return ret;
 }
@@ -2298,36 +2131,30 @@ FS_func_sendfile(PyObject *obj, PyObject *args, PyObject *kwargs)
 
     UNUSED_ARG(obj);
     fs_req = NULL;
-    callback = NULL;
+    callback = Py_None;
 
     if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!iiii|O:sendfile", kwlist, &LoopType, &loop, &out_fd, &in_fd, &in_offset, &length, &callback)) {
         return NULL;
     }
 
-    if (callback != NULL && !PyCallable_Check(callback)) {
+    if (callback != Py_None && !PyCallable_Check(callback)) {
         PyErr_SetString(PyExc_TypeError, "a callable is required");
         return NULL;
     }
 
-    fs_req = (FSRequest *)PyObject_CallObject((PyObject *)&FSRequestType, NULL);
+    fs_req = (FSRequest *)PyObject_CallFunctionObjArgs((PyObject *)&FSRequestType, loop, callback, NULL);
     if (!fs_req) {
-        PyErr_NoMemory();
         return NULL;
     }
 
-    fs_req->callback = callback;
-    REQUEST(fs_req)->loop = loop;
-    Py_XINCREF(callback);
-    Py_INCREF(loop);
-
-    r = uv_fs_sendfile(loop->uv_loop, &fs_req->req, out_fd, in_fd, in_offset, length, (callback != NULL) ? sendfile_cb : NULL);
+    r = uv_fs_sendfile(loop->uv_loop, &fs_req->req, out_fd, in_fd, in_offset, length, (callback != Py_None) ? sendfile_cb : NULL);
     if (r < 0) {
         RAISE_UV_EXCEPTION(loop->uv_loop, PyExc_FSError);
         ret = NULL;
         goto end;
     }
 
-    if (callback != NULL) {
+    if (callback != Py_None) {
         /* No need to cleanup, it will be done in the callback */
         Py_INCREF(fs_req);
         return (PyObject *)fs_req;
@@ -2339,8 +2166,6 @@ FS_func_sendfile(PyObject *obj, PyObject *args, PyObject *kwargs)
     }
 
 end:
-    Py_DECREF(loop);
-    Py_XDECREF(callback);
     Py_DECREF(fs_req);
     return ret;
 }
@@ -2360,35 +2185,29 @@ FS_func_utime(PyObject *obj, PyObject *args, PyObject *kwargs)
 
     UNUSED_ARG(obj);
     fs_req = NULL;
-    callback = NULL;
+    callback = Py_None;
 
     if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!sdd|O:utime", kwlist, &LoopType, &loop, &path, &atime, &mtime, &callback)) {
         return NULL;
     }
 
-    if (callback != NULL && !PyCallable_Check(callback)) {
+    if (callback != Py_None && !PyCallable_Check(callback)) {
         PyErr_SetString(PyExc_TypeError, "a callable is required");
         return NULL;
     }
 
-    fs_req = (FSRequest *)PyObject_CallObject((PyObject *)&FSRequestType, NULL);
+    fs_req = (FSRequest *)PyObject_CallFunctionObjArgs((PyObject *)&FSRequestType, loop, callback, NULL);
     if (!fs_req) {
-        PyErr_NoMemory();
         return NULL;
     }
 
-    fs_req->callback = callback;
-    REQUEST(fs_req)->loop = loop;
-    Py_XINCREF(callback);
-    Py_INCREF(loop);
-
-    r = uv_fs_utime(loop->uv_loop, &fs_req->req, path, atime, mtime, (callback != NULL) ? utime_cb : NULL);
+    r = uv_fs_utime(loop->uv_loop, &fs_req->req, path, atime, mtime, (callback != Py_None) ? utime_cb : NULL);
     if (r < 0) {
         RAISE_UV_EXCEPTION(loop->uv_loop, PyExc_FSError);
         goto end;
     }
 
-    if (callback != NULL) {
+    if (callback != Py_None) {
         Py_INCREF(fs_req);
         return (PyObject *)fs_req;
     } else {
@@ -2396,8 +2215,6 @@ FS_func_utime(PyObject *obj, PyObject *args, PyObject *kwargs)
     }
 
 end:
-    Py_DECREF(loop);
-    Py_XDECREF(callback);
     Py_DECREF(fs_req);
     return NULL;
 }
@@ -2416,35 +2233,29 @@ FS_func_futime(PyObject *obj, PyObject *args, PyObject *kwargs)
 
     UNUSED_ARG(obj);
     fs_req = NULL;
-    callback = NULL;
+    callback = Py_None;
 
     if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!idd|O:futime", kwlist, &LoopType, &loop, &fd, &atime, &mtime, &callback)) {
         return NULL;
     }
 
-    if (callback != NULL && !PyCallable_Check(callback)) {
+    if (callback != Py_None && !PyCallable_Check(callback)) {
         PyErr_SetString(PyExc_TypeError, "a callable is required");
         return NULL;
     }
 
-    fs_req = (FSRequest *)PyObject_CallObject((PyObject *)&FSRequestType, NULL);
+    fs_req = (FSRequest *)PyObject_CallFunctionObjArgs((PyObject *)&FSRequestType, loop, callback, NULL);
     if (!fs_req) {
-        PyErr_NoMemory();
         return NULL;
     }
 
-    fs_req->callback = callback;
-    REQUEST(fs_req)->loop = loop;
-    Py_XINCREF(callback);
-    Py_INCREF(loop);
-
-    r = uv_fs_futime(loop->uv_loop, &fs_req->req, fd, atime, mtime, (callback != NULL) ? utime_cb : NULL);
+    r = uv_fs_futime(loop->uv_loop, &fs_req->req, fd, atime, mtime, (callback != Py_None) ? utime_cb : NULL);
     if (r < 0) {
         RAISE_UV_EXCEPTION(loop->uv_loop, PyExc_FSError);
         goto end;
     }
 
-    if (callback != NULL) {
+    if (callback != Py_None) {
         Py_INCREF(fs_req);
         return (PyObject *)fs_req;
     } else {
@@ -2452,8 +2263,6 @@ FS_func_futime(PyObject *obj, PyObject *args, PyObject *kwargs)
     }
 
 end:
-    Py_DECREF(loop);
-    Py_XDECREF(callback);
     Py_DECREF(fs_req);
     return NULL;
 }

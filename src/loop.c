@@ -210,7 +210,7 @@ threadpool_done_cb(uv_work_t *req, int status)
     work_req = PYUV_CONTAINER_OF(req, WorkRequest, req);
     loop = REQUEST(work_req)->loop;
 
-    if (work_req->done_cb) {
+    if (work_req->done_cb != Py_None) {
         if (status < 0) {
             uv_err_t err = uv_last_error(req->loop);
             errorno = PyInt_FromLong((long)err.code);
@@ -227,14 +227,8 @@ threadpool_done_cb(uv_work_t *req, int status)
         Py_DECREF(errorno);
     }
 
-    Py_DECREF(work_req->work_cb);
-    Py_XDECREF(work_req->done_cb);
-    work_req->work_cb = NULL;
-    work_req->done_cb = NULL;
+    UV_REQUEST(work_req) = NULL;
     Py_DECREF(work_req);
-
-    /* Refcount was increased in queue_work */
-    Py_DECREF(loop);
 
     PyGILState_Release(gstate);
 }
@@ -246,8 +240,7 @@ Loop_func_queue_work(Loop *self, PyObject *args)
     WorkRequest *work_req;
     PyObject *work_cb, *done_cb;
 
-    work_req = NULL;
-    done_cb = NULL;
+    done_cb = Py_None;
 
     if (!PyArg_ParseTuple(args, "O|O:queue_work", &work_cb, &done_cb)) {
         return NULL;
@@ -258,23 +251,16 @@ Loop_func_queue_work(Loop *self, PyObject *args)
         return NULL;
     }
 
-    if (done_cb != NULL && !PyCallable_Check(done_cb)) {
-        PyErr_SetString(PyExc_TypeError, "done_cb must be a callable");
+    if (done_cb != Py_None && !PyCallable_Check(done_cb)) {
+        PyErr_SetString(PyExc_TypeError, "done_cb must be a callable or None");
         return NULL;
     }
 
-    work_req = (WorkRequest *)PyObject_CallObject((PyObject *)&WorkRequestType, NULL);
+    work_req = (WorkRequest *)PyObject_CallFunctionObjArgs((PyObject *)&WorkRequestType, self, work_cb, done_cb, NULL);
     if (!work_req) {
         PyErr_NoMemory();
         return NULL;
     }
-
-    work_req->work_cb = work_cb;
-    work_req->done_cb = done_cb;
-    REQUEST(work_req)->loop = self;
-    Py_INCREF(work_cb);
-    Py_XINCREF(done_cb);
-    Py_INCREF(self);
 
     r = uv_queue_work(self->uv_loop, &work_req->req, threadpool_work_cb, threadpool_done_cb);
     if (r != 0) {
@@ -287,9 +273,6 @@ Loop_func_queue_work(Loop *self, PyObject *args)
 
 error:
     Py_DECREF(work_req);
-    Py_DECREF(work_cb);
-    Py_XDECREF(done_cb);
-    Py_DECREF(self);
     return NULL;
 }
 
