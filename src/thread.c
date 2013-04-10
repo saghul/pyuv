@@ -5,7 +5,7 @@ Barrier_func_wait(Barrier *self)
     RAISE_IF_NOT_INITIALIZED(self, NULL);
 
     Py_BEGIN_ALLOW_THREADS
-    uv_barrier_wait(self->uv_barrier);
+    uv_barrier_wait(&self->uv_barrier);
     Py_END_ALLOW_THREADS
 
     Py_RETURN_NONE;
@@ -25,7 +25,7 @@ Barrier_tp_init(Barrier *self, PyObject *args, PyObject *kwargs)
         return -1;
     }
 
-    if (uv_barrier_init(self->uv_barrier, count)) {
+    if (uv_barrier_init(&self->uv_barrier, count)) {
         PyErr_SetString(PyExc_ThreadError, "Error initializing Barrier");
         return -1;
     }
@@ -39,20 +39,11 @@ static PyObject *
 Barrier_tp_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
 {
     Barrier *self;
-    uv_barrier_t *uv_barrier;
-
-    uv_barrier = PyMem_Malloc(sizeof *uv_barrier);
-    if (!uv_barrier) {
-        PyErr_NoMemory();
-        return NULL;
-    }
 
     self = (Barrier *)PyType_GenericNew(type, args, kwargs);
     if (!self) {
-        PyMem_Free(uv_barrier);
         return NULL;
     }
-    self->uv_barrier = uv_barrier;
     self->initialized = False;
     return (PyObject *)self;
 }
@@ -61,11 +52,9 @@ Barrier_tp_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
 static void
 Barrier_tp_dealloc(Barrier *self)
 {
-    ASSERT(self->uv_barrier);
     if (self->initialized) {
-        uv_barrier_destroy(self->uv_barrier);
+        uv_barrier_destroy(&self->uv_barrier);
     }
-    PyMem_Free(self->uv_barrier);
     Py_TYPE(self)->tp_free(self);
 }
 
@@ -125,7 +114,7 @@ Mutex_func_lock(Mutex *self)
     RAISE_IF_NOT_INITIALIZED(self, NULL);
 
     Py_BEGIN_ALLOW_THREADS
-    uv_mutex_lock(self->uv_mutex);
+    uv_mutex_lock(&self->uv_mutex);
     Py_END_ALLOW_THREADS
 
     Py_RETURN_NONE;
@@ -138,7 +127,7 @@ Mutex_func_unlock(Mutex *self)
     RAISE_IF_NOT_INITIALIZED(self, NULL);
 
     Py_BEGIN_ALLOW_THREADS
-    uv_mutex_unlock(self->uv_mutex);
+    uv_mutex_unlock(&self->uv_mutex);
     Py_END_ALLOW_THREADS
 
     Py_RETURN_NONE;
@@ -153,7 +142,7 @@ Mutex_func_trylock(Mutex *self)
     RAISE_IF_NOT_INITIALIZED(self, NULL);
 
     Py_BEGIN_ALLOW_THREADS
-    r = uv_mutex_trylock(self->uv_mutex);
+    r = uv_mutex_trylock(&self->uv_mutex);
     Py_END_ALLOW_THREADS
 
     return PyBool_FromLong((long)(r == 0));
@@ -168,7 +157,7 @@ Mutex_tp_init(Mutex *self, PyObject *args, PyObject *kwargs)
 
     RAISE_IF_INITIALIZED(self, -1);
 
-    if (uv_mutex_init(self->uv_mutex)) {
+    if (uv_mutex_init(&self->uv_mutex)) {
         PyErr_SetString(PyExc_ThreadError, "Error initializing Mutex");
         return -1;
     }
@@ -182,20 +171,11 @@ static PyObject *
 Mutex_tp_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
 {
     Mutex *self;
-    uv_mutex_t *uv_mutex;
-
-    uv_mutex = PyMem_Malloc(sizeof *uv_mutex);
-    if (!uv_mutex) {
-        PyErr_NoMemory();
-        return NULL;
-    }
 
     self = (Mutex *)PyType_GenericNew(type, args, kwargs);
     if (!self) {
-        PyMem_Free(uv_mutex);
         return NULL;
     }
-    self->uv_mutex = uv_mutex;
     self->initialized = False;
     return (PyObject *)self;
 }
@@ -204,11 +184,9 @@ Mutex_tp_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
 static void
 Mutex_tp_dealloc(Mutex *self)
 {
-    ASSERT(self->uv_mutex);
     if (self->initialized) {
-        uv_mutex_destroy(self->uv_mutex);
+        uv_mutex_destroy(&self->uv_mutex);
     }
-    PyMem_Free(self->uv_mutex);
     Py_TYPE(self)->tp_free(self);
 }
 
@@ -272,7 +250,7 @@ RWLock_func_rdlock(RWLock *self)
     RAISE_IF_NOT_INITIALIZED(self, NULL);
 
     Py_BEGIN_ALLOW_THREADS
-    uv_rwlock_rdlock(self->uv_rwlock);
+    uv_rwlock_rdlock(&self->uv_rwlock);
     Py_END_ALLOW_THREADS
 
     Py_RETURN_NONE;
@@ -285,7 +263,7 @@ RWLock_func_rdunlock(RWLock *self)
     RAISE_IF_NOT_INITIALIZED(self, NULL);
 
     Py_BEGIN_ALLOW_THREADS
-    uv_rwlock_rdunlock(self->uv_rwlock);
+    uv_rwlock_rdunlock(&self->uv_rwlock);
     Py_END_ALLOW_THREADS
 
     Py_RETURN_NONE;
@@ -300,7 +278,7 @@ RWLock_func_tryrdlock(RWLock *self)
     RAISE_IF_NOT_INITIALIZED(self, NULL);
 
     Py_BEGIN_ALLOW_THREADS
-    r = uv_rwlock_tryrdlock(self->uv_rwlock);
+    r = uv_rwlock_tryrdlock(&self->uv_rwlock);
     Py_END_ALLOW_THREADS
 
     return PyBool_FromLong((long)(r == 0));
@@ -313,7 +291,7 @@ RWLock_func_wrlock(RWLock *self)
     RAISE_IF_NOT_INITIALIZED(self, NULL);
 
     Py_BEGIN_ALLOW_THREADS
-    uv_rwlock_wrlock(self->uv_rwlock);
+    uv_rwlock_wrlock(&self->uv_rwlock);
     Py_END_ALLOW_THREADS
 
     Py_RETURN_NONE;
@@ -326,7 +304,7 @@ RWLock_func_wrunlock(RWLock *self)
     RAISE_IF_NOT_INITIALIZED(self, NULL);
 
     Py_BEGIN_ALLOW_THREADS
-    uv_rwlock_wrunlock(self->uv_rwlock);
+    uv_rwlock_wrunlock(&self->uv_rwlock);
     Py_END_ALLOW_THREADS
 
     Py_RETURN_NONE;
@@ -341,7 +319,7 @@ RWLock_func_trywrlock(RWLock *self)
     RAISE_IF_NOT_INITIALIZED(self, NULL);
 
     Py_BEGIN_ALLOW_THREADS
-    r = uv_rwlock_trywrlock(self->uv_rwlock);
+    r = uv_rwlock_trywrlock(&self->uv_rwlock);
     Py_END_ALLOW_THREADS
 
     return PyBool_FromLong((long)(r == 0));
@@ -356,7 +334,7 @@ RWLock_tp_init(RWLock *self, PyObject *args, PyObject *kwargs)
 
     RAISE_IF_INITIALIZED(self, -1);
 
-    if (uv_rwlock_init(self->uv_rwlock)) {
+    if (uv_rwlock_init(&self->uv_rwlock)) {
         PyErr_SetString(PyExc_ThreadError, "Error initializing RWLock");
         return -1;
     }
@@ -370,20 +348,11 @@ static PyObject *
 RWLock_tp_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
 {
     RWLock *self;
-    uv_rwlock_t *uv_rwlock;
-
-    uv_rwlock = PyMem_Malloc(sizeof *uv_rwlock);
-    if (!uv_rwlock) {
-        PyErr_NoMemory();
-        return NULL;
-    }
 
     self = (RWLock *)PyType_GenericNew(type, args, kwargs);
     if (!self) {
-        PyMem_Free(uv_rwlock);
         return NULL;
     }
-    self->uv_rwlock = uv_rwlock;
     self->initialized = False;
     return (PyObject *)self;
 }
@@ -392,11 +361,9 @@ RWLock_tp_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
 static void
 RWLock_tp_dealloc(RWLock *self)
 {
-    ASSERT(self->uv_rwlock);
     if (self->initialized) {
-        uv_rwlock_destroy(self->uv_rwlock);
+        uv_rwlock_destroy(&self->uv_rwlock);
     }
-    PyMem_Free(self->uv_rwlock);
     Py_TYPE(self)->tp_free(self);
 }
 
@@ -461,7 +428,7 @@ Condition_func_signal(Condition *self)
     RAISE_IF_NOT_INITIALIZED(self, NULL);
 
     Py_BEGIN_ALLOW_THREADS
-    uv_cond_signal(self->uv_condition);
+    uv_cond_signal(&self->uv_condition);
     Py_END_ALLOW_THREADS
 
     Py_RETURN_NONE;
@@ -474,7 +441,7 @@ Condition_func_broadcast(Condition *self)
     RAISE_IF_NOT_INITIALIZED(self, NULL);
 
     Py_BEGIN_ALLOW_THREADS
-    uv_cond_broadcast(self->uv_condition);
+    uv_cond_broadcast(&self->uv_condition);
     Py_END_ALLOW_THREADS
 
     Py_RETURN_NONE;
@@ -495,7 +462,7 @@ Condition_func_wait(Condition *self, PyObject *args)
     Py_INCREF(pymutex);
 
     Py_BEGIN_ALLOW_THREADS
-    uv_cond_wait(self->uv_condition, pymutex->uv_mutex);
+    uv_cond_wait(&self->uv_condition, &pymutex->uv_mutex);
     Py_END_ALLOW_THREADS
 
     Py_DECREF(pymutex);
@@ -519,7 +486,7 @@ Condition_func_timedwait(Condition *self, PyObject *args)
     Py_INCREF(pymutex);
 
     Py_BEGIN_ALLOW_THREADS
-    r = uv_cond_timedwait(self->uv_condition, pymutex->uv_mutex, (uint64_t)(timeout*1e9));
+    r = uv_cond_timedwait(&self->uv_condition, &pymutex->uv_mutex, (uint64_t)(timeout*1e9));
     Py_END_ALLOW_THREADS
 
     Py_DECREF(pymutex);
@@ -535,7 +502,7 @@ Condition_tp_init(Condition *self, PyObject *args, PyObject *kwargs)
 
     RAISE_IF_INITIALIZED(self, -1);
 
-    if (uv_cond_init(self->uv_condition)) {
+    if (uv_cond_init(&self->uv_condition)) {
         PyErr_SetString(PyExc_ThreadError, "Error initializing Condition");
         return -1;
     }
@@ -549,20 +516,11 @@ static PyObject *
 Condition_tp_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
 {
     Condition *self;
-    uv_cond_t *uv_condition;
-
-    uv_condition = PyMem_Malloc(sizeof *uv_condition);
-    if (!uv_condition) {
-        PyErr_NoMemory();
-        return NULL;
-    }
 
     self = (Condition *)PyType_GenericNew(type, args, kwargs);
     if (!self) {
-        PyMem_Free(uv_condition);
         return NULL;
     }
-    self->uv_condition = uv_condition;
     self->initialized = False;
     return (PyObject *)self;
 }
@@ -571,11 +529,9 @@ Condition_tp_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
 static void
 Condition_tp_dealloc(Condition *self)
 {
-    ASSERT(self->uv_condition);
     if (self->initialized) {
-        uv_cond_destroy(self->uv_condition);
+        uv_cond_destroy(&self->uv_condition);
     }
-    PyMem_Free(self->uv_condition);
     Py_TYPE(self)->tp_free(self);
 }
 
@@ -638,7 +594,7 @@ Semaphore_func_post(Semaphore *self)
     RAISE_IF_NOT_INITIALIZED(self, NULL);
 
     Py_BEGIN_ALLOW_THREADS
-    uv_sem_post(self->uv_semaphore);
+    uv_sem_post(&self->uv_semaphore);
     Py_END_ALLOW_THREADS
 
     Py_RETURN_NONE;
@@ -651,7 +607,7 @@ Semaphore_func_wait(Semaphore *self)
     RAISE_IF_NOT_INITIALIZED(self, NULL);
 
     Py_BEGIN_ALLOW_THREADS
-    uv_sem_wait(self->uv_semaphore);
+    uv_sem_wait(&self->uv_semaphore);
     Py_END_ALLOW_THREADS
 
     Py_RETURN_NONE;
@@ -666,7 +622,7 @@ Semaphore_func_trywait(Semaphore *self)
     RAISE_IF_NOT_INITIALIZED(self, NULL);
 
     Py_BEGIN_ALLOW_THREADS
-    r = uv_sem_trywait(self->uv_semaphore);
+    r = uv_sem_trywait(&self->uv_semaphore);
     Py_END_ALLOW_THREADS
 
     return PyBool_FromLong((long)(r == 0));
@@ -686,7 +642,7 @@ Semaphore_tp_init(Semaphore *self, PyObject *args, PyObject *kwargs)
         return -1;
     }
 
-    if (uv_sem_init(self->uv_semaphore, value)) {
+    if (uv_sem_init(&self->uv_semaphore, value)) {
         PyErr_SetString(PyExc_ThreadError, "Error initializing Semaphore");
         return -1;
     }
@@ -700,20 +656,11 @@ static PyObject *
 Semaphore_tp_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
 {
     Semaphore *self;
-    uv_sem_t *uv_semaphore;
-
-    uv_semaphore = PyMem_Malloc(sizeof *uv_semaphore);
-    if (!uv_semaphore) {
-        PyErr_NoMemory();
-        return NULL;
-    }
 
     self = (Semaphore *)PyType_GenericNew(type, args, kwargs);
     if (!self) {
-        PyMem_Free(uv_semaphore);
         return NULL;
     }
-    self->uv_semaphore = uv_semaphore;
     self->initialized = False;
     return (PyObject *)self;
 }
@@ -722,11 +669,9 @@ Semaphore_tp_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
 static void
 Semaphore_tp_dealloc(Semaphore *self)
 {
-    ASSERT(self->uv_semaphore);
     if (self->initialized) {
-        uv_sem_destroy(self->uv_semaphore);
+        uv_sem_destroy(&self->uv_semaphore);
     }
-    PyMem_Free(self->uv_semaphore);
     Py_TYPE(self)->tp_free(self);
 }
 
@@ -815,5 +760,4 @@ init_thread(void)
 
     return module;
 }
-
 

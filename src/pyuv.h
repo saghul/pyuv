@@ -296,7 +296,7 @@ static PyTypeObject FSPollType;
 typedef struct {
     PyObject_HEAD
     Bool initialized;
-    uv_barrier_t *uv_barrier;
+    uv_barrier_t uv_barrier;
 } Barrier;
 
 static PyTypeObject BarrierType;
@@ -305,7 +305,7 @@ static PyTypeObject BarrierType;
 typedef struct {
     PyObject_HEAD
     Bool initialized;
-    uv_cond_t *uv_condition;
+    uv_cond_t uv_condition;
 } Condition;
 
 static PyTypeObject ConditionType;
@@ -314,7 +314,7 @@ static PyTypeObject ConditionType;
 typedef struct {
     PyObject_HEAD
     Bool initialized;
-    uv_mutex_t *uv_mutex;
+    uv_mutex_t uv_mutex;
 } Mutex;
 
 static PyTypeObject MutexType;
@@ -323,7 +323,7 @@ static PyTypeObject MutexType;
 typedef struct {
     PyObject_HEAD
     Bool initialized;
-    uv_rwlock_t *uv_rwlock;
+    uv_rwlock_t uv_rwlock;
 } RWLock;
 
 static PyTypeObject RWLockType;
@@ -332,7 +332,7 @@ static PyTypeObject RWLockType;
 typedef struct {
     PyObject_HEAD
     Bool initialized;
-    uv_sem_t *uv_semaphore;
+    uv_sem_t uv_semaphore;
 } Semaphore;
 
 static PyTypeObject SemaphoreType;
