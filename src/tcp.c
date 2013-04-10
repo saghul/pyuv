@@ -412,8 +412,7 @@ static int
 TCP_tp_traverse(TCP *self, visitproc visit, void *arg)
 {
     Py_VISIT(self->on_new_connection_cb);
-    StreamType.tp_traverse((PyObject *)self, visit, arg);
-    return 0;
+    return StreamType.tp_traverse((PyObject *)self, visit, arg);
 }
 
 
@@ -421,8 +420,7 @@ static int
 TCP_tp_clear(TCP *self)
 {
     Py_CLEAR(self->on_new_connection_cb);
-    StreamType.tp_clear((PyObject *)self);
-    return 0;
+    return StreamType.tp_clear((PyObject *)self);
 }
 
 

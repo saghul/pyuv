@@ -95,16 +95,14 @@ TTY_tp_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
 static int
 TTY_tp_traverse(TTY *self, visitproc visit, void *arg)
 {
-    StreamType.tp_traverse((PyObject *)self, visit, arg);
-    return 0;
+    return StreamType.tp_traverse((PyObject *)self, visit, arg);
 }
 
 
 static int
 TTY_tp_clear(TTY *self)
 {
-    StreamType.tp_clear((PyObject *)self);
-    return 0;
+    return StreamType.tp_clear((PyObject *)self);
 }
 
 

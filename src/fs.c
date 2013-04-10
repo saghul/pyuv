@@ -2418,8 +2418,7 @@ static int
 FSEvent_tp_traverse(FSEvent *self, visitproc visit, void *arg)
 {
     Py_VISIT(self->callback);
-    HandleType.tp_traverse((PyObject *)self, visit, arg);
-    return 0;
+    return HandleType.tp_traverse((PyObject *)self, visit, arg);
 }
 
 
@@ -2427,8 +2426,7 @@ static int
 FSEvent_tp_clear(FSEvent *self)
 {
     Py_CLEAR(self->callback);
-    HandleType.tp_clear((PyObject *)self);
-    return 0;
+    return HandleType.tp_clear((PyObject *)self);
 }
 
 
@@ -2647,8 +2645,7 @@ static int
 FSPoll_tp_traverse(FSPoll *self, visitproc visit, void *arg)
 {
     Py_VISIT(self->callback);
-    HandleType.tp_traverse((PyObject *)self, visit, arg);
-    return 0;
+    return HandleType.tp_traverse((PyObject *)self, visit, arg);
 }
 
 
@@ -2656,8 +2653,7 @@ static int
 FSPoll_tp_clear(FSPoll *self)
 {
     Py_CLEAR(self->callback);
-    HandleType.tp_clear((PyObject *)self);
-    return 0;
+    return HandleType.tp_clear((PyObject *)self);
 }
 
 

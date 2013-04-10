@@ -427,8 +427,7 @@ static int
 Pipe_tp_traverse(Pipe *self, visitproc visit, void *arg)
 {
     Py_VISIT(self->on_new_connection_cb);
-    StreamType.tp_traverse((PyObject *)self, visit, arg);
-    return 0;
+    return StreamType.tp_traverse((PyObject *)self, visit, arg);
 }
 
 
@@ -436,8 +435,7 @@ static int
 Pipe_tp_clear(Pipe *self)
 {
     Py_CLEAR(self->on_new_connection_cb);
-    StreamType.tp_clear((PyObject *)self);
-    return 0;
+    return StreamType.tp_clear((PyObject *)self);
 }
 
 

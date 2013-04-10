@@ -128,8 +128,7 @@ static int
 Prepare_tp_traverse(Prepare *self, visitproc visit, void *arg)
 {
     Py_VISIT(self->callback);
-    HandleType.tp_traverse((PyObject *)self, visit, arg);
-    return 0;
+    return HandleType.tp_traverse((PyObject *)self, visit, arg);
 }
 
 
@@ -137,8 +136,7 @@ static int
 Prepare_tp_clear(Prepare *self)
 {
     Py_CLEAR(self->callback);
-    HandleType.tp_clear((PyObject *)self);
-    return 0;
+    return HandleType.tp_clear((PyObject *)self);
 }
 
 

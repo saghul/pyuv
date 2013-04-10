@@ -483,16 +483,14 @@ SignalChecker_tp_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
 static int
 SignalChecker_tp_traverse(SignalChecker *self, visitproc visit, void *arg)
 {
-    HandleType.tp_traverse((PyObject *)self, visit, arg);
-    return 0;
+    return HandleType.tp_traverse((PyObject *)self, visit, arg);
 }
 
 
 static int
 SignalChecker_tp_clear(SignalChecker *self)
 {
-    HandleType.tp_clear((PyObject *)self);
-    return 0;
+    return HandleType.tp_clear((PyObject *)self);
 }
 
 

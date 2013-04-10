@@ -124,8 +124,7 @@ static int
 Signal_tp_traverse(Signal *self, visitproc visit, void *arg)
 {
     Py_VISIT(self->callback);
-    HandleType.tp_traverse((PyObject *)self, visit, arg);
-    return 0;
+    return HandleType.tp_traverse((PyObject *)self, visit, arg);
 }
 
 
@@ -133,8 +132,7 @@ static int
 Signal_tp_clear(Signal *self)
 {
     Py_CLEAR(self->callback);
-    HandleType.tp_clear((PyObject *)self);
-    return 0;
+    return HandleType.tp_clear((PyObject *)self);
 }
 
 

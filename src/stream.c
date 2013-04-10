@@ -419,8 +419,7 @@ static int
 Stream_tp_traverse(Stream *self, visitproc visit, void *arg)
 {
     Py_VISIT(self->on_read_cb);
-    HandleType.tp_traverse((PyObject *)self, visit, arg);
-    return 0;
+    return HandleType.tp_traverse((PyObject *)self, visit, arg);
 }
 
 
@@ -428,8 +427,7 @@ static int
 Stream_tp_clear(Stream *self)
 {
     Py_CLEAR(self->on_read_cb);
-    HandleType.tp_clear((PyObject *)self);
-    return 0;
+    return HandleType.tp_clear((PyObject *)self);
 }
 
 

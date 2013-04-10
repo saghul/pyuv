@@ -533,8 +533,7 @@ Process_tp_traverse(Process *self, visitproc visit, void *arg)
 {
     Py_VISIT(self->on_exit_cb);
     Py_VISIT(self->stdio);
-    HandleType.tp_traverse((PyObject *)self, visit, arg);
-    return 0;
+    return HandleType.tp_traverse((PyObject *)self, visit, arg);
 }
 
 
@@ -543,8 +542,7 @@ Process_tp_clear(Process *self)
 {
     Py_CLEAR(self->on_exit_cb);
     Py_CLEAR(self->stdio);
-    HandleType.tp_clear((PyObject *)self);
-    return 0;
+    return HandleType.tp_clear((PyObject *)self);
 }
 
 
