@@ -459,6 +459,7 @@ static PyStructSequence_Field interface_addresses_result_fields[] = {
     {"name", ""},
     {"is_internal", ""},
     {"address", ""},
+    {"netmask", ""},
     {NULL}
 };
 
@@ -466,7 +467,7 @@ static PyStructSequence_Desc interface_addresses_result_desc = {
     "interface_addresses_result",
     NULL,
     interface_addresses_result_fields,
-    3
+    4
 };
 
 

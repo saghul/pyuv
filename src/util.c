@@ -114,6 +114,12 @@ Util_func_interface_addresses(PyObject *obj)
                 uv_ip6_name(&interfaces[i].address.address6, buf, sizeof(buf));
             }
             PyStructSequence_SET_ITEM(item, 2, Py_BuildValue("s", buf));
+            if (interfaces[i].netmask.netmask4.sin_family == AF_INET) {
+                uv_ip4_name(&interfaces[i].netmask.netmask4, buf, sizeof(buf));
+            } else if (interfaces[i].netmask.netmask4.sin_family == AF_INET6) {
+                uv_ip6_name(&interfaces[i].netmask.netmask6, buf, sizeof(buf));
+            }
+            PyStructSequence_SET_ITEM(item, 3, Py_BuildValue("s", buf));
             PyList_SET_ITEM(result, i, item);
         }
         uv_free_interface_addresses(interfaces, count);
