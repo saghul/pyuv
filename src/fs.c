@@ -1,114 +1,40 @@
 
 static PyObject *
-format_time(time_t sec, unsigned long nsec)
+format_time(uv_timespec_t tspec)
 {
     /* TODO: look at stat_float_times in Modules/posixmodule.c */
-    PyObject *ival;
-
-    UNUSED_ARG(nsec);
-
-#if SIZEOF_TIME_T > SIZEOF_LONG
-    ival = PyLong_FromLongLong((PY_LONG_LONG)sec);
-#else
-    ival = PyInt_FromLong((long)sec);
-#endif
-    if (!ival) {
-        return PyInt_FromLong(0);
-    }
-    return ival;
+    return PyLong_FromLong(tspec.tv_sec);
 }
 
 
 static void
-stat_to_pyobj(uv_statbuf_t *st, PyObject **stat_data) {
-    unsigned long ansec, mnsec, cnsec, bnsec;
-
-    PyStructSequence_SET_ITEM(*stat_data, 0, PyInt_FromLong((long)st->st_mode));
-#ifdef HAVE_LARGEFILE_SUPPORT
-    PyStructSequence_SET_ITEM(*stat_data, 1, PyLong_FromLongLong((PY_LONG_LONG)st->st_ino));
-#else
-    PyStructSequence_SET_ITEM(*stat_data, 1, PyInt_FromLong((long)st->st_ino));
-#endif
-#if defined(HAVE_LONG_LONG)
-    PyStructSequence_SET_ITEM(*stat_data, 2, PyLong_FromLongLong((PY_LONG_LONG)st->st_dev));
-#else
-    PyStructSequence_SET_ITEM(*stat_data, 2, PyInt_FromLong((long)st->st_dev));
-#endif
-    PyStructSequence_SET_ITEM(*stat_data, 3, PyInt_FromLong((long)st->st_nlink));
-    PyStructSequence_SET_ITEM(*stat_data, 4, PyInt_FromLong((long)st->st_uid));
-    PyStructSequence_SET_ITEM(*stat_data, 5, PyInt_FromLong((long)st->st_gid));
-#ifdef HAVE_LARGEFILE_SUPPORT
-    PyStructSequence_SET_ITEM(*stat_data, 6, PyLong_FromLongLong((PY_LONG_LONG)st->st_size));
-#else
-    PyStructSequence_SET_ITEM(*stat_data, 6, PyInt_FromLong(st->st_size));
-#endif
-#if defined(HAVE_STAT_TV_NSEC)
-    ansec = st->st_atim.tv_nsec;
-    mnsec = st->st_mtim.tv_nsec;
-    cnsec = st->st_ctim.tv_nsec;
-#elif defined(HAVE_STAT_TV_NSEC2)
-    ansec = st->st_atimespec.tv_nsec;
-    mnsec = st->st_mtimespec.tv_nsec;
-    cnsec = st->st_ctimespec.tv_nsec;
-#elif defined(HAVE_STAT_NSEC)
-    ansec = st->st_atime_nsec;
-    mnsec = st->st_mtime_nsec;
-    cnsec = st->st_ctime_nsec;
-#else
-    ansec = mnsec = cnsec = 0;
-#endif
-    PyStructSequence_SET_ITEM(*stat_data, 7, format_time(st->st_atime, ansec));
-    PyStructSequence_SET_ITEM(*stat_data, 8, format_time(st->st_mtime, mnsec));
-    PyStructSequence_SET_ITEM(*stat_data, 9, format_time(st->st_ctime, cnsec));
-#ifdef HAVE_STRUCT_STAT_ST_BLKSIZE
-    PyStructSequence_SET_ITEM(*stat_data, 10, PyInt_FromLong((long)st->st_blksize));
-# else
-    Py_INCREF(Py_None);
-    PyStructSequence_SET_ITEM(*stat_data, 10, Py_None);
-#endif
-#ifdef HAVE_STRUCT_STAT_ST_BLOCKS
-    PyStructSequence_SET_ITEM(*stat_data, 11, PyInt_FromLong((long)st->st_blocks));
-# else
-    Py_INCREF(Py_None);
-    PyStructSequence_SET_ITEM(*stat_data, 11, Py_None);
-#endif
-#ifdef HAVE_STRUCT_STAT_ST_RDEV
-    PyStructSequence_SET_ITEM(*stat_data, 12, PyInt_FromLong((long)st->st_rdev));
-# else
-    Py_INCREF(Py_None);
-    PyStructSequence_SET_ITEM(*stat_data, 12, Py_None);
-#endif
-#ifdef HAVE_STRUCT_STAT_ST_FLAGS
-    PyStructSequence_SET_ITEM(*stat_data, 13, PyInt_FromLong((long)st->st_flags));
-#else
+stat_to_pyobj(uv_stat_t *st, PyObject **stat_data) {
+    PyStructSequence_SET_ITEM(*stat_data, 0, PyLong_FromUnsignedLongLong(st->st_mode));
+    PyStructSequence_SET_ITEM(*stat_data, 1, PyLong_FromUnsignedLongLong(st->st_ino));
+    PyStructSequence_SET_ITEM(*stat_data, 2, PyLong_FromUnsignedLongLong(st->st_dev));
+    PyStructSequence_SET_ITEM(*stat_data, 3, PyLong_FromUnsignedLongLong(st->st_nlink));
+    PyStructSequence_SET_ITEM(*stat_data, 4, PyLong_FromUnsignedLongLong(st->st_uid));
+    PyStructSequence_SET_ITEM(*stat_data, 5, PyLong_FromUnsignedLongLong(st->st_gid));
+    PyStructSequence_SET_ITEM(*stat_data, 6, PyLong_FromUnsignedLongLong(st->st_size));
+    PyStructSequence_SET_ITEM(*stat_data, 7, format_time(st->st_atim));
+    PyStructSequence_SET_ITEM(*stat_data, 8, format_time(st->st_mtim));
+    PyStructSequence_SET_ITEM(*stat_data, 9, format_time(st->st_ctim));
+    PyStructSequence_SET_ITEM(*stat_data, 10, PyLong_FromUnsignedLongLong(st->st_blksize));
+    PyStructSequence_SET_ITEM(*stat_data, 11, PyLong_FromUnsignedLongLong(st->st_blocks));
+    PyStructSequence_SET_ITEM(*stat_data, 12, PyLong_FromUnsignedLongLong(st->st_rdev));
+    /* not supported by libuv yet */
     Py_INCREF(Py_None);
     PyStructSequence_SET_ITEM(*stat_data, 13, Py_None);
-#endif
-#ifdef HAVE_STRUCT_STAT_ST_GEN
-    PyStructSequence_SET_ITEM(*stat_data, 14, PyInt_FromLong((long)st->st_gen));
-#else
     Py_INCREF(Py_None);
     PyStructSequence_SET_ITEM(*stat_data, 14, Py_None);
-#endif
-#ifdef HAVE_STRUCT_STAT_ST_BIRTHTIME
-#ifdef HAVE_STAT_TV_NSEC2
-    bnsec = st->st_birthtimespec.tv_nsec;
-#else
-    bnsec = 0;
-#endif
-    PyStructSequence_SET_ITEM(*stat_data, 15, format_time(st->st_birthtime, bnsec));
-#else
-    UNUSED_ARG(bnsec);
     Py_INCREF(Py_None);
     PyStructSequence_SET_ITEM(*stat_data, 15, Py_None);
-#endif
-
 }
 
 
 static void
 process_stat(uv_fs_t* req, PyObject **path, PyObject **stat_data, PyObject **errorno) {
-    uv_statbuf_t *st;
+    uv_stat_t *st;
 
     ASSERT(req);
     ASSERT(req->fs_type == UV_FS_STAT || req->fs_type == UV_FS_LSTAT || req->fs_type == UV_FS_FSTAT);
@@ -2481,7 +2407,7 @@ static PyTypeObject FSEventType = {
 /* FSPoll handle */
 
 static void
-on_fspoll_callback(uv_fs_poll_t *handle, int status, const uv_statbuf_t *prev, const uv_statbuf_t *curr)
+on_fspoll_callback(uv_fs_poll_t *handle, int status, const uv_stat_t *prev, const uv_stat_t *curr)
 {
     PyGILState_STATE gstate = PyGILState_Ensure();
     FSPoll *self;
@@ -2510,7 +2436,7 @@ on_fspoll_callback(uv_fs_poll_t *handle, int status, const uv_statbuf_t *prev, c
             prev_stat_data = Py_None;
             Py_INCREF(Py_None);
         } else {
-            stat_to_pyobj((uv_statbuf_t *)prev, &prev_stat_data);
+            stat_to_pyobj((uv_stat_t *)prev, &prev_stat_data);
         }
         curr_stat_data = PyStructSequence_New(&StatResultType);
         if (!curr_stat_data) {
@@ -2518,7 +2444,7 @@ on_fspoll_callback(uv_fs_poll_t *handle, int status, const uv_statbuf_t *prev, c
             curr_stat_data = Py_None;
             Py_INCREF(Py_None);
         } else {
-            stat_to_pyobj((uv_statbuf_t *)curr, &curr_stat_data);
+            stat_to_pyobj((uv_stat_t *)curr, &curr_stat_data);
         }
     }
 
