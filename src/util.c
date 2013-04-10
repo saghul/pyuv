@@ -264,6 +264,7 @@ Util_func_getaddrinfo(PyObject *obj, PyObject *args, PyObject *kwargs)
 
     UNUSED_ARG(obj);
     gai_req = NULL;
+    idna = NULL;
     port = socktype = protocol = flags = 0;
     family = AF_UNSPEC;
 
@@ -281,25 +282,25 @@ Util_func_getaddrinfo(PyObject *obj, PyObject *args, PyObject *kwargs)
     } else if (PyBytes_Check(host)) {
         host_str = PyBytes_AsString(host);
     } else {
-        PyErr_SetString(PyExc_TypeError, "getaddrinfo() argument 2 must be string or None");
-        return NULL;
+        PyErr_SetString(PyExc_TypeError, "getaddrinfo() argument 3 must be string or None");
+        goto error;
     }
 
     if (!PyCallable_Check(callback)) {
         PyErr_SetString(PyExc_TypeError, "a callable is required");
-        return NULL;
+        goto error;
     }
 
     if (port < 0 || port > 0xffff) {
         PyErr_SetString(PyExc_ValueError, "port must be between 0 and 65535");
-        return NULL;
+        goto error;
     }
     snprintf(port_str, sizeof(port_str), "%d", port);
 
     gai_req = (GAIRequest *)PyObject_CallFunctionObjArgs((PyObject *)&GAIRequestType, loop, callback, NULL);
     if (!gai_req) {
         PyErr_NoMemory();
-        return NULL;
+        goto error;
     }
 
     memset(&hints, 0, sizeof(hints));
@@ -314,11 +315,14 @@ Util_func_getaddrinfo(PyObject *obj, PyObject *args, PyObject *kwargs)
         goto error;
     }
 
+    Py_XDECREF(idna);
+
     Py_INCREF(gai_req);
     return (PyObject *)gai_req;
 
 error:
-    Py_DECREF(gai_req);
+    Py_XDECREF(idna);
+    Py_XDECREF(gai_req);
     return NULL;
 }
 
