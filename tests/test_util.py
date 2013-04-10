@@ -43,7 +43,7 @@ class UtilTest(unittest2.TestCase):
         def getaddrinfo_cb(result, errorno):
             self.assertEqual(errorno, None)
         loop = pyuv.Loop.default_loop()
-        pyuv.util.getaddrinfo(loop, 'localhost', getaddrinfo_cb, 80, socket.AF_INET)
+        pyuv.util.getaddrinfo(loop, getaddrinfo_cb, 'localhost', 80, socket.AF_INET)
         loop.run()
 
 

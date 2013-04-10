@@ -267,7 +267,7 @@ Util_func_getaddrinfo(PyObject *obj, PyObject *args, PyObject *kwargs)
     port = socktype = protocol = flags = 0;
     family = AF_UNSPEC;
 
-    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!OO|iiiii:getaddrinfo", kwlist, &LoopType, &loop, &host, &callback, &port, &family, &socktype, &protocol, &flags)) {
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!OO|iiiii:getaddrinfo", kwlist, &LoopType, &loop, &callback, &host, &port, &family, &socktype, &protocol, &flags)) {
         return NULL;
     }
 
@@ -290,7 +290,7 @@ Util_func_getaddrinfo(PyObject *obj, PyObject *args, PyObject *kwargs)
         return NULL;
     }
 
-    if (port < 0 || port > 65535) {
+    if (port < 0 || port > 0xffff) {
         PyErr_SetString(PyExc_ValueError, "port must be between 0 and 65535");
         return NULL;
     }
