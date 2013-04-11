@@ -2291,13 +2291,13 @@ FSEvent_tp_init(FSEvent *self, PyObject *args, PyObject *kwargs)
     Loop *loop;
     PyObject *callback, *tmp;
 
-    static char *kwlist[] = {"loop", "path", "callback", "flags", NULL};
+    static char *kwlist[] = {"loop", "path", "flags", "callback", NULL};
 
     UNUSED_ARG(kwargs);
 
     RAISE_IF_HANDLE_INITIALIZED(self, -1);
 
-    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!sOi:__init__", kwlist, &LoopType, &loop, &path, &callback, &flags)) {
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!siO:__init__", kwlist, &LoopType, &loop, &path, &flags, &callback)) {
         return -1;
     }
 
@@ -2467,14 +2467,14 @@ FSPoll_func_start(FSPoll *self, PyObject *args, PyObject *kwargs)
     double interval;
     PyObject *tmp, *callback;
 
-    static char *kwlist[] = {"path", "callback", "interval", NULL};
+    static char *kwlist[] = {"path", "interval", "callback", NULL};
 
     tmp = NULL;
 
     RAISE_IF_HANDLE_NOT_INITIALIZED(self, NULL);
     RAISE_IF_HANDLE_CLOSED(self, PyExc_HandleClosedError, NULL);
 
-    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "sOd:start", kwlist, &path, &callback, &interval)) {
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "sdO:start", kwlist, &path, &interval, &callback)) {
         return NULL;
     }
 
