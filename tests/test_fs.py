@@ -8,6 +8,7 @@ import pyuv
 
 # Make stat return integers
 os.stat_float_times(False)
+pyuv.fs.stat_float_times(False)
 
 
 BAD_FILE = 'test_file_bad'

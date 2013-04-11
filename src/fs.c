@@ -1,9 +1,31 @@
 
+/* If true, st_?time is float */
+static int _stat_float_times = 1;
+
+static PyObject*
+stat_float_times(PyObject* self, PyObject *args)
+{
+    int newval = -1;
+    if (!PyArg_ParseTuple(args, "|i:stat_float_times", &newval)) {
+        return NULL;
+    }
+    if (newval == -1) {
+        /* Return old value */
+        return PyBool_FromLong(_stat_float_times);
+    }
+    _stat_float_times = newval;
+    Py_RETURN_NONE;
+}
+
+
 static PyObject *
 format_time(uv_timespec_t tspec)
 {
-    /* TODO: look at stat_float_times in Modules/posixmodule.c */
-    return PyLong_FromLong(tspec.tv_sec);
+    if (_stat_float_times) {
+        return PyFloat_FromDouble(tspec.tv_sec + 1e-9*tspec.tv_nsec);
+    } else {
+        return PyInt_FromLong(tspec.tv_sec);
+    }
 }
 
 
@@ -2221,6 +2243,7 @@ FS_methods[] = {
     { "sendfile", (PyCFunction)FS_func_sendfile, METH_VARARGS|METH_KEYWORDS, "Sends a regular file to a stream socket." },
     { "utime", (PyCFunction)FS_func_utime, METH_VARARGS|METH_KEYWORDS, "Update file times." },
     { "futime", (PyCFunction)FS_func_futime, METH_VARARGS|METH_KEYWORDS, "Update file times." },
+    { "stat_float_times", (PyCFunction)stat_float_times, METH_VARARGS, "Use floats for times in stat structs." },
     { NULL }
 };
 
