@@ -50,10 +50,10 @@ class TimerTest(unittest2.TestCase):
         loop = pyuv.Loop.default_loop()
         self.timer = pyuv.Timer(loop)
         self.timer.start(timer_cb, 0.1, 0)
-        self.timer.unref()
+        self.timer.ref = False
         loop.run()
         self.assertEqual(self.timer_cb_called, 0)
-        self.timer.ref()
+        self.timer.ref = True
         loop.run()
         self.assertEqual(self.timer_cb_called, 1)
 

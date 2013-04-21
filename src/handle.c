@@ -102,26 +102,6 @@ initialize_handle(Handle *self, Loop *loop)
 
 
 static PyObject *
-Handle_func_ref(Handle *self)
-{
-    RAISE_IF_HANDLE_NOT_INITIALIZED(self, NULL);
-    RAISE_IF_HANDLE_CLOSED(self, PyExc_HandleClosedError, NULL);
-    uv_ref(self->uv_handle);
-    Py_RETURN_NONE;
-}
-
-
-static PyObject *
-Handle_func_unref(Handle *self)
-{
-    RAISE_IF_HANDLE_NOT_INITIALIZED(self, NULL);
-    RAISE_IF_HANDLE_CLOSED(self, PyExc_HandleClosedError, NULL);
-    uv_unref(self->uv_handle);
-    Py_RETURN_NONE;
-}
-
-
-static PyObject *
 Handle_func_close(Handle *self, PyObject *args)
 {
     PyObject *callback = Py_None;
@@ -169,6 +149,39 @@ Handle_closed_get(Handle *self, void *closure)
     RAISE_IF_HANDLE_NOT_INITIALIZED(self, NULL);
 
     return PyBool_FromLong((long)uv_is_closing(self->uv_handle));
+}
+
+
+static PyObject *
+Handle_ref_get(Handle *self, void *closure)
+{
+    UNUSED_ARG(closure);
+
+    RAISE_IF_HANDLE_NOT_INITIALIZED(self, NULL);
+
+    return PyBool_FromLong((long)uv_has_ref(self->uv_handle));
+}
+
+
+static int
+Handle_ref_set(Handle *self, PyObject* val, void* c)
+{
+    long ref;
+
+    UNUSED_ARG(c);
+
+    ref = PyLong_AsLong(val);
+    if (ref == -1 && PyErr_Occurred()) {
+        return -1;
+    }
+
+    if (ref) {
+        uv_ref(self->uv_handle);
+    } else {
+        uv_unref(self->uv_handle);
+    }
+
+    return 0;
 }
 
 
@@ -278,8 +291,6 @@ Handle_dict_set(Handle *self, PyObject* val, void* c)
 
 static PyMethodDef
 Handle_tp_methods[] = {
-    { "ref", (PyCFunction)Handle_func_ref, METH_NOARGS, "Increase the event loop reference count." },
-    { "unref", (PyCFunction)Handle_func_unref, METH_NOARGS, "Decrease the event loop reference count." },
     { "close", (PyCFunction)Handle_func_close, METH_VARARGS, "Close handle." },
     { NULL }
 };
@@ -294,6 +305,7 @@ static PyMemberDef Handle_tp_members[] = {
 static PyGetSetDef Handle_tp_getsets[] = {
     {"__dict__", (getter)Handle_dict_get, (setter)Handle_dict_set, NULL},
     {"active", (getter)Handle_active_get, NULL, "Indicates if this handle is active.", NULL},
+    {"ref", (getter)Handle_ref_get, (setter)Handle_ref_set, "Indicates if this handle is ref'd or not.", NULL},
     {"closed", (getter)Handle_closed_get, NULL, "Indicates if this handle is closing or already closed.", NULL},
     {NULL}
 };

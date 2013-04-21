@@ -248,7 +248,7 @@ class ProcessTest(unittest2.TestCase):
         proc = pyuv.Process(loop)
         proc.spawn(file=sys.executable, args=["proc_basic.py"],
                    exit_callback=proc_exit_cb, flags=pyuv.UV_PROCESS_DETACHED)
-        proc.unref()
+        proc.ref = False
         pid = proc.pid
         loop.run()
         self.assertEqual(self.exit_cb_called, 0)
