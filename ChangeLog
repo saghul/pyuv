@@ -1,3 +1,12 @@
+Version 0.10.2
+==============
+ - Fixed getaddrinfo parameter order
+ - Fixed memory leak in getaddrinfo
+ - Avoid allocating extra memory for synchronization primitives
+ - Handle fd argument consistently
+ - Updated documentation
+ - Raised libuv revision to 2400716 (v0.10 branch)
+
 Version 0.10.1
 ==============
  - Added better libuv version information
