@@ -42,11 +42,13 @@
 
     Get CPUs information.
 
-.. py:function:: pyuv.util.getaddrinfo(...)
+.. py:function:: pyuv.util.getaddrinfo(loop, cb, ...)
 
     Asyncronous equivalent of `socket.getaddrinfo`. This function returns
     a `GAIRequest` object which has a `cancel()` method that can be called
     in order to cancel the request.
+
+    Callback signature: ``callback(result, errorno)``.
 
 .. py:class:: pyuv.util.SignalChecker(loop, fd)
 
