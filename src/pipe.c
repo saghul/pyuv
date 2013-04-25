@@ -252,16 +252,17 @@ Pipe_func_connect(Pipe *self, PyObject *args)
 static PyObject *
 Pipe_func_open(Pipe *self, PyObject *args)
 {
-    int r, fd;
+    int r;
+    long fd;
 
     RAISE_IF_HANDLE_NOT_INITIALIZED(self, NULL);
     RAISE_IF_HANDLE_CLOSED(self, PyExc_HandleClosedError, NULL);
 
-    if (!PyArg_ParseTuple(args, "i:open", &fd)) {
+    if (!PyArg_ParseTuple(args, "l:open", &fd)) {
         return NULL;
     }
 
-    r = uv_pipe_open(&self->pipe_h, fd);
+    r = uv_pipe_open(&self->pipe_h, (uv_file)fd);
     if (r != 0) {
         RAISE_UV_EXCEPTION(UV_HANDLE_LOOP(self), PyExc_PipeError);
         return NULL;
