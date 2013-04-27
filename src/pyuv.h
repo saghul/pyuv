@@ -602,7 +602,7 @@ error:
 
 /* parse a Python tuple containing host, port, flowinfo, scope_id into a sockaddr struct */
 static int
-pyuv_parse_addr_tuple(PyObject *addr, struct sockaddr *sa)
+pyuv_parse_addr_tuple(PyObject *addr, struct sockaddr_storage *ss)
 {
     char *host;
     int port;
@@ -633,18 +633,18 @@ pyuv_parse_addr_tuple(PyObject *addr, struct sockaddr *sa)
         return -1;
     }
 
-    memset(sa, 0, sizeof(struct sockaddr));
+    memset(ss, 0, sizeof(struct sockaddr_storage));
 
     if (uv_inet_pton(AF_INET, host, &addr4).code == UV_OK) {
         /* it's an IPv4 address */
-        sa4 = (struct sockaddr_in *)sa;
+        sa4 = (struct sockaddr_in *)ss;
         sa4->sin_family = AF_INET;
         sa4->sin_port = htons((short)port);
         sa4->sin_addr = addr4;
         return 0;
     } else if (uv_inet_pton(AF_INET6, host, &addr6).code == UV_OK) {
-        /* it's an IPv4 address */
-        sa6 = (struct sockaddr_in6 *)sa;
+        /* it's an IPv6 address */
+        sa6 = (struct sockaddr_in6 *)ss;
         sa6->sin6_family = AF_INET6;
         sa6->sin6_port = htons((short)port);
         sa6->sin6_addr = addr6;
