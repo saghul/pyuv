@@ -405,6 +405,17 @@ Stream_writable_get(Stream *self, void *closure)
 
 
 static PyObject *
+Stream_write_queue_size_get(Stream *self, void *closure)
+{
+    UNUSED_ARG(closure);
+
+    RAISE_IF_HANDLE_NOT_INITIALIZED(self, NULL);
+
+    return PyInt_FromSize_t(((uv_stream_t *)UV_HANDLE(self))->write_queue_size);
+}
+
+
+static PyObject *
 Stream_tp_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
 {
     Stream *self = (Stream *)HandleType.tp_new(type, args, kwargs);
@@ -445,6 +456,7 @@ Stream_tp_methods[] = {
 static PyGetSetDef Stream_tp_getsets[] = {
     {"readable", (getter)Stream_readable_get, 0, "Indicates if stream is readable.", NULL},
     {"writable", (getter)Stream_writable_get, 0, "Indicates if stream is writable.", NULL},
+    {"write_queue_size", (getter)Stream_write_queue_size_get, 0, "Returns the size of the write queue.", NULL},
     {NULL}
 };
 
