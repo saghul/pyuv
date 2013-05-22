@@ -155,6 +155,12 @@
         is why it is enabled by default) but may lead to uneven load distribution in
         multi-process setups.
 
+    .. py:attribute:: write_queue_size
+
+        *Read only*
+
+        Returns the size of the write queue.
+
     .. py:attribute:: readable
 
         *Read only*

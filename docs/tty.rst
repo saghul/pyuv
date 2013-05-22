@@ -76,6 +76,12 @@
 
         Reset TTY settings. To be called when program exits.
 
+    .. py:attribute:: write_queue_size
+
+        *Read only*
+
+        Returns the size of the write queue.
+
     .. py:attribute:: readable
 
         *Read only*
