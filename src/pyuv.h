@@ -108,6 +108,25 @@ typedef int Bool;
         }                                                                           \
     } while(0)                                                                      \
 
+#define RAISE_STREAM_EXCEPTION(handle)                                              \
+    do {                                                                            \
+        PyObject *exc_type;                                                         \
+        switch ((handle)->type) {                                                   \
+            case UV_TCP:                                                            \
+                exc_type = PyExc_TCPError;                                          \
+                break;                                                              \
+            case UV_NAMED_PIPE:                                                     \
+                exc_type = PyExc_PipeError;                                         \
+                break;                                                              \
+            case UV_TTY:                                                            \
+                exc_type = PyExc_TTYError;                                          \
+                break;                                                              \
+            default:                                                                \
+                ASSERT(0 && "invalid stream handle type");                          \
+        }                                                                           \
+        RAISE_UV_EXCEPTION((handle)->loop, exc_type);                               \
+    } while(0)                                                                      \
+
 #define PYUV_SLAB_SIZE 65536
 
 

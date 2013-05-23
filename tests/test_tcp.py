@@ -45,6 +45,13 @@ class TCPErrorTest(unittest2.TestCase):
         loop.run()
         sock.close()
 
+    def test_raise(self):
+        loop = pyuv.Loop.default_loop()
+        tcp = pyuv.TCP(loop)
+        self.assertRaises(pyuv.error.TCPError, tcp.write, b"PING")
+        tcp.close()
+        loop.run()
+
 
 class TCPTest(unittest2.TestCase):
 

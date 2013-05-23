@@ -184,7 +184,7 @@ Stream_func_shutdown(Stream *self, PyObject *args)
 
     r = uv_shutdown(&ctx->req, (uv_stream_t *)UV_HANDLE(self), on_stream_shutdown);
     if (r != 0) {
-        RAISE_UV_EXCEPTION(UV_HANDLE_LOOP(self), PyExc_StreamError);
+        RAISE_STREAM_EXCEPTION(UV_HANDLE(self));
         goto error;
     }
 
@@ -222,7 +222,7 @@ Stream_func_start_read(Stream *self, PyObject *args)
 
     r = uv_read_start((uv_stream_t *)UV_HANDLE(self), (uv_alloc_cb)on_stream_alloc, (uv_read_cb)on_stream_read);
     if (r != 0) {
-        RAISE_UV_EXCEPTION(UV_HANDLE_LOOP(self), PyExc_StreamError);
+        RAISE_STREAM_EXCEPTION(UV_HANDLE(self));
         return NULL;
     }
 
@@ -245,7 +245,7 @@ Stream_func_stop_read(Stream *self)
 
     r = uv_read_stop((uv_stream_t *)UV_HANDLE(self));
     if (r != 0) {
-        RAISE_UV_EXCEPTION(UV_HANDLE_LOOP(self), PyExc_StreamError);
+        RAISE_STREAM_EXCEPTION(UV_HANDLE(self));
         return NULL;
     }
 
@@ -277,7 +277,7 @@ pyuv_stream_write(Stream *self, stream_write_ctx *ctx, Py_buffer *views, uv_buf_
     }
 
     if (r != 0) {
-        RAISE_UV_EXCEPTION(UV_HANDLE_LOOP(self), PyExc_StreamError);
+        RAISE_STREAM_EXCEPTION(UV_HANDLE(self));
         goto error;
     }
 
