@@ -1806,7 +1806,8 @@ end:
 static PyObject *
 FS_func_read(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
-    int r, length, offset;
+    int r, length;
+    int64_t offset;
     long fd;
     char *buf;
     Loop *loop;
@@ -1820,7 +1821,7 @@ FS_func_read(PyObject *obj, PyObject *args, PyObject *kwargs)
     buf = NULL;
     callback = Py_None;
 
-    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!lii|O:read", kwlist, &LoopType, &loop, &fd, &length, &offset, &callback)) {
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!liL|O:read", kwlist, &LoopType, &loop, &fd, &length, &offset, &callback)) {
         return NULL;
     }
 
@@ -1869,7 +1870,8 @@ end:
 static PyObject *
 FS_func_write(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
-    int r, offset;
+    int r;
+    int64_t offset;
     long fd;
     char *pbuf, *buf;
     Loop *loop;
@@ -1884,7 +1886,7 @@ FS_func_write(PyObject *obj, PyObject *args, PyObject *kwargs)
     buf = NULL;
     callback = Py_None;
 
-    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!ls#i|O:write", kwlist, &LoopType, &loop, &fd, &pbuf, &length, &offset, &callback)) {
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!ls#L|O:write", kwlist, &LoopType, &loop, &fd, &pbuf, &length, &offset, &callback)) {
         return NULL;
     }
 
@@ -2030,7 +2032,8 @@ end:
 static PyObject *
 FS_func_ftruncate(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
-    int r, offset;
+    int r;
+    int64_t offset;
     long fd;
     Loop *loop;
     FSRequest *fs_req;
@@ -2042,7 +2045,7 @@ FS_func_ftruncate(PyObject *obj, PyObject *args, PyObject *kwargs)
     fs_req = NULL;
     callback = Py_None;
 
-    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!li|O:ftruncate", kwlist, &LoopType, &loop, &fd, &offset, &callback)) {
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!lL|O:ftruncate", kwlist, &LoopType, &loop, &fd, &offset, &callback)) {
         return NULL;
     }
 
@@ -2131,7 +2134,8 @@ end:
 static PyObject *
 FS_func_sendfile(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
-    int r, in_offset, length;
+    int r, length;
+    int64_t in_offset;
     long out_fd, in_fd;
     Loop *loop;
     FSRequest *fs_req;
@@ -2143,7 +2147,7 @@ FS_func_sendfile(PyObject *obj, PyObject *args, PyObject *kwargs)
     fs_req = NULL;
     callback = Py_None;
 
-    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!llii|O:sendfile", kwlist, &LoopType, &loop, &out_fd, &in_fd, &in_offset, &length, &callback)) {
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!llli|O:sendfile", kwlist, &LoopType, &loop, &out_fd, &in_fd, &in_offset, &length, &callback)) {
         return NULL;
     }
 
