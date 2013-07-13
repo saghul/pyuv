@@ -2,7 +2,7 @@
 static PyObject *
 TTY_func_set_mode(TTY *self, PyObject *args)
 {
-    int r, mode;
+    int err, mode;
 
     RAISE_IF_HANDLE_NOT_INITIALIZED(self, NULL);
     RAISE_IF_HANDLE_CLOSED(self, PyExc_HandleClosedError, NULL);
@@ -11,9 +11,9 @@ TTY_func_set_mode(TTY *self, PyObject *args)
         return NULL;
     }
 
-    r = uv_tty_set_mode(&self->tty_h, mode);
-    if (r != 0) {
-        RAISE_UV_EXCEPTION(UV_HANDLE_LOOP(self), PyExc_TTYError);
+    err = uv_tty_set_mode(&self->tty_h, mode);
+    if (err < 0) {
+        RAISE_UV_EXCEPTION(err, PyExc_TTYError);
         return NULL;
     }
 
@@ -33,14 +33,14 @@ TTY_func_reset_mode(PyObject *cls)
 static PyObject *
 TTY_func_get_winsize(TTY *self)
 {
-    int r, width, height;
+    int err, width, height;
 
     RAISE_IF_HANDLE_NOT_INITIALIZED(self, NULL);
     RAISE_IF_HANDLE_CLOSED(self, PyExc_HandleClosedError, NULL);
 
-    r = uv_tty_get_winsize(&self->tty_h, &width, &height);
-    if (r != 0) {
-        RAISE_UV_EXCEPTION(UV_HANDLE_LOOP(self), PyExc_TTYError);
+    err = uv_tty_get_winsize(&self->tty_h, &width, &height);
+    if (err < 0) {
+        RAISE_UV_EXCEPTION(err, PyExc_TTYError);
         return NULL;
     }
 
@@ -51,7 +51,7 @@ TTY_func_get_winsize(TTY *self)
 static int
 TTY_tp_init(TTY *self, PyObject *args, PyObject *kwargs)
 {
-    int fd, r;
+    int fd, err;
     Loop *loop;
     PyObject *readable;
 
@@ -63,9 +63,9 @@ TTY_tp_init(TTY *self, PyObject *args, PyObject *kwargs)
         return -1;
     }
 
-    r = uv_tty_init(loop->uv_loop, &self->tty_h, fd, (readable == Py_True) ? 1 : 0);
-    if (r != 0) {
-        RAISE_UV_EXCEPTION(loop->uv_loop, PyExc_TTYError);
+    err = uv_tty_init(loop->uv_loop, &self->tty_h, fd, (readable == Py_True) ? 1 : 0);
+    if (err < 0) {
+        RAISE_UV_EXCEPTION(err, PyExc_TTYError);
         return -1;
     }
 

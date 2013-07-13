@@ -28,14 +28,14 @@ on_async_callback(uv_async_t *handle, int status)
 static PyObject *
 Async_func_send(Async *self)
 {
-    int r;
+    int err;
 
     RAISE_IF_HANDLE_NOT_INITIALIZED(self, NULL);
     RAISE_IF_HANDLE_CLOSED(self, PyExc_HandleClosedError, NULL);
 
-    r = uv_async_send(&self->async_h);
-    if (r != 0) {
-        RAISE_UV_EXCEPTION(UV_HANDLE_LOOP(self), PyExc_AsyncError);
+    err = uv_async_send(&self->async_h);
+    if (err < 0) {
+        RAISE_UV_EXCEPTION(err, PyExc_AsyncError);
         return NULL;
     }
 
@@ -46,7 +46,7 @@ Async_func_send(Async *self)
 static int
 Async_tp_init(Async *self, PyObject *args, PyObject *kwargs)
 {
-    int r;
+    int err;
     Loop *loop;
     PyObject *callback, *tmp;
 
@@ -63,9 +63,9 @@ Async_tp_init(Async *self, PyObject *args, PyObject *kwargs)
         return -1;
     }
 
-    r = uv_async_init(loop->uv_loop, &self->async_h, on_async_callback);
-    if (r != 0) {
-        RAISE_UV_EXCEPTION(loop->uv_loop, PyExc_AsyncError);
+    err = uv_async_init(loop->uv_loop, &self->async_h, on_async_callback);
+    if (err != 0) {
+        RAISE_UV_EXCEPTION(err, PyExc_AsyncError);
         return -1;
     }
 

@@ -24,16 +24,12 @@ static PyObject *
 Errno_func_strerror(PyObject *obj, PyObject *args)
 {
     int errorno;
-    uv_err_t err;
-
     UNUSED_ARG(obj);
 
     if (!PyArg_ParseTuple(args, "i:strerror", &errorno)) {
         return NULL;
     }
-
-    err.code = errorno;
-    return Py_BuildValue("s", uv_strerror(err));
+    return Py_BuildValue("s", uv_strerror(errorno));
 }
 
 
@@ -75,7 +71,7 @@ init_errno(void)
         return NULL;
     }
 
-#define XX(val, name, s) inscode(module_dict, errorcode_dict, PYUV_STRINGIFY(UV_##name), UV_##name);
+#define XX(name, s) inscode(module_dict, errorcode_dict, PYUV_STRINGIFY(UV_##name), UV_##name);
     UV_ERRNO_MAP(XX)
 #undef XX
 

@@ -39,8 +39,7 @@ on_stream_shutdown(uv_shutdown_t* req, int status)
 
     if (callback != Py_None) {
         if (status < 0) {
-            uv_err_t err = uv_last_error(UV_HANDLE_LOOP(self));
-            py_errorno = PyInt_FromLong((long)err.code);
+            py_errorno = PyInt_FromLong((long)status);
         } else {
             py_errorno = Py_None;
             Py_INCREF(Py_None);
@@ -67,7 +66,7 @@ static void
 on_stream_read(uv_stream_t* handle, int nread, uv_buf_t buf)
 {
     PyGILState_STATE gstate = PyGILState_Ensure();
-    uv_err_t err;
+    int err;
     Stream *self;
     PyObject *result, *data, *py_errorno;
     ASSERT(handle);
@@ -85,8 +84,7 @@ on_stream_read(uv_stream_t* handle, int nread, uv_buf_t buf)
     } else {
         data = Py_None;
         Py_INCREF(Py_None);
-        err = uv_last_error(UV_HANDLE_LOOP(self));
-        py_errorno = PyInt_FromLong((long)err.code);
+        py_errorno = PyInt_FromLong((long)nread);
         /* Stop reading, otherwise an assert blows up on unix */
         uv_read_stop(handle);
     }
@@ -112,7 +110,6 @@ on_stream_write(uv_write_t* req, int status)
     stream_write_ctx *ctx;
     Stream *self;
     PyObject *callback, *send_handle, *result, *py_errorno;
-    uv_err_t err;
 
     ASSERT(req);
 
@@ -123,8 +120,7 @@ on_stream_write(uv_write_t* req, int status)
 
     if (callback != Py_None) {
         if (status < 0) {
-            err = uv_last_error(UV_HANDLE_LOOP(self));
-            py_errorno = PyInt_FromLong((long)err.code);
+            py_errorno = PyInt_FromLong((long)status);
         } else {
             py_errorno = Py_None;
             Py_INCREF(Py_None);
@@ -157,7 +153,7 @@ on_stream_write(uv_write_t* req, int status)
 static PyObject *
 Stream_func_shutdown(Stream *self, PyObject *args)
 {
-    int r;
+    int err;
     stream_shutdown_ctx *ctx;
     PyObject *callback;
 
@@ -182,9 +178,9 @@ Stream_func_shutdown(Stream *self, PyObject *args)
     ctx->obj = self;
     ctx->callback = callback;
 
-    r = uv_shutdown(&ctx->req, (uv_stream_t *)UV_HANDLE(self), on_stream_shutdown);
-    if (r != 0) {
-        RAISE_UV_EXCEPTION(UV_HANDLE_LOOP(self), PyExc_StreamError);
+    err = uv_shutdown(&ctx->req, (uv_stream_t *)UV_HANDLE(self), on_stream_shutdown);
+    if (err < 0) {
+        RAISE_UV_EXCEPTION(err, PyExc_StreamError);
         goto error;
     }
 
@@ -203,7 +199,7 @@ error:
 static PyObject *
 Stream_func_start_read(Stream *self, PyObject *args)
 {
-    int r;
+    int err;
     PyObject *tmp, *callback;
 
     tmp = NULL;
@@ -220,9 +216,9 @@ Stream_func_start_read(Stream *self, PyObject *args)
         return NULL;
     }
 
-    r = uv_read_start((uv_stream_t *)UV_HANDLE(self), (uv_alloc_cb)on_stream_alloc, (uv_read_cb)on_stream_read);
-    if (r != 0) {
-        RAISE_UV_EXCEPTION(UV_HANDLE_LOOP(self), PyExc_StreamError);
+    err = uv_read_start((uv_stream_t *)UV_HANDLE(self), (uv_alloc_cb)on_stream_alloc, (uv_read_cb)on_stream_read);
+    if (err < 0) {
+        RAISE_UV_EXCEPTION(err, PyExc_StreamError);
         return NULL;
     }
 
@@ -238,14 +234,14 @@ Stream_func_start_read(Stream *self, PyObject *args)
 static PyObject *
 Stream_func_stop_read(Stream *self)
 {
-    int r;
+    int err;
 
     RAISE_IF_HANDLE_NOT_INITIALIZED(self, NULL);
     RAISE_IF_HANDLE_CLOSED(self, PyExc_HandleClosedError, NULL);
 
-    r = uv_read_stop((uv_stream_t *)UV_HANDLE(self));
-    if (r != 0) {
-        RAISE_UV_EXCEPTION(UV_HANDLE_LOOP(self), PyExc_StreamError);
+    err = uv_read_stop((uv_stream_t *)UV_HANDLE(self));
+    if (err < 0) {
+        RAISE_UV_EXCEPTION(err, PyExc_StreamError);
         return NULL;
     }
 
@@ -259,7 +255,7 @@ Stream_func_stop_read(Stream *self)
 static INLINE PyObject *
 pyuv_stream_write(Stream *self, stream_write_ctx *ctx, Py_buffer *views, uv_buf_t *bufs, int buf_count, PyObject *callback, PyObject *send_handle)
 {
-    int i, r;
+    int i, err;
 
     Py_INCREF(callback);
     Py_XINCREF(send_handle);
@@ -271,13 +267,13 @@ pyuv_stream_write(Stream *self, stream_write_ctx *ctx, Py_buffer *views, uv_buf_
     ctx->view_count = buf_count;
 
     if (send_handle) {
-        r = uv_write2(&ctx->req, (uv_stream_t *)UV_HANDLE(self), bufs, buf_count, (uv_stream_t *)UV_HANDLE(send_handle), on_stream_write);
+        err = uv_write2(&ctx->req, (uv_stream_t *)UV_HANDLE(self), bufs, buf_count, (uv_stream_t *)UV_HANDLE(send_handle), on_stream_write);
     } else {
-        r = uv_write(&ctx->req, (uv_stream_t *)UV_HANDLE(self), bufs, buf_count, on_stream_write);
+        err = uv_write(&ctx->req, (uv_stream_t *)UV_HANDLE(self), bufs, buf_count, on_stream_write);
     }
 
-    if (r != 0) {
-        RAISE_UV_EXCEPTION(UV_HANDLE_LOOP(self), PyExc_StreamError);
+    if (err < 0) {
+        RAISE_UV_EXCEPTION(err, PyExc_StreamError);
         goto error;
     }
 

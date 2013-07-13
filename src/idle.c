@@ -28,7 +28,7 @@ on_idle_callback(uv_idle_t *handle, int status)
 static PyObject *
 Idle_func_start(Idle *self, PyObject *args)
 {
-    int r;
+    int err;
     PyObject *tmp, *callback;
 
     tmp = NULL;
@@ -45,9 +45,9 @@ Idle_func_start(Idle *self, PyObject *args)
         return NULL;
     }
 
-    r = uv_idle_start(&self->idle_h, on_idle_callback);
-    if (r != 0) {
-        RAISE_UV_EXCEPTION(UV_HANDLE_LOOP(self), PyExc_IdleError);
+    err = uv_idle_start(&self->idle_h, on_idle_callback);
+    if (err < 0) {
+        RAISE_UV_EXCEPTION(err, PyExc_IdleError);
         return NULL;
     }
 
@@ -63,14 +63,14 @@ Idle_func_start(Idle *self, PyObject *args)
 static PyObject *
 Idle_func_stop(Idle *self)
 {
-    int r;
+    int err;
 
     RAISE_IF_HANDLE_NOT_INITIALIZED(self, NULL);
     RAISE_IF_HANDLE_CLOSED(self, PyExc_HandleClosedError, NULL);
 
-    r = uv_idle_stop(&self->idle_h);
-    if (r != 0) {
-        RAISE_UV_EXCEPTION(UV_HANDLE_LOOP(self), PyExc_IdleError);
+    err = uv_idle_stop(&self->idle_h);
+    if (err < 0) {
+        RAISE_UV_EXCEPTION(err, PyExc_IdleError);
         return NULL;
     }
 
@@ -84,7 +84,7 @@ Idle_func_stop(Idle *self)
 static int
 Idle_tp_init(Idle *self, PyObject *args, PyObject *kwargs)
 {
-    int r;
+    int err;
     Loop *loop;
 
     UNUSED_ARG(kwargs);
@@ -95,9 +95,9 @@ Idle_tp_init(Idle *self, PyObject *args, PyObject *kwargs)
         return -1;
     }
 
-    r = uv_idle_init(loop->uv_loop, &self->idle_h);
-    if (r != 0) {
-        RAISE_UV_EXCEPTION(loop->uv_loop, PyExc_IdleError);
+    err = uv_idle_init(loop->uv_loop, &self->idle_h);
+    if (err < 0) {
+        RAISE_UV_EXCEPTION(err, PyExc_IdleError);
         return -1;
     }
 

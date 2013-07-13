@@ -218,7 +218,7 @@ on_process_exit(uv_process_t *handle, int exit_status, int term_signal)
 static PyObject *
 Process_func_spawn(Process *self, PyObject *args, PyObject *kwargs)
 {
-    int r, flags, len, stdio_count;
+    int err, flags, len, stdio_count;
     unsigned int uid, gid;
     char *cwd, *cwd2, *file, *file2, *arg_str, *tmp_str, *key_str, *value_str;
     char **ptr, **process_args, **process_env;
@@ -388,9 +388,9 @@ Process_func_spawn(Process *self, PyObject *args, PyObject *kwargs)
     options.stdio = stdio_container;
     options.stdio_count = stdio_count;
 
-    r = uv_spawn(UV_HANDLE_LOOP(self), &self->process_h, options);
-    if (r != 0) {
-        RAISE_UV_EXCEPTION(UV_HANDLE_LOOP(self), PyExc_ProcessError);
+    err = uv_spawn(UV_HANDLE_LOOP(self), &self->process_h, options);
+    if (err < 0) {
+        RAISE_UV_EXCEPTION(err, PyExc_ProcessError);
         ret = NULL;
         goto cleanup;
     }
@@ -439,7 +439,7 @@ cleanup:
 static PyObject *
 Process_func_kill(Process *self, PyObject *args)
 {
-    int signum, r;
+    int signum, err;
 
     RAISE_IF_HANDLE_NOT_INITIALIZED(self, NULL);
     RAISE_IF_NOT_SPAWNED(self, NULL);
@@ -449,9 +449,9 @@ Process_func_kill(Process *self, PyObject *args)
         return NULL;
     }
 
-    r = uv_process_kill(&self->process_h, signum);
-    if (r != 0) {
-        RAISE_UV_EXCEPTION(UV_HANDLE_LOOP(self), PyExc_ProcessError);
+    err = uv_process_kill(&self->process_h, signum);
+    if (err < 0) {
+        RAISE_UV_EXCEPTION(err, PyExc_ProcessError);
         return NULL;
     }
 

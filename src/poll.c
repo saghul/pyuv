@@ -3,7 +3,7 @@ static void
 on_poll_callback(uv_poll_t *handle, int status, int events)
 {
     PyGILState_STATE gstate = PyGILState_Ensure();
-    uv_err_t err;
+    int err;
     Poll *self;
     PyObject *result, *py_events, *py_errorno;
 
@@ -21,11 +21,10 @@ on_poll_callback(uv_poll_t *handle, int status, int events)
     } else  {
         py_events = Py_None;
         Py_INCREF(Py_None);
-        err = uv_last_error(UV_HANDLE_LOOP(self));
-        py_errorno = PyInt_FromLong((long)err.code);
+        py_errorno = PyInt_FromLong((long)status);
     }
 
-    result = PyObject_CallFunctionObjArgs(self->callback, self, py_events, py_errorno,NULL);
+    result = PyObject_CallFunctionObjArgs(self->callback, self, py_events, py_errorno, NULL);
     if (result == NULL) {
         handle_uncaught_exception(HANDLE(self)->loop);
     }
@@ -39,7 +38,7 @@ on_poll_callback(uv_poll_t *handle, int status, int events)
 static PyObject *
 Poll_func_start(Poll *self, PyObject *args)
 {
-    int r, events;
+    int err, events;
     PyObject *tmp, *callback;
 
     tmp = NULL;
@@ -56,9 +55,9 @@ Poll_func_start(Poll *self, PyObject *args)
         return NULL;
     }
 
-    r = uv_poll_start(&self->poll_h, events, on_poll_callback);
-    if (r != 0) {
-        RAISE_UV_EXCEPTION(UV_HANDLE_LOOP(self), PyExc_PollError);
+    err = uv_poll_start(&self->poll_h, events, on_poll_callback);
+    if (err < 0) {
+        RAISE_UV_EXCEPTION(err, PyExc_PollError);
         return NULL;
     }
 
@@ -74,14 +73,14 @@ Poll_func_start(Poll *self, PyObject *args)
 static PyObject *
 Poll_func_stop(Poll *self)
 {
-    int r;
+    int err;
 
     RAISE_IF_HANDLE_NOT_INITIALIZED(self, NULL);
     RAISE_IF_HANDLE_CLOSED(self, PyExc_HandleClosedError, NULL);
 
-    r = uv_poll_stop(&self->poll_h);
-    if (r != 0) {
-        RAISE_UV_EXCEPTION(UV_HANDLE_LOOP(self), PyExc_PollError);
+    err = uv_poll_stop(&self->poll_h);
+    if (err < 0) {
+        RAISE_UV_EXCEPTION(err, PyExc_PollError);
         return NULL;
     }
 
@@ -106,7 +105,7 @@ Poll_func_fileno(Poll *self)
 static int
 Poll_tp_init(Poll *self, PyObject *args, PyObject *kwargs)
 {
-    int r;
+    int err;
     long fd;
     Loop *loop;
 
@@ -118,9 +117,9 @@ Poll_tp_init(Poll *self, PyObject *args, PyObject *kwargs)
         return -1;
     }
 
-    r = uv_poll_init_socket(loop->uv_loop, &self->poll_h, (uv_os_sock_t)fd);
-    if (r != 0) {
-        RAISE_UV_EXCEPTION(loop->uv_loop, PyExc_PollError);
+    err = uv_poll_init_socket(loop->uv_loop, &self->poll_h, (uv_os_sock_t)fd);
+    if (err < 0) {
+        RAISE_UV_EXCEPTION(err, PyExc_PollError);
         return -1;
     }
 

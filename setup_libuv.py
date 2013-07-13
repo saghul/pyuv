@@ -95,7 +95,7 @@ class libuv_build_ext(build_ext):
     libuv_dir      = os.path.join('deps', 'libuv')
     libuv_repo     = 'https://github.com/joyent/libuv.git'
     libuv_branch   = 'master'
-    libuv_revision = 'ffe2ef0'
+    libuv_revision = '3ee4d3f'
     libuv_patches  = []
 
     user_options = build_ext.user_options
@@ -120,7 +120,7 @@ class libuv_build_ext(build_ext):
         if self.compiler.compiler_type == 'msvc':
             self.libuv_lib = os.path.join(self.libuv_dir, 'Release', 'lib', 'libuv.lib')
         else:
-            self.libuv_lib = os.path.join(self.libuv_dir, 'libuv.a')
+            self.libuv_lib = os.path.join(self.libuv_dir, '.libs', 'libuv.a')
         self.get_libuv()
         # Set compiler options
         if self.compiler.compiler_type == 'mingw32':
@@ -166,7 +166,9 @@ class libuv_build_ext(build_ext):
                 libuv_arch = {'32bit': 'x86', '64bit': 'x64'}[platform.architecture()[0]]
                 exec_process(['cmd.exe', '/C', 'vcbuild.bat', libuv_arch, 'release'], cwd=self.libuv_dir, env=env, shell=True)
             else:
-                exec_process(['make', 'libuv.a'], cwd=self.libuv_dir, env=env)
+                exec_process(['sh', 'autogen.sh'], cwd=self.libuv_dir, env=env)
+                exec_process(['./configure'], cwd=self.libuv_dir, env=env)
+                exec_process(['make'], cwd=self.libuv_dir, env=env)
         if self.libuv_force_fetch:
             rmtree('deps')
         if not os.path.exists(self.libuv_dir):

@@ -27,7 +27,7 @@ on_signal_callback(uv_signal_t *handle, int signum)
 static PyObject *
 Signal_func_start(Signal *self, PyObject *args)
 {
-    int r, signum;
+    int err, signum;
     PyObject *tmp, *callback;
 
     tmp = NULL;
@@ -44,9 +44,9 @@ Signal_func_start(Signal *self, PyObject *args)
         return NULL;
     }
 
-    r = uv_signal_start(&self->signal_h, (uv_signal_cb)on_signal_callback, signum);
-    if (r != 0) {
-        RAISE_UV_EXCEPTION(UV_HANDLE_LOOP(self), PyExc_SignalError);
+    err = uv_signal_start(&self->signal_h, (uv_signal_cb)on_signal_callback, signum);
+    if (err < 0) {
+        RAISE_UV_EXCEPTION(err, PyExc_SignalError);
         return NULL;
     }
 
@@ -62,14 +62,14 @@ Signal_func_start(Signal *self, PyObject *args)
 static PyObject *
 Signal_func_stop(Signal *self)
 {
-    int r;
+    int err;
 
     RAISE_IF_HANDLE_NOT_INITIALIZED(self, NULL);
     RAISE_IF_HANDLE_CLOSED(self, PyExc_HandleClosedError, NULL);
 
-    r = uv_signal_stop(&self->signal_h);
-    if (r != 0) {
-        RAISE_UV_EXCEPTION(UV_HANDLE_LOOP(self), PyExc_SignalError);
+    err = uv_signal_stop(&self->signal_h);
+    if (err < 0) {
+        RAISE_UV_EXCEPTION(err, PyExc_SignalError);
         return NULL;
     }
 
@@ -80,7 +80,7 @@ Signal_func_stop(Signal *self)
 static int
 Signal_tp_init(Signal *self, PyObject *args, PyObject *kwargs)
 {
-    int r;
+    int err;
     Loop *loop;
 
     UNUSED_ARG(kwargs);
@@ -91,9 +91,9 @@ Signal_tp_init(Signal *self, PyObject *args, PyObject *kwargs)
         return -1;
     }
 
-    r = uv_signal_init(loop->uv_loop, &self->signal_h);
-    if (r != 0) {
-        RAISE_UV_EXCEPTION(loop->uv_loop, PyExc_SignalError);
+    err = uv_signal_init(loop->uv_loop, &self->signal_h);
+    if (err < 0) {
+        RAISE_UV_EXCEPTION(err, PyExc_SignalError);
         return -1;
     }
 

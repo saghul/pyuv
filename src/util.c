@@ -39,16 +39,16 @@ static PyObject *
 Util_func_uptime(PyObject *obj)
 {
     double uptime;
-    uv_err_t err;
+    int err;
     PyObject *exc_data;
 
     UNUSED_ARG(obj);
 
     err = uv_uptime(&uptime);
-    if (err.code == UV_OK) {
+    if (err == 0) {
         return PyFloat_FromDouble(uptime);
     } else {
-        exc_data = Py_BuildValue("(is)", err.code, uv_strerror(err));
+        exc_data = Py_BuildValue("(is)", err, uv_strerror(err));
         if (exc_data != NULL) {
             PyErr_SetObject(PyExc_UVError, exc_data);
             Py_DECREF(exc_data);
@@ -62,16 +62,16 @@ static PyObject *
 Util_func_resident_set_memory(PyObject *obj)
 {
     size_t rss;
-    uv_err_t err;
+    int err;
     PyObject *exc_data;
 
     UNUSED_ARG(obj);
 
     err = uv_resident_set_memory(&rss);
-    if (err.code == UV_OK) {
+    if (err == 0) {
         return PyInt_FromSsize_t(rss);
     } else {
-        exc_data = Py_BuildValue("(is)", err.code, uv_strerror(err));
+        exc_data = Py_BuildValue("(is)", err, uv_strerror(err));
         if (exc_data != NULL) {
             PyErr_SetObject(PyExc_UVError, exc_data);
             Py_DECREF(exc_data);
@@ -87,13 +87,13 @@ Util_func_interface_addresses(PyObject *obj)
     static char buf[INET6_ADDRSTRLEN+1];
     int i, count;
     uv_interface_address_t* interfaces;
-    uv_err_t err;
+    int err;
     PyObject *result, *item, *exc_data;
 
     UNUSED_ARG(obj);
 
     err = uv_interface_addresses(&interfaces, &count);
-    if (err.code == UV_OK) {
+    if (err == 0) {
         result = PyList_New(count);
         if (!result) {
             uv_free_interface_addresses(interfaces, count);
@@ -125,7 +125,7 @@ Util_func_interface_addresses(PyObject *obj)
         uv_free_interface_addresses(interfaces, count);
         return result;
     } else {
-        exc_data = Py_BuildValue("(is)", err.code, uv_strerror(err));
+        exc_data = Py_BuildValue("(is)", err, uv_strerror(err));
         if (exc_data != NULL) {
             PyErr_SetObject(PyExc_UVError, exc_data);
             Py_DECREF(exc_data);
@@ -140,13 +140,13 @@ Util_func_cpu_info(PyObject *obj)
 {
     int i, count;
     uv_cpu_info_t* cpus;
-    uv_err_t err;
+    int err;
     PyObject *result, *item, *times, *exc_data;
 
     UNUSED_ARG(obj);
 
     err = uv_cpu_info(&cpus, &count);
-    if (err.code == UV_OK) {
+    if (err == 0) {
         result = PyList_New(count);
         if (!result) {
             uv_free_cpu_info(cpus, count);
@@ -175,7 +175,7 @@ Util_func_cpu_info(PyObject *obj)
         uv_free_cpu_info(cpus, count);
         return result;
     } else {
-        exc_data = Py_BuildValue("(is)", err.code, uv_strerror(err));
+        exc_data = Py_BuildValue("(is)", err, uv_strerror(err));
         if (exc_data != NULL) {
             PyErr_SetObject(PyExc_UVError, exc_data);
             Py_DECREF(exc_data);
@@ -200,8 +200,7 @@ getaddrinfo_cb(uv_getaddrinfo_t* req, int status, struct addrinfo* res)
     loop = REQUEST(gai_req)->loop;
 
     if (status != 0) {
-        uv_err_t err = uv_last_error(req->loop);
-        errorno = PyInt_FromLong((long)err.code);
+        errorno = PyInt_FromLong((long)status);
         dns_result = Py_None;
         Py_INCREF(Py_None);
         goto callback;
@@ -260,7 +259,7 @@ Util_func_getaddrinfo(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
     char *host_str;
     char port_str[6];
-    int port, family, socktype, protocol, flags, r;
+    int port, family, socktype, protocol, flags, err;
     struct addrinfo hints;
     Loop *loop;
     GAIRequest *gai_req;
@@ -315,9 +314,9 @@ Util_func_getaddrinfo(PyObject *obj, PyObject *args, PyObject *kwargs)
     hints.ai_protocol = protocol;
     hints.ai_flags = flags;
 
-    r = uv_getaddrinfo(loop->uv_loop, &gai_req->req, &getaddrinfo_cb, host_str, port_str, &hints);
-    if (r != 0) {
-        RAISE_UV_EXCEPTION(loop->uv_loop, PyExc_UVError);
+    err = uv_getaddrinfo(loop->uv_loop, &gai_req->req, &getaddrinfo_cb, host_str, port_str, &hints);
+    if (err < 0) {
+        RAISE_UV_EXCEPTION(err, PyExc_UVError);
         goto error;
     }
 
@@ -411,14 +410,14 @@ check_signals(uv_poll_t *handle, int status, int events)
 static PyObject *
 SignalChecker_func_start(SignalChecker *self)
 {
-    int r;
+    int err;
 
     RAISE_IF_HANDLE_NOT_INITIALIZED(self, NULL);
     RAISE_IF_HANDLE_CLOSED(self, PyExc_HandleClosedError, NULL);
 
-    r = uv_poll_start(&self->poll_h, UV_READABLE, check_signals);
-    if (r != 0) {
-        RAISE_UV_EXCEPTION(UV_HANDLE_LOOP(self), PyExc_UVError);
+    err = uv_poll_start(&self->poll_h, UV_READABLE, check_signals);
+    if (err < 0) {
+        RAISE_UV_EXCEPTION(err, PyExc_UVError);
         return NULL;
     }
 
@@ -429,14 +428,14 @@ SignalChecker_func_start(SignalChecker *self)
 static PyObject *
 SignalChecker_func_stop(SignalChecker *self)
 {
-    int r;
+    int err;
 
     RAISE_IF_HANDLE_NOT_INITIALIZED(self, NULL);
     RAISE_IF_HANDLE_CLOSED(self, PyExc_HandleClosedError, NULL);
 
-    r = uv_poll_stop(&self->poll_h);
-    if (r != 0) {
-        RAISE_UV_EXCEPTION(UV_HANDLE_LOOP(self), PyExc_UVError);
+    err = uv_poll_stop(&self->poll_h);
+    if (err < 0) {
+        RAISE_UV_EXCEPTION(err, PyExc_UVError);
         return NULL;
     }
 
@@ -447,7 +446,7 @@ SignalChecker_func_stop(SignalChecker *self)
 static int
 SignalChecker_tp_init(SignalChecker *self, PyObject *args, PyObject *kwargs)
 {
-    int r;
+    int err;
     long fd;
     Loop *loop;
 
@@ -459,9 +458,9 @@ SignalChecker_tp_init(SignalChecker *self, PyObject *args, PyObject *kwargs)
         return -1;
     }
 
-    r = uv_poll_init_socket(loop->uv_loop, &self->poll_h, (uv_os_sock_t)fd);
-    if (r != 0) {
-        RAISE_UV_EXCEPTION(loop->uv_loop, PyExc_UVError);
+    err = uv_poll_init_socket(loop->uv_loop, &self->poll_h, (uv_os_sock_t)fd);
+    if (err < 0) {
+        RAISE_UV_EXCEPTION(err, PyExc_UVError);
         return -1;
     }
 
