@@ -98,10 +98,9 @@ typedef int Bool;
         }                                                                   \
     } while(0)                                                              \
 
-#define RAISE_UV_EXCEPTION(loop, exc_type)                                          \
+#define RAISE_UV_EXCEPTION(err, exc_type)                                           \
     do {                                                                            \
-        uv_err_t err = uv_last_error(loop);                                         \
-        PyObject *exc_data = Py_BuildValue("(is)", err.code, uv_strerror(err));     \
+        PyObject *exc_data = Py_BuildValue("(is)", err, uv_strerror(err));          \
         if (exc_data != NULL) {                                                     \
             PyErr_SetObject(exc_type, exc_data);                                    \
             Py_DECREF(exc_data);                                                    \
@@ -636,14 +635,14 @@ pyuv_parse_addr_tuple(PyObject *addr, struct sockaddr *sa)
 
     memset(sa, 0, sizeof(struct sockaddr));
 
-    if (uv_inet_pton(AF_INET, host, &addr4).code == UV_OK) {
+    if (uv_inet_pton(AF_INET, host, &addr4) == 0) {
         /* it's an IPv4 address */
         sa4 = (struct sockaddr_in *)sa;
         sa4->sin_family = AF_INET;
         sa4->sin_port = htons((short)port);
         sa4->sin_addr = addr4;
         return 0;
-    } else if (uv_inet_pton(AF_INET6, host, &addr6).code == UV_OK) {
+    } else if (uv_inet_pton(AF_INET6, host, &addr6) == 0) {
         /* it's an IPv4 address */
         sa6 = (struct sockaddr_in6 *)sa;
         sa6->sin6_family = AF_INET6;

@@ -70,8 +70,8 @@ process_stat(uv_fs_t* req, PyObject **path, PyObject **stat_data, PyObject **err
         Py_INCREF(Py_None);
     }
 
-    if (req->errorno != 0) {
-        *errorno = PyInt_FromLong((long)req->errorno);
+    if (req->result < 0) {
+        *errorno = PyInt_FromLong((long)req->result);
         *stat_data = Py_None;
         Py_INCREF(Py_None);
         return;
@@ -147,8 +147,8 @@ unlink_cb(uv_fs_t* req) {
         Py_INCREF(Py_None);
     }
 
-    if (req->errorno != 0) {
-        errorno = PyInt_FromLong((long)req->errorno);
+    if (req->result < 0) {
+        errorno = PyInt_FromLong((long)req->result);
     } else {
         errorno = Py_None;
         Py_INCREF(Py_None);
@@ -191,8 +191,8 @@ mkdir_cb(uv_fs_t* req) {
         Py_INCREF(Py_None);
     }
 
-    if (req->errorno != 0) {
-        errorno = PyInt_FromLong((long)req->errorno);
+    if (req->result < 0) {
+        errorno = PyInt_FromLong((long)req->result);
     } else {
         errorno = Py_None;
         Py_INCREF(Py_None);
@@ -235,8 +235,8 @@ rmdir_cb(uv_fs_t* req) {
         Py_INCREF(Py_None);
     }
 
-    if (req->errorno != 0) {
-        errorno = PyInt_FromLong((long)req->errorno);
+    if (req->result < 0) {
+        errorno = PyInt_FromLong((long)req->result);
     } else {
         errorno = Py_None;
         Py_INCREF(Py_None);
@@ -279,8 +279,8 @@ rename_cb(uv_fs_t* req) {
         Py_INCREF(Py_None);
     }
 
-    if (req->errorno != 0) {
-        errorno = PyInt_FromLong((long)req->errorno);
+    if (req->result < 0) {
+        errorno = PyInt_FromLong((long)req->result);
     } else {
         errorno = Py_None;
         Py_INCREF(Py_None);
@@ -323,8 +323,8 @@ chmod_cb(uv_fs_t* req) {
         Py_INCREF(Py_None);
     }
 
-    if (req->errorno != 0) {
-        errorno = PyInt_FromLong((long)req->errorno);
+    if (req->result < 0) {
+        errorno = PyInt_FromLong((long)req->result);
     } else {
         errorno = Py_None;
         Py_INCREF(Py_None);
@@ -367,8 +367,8 @@ link_cb(uv_fs_t* req) {
         Py_INCREF(Py_None);
     }
 
-    if (req->errorno != 0) {
-        errorno = PyInt_FromLong((long)req->errorno);
+    if (req->result < 0) {
+        errorno = PyInt_FromLong((long)req->result);
     } else {
         errorno = Py_None;
         Py_INCREF(Py_None);
@@ -411,8 +411,8 @@ symlink_cb(uv_fs_t* req) {
         Py_INCREF(Py_None);
     }
 
-    if (req->errorno != 0) {
-        errorno = PyInt_FromLong((long)req->errorno);
+    if (req->result < 0) {
+        errorno = PyInt_FromLong((long)req->result);
     } else {
         errorno = Py_None;
         Py_INCREF(Py_None);
@@ -441,8 +441,8 @@ process_readlink(uv_fs_t* req, PyObject **path, PyObject **errorno)
     ASSERT(req);
     ASSERT(req->fs_type == UV_FS_READLINK);
 
-    if (req->errorno != 0) {
-        *errorno = PyInt_FromLong((long)req->errorno);
+    if (req->result < 0) {
+        *errorno = PyInt_FromLong((long)req->result);
         *path = Py_None;
         Py_INCREF(Py_None);
     } else {
@@ -501,8 +501,8 @@ chown_cb(uv_fs_t* req) {
         Py_INCREF(Py_None);
     }
 
-    if (req->errorno != 0) {
-        errorno = PyInt_FromLong((long)req->errorno);
+    if (req->result < 0) {
+        errorno = PyInt_FromLong((long)req->result);
     } else {
         errorno = Py_None;
         Py_INCREF(Py_None);
@@ -538,8 +538,8 @@ process_open(uv_fs_t* req, PyObject **path, PyObject **fd, PyObject **errorno)
         Py_INCREF(Py_None);
     }
 
-    if (req->errorno != 0) {
-        *errorno = PyInt_FromLong((long)req->errorno);
+    if (req->result < 0) {
+        *errorno = PyInt_FromLong((long)req->result);
         *fd = Py_None;
         Py_INCREF(Py_None);
     } else {
@@ -599,8 +599,8 @@ close_cb(uv_fs_t* req) {
         Py_INCREF(Py_None);
     }
 
-    if (req->errorno != 0) {
-        errorno = PyInt_FromLong((long)req->errorno);
+    if (req->result < 0) {
+        errorno = PyInt_FromLong((long)req->result);
     } else {
         errorno = Py_None;
         Py_INCREF(Py_None);
@@ -637,8 +637,8 @@ process_read(uv_fs_t* req, PyObject **path, PyObject **read_data, PyObject **err
         Py_INCREF(Py_None);
     }
 
-    if (req->errorno != 0) {
-        *errorno = PyInt_FromLong((long)req->errorno);
+    if (req->result < 0) {
+        *errorno = PyInt_FromLong((long)req->result);
         *read_data = Py_None;
         Py_INCREF(Py_None);
     } else {
@@ -693,8 +693,8 @@ process_write(uv_fs_t* req, PyObject **path, PyObject **bytes_written, PyObject 
         Py_INCREF(Py_None);
     }
 
-    if (req->errorno != 0) {
-        *errorno = PyInt_FromLong((long)req->errorno);
+    if (req->result < 0) {
+        *errorno = PyInt_FromLong((long)req->result);
     } else {
         *errorno = Py_None;
         Py_INCREF(Py_None);
@@ -755,8 +755,8 @@ fsync_cb(uv_fs_t* req) {
         Py_INCREF(Py_None);
     }
 
-    if (req->errorno != 0) {
-        errorno = PyInt_FromLong((long)req->errorno);
+    if (req->result < 0) {
+        errorno = PyInt_FromLong((long)req->result);
     } else {
         errorno = Py_None;
         Py_INCREF(Py_None);
@@ -799,8 +799,8 @@ ftruncate_cb(uv_fs_t* req) {
         Py_INCREF(Py_None);
     }
 
-    if (req->errorno != 0) {
-        errorno = PyInt_FromLong((long)req->errorno);
+    if (req->result < 0) {
+        errorno = PyInt_FromLong((long)req->result);
     } else {
         errorno = Py_None;
         Py_INCREF(Py_None);
@@ -840,8 +840,8 @@ process_readdir(uv_fs_t* req, PyObject **path, PyObject **files, PyObject **erro
         Py_INCREF(Py_None);
     }
 
-    if (req->errorno != 0) {
-        *errorno = PyInt_FromLong((long)req->errorno);
+    if (req->result < 0) {
+        *errorno = PyInt_FromLong((long)req->result);
         *files = Py_None;
         Py_INCREF(Py_None);
     } else {
@@ -911,8 +911,8 @@ process_sendfile(uv_fs_t* req, PyObject **path, PyObject **bytes_written, PyObje
         Py_INCREF(Py_None);
     }
 
-    if (req->errorno != 0) {
-        *errorno = PyInt_FromLong((long)req->errorno);
+    if (req->result < 0) {
+        *errorno = PyInt_FromLong((long)req->result);
     } else {
         *errorno = Py_None;
         Py_INCREF(Py_None);
@@ -969,8 +969,8 @@ utime_cb(uv_fs_t* req) {
         Py_INCREF(Py_None);
     }
 
-    if (req->errorno != 0) {
-        errorno = PyInt_FromLong((long)req->errorno);
+    if (req->result < 0) {
+        errorno = PyInt_FromLong((long)req->result);
     } else {
         errorno = Py_None;
         Py_INCREF(Py_None);
@@ -996,7 +996,7 @@ utime_cb(uv_fs_t* req) {
 static PyObject *
 stat_func(PyObject *args, PyObject *kwargs, int type)
 {
-    int r;
+    int err;
     char *path;
     Loop *loop;
     FSRequest *fs_req;
@@ -1022,12 +1022,12 @@ stat_func(PyObject *args, PyObject *kwargs, int type)
     }
 
     if (type == UV_FS_STAT) {
-        r = uv_fs_stat(loop->uv_loop, &fs_req->req, path, (callback != Py_None) ? stat_cb : NULL);
+        err = uv_fs_stat(loop->uv_loop, &fs_req->req, path, (callback != Py_None) ? stat_cb : NULL);
     } else {
-        r = uv_fs_lstat(loop->uv_loop, &fs_req->req, path, (callback != Py_None) ? stat_cb : NULL);
+        err = uv_fs_lstat(loop->uv_loop, &fs_req->req, path, (callback != Py_None) ? stat_cb : NULL);
     }
-    if (r < 0) {
-        RAISE_UV_EXCEPTION(loop->uv_loop, PyExc_FSError);
+    if (err < 0) {
+        RAISE_UV_EXCEPTION(err, PyExc_FSError);
         ret = NULL;
         goto end;
     }
@@ -1068,7 +1068,7 @@ FS_func_lstat(PyObject *obj, PyObject *args, PyObject *kwargs)
 static PyObject *
 FS_func_fstat(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
-    int r;
+    int err;
     long fd;
     Loop *loop;
     FSRequest *fs_req;
@@ -1094,9 +1094,9 @@ FS_func_fstat(PyObject *obj, PyObject *args, PyObject *kwargs)
         return NULL;
     }
 
-    r = uv_fs_fstat(loop->uv_loop, &fs_req->req, (uv_file)fd, (callback != Py_None) ? stat_cb : NULL);
-    if (r < 0) {
-        RAISE_UV_EXCEPTION(loop->uv_loop, PyExc_FSError);
+    err = uv_fs_fstat(loop->uv_loop, &fs_req->req, (uv_file)fd, (callback != Py_None) ? stat_cb : NULL);
+    if (err < 0) {
+        RAISE_UV_EXCEPTION(err, PyExc_FSError);
         ret = NULL;
         goto end;
     }
@@ -1121,7 +1121,7 @@ end:
 static PyObject *
 FS_func_unlink(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
-    int r;
+    int err;
     char *path;
     Loop *loop;
     FSRequest *fs_req;
@@ -1147,9 +1147,9 @@ FS_func_unlink(PyObject *obj, PyObject *args, PyObject *kwargs)
         return NULL;
     }
 
-    r = uv_fs_unlink(loop->uv_loop, &fs_req->req, path, (callback != Py_None) ? unlink_cb : NULL);
-    if (r < 0) {
-        RAISE_UV_EXCEPTION(loop->uv_loop, PyExc_FSError);
+    err = uv_fs_unlink(loop->uv_loop, &fs_req->req, path, (callback != Py_None) ? unlink_cb : NULL);
+    if (err < 0) {
+        RAISE_UV_EXCEPTION(err, PyExc_FSError);
         goto end;
     }
 
@@ -1169,7 +1169,7 @@ end:
 static PyObject *
 FS_func_mkdir(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
-    int r, mode;
+    int err, mode;
     char *path;
     Loop *loop;
     FSRequest *fs_req;
@@ -1195,9 +1195,9 @@ FS_func_mkdir(PyObject *obj, PyObject *args, PyObject *kwargs)
         return NULL;
     }
 
-    r = uv_fs_mkdir(loop->uv_loop, &fs_req->req, path, mode, (callback != Py_None) ? mkdir_cb : NULL);
-    if (r < 0) {
-        RAISE_UV_EXCEPTION(loop->uv_loop, PyExc_FSError);
+    err = uv_fs_mkdir(loop->uv_loop, &fs_req->req, path, mode, (callback != Py_None) ? mkdir_cb : NULL);
+    if (err < 0) {
+        RAISE_UV_EXCEPTION(err, PyExc_FSError);
         goto end;
     }
 
@@ -1217,7 +1217,7 @@ end:
 static PyObject *
 FS_func_rmdir(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
-    int r;
+    int err;
     char *path;
     Loop *loop;
     FSRequest *fs_req;
@@ -1243,9 +1243,9 @@ FS_func_rmdir(PyObject *obj, PyObject *args, PyObject *kwargs)
         return NULL;
     }
 
-    r = uv_fs_rmdir(loop->uv_loop, &fs_req->req, path, (callback != Py_None) ? rmdir_cb : NULL);
-    if (r < 0) {
-        RAISE_UV_EXCEPTION(loop->uv_loop, PyExc_FSError);
+    err = uv_fs_rmdir(loop->uv_loop, &fs_req->req, path, (callback != Py_None) ? rmdir_cb : NULL);
+    if (err < 0) {
+        RAISE_UV_EXCEPTION(err, PyExc_FSError);
         goto end;
     }
 
@@ -1265,7 +1265,7 @@ end:
 static PyObject *
 FS_func_rename(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
-    int r;
+    int err;
     char *path, *new_path;
     Loop *loop;
     FSRequest *fs_req;
@@ -1291,9 +1291,9 @@ FS_func_rename(PyObject *obj, PyObject *args, PyObject *kwargs)
         return NULL;
     }
 
-    r = uv_fs_rename(loop->uv_loop, &fs_req->req, path, new_path, (callback != Py_None) ? rename_cb : NULL);
-    if (r < 0) {
-        RAISE_UV_EXCEPTION(loop->uv_loop, PyExc_FSError);
+    err = uv_fs_rename(loop->uv_loop, &fs_req->req, path, new_path, (callback != Py_None) ? rename_cb : NULL);
+    if (err < 0) {
+        RAISE_UV_EXCEPTION(err, PyExc_FSError);
         goto end;
     }
 
@@ -1313,7 +1313,7 @@ end:
 static PyObject *
 FS_func_chmod(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
-    int r, mode;
+    int err, mode;
     char *path;
     Loop *loop;
     FSRequest *fs_req;
@@ -1339,9 +1339,9 @@ FS_func_chmod(PyObject *obj, PyObject *args, PyObject *kwargs)
         return NULL;
     }
 
-    r = uv_fs_chmod(loop->uv_loop, &fs_req->req, path, mode, (callback != Py_None) ? chmod_cb : NULL);
-    if (r < 0) {
-        RAISE_UV_EXCEPTION(loop->uv_loop, PyExc_FSError);
+    err = uv_fs_chmod(loop->uv_loop, &fs_req->req, path, mode, (callback != Py_None) ? chmod_cb : NULL);
+    if (err < 0) {
+        RAISE_UV_EXCEPTION(err, PyExc_FSError);
         goto end;
     }
 
@@ -1361,7 +1361,7 @@ end:
 static PyObject *
 FS_func_fchmod(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
-    int r, mode;
+    int err, mode;
     long fd;
     Loop *loop;
     FSRequest *fs_req;
@@ -1387,9 +1387,9 @@ FS_func_fchmod(PyObject *obj, PyObject *args, PyObject *kwargs)
         return NULL;
     }
 
-    r = uv_fs_fchmod(loop->uv_loop, &fs_req->req, (uv_file)fd, mode, (callback != Py_None) ? chmod_cb : NULL);
-    if (r < 0) {
-        RAISE_UV_EXCEPTION(loop->uv_loop, PyExc_FSError);
+    err = uv_fs_fchmod(loop->uv_loop, &fs_req->req, (uv_file)fd, mode, (callback != Py_None) ? chmod_cb : NULL);
+    if (err < 0) {
+        RAISE_UV_EXCEPTION(err, PyExc_FSError);
         goto end;
     }
 
@@ -1409,7 +1409,7 @@ end:
 static PyObject *
 FS_func_link(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
-    int r;
+    int err;
     char *path, *new_path;
     Loop *loop;
     FSRequest *fs_req;
@@ -1435,9 +1435,9 @@ FS_func_link(PyObject *obj, PyObject *args, PyObject *kwargs)
         return NULL;
     }
 
-    r = uv_fs_link(loop->uv_loop, &fs_req->req, path, new_path, (callback != Py_None) ? link_cb : NULL);
-    if (r < 0) {
-        RAISE_UV_EXCEPTION(loop->uv_loop, PyExc_FSError);
+    err = uv_fs_link(loop->uv_loop, &fs_req->req, path, new_path, (callback != Py_None) ? link_cb : NULL);
+    if (err < 0) {
+        RAISE_UV_EXCEPTION(err, PyExc_FSError);
         goto end;
     }
 
@@ -1457,7 +1457,7 @@ end:
 static PyObject *
 FS_func_symlink(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
-    int r, flags;
+    int err, flags;
     char *path, *new_path;
     Loop *loop;
     FSRequest *fs_req;
@@ -1483,9 +1483,9 @@ FS_func_symlink(PyObject *obj, PyObject *args, PyObject *kwargs)
         return NULL;
     }
 
-    r = uv_fs_symlink(loop->uv_loop, &fs_req->req, path, new_path, flags, (callback != Py_None) ? symlink_cb : NULL);
-    if (r < 0) {
-        RAISE_UV_EXCEPTION(loop->uv_loop, PyExc_FSError);
+    err = uv_fs_symlink(loop->uv_loop, &fs_req->req, path, new_path, flags, (callback != Py_None) ? symlink_cb : NULL);
+    if (err < 0) {
+        RAISE_UV_EXCEPTION(err, PyExc_FSError);
         goto end;
     }
 
@@ -1505,7 +1505,7 @@ end:
 static PyObject *
 FS_func_readlink(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
-    int r;
+    int err;
     char *path;
     Loop *loop;
     FSRequest *fs_req;
@@ -1531,9 +1531,9 @@ FS_func_readlink(PyObject *obj, PyObject *args, PyObject *kwargs)
         return NULL;
     }
 
-    r = uv_fs_readlink(loop->uv_loop, &fs_req->req, path, (callback != Py_None) ? readlink_cb : NULL);
-    if (r < 0) {
-        RAISE_UV_EXCEPTION(loop->uv_loop, PyExc_FSError);
+    err = uv_fs_readlink(loop->uv_loop, &fs_req->req, path, (callback != Py_None) ? readlink_cb : NULL);
+    if (err < 0) {
+        RAISE_UV_EXCEPTION(err, PyExc_FSError);
         ret = NULL;
         goto end;
     }
@@ -1557,7 +1557,7 @@ end:
 static PyObject *
 FS_func_chown(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
-    int r, uid, gid;
+    int err, uid, gid;
     char *path;
     Loop *loop;
     FSRequest *fs_req;
@@ -1583,9 +1583,9 @@ FS_func_chown(PyObject *obj, PyObject *args, PyObject *kwargs)
         return NULL;
     }
 
-    r = uv_fs_chown(loop->uv_loop, &fs_req->req, path, uid, gid, (callback != Py_None) ? chown_cb : NULL);
-    if (r < 0) {
-        RAISE_UV_EXCEPTION(loop->uv_loop, PyExc_FSError);
+    err = uv_fs_chown(loop->uv_loop, &fs_req->req, path, uid, gid, (callback != Py_None) ? chown_cb : NULL);
+    if (err < 0) {
+        RAISE_UV_EXCEPTION(err, PyExc_FSError);
         goto end;
     }
 
@@ -1605,7 +1605,7 @@ end:
 static PyObject *
 FS_func_fchown(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
-    int r, uid, gid;
+    int err, uid, gid;
     long fd;
     Loop *loop;
     FSRequest *fs_req;
@@ -1631,9 +1631,9 @@ FS_func_fchown(PyObject *obj, PyObject *args, PyObject *kwargs)
         return NULL;
     }
 
-    r = uv_fs_fchown(loop->uv_loop, &fs_req->req, (uv_file)fd, uid, gid, (callback != Py_None) ? chown_cb : NULL);
-    if (r != 0) {
-        RAISE_UV_EXCEPTION(loop->uv_loop, PyExc_FSError);
+    err = uv_fs_fchown(loop->uv_loop, &fs_req->req, (uv_file)fd, uid, gid, (callback != Py_None) ? chown_cb : NULL);
+    if (err < 0) {
+        RAISE_UV_EXCEPTION(err, PyExc_FSError);
         goto end;
     }
 
@@ -1653,7 +1653,7 @@ end:
 static PyObject *
 FS_func_open(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
-    int r, flags, mode;
+    int err, flags, mode;
     char *path;
     Loop *loop;
     FSRequest *fs_req;
@@ -1679,9 +1679,9 @@ FS_func_open(PyObject *obj, PyObject *args, PyObject *kwargs)
         return NULL;
     }
 
-    r = uv_fs_open(loop->uv_loop, &fs_req->req, path, flags, mode, (callback != Py_None) ? open_cb : NULL);
-    if (r < 0) {
-        RAISE_UV_EXCEPTION(loop->uv_loop, PyExc_FSError);
+    err = uv_fs_open(loop->uv_loop, &fs_req->req, path, flags, mode, (callback != Py_None) ? open_cb : NULL);
+    if (err < 0) {
+        RAISE_UV_EXCEPTION(err, PyExc_FSError);
         ret = NULL;
         goto end;
     }
@@ -1706,7 +1706,7 @@ end:
 static PyObject *
 FS_func_close(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
-    int r;
+    int err;
     long fd;
     Loop *loop;
     FSRequest *fs_req;
@@ -1732,9 +1732,9 @@ FS_func_close(PyObject *obj, PyObject *args, PyObject *kwargs)
         return NULL;
     }
 
-    r = uv_fs_close(loop->uv_loop, &fs_req->req, (uv_file)fd, (callback != Py_None) ? close_cb : NULL);
-    if (r < 0) {
-        RAISE_UV_EXCEPTION(loop->uv_loop, PyExc_FSError);
+    err = uv_fs_close(loop->uv_loop, &fs_req->req, (uv_file)fd, (callback != Py_None) ? close_cb : NULL);
+    if (err < 0) {
+        RAISE_UV_EXCEPTION(err, PyExc_FSError);
         goto end;
     }
 
@@ -1754,7 +1754,7 @@ end:
 static PyObject *
 FS_func_read(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
-    int r, length, offset;
+    int err, length, offset;
     long fd;
     char *buf;
     Loop *loop;
@@ -1789,9 +1789,9 @@ FS_func_read(PyObject *obj, PyObject *args, PyObject *kwargs)
         goto end;
     }
 
-    r = uv_fs_read(loop->uv_loop, &fs_req->req, (uv_file)fd, buf, length, offset, (callback != Py_None) ? read_cb : NULL);
-    if (r < 0) {
-        RAISE_UV_EXCEPTION(loop->uv_loop, PyExc_FSError);
+    err = uv_fs_read(loop->uv_loop, &fs_req->req, (uv_file)fd, buf, length, offset, (callback != Py_None) ? read_cb : NULL);
+    if (err < 0) {
+        RAISE_UV_EXCEPTION(err, PyExc_FSError);
         ret = NULL;
         goto end;
     }
@@ -1817,7 +1817,7 @@ end:
 static PyObject *
 FS_func_write(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
-    int r, offset;
+    int err, offset;
     long fd;
     char *pbuf, *buf;
     Loop *loop;
@@ -1854,9 +1854,9 @@ FS_func_write(PyObject *obj, PyObject *args, PyObject *kwargs)
     }
     memcpy(buf, pbuf, length);
 
-    r = uv_fs_write(loop->uv_loop, &fs_req->req, (uv_file)fd, buf, length, offset, (callback != Py_None) ? write_cb : NULL);
-    if (r < 0) {
-        RAISE_UV_EXCEPTION(loop->uv_loop, PyExc_FSError);
+    err = uv_fs_write(loop->uv_loop, &fs_req->req, (uv_file)fd, buf, length, offset, (callback != Py_None) ? write_cb : NULL);
+    if (err < 0) {
+        RAISE_UV_EXCEPTION(err, PyExc_FSError);
         ret = NULL;
         goto end;
     }
@@ -1882,7 +1882,7 @@ end:
 static PyObject *
 FS_func_fsync(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
-    int r;
+    int err;
     long fd;
     Loop *loop;
     FSRequest *fs_req;
@@ -1908,9 +1908,9 @@ FS_func_fsync(PyObject *obj, PyObject *args, PyObject *kwargs)
         return NULL;
     }
 
-    r = uv_fs_fsync(loop->uv_loop, &fs_req->req, (uv_file)fd, (callback != Py_None) ? fsync_cb : NULL);
-    if (r < 0) {
-        RAISE_UV_EXCEPTION(loop->uv_loop, PyExc_FSError);
+    err = uv_fs_fsync(loop->uv_loop, &fs_req->req, (uv_file)fd, (callback != Py_None) ? fsync_cb : NULL);
+    if (err < 0) {
+        RAISE_UV_EXCEPTION(err, PyExc_FSError);
         goto end;
     }
 
@@ -1930,7 +1930,7 @@ end:
 static PyObject *
 FS_func_fdatasync(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
-    int r;
+    int err;
     long fd;
     Loop *loop;
     FSRequest *fs_req;
@@ -1956,9 +1956,9 @@ FS_func_fdatasync(PyObject *obj, PyObject *args, PyObject *kwargs)
         return NULL;
     }
 
-    r = uv_fs_fdatasync(loop->uv_loop, &fs_req->req, (uv_file)fd, (callback != Py_None) ? fsync_cb : NULL);
-    if (r != 0) {
-        RAISE_UV_EXCEPTION(loop->uv_loop, PyExc_FSError);
+    err = uv_fs_fdatasync(loop->uv_loop, &fs_req->req, (uv_file)fd, (callback != Py_None) ? fsync_cb : NULL);
+    if (err < 0) {
+        RAISE_UV_EXCEPTION(err, PyExc_FSError);
         goto end;
     }
 
@@ -1978,7 +1978,7 @@ end:
 static PyObject *
 FS_func_ftruncate(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
-    int r, offset;
+    int err, offset;
     long fd;
     Loop *loop;
     FSRequest *fs_req;
@@ -2004,9 +2004,9 @@ FS_func_ftruncate(PyObject *obj, PyObject *args, PyObject *kwargs)
         return NULL;
     }
 
-    r = uv_fs_ftruncate(loop->uv_loop, &fs_req->req, (uv_file)fd, offset, (callback != Py_None) ? ftruncate_cb : NULL);
-    if (r < 0) {
-        RAISE_UV_EXCEPTION(loop->uv_loop, PyExc_FSError);
+    err = uv_fs_ftruncate(loop->uv_loop, &fs_req->req, (uv_file)fd, offset, (callback != Py_None) ? ftruncate_cb : NULL);
+    if (err < 0) {
+        RAISE_UV_EXCEPTION(err, PyExc_FSError);
         goto end;
     }
 
@@ -2026,7 +2026,7 @@ end:
 static PyObject *
 FS_func_readdir(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
-    int r, flags;
+    int err, flags;
     char *path;
     Loop *loop;
     FSRequest *fs_req;
@@ -2052,9 +2052,9 @@ FS_func_readdir(PyObject *obj, PyObject *args, PyObject *kwargs)
         return NULL;
     }
 
-    r = uv_fs_readdir(loop->uv_loop, &fs_req->req, path, flags, (callback != Py_None) ? readdir_cb : NULL);
-    if (r < 0) {
-        RAISE_UV_EXCEPTION(loop->uv_loop, PyExc_FSError);
+    err = uv_fs_readdir(loop->uv_loop, &fs_req->req, path, flags, (callback != Py_None) ? readdir_cb : NULL);
+    if (err < 0) {
+        RAISE_UV_EXCEPTION(err, PyExc_FSError);
         ret = NULL;
         goto end;
     }
@@ -2079,7 +2079,7 @@ end:
 static PyObject *
 FS_func_sendfile(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
-    int r, in_offset, length;
+    int err, in_offset, length;
     long out_fd, in_fd;
     Loop *loop;
     FSRequest *fs_req;
@@ -2105,9 +2105,9 @@ FS_func_sendfile(PyObject *obj, PyObject *args, PyObject *kwargs)
         return NULL;
     }
 
-    r = uv_fs_sendfile(loop->uv_loop, &fs_req->req, (uv_file)out_fd, (uv_file)in_fd, in_offset, length, (callback != Py_None) ? sendfile_cb : NULL);
-    if (r < 0) {
-        RAISE_UV_EXCEPTION(loop->uv_loop, PyExc_FSError);
+    err = uv_fs_sendfile(loop->uv_loop, &fs_req->req, (uv_file)out_fd, (uv_file)in_fd, in_offset, length, (callback != Py_None) ? sendfile_cb : NULL);
+    if (err < 0) {
+        RAISE_UV_EXCEPTION(err, PyExc_FSError);
         ret = NULL;
         goto end;
     }
@@ -2132,7 +2132,7 @@ end:
 static PyObject *
 FS_func_utime(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
-    int r;
+    int err;
     double atime, mtime;
     char *path;
     Loop *loop;
@@ -2159,9 +2159,9 @@ FS_func_utime(PyObject *obj, PyObject *args, PyObject *kwargs)
         return NULL;
     }
 
-    r = uv_fs_utime(loop->uv_loop, &fs_req->req, path, atime, mtime, (callback != Py_None) ? utime_cb : NULL);
-    if (r < 0) {
-        RAISE_UV_EXCEPTION(loop->uv_loop, PyExc_FSError);
+    err = uv_fs_utime(loop->uv_loop, &fs_req->req, path, atime, mtime, (callback != Py_None) ? utime_cb : NULL);
+    if (err < 0) {
+        RAISE_UV_EXCEPTION(err, PyExc_FSError);
         goto end;
     }
 
@@ -2181,7 +2181,7 @@ end:
 static PyObject *
 FS_func_futime(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
-    int r;
+    int err;
     long fd;
     double atime, mtime;
     Loop *loop;
@@ -2208,9 +2208,9 @@ FS_func_futime(PyObject *obj, PyObject *args, PyObject *kwargs)
         return NULL;
     }
 
-    r = uv_fs_futime(loop->uv_loop, &fs_req->req, (uv_file)fd, atime, mtime, (callback != Py_None) ? utime_cb : NULL);
-    if (r < 0) {
-        RAISE_UV_EXCEPTION(loop->uv_loop, PyExc_FSError);
+    err = uv_fs_futime(loop->uv_loop, &fs_req->req, (uv_file)fd, atime, mtime, (callback != Py_None) ? utime_cb : NULL);
+    if (err < 0) {
+        RAISE_UV_EXCEPTION(err, PyExc_FSError);
         goto end;
     }
 
@@ -2283,8 +2283,7 @@ on_fsevent_callback(uv_fs_event_t *handle, const char *filename, int events, int
     }
 
     if (status < 0) {
-        uv_err_t err = uv_last_error(UV_HANDLE_LOOP(self));
-        errorno = PyInt_FromLong((long)err.code);
+        errorno = PyInt_FromLong((long)status);
     } else {
         errorno = Py_None;
         Py_INCREF(Py_None);
@@ -2320,7 +2319,7 @@ FSEvent_filename_get(FSEvent *self, void *closure)
 static int
 FSEvent_tp_init(FSEvent *self, PyObject *args, PyObject *kwargs)
 {
-    int r, flags;
+    int err, flags;
     char *path;
     Loop *loop;
     PyObject *callback, *tmp;
@@ -2340,9 +2339,9 @@ FSEvent_tp_init(FSEvent *self, PyObject *args, PyObject *kwargs)
         return -1;
     }
 
-    r = uv_fs_event_init(loop->uv_loop, &self->fsevent_h, path, on_fsevent_callback, flags);
-    if (r != 0) {
-        RAISE_UV_EXCEPTION(loop->uv_loop, PyExc_FSEventError);
+    err = uv_fs_event_init(loop->uv_loop, &self->fsevent_h, path, on_fsevent_callback, flags);
+    if (err < 0) {
+        RAISE_UV_EXCEPTION(err, PyExc_FSEventError);
         return -1;
     }
 
@@ -2455,8 +2454,7 @@ on_fspoll_callback(uv_fs_poll_t *handle, int status, const uv_stat_t *prev, cons
     Py_INCREF(self);
 
     if (status < 0) {
-        uv_err_t err = uv_last_error(UV_HANDLE_LOOP(self));
-        errorno = PyInt_FromLong((long)err.code);
+        errorno = PyInt_FromLong((long)status);
         prev_stat_data = Py_None;
         curr_stat_data = Py_None;
         Py_INCREF(Py_None);
@@ -2496,7 +2494,7 @@ on_fspoll_callback(uv_fs_poll_t *handle, int status, const uv_stat_t *prev, cons
 static PyObject *
 FSPoll_func_start(FSPoll *self, PyObject *args, PyObject *kwargs)
 {
-    int r;
+    int err;
     char *path;
     double interval;
     PyObject *tmp, *callback;
@@ -2522,9 +2520,9 @@ FSPoll_func_start(FSPoll *self, PyObject *args, PyObject *kwargs)
         return NULL;
     }
 
-    r = uv_fs_poll_start(&self->fspoll_h, on_fspoll_callback, path, (unsigned int)interval*1000);
-    if (r != 0) {
-        RAISE_UV_EXCEPTION(UV_HANDLE_LOOP(self), PyExc_FSPollError);
+    err = uv_fs_poll_start(&self->fspoll_h, on_fspoll_callback, path, (unsigned int)interval*1000);
+    if (err < 0) {
+        RAISE_UV_EXCEPTION(err, PyExc_FSPollError);
         return NULL;
     }
 
@@ -2540,14 +2538,14 @@ FSPoll_func_start(FSPoll *self, PyObject *args, PyObject *kwargs)
 static PyObject *
 FSPoll_func_stop(FSPoll *self)
 {
-    int r;
+    int err;
 
     RAISE_IF_HANDLE_NOT_INITIALIZED(self, NULL);
     RAISE_IF_HANDLE_CLOSED(self, PyExc_HandleClosedError, NULL);
 
-    r = uv_fs_poll_stop(&self->fspoll_h);
-    if (r != 0) {
-        RAISE_UV_EXCEPTION(UV_HANDLE_LOOP(self), PyExc_FSPollError);
+    err = uv_fs_poll_stop(&self->fspoll_h);
+    if (err < 0) {
+        RAISE_UV_EXCEPTION(err, PyExc_FSPollError);
         return NULL;
     }
 
@@ -2561,7 +2559,7 @@ FSPoll_func_stop(FSPoll *self)
 static int
 FSPoll_tp_init(FSPoll *self, PyObject *args, PyObject *kwargs)
 {
-    int r;
+    int err;
     Loop *loop;
 
     UNUSED_ARG(kwargs);
@@ -2572,9 +2570,9 @@ FSPoll_tp_init(FSPoll *self, PyObject *args, PyObject *kwargs)
         return -1;
     }
 
-    r = uv_fs_poll_init(loop->uv_loop, &self->fspoll_h);
-    if (r != 0) {
-        RAISE_UV_EXCEPTION(loop->uv_loop, PyExc_FSPollError);
+    err = uv_fs_poll_init(loop->uv_loop, &self->fspoll_h);
+    if (err < 0) {
+        RAISE_UV_EXCEPTION(err, PyExc_FSPollError);
         return -1;
     }
 

@@ -212,8 +212,7 @@ threadpool_done_cb(uv_work_t *req, int status)
 
     if (work_req->done_cb != Py_None) {
         if (status < 0) {
-            uv_err_t err = uv_last_error(req->loop);
-            errorno = PyInt_FromLong((long)err.code);
+            errorno = PyInt_FromLong((long)status);
         } else {
             errorno = Py_None;
             Py_INCREF(Py_None);
@@ -236,7 +235,7 @@ threadpool_done_cb(uv_work_t *req, int status)
 static PyObject *
 Loop_func_queue_work(Loop *self, PyObject *args)
 {
-    int r;
+    int err;
     WorkRequest *work_req;
     PyObject *work_cb, *done_cb;
 
@@ -262,9 +261,9 @@ Loop_func_queue_work(Loop *self, PyObject *args)
         return NULL;
     }
 
-    r = uv_queue_work(self->uv_loop, &work_req->req, threadpool_work_cb, threadpool_done_cb);
-    if (r != 0) {
-        RAISE_UV_EXCEPTION(self->uv_loop, PyExc_Exception);
+    err = uv_queue_work(self->uv_loop, &work_req->req, threadpool_work_cb, threadpool_done_cb);
+    if (err < 0) {
+        RAISE_UV_EXCEPTION(err, PyExc_Exception);
         goto error;
     }
 

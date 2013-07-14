@@ -28,7 +28,7 @@ on_prepare_callback(uv_prepare_t *handle, int status)
 static PyObject *
 Prepare_func_start(Prepare *self, PyObject *args)
 {
-    int r;
+    int err;
     PyObject *tmp, *callback;
 
     tmp = NULL;
@@ -45,9 +45,9 @@ Prepare_func_start(Prepare *self, PyObject *args)
         return NULL;
     }
 
-    r = uv_prepare_start(&self->prepare_h, on_prepare_callback);
-    if (r != 0) {
-        RAISE_UV_EXCEPTION(UV_HANDLE_LOOP(self), PyExc_PrepareError);
+    err = uv_prepare_start(&self->prepare_h, on_prepare_callback);
+    if (err < 0) {
+        RAISE_UV_EXCEPTION(err, PyExc_PrepareError);
         return NULL;
     }
 
@@ -63,14 +63,14 @@ Prepare_func_start(Prepare *self, PyObject *args)
 static PyObject *
 Prepare_func_stop(Prepare *self)
 {
-    int r;
+    int err;
 
     RAISE_IF_HANDLE_NOT_INITIALIZED(self, NULL);
     RAISE_IF_HANDLE_CLOSED(self, PyExc_HandleClosedError, NULL);
 
-    r = uv_prepare_stop(&self->prepare_h);
-    if (r != 0) {
-        RAISE_UV_EXCEPTION(UV_HANDLE_LOOP(self), PyExc_PrepareError);
+    err = uv_prepare_stop(&self->prepare_h);
+    if (err < 0) {
+        RAISE_UV_EXCEPTION(err, PyExc_PrepareError);
         return NULL;
     }
 
@@ -84,7 +84,7 @@ Prepare_func_stop(Prepare *self)
 static int
 Prepare_tp_init(Prepare *self, PyObject *args, PyObject *kwargs)
 {
-    int r;
+    int err;
     Loop *loop;
 
     UNUSED_ARG(kwargs);
@@ -95,9 +95,9 @@ Prepare_tp_init(Prepare *self, PyObject *args, PyObject *kwargs)
         return -1;
     }
 
-    r = uv_prepare_init(loop->uv_loop, &self->prepare_h);
-    if (r != 0) {
-        RAISE_UV_EXCEPTION(loop->uv_loop, PyExc_PrepareError);
+    err = uv_prepare_init(loop->uv_loop, &self->prepare_h);
+    if (err < 0) {
+        RAISE_UV_EXCEPTION(err, PyExc_PrepareError);
         return -1;
     }
 

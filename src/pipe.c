@@ -13,8 +13,7 @@ on_pipe_connection(uv_stream_t* handle, int status)
     Py_INCREF(self);
 
     if (status != 0) {
-        uv_err_t err = uv_last_error(UV_HANDLE_LOOP(self));
-        py_errorno = PyInt_FromLong((long)err.code);
+        py_errorno = PyInt_FromLong((long)status);
     } else {
         py_errorno = Py_None;
         Py_INCREF(Py_None);
@@ -46,8 +45,7 @@ on_pipe_client_connection(uv_connect_t *req, int status)
     ASSERT(self);
 
     if (status != 0) {
-        uv_err_t err = uv_last_error(UV_HANDLE_LOOP(self));
-        py_errorno = PyInt_FromLong(err.code);
+        py_errorno = PyInt_FromLong(status);
     } else {
         py_errorno = Py_None;
         Py_INCREF(Py_None);
@@ -74,7 +72,7 @@ static void
 on_pipe_read2(uv_pipe_t* handle, int nread, uv_buf_t buf, uv_handle_type pending)
 {
     PyGILState_STATE gstate = PyGILState_Ensure();
-    uv_err_t err;
+    int err;
     Pipe *self;
     PyObject *result, *data, *py_errorno, *py_pending;
     ASSERT(handle);
@@ -93,8 +91,7 @@ on_pipe_read2(uv_pipe_t* handle, int nread, uv_buf_t buf, uv_handle_type pending
     } else {
         data = Py_None;
         Py_INCREF(Py_None);
-        err = uv_last_error(UV_HANDLE_LOOP(self));
-        py_errorno = PyInt_FromLong((long)err.code);
+        py_errorno = PyInt_FromLong((long)nread);
     }
 
     result = PyObject_CallFunctionObjArgs(((Stream *)self)->on_read_cb, self, data, py_pending, py_errorno, NULL);
@@ -114,7 +111,7 @@ on_pipe_read2(uv_pipe_t* handle, int nread, uv_buf_t buf, uv_handle_type pending
 static PyObject *
 Pipe_func_bind(Pipe *self, PyObject *args)
 {
-    int r;
+    int err;
     char *name;
 
     RAISE_IF_HANDLE_NOT_INITIALIZED(self, NULL);
@@ -124,9 +121,9 @@ Pipe_func_bind(Pipe *self, PyObject *args)
         return NULL;
     }
 
-    r = uv_pipe_bind(&self->pipe_h, name);
-    if (r != 0) {
-        RAISE_UV_EXCEPTION(UV_HANDLE_LOOP(self), PyExc_PipeError);
+    err = uv_pipe_bind(&self->pipe_h, name);
+    if (err < 0) {
+        RAISE_UV_EXCEPTION(err, PyExc_PipeError);
         return NULL;
     }
 
@@ -137,7 +134,7 @@ Pipe_func_bind(Pipe *self, PyObject *args)
 static PyObject *
 Pipe_func_listen(Pipe *self, PyObject *args)
 {
-    int r, backlog;
+    int err, backlog;
     PyObject *callback, *tmp;
 
     backlog = 128;
@@ -160,9 +157,9 @@ Pipe_func_listen(Pipe *self, PyObject *args)
         return NULL;
     }
 
-    r = uv_listen((uv_stream_t *)&self->pipe_h, backlog, on_pipe_connection);
-    if (r != 0) {
-        RAISE_UV_EXCEPTION(UV_HANDLE_LOOP(self), PyExc_PipeError);
+    err = uv_listen((uv_stream_t *)&self->pipe_h, backlog, on_pipe_connection);
+    if (err < 0) {
+        RAISE_UV_EXCEPTION(err, PyExc_PipeError);
         return NULL;
     }
 
@@ -178,7 +175,7 @@ Pipe_func_listen(Pipe *self, PyObject *args)
 static PyObject *
 Pipe_func_accept(Pipe *self, PyObject *args)
 {
-    int r;
+    int err;
     PyObject *client;
 
     RAISE_IF_HANDLE_NOT_INITIALIZED(self, NULL);
@@ -200,9 +197,9 @@ Pipe_func_accept(Pipe *self, PyObject *args)
         return NULL;
     }
 
-    r = uv_accept((uv_stream_t *)&self->pipe_h, (uv_stream_t *)UV_HANDLE(client));
-    if (r != 0) {
-        RAISE_UV_EXCEPTION(UV_HANDLE_LOOP(self), PyExc_PipeError);
+    err = uv_accept((uv_stream_t *)&self->pipe_h, (uv_stream_t *)UV_HANDLE(client));
+    if (err < 0) {
+        RAISE_UV_EXCEPTION(err, PyExc_PipeError);
         return NULL;
     }
 
@@ -252,7 +249,7 @@ Pipe_func_connect(Pipe *self, PyObject *args)
 static PyObject *
 Pipe_func_open(Pipe *self, PyObject *args)
 {
-    int r;
+    int err;
     long fd;
 
     RAISE_IF_HANDLE_NOT_INITIALIZED(self, NULL);
@@ -262,9 +259,9 @@ Pipe_func_open(Pipe *self, PyObject *args)
         return NULL;
     }
 
-    r = uv_pipe_open(&self->pipe_h, (uv_file)fd);
-    if (r != 0) {
-        RAISE_UV_EXCEPTION(UV_HANDLE_LOOP(self), PyExc_PipeError);
+    err = uv_pipe_open(&self->pipe_h, (uv_file)fd);
+    if (err < 0) {
+        RAISE_UV_EXCEPTION(err, PyExc_PipeError);
         return NULL;
     }
 
@@ -294,7 +291,7 @@ Pipe_func_pending_instances(Pipe *self, PyObject *args)
 static PyObject *
 Pipe_func_start_read2(Pipe *self, PyObject *args)
 {
-    int r;
+    int err;
     PyObject *tmp, *callback;
 
     tmp = NULL;
@@ -311,9 +308,9 @@ Pipe_func_start_read2(Pipe *self, PyObject *args)
         return NULL;
     }
 
-    r = uv_read2_start((uv_stream_t *)&self->pipe_h, (uv_alloc_cb)on_stream_alloc, (uv_read2_cb)on_pipe_read2);
-    if (r != 0) {
-        RAISE_UV_EXCEPTION(UV_HANDLE_LOOP(self), PyExc_PipeError);
+    err = uv_read2_start((uv_stream_t *)&self->pipe_h, (uv_alloc_cb)on_stream_alloc, (uv_read2_cb)on_pipe_read2);
+    if (err < 0) {
+        RAISE_UV_EXCEPTION(err, PyExc_PipeError);
         return NULL;
     }
 
@@ -383,7 +380,7 @@ error:
 static int
 Pipe_tp_init(Pipe *self, PyObject *args, PyObject *kwargs)
 {
-    int r;
+    int err;
     Loop *loop;
     PyObject *ipc = Py_False;
 
@@ -395,9 +392,9 @@ Pipe_tp_init(Pipe *self, PyObject *args, PyObject *kwargs)
         return -1;
     }
 
-    r = uv_pipe_init(loop->uv_loop, &self->pipe_h, (ipc == Py_True) ? 1 : 0);
-    if (r != 0) {
-        RAISE_UV_EXCEPTION(loop->uv_loop, PyExc_PipeError);
+    err = uv_pipe_init(loop->uv_loop, &self->pipe_h, (ipc == Py_True) ? 1 : 0);
+    if (err < 0) {
+        RAISE_UV_EXCEPTION(err, PyExc_PipeError);
         return -1;
     }
 

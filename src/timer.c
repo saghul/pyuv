@@ -28,7 +28,7 @@ on_timer_callback(uv_timer_t *handle, int status)
 static PyObject *
 Timer_func_start(Timer *self, PyObject *args, PyObject *kwargs)
 {
-    int r;
+    int err;
     double timeout, repeat;
     PyObject *tmp, *callback;
 
@@ -58,9 +58,9 @@ Timer_func_start(Timer *self, PyObject *args, PyObject *kwargs)
         return NULL;
     }
 
-    r = uv_timer_start(&self->timer_h, on_timer_callback, (uint64_t)(timeout * 1000), (uint64_t)(repeat * 1000));
-    if (r != 0) {
-        RAISE_UV_EXCEPTION(UV_HANDLE_LOOP(self), PyExc_TimerError);
+    err = uv_timer_start(&self->timer_h, on_timer_callback, (uint64_t)(timeout * 1000), (uint64_t)(repeat * 1000));
+    if (err < 0) {
+        RAISE_UV_EXCEPTION(err, PyExc_TimerError);
         return NULL;
     }
 
@@ -76,14 +76,14 @@ Timer_func_start(Timer *self, PyObject *args, PyObject *kwargs)
 static PyObject *
 Timer_func_stop(Timer *self)
 {
-    int r;
+    int err;
 
     RAISE_IF_HANDLE_NOT_INITIALIZED(self, NULL);
     RAISE_IF_HANDLE_CLOSED(self, PyExc_HandleClosedError, NULL);
 
-    r = uv_timer_stop(&self->timer_h);
-    if (r != 0) {
-        RAISE_UV_EXCEPTION(UV_HANDLE_LOOP(self), PyExc_TimerError);
+    err = uv_timer_stop(&self->timer_h);
+    if (err < 0) {
+        RAISE_UV_EXCEPTION(err, PyExc_TimerError);
         return NULL;
     }
 
@@ -94,14 +94,14 @@ Timer_func_stop(Timer *self)
 static PyObject *
 Timer_func_again(Timer *self)
 {
-    int r;
+    int err;
 
     RAISE_IF_HANDLE_NOT_INITIALIZED(self, NULL);
     RAISE_IF_HANDLE_CLOSED(self, PyExc_HandleClosedError, NULL);
 
-    r = uv_timer_again(&self->timer_h);
-    if (r != 0) {
-        RAISE_UV_EXCEPTION(UV_HANDLE_LOOP(self), PyExc_TimerError);
+    err = uv_timer_again(&self->timer_h);
+    if (err < 0) {
+        RAISE_UV_EXCEPTION(err, PyExc_TimerError);
         return NULL;
     }
 
@@ -153,7 +153,7 @@ Timer_repeat_set(Timer *self, PyObject *value, void *closure)
 static int
 Timer_tp_init(Timer *self, PyObject *args, PyObject *kwargs)
 {
-    int r;
+    int err;
     Loop *loop;
 
     UNUSED_ARG(kwargs);
@@ -164,9 +164,9 @@ Timer_tp_init(Timer *self, PyObject *args, PyObject *kwargs)
         return -1;
     }
 
-    r = uv_timer_init(loop->uv_loop, &self->timer_h);
-    if (r != 0) {
-        RAISE_UV_EXCEPTION(loop->uv_loop, PyExc_TimerError);
+    err = uv_timer_init(loop->uv_loop, &self->timer_h);
+    if (err < 0) {
+        RAISE_UV_EXCEPTION(err, PyExc_TimerError);
         return -1;
     }
 

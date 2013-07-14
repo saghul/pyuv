@@ -28,7 +28,7 @@ on_check_callback(uv_check_t *handle, int status)
 static PyObject *
 Check_func_start(Check *self, PyObject *args)
 {
-    int r;
+    int err;
     PyObject *tmp, *callback;
 
     tmp = NULL;
@@ -45,9 +45,9 @@ Check_func_start(Check *self, PyObject *args)
         return NULL;
     }
 
-    r = uv_check_start(&self->check_h, on_check_callback);
-    if (r != 0) {
-        RAISE_UV_EXCEPTION(UV_HANDLE_LOOP(self), PyExc_CheckError);
+    err = uv_check_start(&self->check_h, on_check_callback);
+    if (err < 0) {
+        RAISE_UV_EXCEPTION(err, PyExc_CheckError);
         return NULL;
     }
 
@@ -63,14 +63,14 @@ Check_func_start(Check *self, PyObject *args)
 static PyObject *
 Check_func_stop(Check *self)
 {
-    int r;
+    int err;
 
     RAISE_IF_HANDLE_NOT_INITIALIZED(self, NULL);
     RAISE_IF_HANDLE_CLOSED(self, PyExc_HandleClosedError, NULL);
 
-    r = uv_check_stop(&self->check_h);
-    if (r != 0) {
-        RAISE_UV_EXCEPTION(UV_HANDLE_LOOP(self), PyExc_CheckError);
+    err = uv_check_stop(&self->check_h);
+    if (err < 0) {
+        RAISE_UV_EXCEPTION(err, PyExc_CheckError);
         return NULL;
     }
 
@@ -84,7 +84,7 @@ Check_func_stop(Check *self)
 static int
 Check_tp_init(Check *self, PyObject *args, PyObject *kwargs)
 {
-    int r;
+    int err;
     Loop *loop;
 
     UNUSED_ARG(kwargs);
@@ -95,9 +95,9 @@ Check_tp_init(Check *self, PyObject *args, PyObject *kwargs)
         return -1;
     }
 
-    r = uv_check_init(loop->uv_loop, &self->check_h);
-    if (r != 0) {
-        RAISE_UV_EXCEPTION(loop->uv_loop, PyExc_CheckError);
+    err = uv_check_init(loop->uv_loop, &self->check_h);
+    if (err < 0) {
+        RAISE_UV_EXCEPTION(err, PyExc_CheckError);
         return -1;
     }
 
