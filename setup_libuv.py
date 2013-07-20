@@ -101,15 +101,17 @@ class libuv_build_ext(build_ext):
     user_options = build_ext.user_options
     user_options.extend([
         ("libuv-clean-compile", None, "Clean libuv tree before compilation"),
-        ("libuv-force-fetch", None, "Remove libuv (if present) and fetch it again")
+        ("libuv-force-fetch", None, "Remove libuv (if present) and fetch it again"),
+        ("libuv-verbose-build", None, "Print output of libuv build process")
     ])
     boolean_options = build_ext.boolean_options
-    boolean_options.extend(["libuv-clean-compile", "libuv-force-fetch"])
+    boolean_options.extend(["libuv-clean-compile", "libuv-force-fetch", "libuv-verbose-build"])
 
     def initialize_options(self):
         build_ext.initialize_options(self)
         self.libuv_clean_compile = 0
         self.libuv_force_fetch = 0
+        self.libuv_verbose_build = 0
 
     def build_extensions(self):
         if self.compiler.compiler_type == 'mingw32':
@@ -164,11 +166,11 @@ class libuv_build_ext(build_ext):
             if win32_msvc:
                 prepare_windows_env(env)
                 libuv_arch = {'32bit': 'x86', '64bit': 'x64'}[platform.architecture()[0]]
-                exec_process(['cmd.exe', '/C', 'vcbuild.bat', libuv_arch, 'release'], cwd=self.libuv_dir, env=env, shell=True)
+                exec_process(['cmd.exe', '/C', 'vcbuild.bat', libuv_arch, 'release'], cwd=self.libuv_dir, env=env, shell=True, silent=not self.libuv_verbose_build)
             else:
-                exec_process(['sh', 'autogen.sh'], cwd=self.libuv_dir, env=env)
-                exec_process(['./configure'], cwd=self.libuv_dir, env=env)
-                exec_process(['make'], cwd=self.libuv_dir, env=env)
+                exec_process(['sh', 'autogen.sh'], cwd=self.libuv_dir, env=env, silent=not self.libuv_verbose_build)
+                exec_process(['./configure'], cwd=self.libuv_dir, env=env, silent=not self.libuv_verbose_build)
+                exec_process(['make'], cwd=self.libuv_dir, env=env, silent=not self.libuv_verbose_build)
         if self.libuv_force_fetch:
             rmtree('deps')
         if not os.path.exists(self.libuv_dir):
