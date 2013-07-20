@@ -44,13 +44,9 @@ stat_to_pyobj(uv_stat_t *st, PyObject **stat_data) {
     PyStructSequence_SET_ITEM(*stat_data, 10, PyLong_FromUnsignedLongLong(st->st_blksize));
     PyStructSequence_SET_ITEM(*stat_data, 11, PyLong_FromUnsignedLongLong(st->st_blocks));
     PyStructSequence_SET_ITEM(*stat_data, 12, PyLong_FromUnsignedLongLong(st->st_rdev));
-    /* not supported by libuv yet */
-    Py_INCREF(Py_None);
-    PyStructSequence_SET_ITEM(*stat_data, 13, Py_None);
-    Py_INCREF(Py_None);
-    PyStructSequence_SET_ITEM(*stat_data, 14, Py_None);
-    Py_INCREF(Py_None);
-    PyStructSequence_SET_ITEM(*stat_data, 15, Py_None);
+    PyStructSequence_SET_ITEM(*stat_data, 13, PyLong_FromUnsignedLongLong(st->st_flags));
+    PyStructSequence_SET_ITEM(*stat_data, 14, PyLong_FromUnsignedLongLong(st->st_gen));
+    PyStructSequence_SET_ITEM(*stat_data, 15, format_time(st->st_birthtim));
 }
 
 
