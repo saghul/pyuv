@@ -66,7 +66,6 @@ static void
 on_stream_read(uv_stream_t* handle, int nread, uv_buf_t buf)
 {
     PyGILState_STATE gstate = PyGILState_Ensure();
-    int err;
     Stream *self;
     PyObject *result, *data, *py_errorno;
     ASSERT(handle);

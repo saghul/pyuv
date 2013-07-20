@@ -72,7 +72,6 @@ static void
 on_pipe_read2(uv_pipe_t* handle, int nread, uv_buf_t buf, uv_handle_type pending)
 {
     PyGILState_STATE gstate = PyGILState_Ensure();
-    int err;
     Pipe *self;
     PyObject *result, *data, *py_errorno, *py_pending;
     ASSERT(handle);

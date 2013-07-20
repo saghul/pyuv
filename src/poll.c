@@ -3,7 +3,6 @@ static void
 on_poll_callback(uv_poll_t *handle, int status, int events)
 {
     PyGILState_STATE gstate = PyGILState_Ensure();
-    int err;
     Poll *self;
     PyObject *result, *py_events, *py_errorno;
 
