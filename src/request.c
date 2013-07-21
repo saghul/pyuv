@@ -353,6 +353,9 @@ FSRequest_tp_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
         return NULL;
     }
     UV_REQUEST(self) = (uv_req_t *)&self->req;
+    self->path = NULL;
+    self->result = NULL;
+    self->error = NULL;
     return (PyObject *)self;
 }
 
@@ -392,10 +395,63 @@ FSRequest_tp_init(FSRequest *self, PyObject *args, PyObject *kwargs)
 }
 
 
+static PyObject *
+FSRequest_path_get(FSRequest *self, void *closure)
+{
+    UNUSED_ARG(closure);
+
+    if (self->path) {
+        Py_INCREF(self->path);
+        return self->path;
+    }
+
+    Py_RETURN_NONE;
+}
+
+
+static PyObject *
+FSRequest_result_get(FSRequest *self, void *closure)
+{
+    UNUSED_ARG(closure);
+
+    if (self->result) {
+        Py_INCREF(self->result);
+        return self->result;
+    }
+
+    Py_RETURN_NONE;
+}
+
+
+static PyObject *
+FSRequest_error_get(FSRequest *self, void *closure)
+{
+    UNUSED_ARG(closure);
+
+    if (self->error) {
+        Py_INCREF(self->error);
+        return self->error;
+    }
+
+    Py_RETURN_NONE;
+}
+
+
+static PyGetSetDef FSRequest_tp_getsets[] = {
+    {"path", (getter)FSRequest_path_get, NULL, "Path on which this request was executed.", NULL},
+    {"result", (getter)FSRequest_result_get, NULL, "Operation result.", NULL},
+    {"error", (getter)FSRequest_error_get, NULL, "Operation error or None.", NULL},
+    {NULL}
+};
+
+
 static int
 FSRequest_tp_traverse(FSRequest *self, visitproc visit, void *arg)
 {
     Py_VISIT(self->callback);
+    Py_VISIT(self->path);
+    Py_VISIT(self->result);
+    Py_VISIT(self->error);
     return RequestType.tp_traverse((PyObject *)self, visit, arg);
 }
 
@@ -404,6 +460,9 @@ static int
 FSRequest_tp_clear(FSRequest *self)
 {
     Py_CLEAR(self->callback);
+    Py_CLEAR(self->path);
+    Py_CLEAR(self->result);
+    Py_CLEAR(self->error);
     return RequestType.tp_clear((PyObject *)self);
 }
 
@@ -438,7 +497,7 @@ static PyTypeObject FSRequestType = {
     0,                                                              /*tp_iternext*/
     0,                                                              /*tp_methods*/
     0,                                                              /*tp_members*/
-    0,                                                              /*tp_getsets*/
+    FSRequest_tp_getsets,                                           /*tp_getsets*/
     0,                                                              /*tp_base*/
     0,                                                              /*tp_dict*/
     0,                                                              /*tp_descr_get*/
