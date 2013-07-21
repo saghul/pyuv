@@ -107,6 +107,10 @@ typedef int Bool;
         }                                                                           \
     } while(0)                                                                      \
 
+#define PYUV_SET_NONE(x)     \
+    Py_INCREF(Py_None);      \
+    (x) = Py_None;           \
+
 #define PYUV_SLAB_SIZE 65536
 
 
@@ -370,6 +374,9 @@ typedef struct {
     Request request;
     uv_fs_t req;
     PyObject *callback;
+    PyObject *path;
+    PyObject *result;
+    PyObject *error;
 } FSRequest;
 
 static PyTypeObject FSRequestType;

@@ -30,8 +30,8 @@ class FSTestStat(unittest2.TestCase):
     def tearDown(self):
         os.remove(TEST_FILE)
 
-    def stat_cb(self, loop, path, stat_result, errorno):
-        self.errorno = errorno
+    def stat_cb(self, req):
+        self.errorno = req.error
 
     def test_stat_error(self):
         self.errorno = None
@@ -78,8 +78,8 @@ class FSTestLstat(unittest2.TestCase):
         except OSError:
             pass
 
-    def stat_cb(self, loop, path, stat_result, errorno):
-        self.errorno = errorno
+    def stat_cb(self, req):
+        self.errorno = req.error
 
     def test_lstat(self):
         self.errorno = None
@@ -98,8 +98,8 @@ class FSTestFstat(unittest2.TestCase):
     def tearDown(self):
         os.remove(TEST_FILE)
 
-    def fstat_cb(self, loop, path, stat_data, errorno):
-        self.errorno = errorno
+    def fstat_cb(self, req):
+        self.errorno = req.error
 
     def test_fstat(self):
         self.errorno = None
@@ -129,8 +129,8 @@ class FSTestUnlink(unittest2.TestCase):
         except OSError:
             pass
 
-    def bad_unlink_cb(self, loop, path, errorno):
-        self.errorno = errorno
+    def bad_unlink_cb(self, req):
+        self.errorno = req.error
 
     def test_bad_unlink(self):
         self.errorno = None
@@ -138,8 +138,8 @@ class FSTestUnlink(unittest2.TestCase):
         self.loop.run()
         self.assertEqual(self.errorno, pyuv.errno.UV_ENOENT)
 
-    def unlink_cb(self, loop, path, errorno):
-        self.errorno = errorno
+    def unlink_cb(self, req):
+        self.errorno = req.error
 
     def test_unlink(self):
         self.errorno = None
@@ -173,8 +173,8 @@ class FSTestMkdir(unittest2.TestCase):
         except OSError:
             pass
 
-    def mkdir_cb(self, loop, path, errorno):
-        self.errorno = errorno
+    def mkdir_cb(self, req):
+        self.errorno = req.error
 
     def test_bad_mkdir(self):
         self.errorno = None
@@ -215,8 +215,8 @@ class FSTestRmdir(unittest2.TestCase):
         except OSError:
             pass
 
-    def rmdir_cb(self, loop, path, errorno):
-        self.errorno = errorno
+    def rmdir_cb(self, req):
+        self.errorno = req.error
 
     def test_bad_rmdir(self):
         self.errorno = None
@@ -262,8 +262,8 @@ class FSTestRename(unittest2.TestCase):
         except OSError:
             pass
 
-    def rename_cb(self, loop, path, errorno):
-        self.errorno = errorno
+    def rename_cb(self, req):
+        self.errorno = req.error
 
     def test_rename(self):
         self.errorno = None
@@ -289,8 +289,8 @@ class FSTestChmod(unittest2.TestCase):
     def tearDown(self):
         os.remove(TEST_FILE)
 
-    def chmod_cb(self, loop, path, errorno):
-        self.errorno = errorno
+    def chmod_cb(self, req):
+        self.errorno = req.error
 
     def test_chmod(self):
         self.errorno = None
@@ -316,8 +316,8 @@ class FSTestFchmod(unittest2.TestCase):
     def tearDown(self):
         os.remove(TEST_FILE)
 
-    def fchmod_cb(self, loop, path, errorno):
-        self.errorno = errorno
+    def fchmod_cb(self, req):
+        self.errorno = req.error
 
     def test_fchmod(self):
         self.errorno = None
@@ -348,8 +348,8 @@ class FSTestLink(unittest2.TestCase):
         os.remove(TEST_FILE)
         os.remove(TEST_LINK)
 
-    def link_cb(self, loop, path, errorno):
-        self.errorno = errorno
+    def link_cb(self, req):
+        self.errorno = req.error
 
     def test_link(self):
         self.errorno = None
@@ -377,8 +377,8 @@ class FSTestSymlink(unittest2.TestCase):
         except OSError:
             pass
 
-    def symlink_cb(self, loop, path, errorno):
-        self.errorno = errorno
+    def symlink_cb(self, req):
+        self.errorno = req.error
 
     def test_symlink(self):
         self.errorno = None
@@ -417,9 +417,9 @@ class FSTestReadlink(unittest2.TestCase):
         except OSError:
             pass
 
-    def readlink_cb(self, loop, path, errorno):
-        self.errorno = errorno
-        self.link_path = path
+    def readlink_cb(self, req):
+        self.errorno = req.error
+        self.link_path = req.result
 
     def test_readlink(self):
         self.errorno = None
@@ -444,8 +444,8 @@ class FSTestChown(unittest2.TestCase):
     def tearDown(self):
         os.remove(TEST_FILE)
 
-    def chown_cb(self, loop, path, errorno):
-        self.errorno = errorno
+    def chown_cb(self, req):
+        self.errorno = req.error
 
     def test_chown(self):
         self.errorno = None
@@ -467,8 +467,8 @@ class FSTestFchown(unittest2.TestCase):
     def tearDown(self):
         os.remove(TEST_FILE)
 
-    def fchown_cb(self, loop, path, errorno):
-        self.errorno = errorno
+    def fchown_cb(self, req):
+        self.errorno = req.error
 
     def test_fchown(self):
         self.errorno = None
@@ -499,12 +499,13 @@ class FSTestOpen(unittest2.TestCase):
         except OSError:
             pass
 
-    def close_cb(self, loop, path, errorno):
-        self.errorno = errorno
+    def close_cb(self, req):
+        self.errorno = req.error
 
-    def open_cb(self, loop, path, fd, errorno):
+    def open_cb(self, req):
+        fd = req.result
         self.assertNotEqual(fd, None)
-        self.assertEqual(errorno, None)
+        self.assertEqual(req.error, None)
         pyuv.fs.close(self.loop, fd, self.close_cb)
 
     def test_open_create(self):
@@ -513,9 +514,9 @@ class FSTestOpen(unittest2.TestCase):
         self.loop.run()
         self.assertEqual(self.errorno, None)
 
-    def open_noent_cb(self, loop, path, fd, errorno):
-        self.fd = fd
-        self.errorno = errorno
+    def open_noent_cb(self, req):
+        self.fd = req.result
+        self.errorno = req.error
 
     def test_open_noent(self):
         self.fd = None
@@ -549,9 +550,9 @@ class FSTestRead(unittest2.TestCase):
     def tearDown(self):
         os.remove(TEST_FILE)
 
-    def read_cb(self, loop, path, read_data, errorno):
-        self.errorno = errorno
-        self.data = read_data
+    def read_cb(self, req):
+        self.errorno = req.error
+        self.data = req.result
         pyuv.fs.close(self.loop, self.fd)
 
     def test_read(self):
@@ -579,10 +580,10 @@ class FSTestWrite(unittest2.TestCase):
     def tearDown(self):
         os.remove(TEST_FILE)
 
-    def write_cb(self, loop, path, bytes_written, errorno):
+    def write_cb(self, req):
         pyuv.fs.close(self.loop, self.fd)
-        self.bytes_written = bytes_written
-        self.errorno = errorno
+        self.bytes_written = req.result
+        self.errorno = req.error
 
     def test_write(self):
         self.bytes_written = None
@@ -617,17 +618,17 @@ class FSTestFsync(unittest2.TestCase):
     def setUp(self):
         self.loop = pyuv.Loop.default_loop()
 
-    def write_cb(self, loop, path, bytes_written, errorno):
-        self.assertEqual(bytes_written, 4)
-        self.assertEqual(errorno, None)
+    def write_cb(self, req):
+        self.assertEqual(req.result, 4)
+        self.assertEqual(req.error, None)
         pyuv.fs.fdatasync(self.loop, self.fd, self.fdatasync_cb)
 
-    def fdatasync_cb(self, loop, path, errorno):
-        self.assertEqual(errorno, None)
+    def fdatasync_cb(self, req):
+        self.assertEqual(req.error, None)
         pyuv.fs.fsync(self.loop, self.fd, self.fsync_cb)
 
-    def fsync_cb(self, loop, path, errorno):
-        self.assertEqual(errorno, None)
+    def fsync_cb(self, req):
+        self.assertEqual(req.error, None)
 
     def test_fsync(self):
         self.fd = pyuv.fs.open(self.loop, TEST_FILE, os.O_RDWR|os.O_CREAT|os.O_TRUNC, stat.S_IREAD|stat.S_IWRITE)
@@ -657,8 +658,8 @@ class FSTestFtruncate(unittest2.TestCase):
     def tearDown(self):
         os.remove(TEST_FILE)
 
-    def ftruncate_cb(self, loop, path, errorno):
-        self.errorno = errorno
+    def ftruncate_cb(self, req):
+        self.errorno = req.error
         pyuv.fs.close(self.loop, self.fd)
 
     def test_ftruncate1(self):
@@ -701,9 +702,9 @@ class FSTestReaddir(unittest2.TestCase):
     def tearDown(self):
         shutil.rmtree(TEST_DIR)
 
-    def readdir_cb(self, loop, path, files, errorno):
-        self.errorno = errorno
-        self.files = files
+    def readdir_cb(self, req):
+        self.errorno = req.error
+        self.files = req.result
 
     def test_bad_readdir(self):
         self.errorno = None
@@ -753,9 +754,9 @@ class FSTestSendfile(unittest2.TestCase):
         os.remove(TEST_FILE)
         os.remove(TEST_FILE2)
 
-    def sendfile_cb(self, loop, path, bytes_written, errorno):
-        self.bytes_written = bytes_written
-        self.errorno = errorno
+    def sendfile_cb(self, req):
+        self.bytes_written = req.result
+        self.errorno = req.error
 
     def test_sendfile(self):
         self.result = None
@@ -793,8 +794,8 @@ class FSTestUtime(unittest2.TestCase):
     def tearDown(self):
         os.remove(TEST_FILE)
 
-    def utime_cb(self, loop, path, errorno):
-        self.errorno = errorno
+    def utime_cb(self, req):
+        self.errorno = req.error
         if self.fd is not None:
             pyuv.fs.close(self.loop, self.fd)
 
