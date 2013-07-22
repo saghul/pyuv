@@ -18,6 +18,7 @@ TEST_LINK = 'test_file_1234_link'
 TEST_DIR = 'test-dir'
 TEST_DIR2 = 'test-dir_2'
 BAD_DIR = 'test-dir-bad'
+MAX_INT32_VALUE = 2 ** 31 - 1
 
 
 class FSTestRequestDict(unittest2.TestCase):
@@ -592,6 +593,15 @@ class FSTestRead(unittest2.TestCase):
         pyuv.fs.close(self.loop, fd)
         self.assertEqual(self.data, b'test')
 
+    def test_read_offset(self):
+        with open(TEST_FILE, 'w') as f:
+            f.seek(MAX_INT32_VALUE)
+            f.write('test1234567890')
+        fd = pyuv.fs.open(self.loop, TEST_FILE, os.O_RDONLY, stat.S_IREAD)
+        data = pyuv.fs.read(self.loop, fd, 4, MAX_INT32_VALUE + 4)
+        pyuv.fs.close(self.loop, fd)
+        self.assertEqual(data, b'1234')
+
 
 class FSTestWrite(unittest2.TestCase):
 
@@ -632,6 +642,14 @@ class FSTestWrite(unittest2.TestCase):
         pyuv.fs.close(self.loop, self.fd)
         self.assertEqual(self.bytes_written, 4)
         with open(TEST_FILE, 'r') as fobj:
+            self.assertEqual(fobj.read(), "TEST")
+
+    def test_write_offset(self):
+        offset = MAX_INT32_VALUE + 4
+        self.bytes_written = pyuv.fs.write(self.loop, self.fd, "TEST", offset)
+        pyuv.fs.close(self.loop, self.fd)
+        with open(TEST_FILE, 'r') as fobj:
+            fobj.seek(offset)
             self.assertEqual(fobj.read(), "TEST")
 
 
@@ -801,6 +819,22 @@ class FSTestSendfile(unittest2.TestCase):
         pyuv.fs.close(self.loop, fd)
         pyuv.fs.close(self.loop, fd2)
         with open(TEST_FILE, 'r') as fobj1:
+            with open(TEST_FILE2, 'r') as fobj2:
+                self.assertEqual(fobj1.read(), fobj2.read())
+
+    def test_sendfile_offset(self):
+        offset = MAX_INT32_VALUE + 1
+        with open(TEST_FILE, 'w') as f:
+            f.seek(offset)
+            f.write("test")
+            f.flush()
+        fd = pyuv.fs.open(self.loop, TEST_FILE, os.O_RDWR, stat.S_IREAD|stat.S_IWRITE)
+        fd2 = pyuv.fs.open(self.loop, TEST_FILE2, os.O_RDWR|os.O_CREAT, stat.S_IREAD|stat.S_IWRITE)
+        self.bytes_written = pyuv.fs.sendfile(self.loop, fd2, fd, offset, 4)
+        pyuv.fs.close(self.loop, fd)
+        pyuv.fs.close(self.loop, fd2)
+        with open(TEST_FILE, 'r') as fobj1:
+            fobj1.seek(offset)
             with open(TEST_FILE2, 'r') as fobj2:
                 self.assertEqual(fobj1.read(), fobj2.read())
 

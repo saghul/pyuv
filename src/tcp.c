@@ -71,7 +71,7 @@ static PyObject *
 TCP_func_bind(TCP *self, PyObject *args)
 {
     int err;
-    struct sockaddr sa;
+    struct sockaddr_storage ss;
     PyObject *addr;
 
     RAISE_IF_HANDLE_NOT_INITIALIZED(self, NULL);
@@ -81,15 +81,15 @@ TCP_func_bind(TCP *self, PyObject *args)
         return NULL;
     }
 
-    if (pyuv_parse_addr_tuple(addr, &sa) < 0) {
+    if (pyuv_parse_addr_tuple(addr, &ss) < 0) {
         /* Error is set by the function itself */
         return NULL;
     }
 
-    if (sa.sa_family == AF_INET) {
-        err = uv_tcp_bind(&self->tcp_h, *(struct sockaddr_in *)&sa);
+    if (ss.ss_family == AF_INET) {
+        err = uv_tcp_bind(&self->tcp_h, *(struct sockaddr_in *)&ss);
     } else {
-        err = uv_tcp_bind6(&self->tcp_h, *(struct sockaddr_in6 *)&sa);
+        err = uv_tcp_bind6(&self->tcp_h, *(struct sockaddr_in6 *)&ss);
     }
 
     if (err < 0) {
@@ -174,7 +174,7 @@ static PyObject *
 TCP_func_connect(TCP *self, PyObject *args)
 {
     int err;
-    struct sockaddr sa;
+    struct sockaddr_storage ss;
     uv_connect_t *connect_req = NULL;
     PyObject *addr, *callback;
 
@@ -190,7 +190,7 @@ TCP_func_connect(TCP *self, PyObject *args)
         return NULL;
     }
 
-    if (pyuv_parse_addr_tuple(addr, &sa) < 0) {
+    if (pyuv_parse_addr_tuple(addr, &ss) < 0) {
         /* Error is set by the function itself */
         return NULL;
     }
@@ -205,10 +205,10 @@ TCP_func_connect(TCP *self, PyObject *args)
 
     connect_req->data = callback;
 
-    if (sa.sa_family == AF_INET) {
-        err = uv_tcp_connect(connect_req, &self->tcp_h, *(struct sockaddr_in *)&sa, on_tcp_client_connection);
+    if (ss.ss_family == AF_INET) {
+        err = uv_tcp_connect(connect_req, &self->tcp_h, *(struct sockaddr_in *)&ss, on_tcp_client_connection);
     } else {
-        err = uv_tcp_connect6(connect_req, &self->tcp_h, *(struct sockaddr_in6 *)&sa, on_tcp_client_connection);
+        err = uv_tcp_connect6(connect_req, &self->tcp_h, *(struct sockaddr_in6 *)&ss, on_tcp_client_connection);
     }
 
     if (err < 0) {

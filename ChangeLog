@@ -1,3 +1,21 @@
+Version 0.10.5
+==============
+ - Loop.now() returns milliseconds, not nanoseconds
+ - Use int64_t for offset in fs functions
+ - Fixed parsing in_offset in fs.sendfile
+ - Raised libuv revision to 3b4e0a2 (v0.10 branch)
+
+Version 0.10.4
+==============
+ - Added Stream.write_queue_size property
+ - Never raise StreamError directly
+ - Raised libuv revision to c53fe81 (v0.10 branch)
+
+Version 0.10.3
+==============
+ - Fixed crash when using IPv6 addresses
+ - Raised libuv revision to 9b801d5 (v0.10 branch)
+
 Version 0.10.2
 ==============
  - Fixed getaddrinfo parameter order

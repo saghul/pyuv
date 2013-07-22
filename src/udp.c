@@ -119,7 +119,7 @@ static PyObject *
 UDP_func_bind(UDP *self, PyObject *args)
 {
     int err, flags;
-    struct sockaddr sa;
+    struct sockaddr_storage ss;
     PyObject *addr;
 
     RAISE_IF_HANDLE_NOT_INITIALIZED(self, NULL);
@@ -131,15 +131,15 @@ UDP_func_bind(UDP *self, PyObject *args)
         return NULL;
     }
 
-    if (pyuv_parse_addr_tuple(addr, &sa) < 0) {
+    if (pyuv_parse_addr_tuple(addr, &ss) < 0) {
         /* Error is set by the function itself */
         return NULL;
     }
 
-    if (sa.sa_family == AF_INET) {
-        err = uv_udp_bind(&self->udp_h, *(struct sockaddr_in *)&sa, flags);
+    if (ss.ss_family == AF_INET) {
+        err = uv_udp_bind(&self->udp_h, *(struct sockaddr_in *)&ss, flags);
     } else {
-        err = uv_udp_bind6(&self->udp_h, *(struct sockaddr_in6 *)&sa, flags);
+        err = uv_udp_bind6(&self->udp_h, *(struct sockaddr_in6 *)&ss, flags);
     }
 
     if (err < 0) {
@@ -211,7 +211,7 @@ static PyObject *
 UDP_func_send(UDP *self, PyObject *args)
 {
     int err;
-    struct sockaddr sa;
+    struct sockaddr_storage ss;
     uv_buf_t buf;
     Py_buffer *view;
     PyObject *addr, *callback;
@@ -240,7 +240,7 @@ UDP_func_send(UDP *self, PyObject *args)
         goto error;
     }
 
-    if (pyuv_parse_addr_tuple(addr, &sa) < 0) {
+    if (pyuv_parse_addr_tuple(addr, &ss) < 0) {
         /* Error is set by the function itself */
         goto error;
     }
@@ -252,11 +252,12 @@ UDP_func_send(UDP *self, PyObject *args)
     ctx->view_count = 1;
     ctx->views = view;
 
-    if (sa.sa_family == AF_INET) {
-        err = uv_udp_send(&ctx->req, &self->udp_h, &buf, 1, *(struct sockaddr_in *)&sa, (uv_udp_send_cb)on_udp_send);
+    if (ss.ss_family == AF_INET) {
+        err = uv_udp_send(&ctx->req, &self->udp_h, &buf, 1, *(struct sockaddr_in *)&ss, (uv_udp_send_cb)on_udp_send);
     } else {
-        err = uv_udp_send6(&ctx->req, &self->udp_h, &buf, 1, *(struct sockaddr_in6 *)&sa, (uv_udp_send_cb)on_udp_send);
+        err = uv_udp_send6(&ctx->req, &self->udp_h, &buf, 1, *(struct sockaddr_in6 *)&ss, (uv_udp_send_cb)on_udp_send);
     }
+
     if (err < 0) {
         RAISE_UV_EXCEPTION(err, PyExc_UDPError);
         Py_DECREF(callback);
@@ -278,8 +279,8 @@ error:
 static PyObject *
 UDP_func_sendlines(UDP *self, PyObject *args)
 {
-    int i, r, err, buf_count;
-    struct sockaddr sa;
+    int i, err, buf_count;
+    struct sockaddr_storage ss;
     PyObject *addr, *callback, *seq;
     Py_buffer *views;
     uv_buf_t *bufs;
@@ -300,13 +301,13 @@ UDP_func_sendlines(UDP *self, PyObject *args)
         return NULL;
     }
 
-    if (pyuv_parse_addr_tuple(addr, &sa) < 0) {
+    if (pyuv_parse_addr_tuple(addr, &ss) < 0) {
         /* Error is set by the function itself */
         return NULL;
     }
 
-    r = pyseq2uvbuf(seq, &views, &bufs, &buf_count);
-    if (r != 0) {
+    err = pyseq2uvbuf(seq, &views, &bufs, &buf_count);
+    if (err != 0) {
         /* error is already set */
         return NULL;
     }
@@ -323,10 +324,10 @@ UDP_func_sendlines(UDP *self, PyObject *args)
     ctx->view_count = buf_count;
     ctx->views = views;
 
-    if (sa.sa_family == AF_INET) {
-        r = uv_udp_send(&ctx->req, &self->udp_h, bufs, buf_count, *(struct sockaddr_in *)&sa, (uv_udp_send_cb)on_udp_send);
+    if (ss.ss_family == AF_INET) {
+        err = uv_udp_send(&ctx->req, &self->udp_h, bufs, buf_count, *(struct sockaddr_in *)&ss, (uv_udp_send_cb)on_udp_send);
     } else {
-        r = uv_udp_send6(&ctx->req, &self->udp_h, bufs, buf_count, *(struct sockaddr_in6 *)&sa, (uv_udp_send_cb)on_udp_send);
+        err = uv_udp_send6(&ctx->req, &self->udp_h, bufs, buf_count, *(struct sockaddr_in6 *)&ss, (uv_udp_send_cb)on_udp_send);
     }
 
     /* uv_write copies the uv_buf_t structures, so we can free them now */

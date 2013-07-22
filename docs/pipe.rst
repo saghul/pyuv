@@ -140,6 +140,12 @@
         This setting applies to Windows only. Set the number of pending pipe instance
         handles when the pipe server is waiting for connections.
 
+    .. py:attribute:: write_queue_size
+
+        *Read only*
+
+        Returns the size of the write queue.
+
     .. py:attribute:: readable
 
         *Read only*

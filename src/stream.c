@@ -179,7 +179,7 @@ Stream_func_shutdown(Stream *self, PyObject *args)
 
     err = uv_shutdown(&ctx->req, (uv_stream_t *)UV_HANDLE(self), on_stream_shutdown);
     if (err < 0) {
-        RAISE_UV_EXCEPTION(err, PyExc_StreamError);
+        RAISE_STREAM_EXCEPTION(err, UV_HANDLE(self));
         goto error;
     }
 
@@ -217,7 +217,7 @@ Stream_func_start_read(Stream *self, PyObject *args)
 
     err = uv_read_start((uv_stream_t *)UV_HANDLE(self), (uv_alloc_cb)on_stream_alloc, (uv_read_cb)on_stream_read);
     if (err < 0) {
-        RAISE_UV_EXCEPTION(err, PyExc_StreamError);
+        RAISE_STREAM_EXCEPTION(err, UV_HANDLE(self));
         return NULL;
     }
 
@@ -240,7 +240,7 @@ Stream_func_stop_read(Stream *self)
 
     err = uv_read_stop((uv_stream_t *)UV_HANDLE(self));
     if (err < 0) {
-        RAISE_UV_EXCEPTION(err, PyExc_StreamError);
+        RAISE_STREAM_EXCEPTION(err, UV_HANDLE(self));
         return NULL;
     }
 
@@ -272,7 +272,7 @@ pyuv_stream_write(Stream *self, stream_write_ctx *ctx, Py_buffer *views, uv_buf_
     }
 
     if (err < 0) {
-        RAISE_UV_EXCEPTION(err, PyExc_StreamError);
+        RAISE_STREAM_EXCEPTION(err, UV_HANDLE(self));
         goto error;
     }
 
@@ -400,6 +400,17 @@ Stream_writable_get(Stream *self, void *closure)
 
 
 static PyObject *
+Stream_write_queue_size_get(Stream *self, void *closure)
+{
+    UNUSED_ARG(closure);
+
+    RAISE_IF_HANDLE_NOT_INITIALIZED(self, NULL);
+
+    return PyLong_FromSize_t(((uv_stream_t *)UV_HANDLE(self))->write_queue_size);
+}
+
+
+static PyObject *
 Stream_tp_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
 {
     Stream *self = (Stream *)HandleType.tp_new(type, args, kwargs);
@@ -440,6 +451,7 @@ Stream_tp_methods[] = {
 static PyGetSetDef Stream_tp_getsets[] = {
     {"readable", (getter)Stream_readable_get, 0, "Indicates if stream is readable.", NULL},
     {"writable", (getter)Stream_writable_get, 0, "Indicates if stream is writable.", NULL},
+    {"write_queue_size", (getter)Stream_write_queue_size_get, 0, "Returns the size of the write queue.", NULL},
     {NULL}
 };
 

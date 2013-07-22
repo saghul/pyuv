@@ -43,7 +43,7 @@
     .. py:method:: update_time
 
         Manage event loop time. ``now`` will return the current event loop time in
-        nanoseconds. It expresses the time when the event loop began to process
+        milliseconds. It expresses the time when the event loop began to process
         events.
 
         After an operation which blocks the event loop for a long time the event loop
