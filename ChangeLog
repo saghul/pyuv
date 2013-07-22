@@ -1,3 +1,12 @@
+Version 0.11.0
+==============
+ - Refactored FS operations
+ - Added instance dictionary to Request objects
+ - Added missing fields in stat result structure
+ - Added libuv-verbose-build command line argument
+ - Adapted to changes in libuv master branch
+ - Raised libuv revision to XXX (master branch)
+
 Version 0.10.5
 ==============
  - Loop.now() returns milliseconds, not nanoseconds
