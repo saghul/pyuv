@@ -20,6 +20,28 @@ TEST_DIR2 = 'test-dir_2'
 BAD_DIR = 'test-dir-bad'
 
 
+class FSTestRequestDict(unittest2.TestCase):
+
+    def setUp(self):
+        self.loop = pyuv.Loop.default_loop()
+        with open(TEST_FILE, 'w') as f:
+            f.write('test')
+
+    def tearDown(self):
+        os.remove(TEST_FILE)
+
+    def stat_cb(self, req):
+        self.errorno = req.error
+        self.assertEqual(req.test, 'test123')
+
+    def test_request_dict(self):
+        self.errorno = None
+        req = pyuv.fs.stat(self.loop, TEST_FILE, self.stat_cb)
+        req.test = 'test123'
+        self.loop.run()
+        self.assertEqual(self.errorno, None)
+
+
 class FSTestStat(unittest2.TestCase):
 
     def setUp(self):

@@ -346,6 +346,7 @@ typedef struct {
     Bool initialized;
     uv_req_t *req_ptr;
     Loop *loop;
+    PyObject *dict;
 } Request;
 
 static PyTypeObject RequestType;

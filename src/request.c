@@ -10,6 +10,45 @@ Request_func_cancel(Request *self)
 }
 
 
+static PyObject*
+Request_dict_get(Request *self, void* c)
+{
+    UNUSED_ARG(c);
+
+    if (self->dict == NULL) {
+        self->dict = PyDict_New();
+        if (self->dict == NULL) {
+            return NULL;
+        }
+    }
+    Py_INCREF(self->dict);
+    return self->dict;
+}
+
+
+static int
+Request_dict_set(Request *self, PyObject* val, void* c)
+{
+    PyObject* tmp;
+
+    UNUSED_ARG(c);
+
+    if (val == NULL) {
+        PyErr_SetString(PyExc_TypeError, "__dict__ may not be deleted");
+        return -1;
+    }
+    if (!PyDict_Check(val)) {
+        PyErr_SetString(PyExc_TypeError, "__dict__ must be a dictionary");
+        return -1;
+    }
+    tmp = self->dict;
+    Py_INCREF(val);
+    self->dict = val;
+    Py_XDECREF(tmp);
+    return 0;
+}
+
+
 static PyObject *
 Request_tp_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
 {
@@ -62,6 +101,12 @@ Request_tp_methods[] = {
 };
 
 
+static PyGetSetDef Request_tp_getsets[] = {
+    {"__dict__", (getter)Request_dict_get, (setter)Request_dict_set, NULL},
+    {NULL}
+};
+
+
 static void
 Request_tp_dealloc(Request *self)
 {
@@ -74,6 +119,7 @@ static int
 Request_tp_traverse(Request *self, visitproc visit, void *arg)
 {
     Py_VISIT(self->loop);
+    Py_VISIT(self->dict);
     return 0;
 }
 
@@ -82,6 +128,7 @@ static int
 Request_tp_clear(Request *self)
 {
     Py_CLEAR(self->loop);
+    Py_CLEAR(self->dict);
     return 0;
 }
 
@@ -116,12 +163,12 @@ static PyTypeObject RequestType = {
     0,                                                              /*tp_iternext*/
     Request_tp_methods,                                             /*tp_methods*/
     Request_tp_members,                                             /*tp_members*/
-    0,                                                              /*tp_getsets*/
+    Request_tp_getsets,                                             /*tp_getsets*/
     0,                                                              /*tp_base*/
     0,                                                              /*tp_dict*/
     0,                                                              /*tp_descr_get*/
     0,                                                              /*tp_descr_set*/
-    0,                                                              /*tp_dictoffset*/
+    offsetof(Request, dict),                                        /*tp_dictoffset*/
     (initproc)Request_tp_init,                                      /*tp_init*/
     0,                                                              /*tp_alloc*/
     Request_tp_new,                                                 /*tp_new*/
