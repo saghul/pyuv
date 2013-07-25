@@ -114,22 +114,14 @@ class libuv_build_ext(build_ext):
         self.libuv_verbose_build = 0
 
     def build_extensions(self):
-        if self.compiler.compiler_type == 'mingw32':
-            # Dirty hack to avoid linking with more than one C runtime when using MinGW
-            # Note that this hack forces the compilation to use the old MSVCT
-            self.compiler.dll_libraries = [lib for lib in self.compiler.dll_libraries if not lib.startswith('msvcr')]
         self.force = self.libuv_force_fetch or self.libuv_clean_compile
-        if self.compiler.compiler_type == 'msvc':
+        if sys.platform == 'win32':
             self.libuv_lib = os.path.join(self.libuv_dir, 'Release', 'lib', 'libuv.lib')
         else:
             self.libuv_lib = os.path.join(self.libuv_dir, '.libs', 'libuv.a')
         self.get_libuv()
         # Set compiler options
-        if self.compiler.compiler_type == 'mingw32':
-            self.compiler.add_library_dir(self.libuv_dir)
-            self.compiler.add_library('uv')
-        else:
-            self.extensions[0].extra_objects.extend([self.libuv_lib])
+        self.extensions[0].extra_objects.extend([self.libuv_lib])
         self.compiler.add_include_dir(os.path.join(self.libuv_dir, 'include'))
         if sys.platform.startswith('linux'):
             self.compiler.add_library('rt')
@@ -137,9 +129,8 @@ class libuv_build_ext(build_ext):
             self.extensions[0].extra_link_args.extend(['-framework', 'CoreServices'])
         elif sys.platform == 'win32':
             self.extensions[0].define_macros.append(('WIN32', 1))
-            if self.compiler.compiler_type == 'msvc':
-                self.extensions[0].extra_link_args.extend(['/NODEFAULTLIB:libcmt', '/LTCG'])
-                self.compiler.add_library('advapi32')
+            self.extensions[0].extra_link_args.extend(['/NODEFAULTLIB:libcmt', '/LTCG'])
+            self.compiler.add_library('advapi32')
             self.compiler.add_library('iphlpapi')
             self.compiler.add_library('psapi')
             self.compiler.add_library('ws2_32')
@@ -147,7 +138,6 @@ class libuv_build_ext(build_ext):
 
     def get_libuv(self):
         #self.debug_mode =  bool(self.debug) or hasattr(sys, 'gettotalrefcount')
-        win32_msvc = self.compiler.compiler_type=='msvc'
         def download_libuv():
             log.info('Downloading libuv...')
             makedirs(self.libuv_dir)
@@ -163,7 +153,7 @@ class libuv_build_ext(build_ext):
             env = os.environ.copy()
             env['CFLAGS'] = ' '.join(x for x in (cflags, env.get('CFLAGS', None)) if x)
             log.info('Building libuv...')
-            if win32_msvc:
+            if sys.platform == 'win32':
                 prepare_windows_env(env)
                 libuv_arch = {'32bit': 'x86', '64bit': 'x64'}[platform.architecture()[0]]
                 exec_process(['cmd.exe', '/C', 'vcbuild.bat', libuv_arch, 'release'], cwd=self.libuv_dir, env=env, shell=True, silent=not self.libuv_verbose_build)
@@ -183,7 +173,7 @@ class libuv_build_ext(build_ext):
             build_libuv()
         else:
             if self.libuv_clean_compile:
-                if win32_msvc:
+                if sys.platform == 'win32':
                     env = os.environ.copy()
                     prepare_windows_env(env)
                     exec_process(['cmd.exe', '/C', 'vcbuild.bat', 'clean'], cwd=self.libuv_dir, env=env, shell=True)

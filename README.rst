@@ -104,18 +104,11 @@ Mac OSX:
     export ARCHFLAGS="-arch x86_64"
     ./build_inplace
 
-Microsoft Windows (with Visual Studio 2008):
+Microsoft Windows (with Visual Studio):
 
 ::
 
-    ./build_inplace
-
-Microsoft Windows (with MinGW, not recommended):
-
-::
-
-    (MinGW and MSYS need to be installed)
-    ./build_inplace --compiler=mingw32
+    python setup.py build_ext --inplace
 
 
 Running the test suite
