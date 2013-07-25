@@ -93,38 +93,7 @@ Util_func_interface_addresses(PyObject *obj)
     UNUSED_ARG(obj);
 
     err = uv_interface_addresses(&interfaces, &count);
-    if (err == 0) {
-        result = PyList_New(count);
-        if (!result) {
-            uv_free_interface_addresses(interfaces, count);
-            return NULL;
-        }
-        for (i = 0; i < count; i++) {
-            item = PyStructSequence_New(&InterfaceAddressesResultType);
-            if (!item) {
-                Py_DECREF(result);
-                uv_free_interface_addresses(interfaces, count);
-                return NULL;
-            }
-            PyStructSequence_SET_ITEM(item, 0, Py_BuildValue("s", interfaces[i].name));
-            PyStructSequence_SET_ITEM(item, 1, PyBool_FromLong((long)interfaces[i].is_internal));
-            if (interfaces[i].address.address4.sin_family == AF_INET) {
-                uv_ip4_name(&interfaces[i].address.address4, buf, sizeof(buf));
-            } else if (interfaces[i].address.address4.sin_family == AF_INET6) {
-                uv_ip6_name(&interfaces[i].address.address6, buf, sizeof(buf));
-            }
-            PyStructSequence_SET_ITEM(item, 2, Py_BuildValue("s", buf));
-            if (interfaces[i].netmask.netmask4.sin_family == AF_INET) {
-                uv_ip4_name(&interfaces[i].netmask.netmask4, buf, sizeof(buf));
-            } else if (interfaces[i].netmask.netmask4.sin_family == AF_INET6) {
-                uv_ip6_name(&interfaces[i].netmask.netmask6, buf, sizeof(buf));
-            }
-            PyStructSequence_SET_ITEM(item, 3, Py_BuildValue("s", buf));
-            PyList_SET_ITEM(result, i, item);
-        }
-        uv_free_interface_addresses(interfaces, count);
-        return result;
-    } else {
+    if (err < 0) {
         exc_data = Py_BuildValue("(is)", err, uv_strerror(err));
         if (exc_data != NULL) {
             PyErr_SetObject(PyExc_UVError, exc_data);
@@ -132,6 +101,47 @@ Util_func_interface_addresses(PyObject *obj)
         }
         return NULL;
     }
+
+    result = PyList_New(count);
+    if (!result) {
+        uv_free_interface_addresses(interfaces, count);
+        return NULL;
+    }
+
+    for (i = 0; i < count; i++) {
+        item = PyStructSequence_New(&InterfaceAddressesResultType);
+        if (!item) {
+            Py_DECREF(result);
+            uv_free_interface_addresses(interfaces, count);
+            return NULL;
+        }
+        PyStructSequence_SET_ITEM(item, 0, Py_BuildValue("s", interfaces[i].name));
+        PyStructSequence_SET_ITEM(item, 1, PyBool_FromLong((long)interfaces[i].is_internal));
+        if (interfaces[i].address.address4.sin_family == AF_INET) {
+            uv_ip4_name(&interfaces[i].address.address4, buf, sizeof(buf));
+        } else if (interfaces[i].address.address4.sin_family == AF_INET6) {
+            uv_ip6_name(&interfaces[i].address.address6, buf, sizeof(buf));
+        }
+        PyStructSequence_SET_ITEM(item, 2, Py_BuildValue("s", buf));
+        if (interfaces[i].netmask.netmask4.sin_family == AF_INET) {
+            uv_ip4_name(&interfaces[i].netmask.netmask4, buf, sizeof(buf));
+        } else if (interfaces[i].netmask.netmask4.sin_family == AF_INET6) {
+            uv_ip6_name(&interfaces[i].netmask.netmask6, buf, sizeof(buf));
+        }
+        PyStructSequence_SET_ITEM(item, 3, Py_BuildValue("s", buf));
+        PyOS_snprintf(buf, sizeof(buf), "%02x:%02x:%02x:%02x:%02x:%02x",
+                                        (unsigned char)interfaces[i].phys_addr[0],
+                                        (unsigned char)interfaces[i].phys_addr[1],
+                                        (unsigned char)interfaces[i].phys_addr[2],
+                                        (unsigned char)interfaces[i].phys_addr[3],
+                                        (unsigned char)interfaces[i].phys_addr[4],
+                                        (unsigned char)interfaces[i].phys_addr[5]);
+        PyStructSequence_SET_ITEM(item, 4, Py_BuildValue("s", buf));
+        PyList_SET_ITEM(result, i, item);
+    }
+
+    uv_free_interface_addresses(interfaces, count);
+    return result;
 }
 
 
