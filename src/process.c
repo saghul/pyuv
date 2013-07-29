@@ -195,10 +195,10 @@ on_process_exit(uv_process_t *handle, int exit_status, int term_signal)
 
     self = PYUV_CONTAINER_OF(handle, Process, process_h);
 
-    py_exit_status = PyInt_FromLong(exit_status);
-    py_term_signal = PyInt_FromLong(term_signal);
-
     if (self->on_exit_cb != Py_None) {
+        py_exit_status = obj_or_none(PyInt_FromLong(exit_status));
+        py_term_signal = obj_or_none(PyInt_FromLong(term_signal));
+
         result = PyObject_CallFunctionObjArgs(self->on_exit_cb, self, py_exit_status, py_term_signal, NULL);
         if (result == NULL) {
             handle_uncaught_exception(HANDLE(self)->loop);

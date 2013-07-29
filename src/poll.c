@@ -4,30 +4,30 @@ on_poll_callback(uv_poll_t *handle, int status, int events)
 {
     PyGILState_STATE gstate = PyGILState_Ensure();
     Poll *self;
-    PyObject *result, *py_events, *py_errorno;
+    PyObject *result, *py_events, *errorno;
 
     ASSERT(handle);
-
+    py_events = errorno = NULL;
     self = PYUV_CONTAINER_OF(handle, Poll, poll_h);
 
     /* Object could go out of scope in the callback, increase refcount to avoid it */
     Py_INCREF(self);
 
     if (status == 0) {
-        py_events = PyInt_FromLong((long)events);
-        py_errorno = Py_None;
-        Py_INCREF(Py_None);
-    } else  {
-        py_events = Py_None;
-        Py_INCREF(Py_None);
-        py_errorno = PyInt_FromLong((long)status);
+        py_events = enomem_if_null(PyInt_FromLong(events), &errorno);
+        errorno = obj_or_none(errorno);
+    } else {
+        errorno = error_to_obj(status);
     }
+    py_events = obj_or_none(py_events);
 
-    result = PyObject_CallFunctionObjArgs(self->callback, self, py_events, py_errorno, NULL);
+    result = PyObject_CallFunctionObjArgs(self->callback, self, py_events, errorno, NULL);
     if (result == NULL) {
         handle_uncaught_exception(HANDLE(self)->loop);
     }
     Py_XDECREF(result);
+    Py_DECREF(py_events);
+    Py_DECREF(errorno);
 
     Py_DECREF(self);
     PyGILState_Release(gstate);

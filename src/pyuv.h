@@ -556,7 +556,7 @@ PyUVModule_AddType(PyObject *module, const char *name, PyTypeObject *type)
 }
 
 
-/* Add a type to a module */
+/* Add an object to a module */
 static int
 PyUVModule_AddObject(PyObject *module, const char *name, PyObject *value)
 {
@@ -566,6 +566,50 @@ PyUVModule_AddObject(PyObject *module, const char *name, PyObject *value)
         return -1;
     }
     return 0;
+}
+
+
+/* Global UV_ENOMEM to be used in case of out-of-memory */
+static PyObject *uv_enomem;
+
+/* Return a new reference to an error value object */
+static PyObject *
+error_to_obj(int errorno)
+{
+    PyObject *error = PyInt_FromLong(errorno);
+    if (error == NULL) {
+        PyErr_Clear();
+        error = uv_enomem;
+        Py_INCREF(error);
+    }
+    return error;
+}
+
+
+/* If obj is NULL, set *errorno to UV_ENOMEM. Always return obj. */
+static PyObject *
+enomem_if_null(PyObject *obj, PyObject **errorno)
+{
+    if (obj == NULL) {
+        PyErr_Clear();
+        if (*errorno == NULL) {
+            *errorno = uv_enomem;
+            Py_INCREF(*errorno);
+        }
+    }
+    return obj;
+}
+
+
+/* Return the given object, or None if NULL */
+static PyObject *
+obj_or_none(PyObject *obj)
+{
+    if (obj == NULL) {
+        obj = Py_None;
+        Py_INCREF(obj);
+    }
+    return obj;
 }
 
 

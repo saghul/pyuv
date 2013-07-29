@@ -211,12 +211,10 @@ threadpool_done_cb(uv_work_t *req, int status)
 
     if (work_req->done_cb != Py_None) {
         if (status < 0) {
-            errorno = PyInt_FromLong((long)status);
+            errorno = error_to_obj(status);
         } else {
-            errorno = Py_None;
-            Py_INCREF(Py_None);
+            PYUV_SET_NONE(errorno);
         }
-
         result = PyObject_CallFunctionObjArgs(work_req->done_cb, errorno, NULL);
         if (result == NULL) {
             handle_uncaught_exception(loop);

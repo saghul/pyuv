@@ -31,7 +31,7 @@ on_stream_shutdown(uv_shutdown_t* req, int status)
     PyGILState_STATE gstate = PyGILState_Ensure();
     stream_shutdown_ctx *ctx;
     Stream *self;
-    PyObject *callback, *result, *py_errorno;
+    PyObject *callback, *result, *errorno;
 
     ctx = PYUV_CONTAINER_OF(req, stream_shutdown_ctx, req);
     self = ctx->obj;
@@ -39,17 +39,16 @@ on_stream_shutdown(uv_shutdown_t* req, int status)
 
     if (callback != Py_None) {
         if (status < 0) {
-            py_errorno = PyInt_FromLong((long)status);
+            errorno = error_to_obj(status);
         } else {
-            py_errorno = Py_None;
-            Py_INCREF(Py_None);
+            PYUV_SET_NONE(errorno);
         }
-        result = PyObject_CallFunctionObjArgs(callback, self, py_errorno, NULL);
+        result = PyObject_CallFunctionObjArgs(callback, self, errorno, NULL);
         if (result == NULL) {
             handle_uncaught_exception(HANDLE(self)->loop);
         }
         Py_XDECREF(result);
-        Py_DECREF(py_errorno);
+        Py_DECREF(errorno);
     }
 
     Py_DECREF(callback);
@@ -67,8 +66,10 @@ on_stream_read(uv_stream_t* handle, int nread, uv_buf_t buf)
 {
     PyGILState_STATE gstate = PyGILState_Ensure();
     Stream *self;
-    PyObject *result, *data, *py_errorno;
+    PyObject *result, *data, *errorno;
+
     ASSERT(handle);
+    data = errorno = NULL;
 
     /* Can't use container_of here */
     self = (Stream *)handle->data;
@@ -77,24 +78,22 @@ on_stream_read(uv_stream_t* handle, int nread, uv_buf_t buf)
     Py_INCREF(self);
 
     if (nread >= 0) {
-        data = PyBytes_FromStringAndSize(buf.base, nread);
-        py_errorno = Py_None;
-        Py_INCREF(Py_None);
+        data = enomem_if_null(PyBytes_FromStringAndSize(buf.base, nread), &errorno);
+        errorno = obj_or_none(errorno);
     } else {
-        data = Py_None;
-        Py_INCREF(Py_None);
-        py_errorno = PyInt_FromLong((long)nread);
+        errorno = error_to_obj(nread);
         /* Stop reading, otherwise an assert blows up on unix */
         uv_read_stop(handle);
     }
+    data = obj_or_none(data);
 
-    result = PyObject_CallFunctionObjArgs(self->on_read_cb, self, data, py_errorno, NULL);
+    result = PyObject_CallFunctionObjArgs(self->on_read_cb, self, data, errorno, NULL);
     if (result == NULL) {
         handle_uncaught_exception(HANDLE(self)->loop);
     }
     Py_XDECREF(result);
     Py_DECREF(data);
-    Py_DECREF(py_errorno);
+    Py_DECREF(errorno);
 
     Py_DECREF(self);
     PyGILState_Release(gstate);
@@ -108,7 +107,7 @@ on_stream_write(uv_write_t* req, int status)
     int i;
     stream_write_ctx *ctx;
     Stream *self;
-    PyObject *callback, *send_handle, *result, *py_errorno;
+    PyObject *callback, *send_handle, *result, *errorno;
 
     ASSERT(req);
 
@@ -119,17 +118,16 @@ on_stream_write(uv_write_t* req, int status)
 
     if (callback != Py_None) {
         if (status < 0) {
-            py_errorno = PyInt_FromLong((long)status);
+            errorno = error_to_obj(status);
         } else {
-            py_errorno = Py_None;
-            Py_INCREF(Py_None);
+            PYUV_SET_NONE(errorno);
         }
-        result = PyObject_CallFunctionObjArgs(callback, self, py_errorno, NULL);
+        result = PyObject_CallFunctionObjArgs(callback, self, errorno, NULL);
         if (result == NULL) {
             handle_uncaught_exception(HANDLE(self)->loop);
         }
         Py_XDECREF(result);
-        Py_DECREF(py_errorno);
+        Py_DECREF(errorno);
     }
 
     Py_DECREF(callback);
