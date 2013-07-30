@@ -1,11 +1,11 @@
 
-from common import unittest2
+from common import unittest2, TestCase
 
 import pyuv
 import socket
 
 
-class TestBasetype(unittest2.TestCase):
+class TestBasetype(TestCase):
 
     def _inheritance_test(self, base, *args, **kwargs):
         derived = type(base.__name__, (base,), {})
@@ -19,55 +19,43 @@ class TestBasetype(unittest2.TestCase):
         self._inheritance_test(pyuv.Loop)
 
     def test_inherit_timer(self):
-        loop = pyuv.Loop.default_loop()
-        self._inheritance_test(pyuv.Timer, loop)
+        self._inheritance_test(pyuv.Timer, self.loop)
 
     def test_inherit_tcp(self):
-        loop = pyuv.Loop.default_loop()
-        self._inheritance_test(pyuv.TCP, loop)
+        self._inheritance_test(pyuv.TCP, self.loop)
 
     def test_inherit_udp(self):
-        loop = pyuv.Loop.default_loop()
-        self._inheritance_test(pyuv.UDP, loop)
+        self._inheritance_test(pyuv.UDP, self.loop)
 
     def test_inherit_poll(self):
-        loop = pyuv.Loop.default_loop()
         sock = socket.socket()
-        self._inheritance_test(pyuv.Poll, loop, sock.fileno())
+        self._inheritance_test(pyuv.Poll, self.loop, sock.fileno())
         sock.close()
 
     def test_inherit_pipe(self):
-        loop = pyuv.Loop.default_loop()
-        self._inheritance_test(pyuv.Pipe, loop)
+        self._inheritance_test(pyuv.Pipe, self.loop)
 
     def test_inherit_process(self):
-        loop = pyuv.Loop.default_loop()
-        self._inheritance_test(pyuv.Process, loop)
+        self._inheritance_test(pyuv.Process, self.loop)
 
     def test_inherit_async(self):
-        loop = pyuv.Loop.default_loop()
         callback = lambda handle: handle
-        self._inheritance_test(pyuv.Async, loop, callback)
+        self._inheritance_test(pyuv.Async, self.loop, callback)
 
     def test_inherit_prepare(self):
-        loop = pyuv.Loop.default_loop()
-        self._inheritance_test(pyuv.Prepare, loop)
+        self._inheritance_test(pyuv.Prepare, self.loop)
 
     def test_inherit_idle(self):
-        loop = pyuv.Loop.default_loop()
-        self._inheritance_test(pyuv.Idle, loop)
+        self._inheritance_test(pyuv.Idle, self.loop)
 
     def test_inherit_check(self):
-        loop = pyuv.Loop.default_loop()
-        self._inheritance_test(pyuv.Check, loop)
+        self._inheritance_test(pyuv.Check, self.loop)
 
     def test_inherit_signal(self):
-        loop = pyuv.Loop.default_loop()
-        self._inheritance_test(pyuv.Signal, loop)
+        self._inheritance_test(pyuv.Signal, self.loop)
 
     def test_inherit_fs_fspoll(self):
-        loop = pyuv.Loop.default_loop()
-        self._inheritance_test(pyuv.fs.FSPoll, loop)
+        self._inheritance_test(pyuv.fs.FSPoll, self.loop)
 
     def test_inherit_thread_barrier(self):
         self._inheritance_test(pyuv.thread.Barrier, 1)
@@ -87,4 +75,3 @@ class TestBasetype(unittest2.TestCase):
 
 if __name__ == '__main__':
     unittest2.main(verbosity=2)
-

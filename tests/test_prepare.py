@@ -1,9 +1,9 @@
 
-from common import unittest2
+from common import unittest2, TestCase
 import pyuv
 
 
-class PrepareTest(unittest2.TestCase):
+class PrepareTest(TestCase):
 
     def test_prepare1(self):
         self.prepare_cb_called = 0
@@ -11,13 +11,11 @@ class PrepareTest(unittest2.TestCase):
             self.prepare_cb_called += 1
             prepare.stop()
             prepare.close()
-        loop = pyuv.Loop.default_loop()
-        prepare = pyuv.Prepare(loop)
+        prepare = pyuv.Prepare(self.loop)
         prepare.start(prepare_cb)
-        loop.run()
+        self.loop.run()
         self.assertEqual(self.prepare_cb_called, 1)
 
 
 if __name__ == '__main__':
     unittest2.main(verbosity=2)
-

@@ -4,12 +4,12 @@ import signal
 import time
 import threading
 
-from common import unittest2, platform_skip
+from common import unittest2, platform_skip, TestCase
 import pyuv
 
 
 @platform_skip(["win32"])
-class SignalTest(unittest2.TestCase):
+class SignalTest(TestCase):
 
     def signal_cb(self, handle, signum):
         self.assertEqual(signum, signal.SIGUSR1)
@@ -24,7 +24,6 @@ class SignalTest(unittest2.TestCase):
     def test_signal1(self):
         self.async_cb_called = 0
         self.signal_cb_called = 0
-        self.loop = pyuv.Loop.default_loop()
         self.async = pyuv.Async(self.loop, self.async_cb)
         self.signal_h = pyuv.Signal(self.loop)
         self.signal_h.start(self.signal_cb, signal.SIGUSR1)
@@ -67,4 +66,3 @@ class MultiLoopSignalTest(unittest2.TestCase):
 
 if __name__ == '__main__':
     unittest2.main(verbosity=2)
-

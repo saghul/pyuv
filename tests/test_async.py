@@ -1,11 +1,11 @@
 
 import threading
 
-from common import unittest2
+from common import unittest2, TestCase
 import pyuv
 
 
-class AsyncTest(unittest2.TestCase):
+class AsyncTest(TestCase):
 
     def test_async1(self):
         self.async_cb_called = 0
@@ -30,7 +30,6 @@ class AsyncTest(unittest2.TestCase):
                     if n == 3:
                         break
                     self.async.send()
-        self.loop = pyuv.Loop.default_loop()
         self.async = pyuv.Async(self.loop, async_cb)
         self.prepare = pyuv.Prepare(self.loop)
         self.prepare.start(prepare_cb)
@@ -42,4 +41,3 @@ class AsyncTest(unittest2.TestCase):
 
 if __name__ == '__main__':
     unittest2.main(verbosity=2)
-

@@ -1,9 +1,9 @@
 
-from common import unittest2
+from common import unittest2, TestCase
 import pyuv
 
 
-class IdleTest(unittest2.TestCase):
+class IdleTest(TestCase):
 
     def test_idle1(self):
         self.idle_cb_called = 0
@@ -11,13 +11,11 @@ class IdleTest(unittest2.TestCase):
             self.idle_cb_called += 1
             idle.stop()
             idle.close()
-        loop = pyuv.Loop.default_loop()
-        idle = pyuv.Idle(loop)
+        idle = pyuv.Idle(self.loop)
         idle.start(idle_cb)
-        loop.run()
+        self.loop.run()
         self.assertEqual(self.idle_cb_called, 1)
 
 
 if __name__ == '__main__':
     unittest2.main(verbosity=2)
-

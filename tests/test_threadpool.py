@@ -4,7 +4,7 @@ import sys
 import threading
 import time
 
-from common import unittest2
+from common import unittest2, TestCase
 import pyuv
 
 
@@ -24,12 +24,12 @@ class WorkItem(object):
             self._cb = None
 
 
-class ThreadPoolTest(unittest2.TestCase):
+class ThreadPoolTest(TestCase):
 
     def setUp(self):
+        super(ThreadPoolTest, self).setUp()
         self.pool_cb_called = 0
         self.pool_after_work_cb_called = 0
-        self.loop = pyuv.Loop.default_loop()
 
     def run_in_pool(self, *args, **kw):
         self.pool_cb_called += 1

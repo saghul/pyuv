@@ -2,17 +2,16 @@
 import gc
 import weakref
 
-from common import unittest2
+from common import unittest2, TestCase
 import pyuv
 
 
 class Foo(object): pass
 
-class GCTest(unittest2.TestCase):
+class GCTest(TestCase):
 
     def test_gc(self):
-        loop = pyuv.Loop.default_loop()
-        timer = pyuv.Timer(loop)
+        timer = pyuv.Timer(self.loop)
 
         w_timer = weakref.ref(timer)
         self.assertNotEqual(w_timer(), None)
@@ -30,4 +29,3 @@ class GCTest(unittest2.TestCase):
 
 if __name__ == '__main__':
     unittest2.main(verbosity=2)
-
