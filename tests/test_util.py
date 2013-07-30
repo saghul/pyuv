@@ -1,11 +1,11 @@
 
-from common import unittest2
+from common import unittest2, TestCase
 
 import pyuv
 import socket
 
 
-class UtilTest(unittest2.TestCase):
+class UtilTest(TestCase):
 
     def test_hrtime(self):
         r = pyuv.util.hrtime()
@@ -42,11 +42,9 @@ class UtilTest(unittest2.TestCase):
     def test_getaddrinfo(self):
         def getaddrinfo_cb(result, errorno):
             self.assertEqual(errorno, None)
-        loop = pyuv.Loop.default_loop()
-        pyuv.util.getaddrinfo(loop, getaddrinfo_cb, 'localhost', 80, socket.AF_INET)
-        loop.run()
+        pyuv.util.getaddrinfo(self.loop, getaddrinfo_cb, 'localhost', 80, socket.AF_INET)
+        self.loop.run()
 
 
 if __name__ == '__main__':
     unittest2.main(verbosity=2)
-

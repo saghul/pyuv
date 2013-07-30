@@ -1,5 +1,5 @@
 
-from common import unittest2, linesep
+from common import unittest2, linesep, TestCase
 
 import errno
 import pyuv
@@ -15,10 +15,10 @@ else:
     NONBLOCKING = (errno.EAGAIN, errno.EINPROGRESS, errno.EWOULDBLOCK)
 
 
-class PollTest(unittest2.TestCase):
+class PollTest(TestCase):
 
     def setUp(self):
-        self.loop = pyuv.Loop.default_loop()
+        super(PollTest, self).setUp()
         self.poll = None
         self.server = None
         self.sock = None
@@ -27,7 +27,7 @@ class PollTest(unittest2.TestCase):
 
     def on_connection(self, server, error):
         self.assertEqual(error, None)
-        client = pyuv.TCP(pyuv.Loop.default_loop())
+        client = pyuv.TCP(self.loop)
         server.accept(client)
         self.client_connection = client
         client.start_read(self.on_client_connection_read)
@@ -38,10 +38,6 @@ class PollTest(unittest2.TestCase):
         self.poll.close()
         self.client_connection.close()
         self.server.close()
-
-    def on_client_connection(self, client, error):
-        self.assertEqual(error, None)
-        client.start_read(self.on_client_read)
 
     def poll_cb(self, handle, events, error):
         if self.connecting:
@@ -92,5 +88,3 @@ class PollTest(unittest2.TestCase):
 
 if __name__ == '__main__':
     unittest2.main(verbosity=2)
-
-

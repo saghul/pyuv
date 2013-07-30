@@ -1,6 +1,5 @@
 
-from common import unittest2, platform_skip
-import common
+from common import unittest2, linesep, platform_skip, TestCase
 import pyuv
 import socket
 import sys
@@ -10,10 +9,10 @@ TEST_PORT = 12345
 TEST_PORT2 = 12346
 MULTICAST_ADDRESS = "239.255.0.1"
 
-class UDPTest(unittest2.TestCase):
+class UDPTest(TestCase):
 
     def setUp(self):
-        self.loop = pyuv.Loop.default_loop()
+        super(UDPTest, self).setUp()
         self.server = None
         self.client = None
 
@@ -25,7 +24,7 @@ class UDPTest(unittest2.TestCase):
         ip, port = ip_port
         data = data.strip()
         self.assertEqual(data, b"PING")
-        self.server.send((ip, port), b"PONG"+common.linesep)
+        self.server.send((ip, port), b"PONG"+linesep)
 
     def on_client_recv(self, handle, ip_port, flags, data, error):
         self.assertEqual(flags, 0)
@@ -36,7 +35,7 @@ class UDPTest(unittest2.TestCase):
         self.server.close(self.on_close)
 
     def timer_cb(self, timer):
-        self.client.send(("127.0.0.1", TEST_PORT), b"PING"+common.linesep)
+        self.client.send(("127.0.0.1", TEST_PORT), b"PING"+linesep)
         timer.close(self.on_close)
 
     def test_udp_pingpong(self):
@@ -59,10 +58,10 @@ class UDPTest(unittest2.TestCase):
         self.assertEqual(self.on_close_called, 3)
 
 
-class UDPTestNull(unittest2.TestCase):
+class UDPTestNull(TestCase):
 
     def setUp(self):
-        self.loop = pyuv.Loop.default_loop()
+        super(UDPTestNull, self).setUp()
         self.server = None
         self.client = None
 
@@ -74,7 +73,7 @@ class UDPTestNull(unittest2.TestCase):
         ip, port = ip_port
         data = data.strip()
         self.assertEqual(data, b"PIN\x00G")
-        self.server.send((ip, port), b"PONG"+common.linesep)
+        self.server.send((ip, port), b"PONG"+linesep)
 
     def on_client_recv(self, handle, ip_port, flags, data, error):
         self.assertEqual(flags, 0)
@@ -85,7 +84,7 @@ class UDPTestNull(unittest2.TestCase):
         self.server.close(self.on_close)
 
     def timer_cb(self, timer):
-        self.client.send(("127.0.0.1", TEST_PORT), b"PIN\x00G"+common.linesep)
+        self.client.send(("127.0.0.1", TEST_PORT), b"PIN\x00G"+linesep)
         timer.close(self.on_close)
 
     def test_udp_pingpong_null(self):
@@ -102,10 +101,10 @@ class UDPTestNull(unittest2.TestCase):
         self.assertEqual(self.on_close_called, 3)
 
 
-class UDPTestList(unittest2.TestCase):
+class UDPTestList(TestCase):
 
     def setUp(self):
-        self.loop = pyuv.Loop.default_loop()
+        super(UDPTestList, self).setUp()
         self.server = None
         self.client = None
 
@@ -117,7 +116,7 @@ class UDPTestList(unittest2.TestCase):
         ip, port = ip_port
         data = data.strip()
         self.assertEqual(data, b"PING")
-        self.server.sendlines((ip, port), [b"PONG", common.linesep])
+        self.server.sendlines((ip, port), [b"PONG", linesep])
 
     def on_client_recv(self, handle, ip_port, flags, data, error):
         self.assertEqual(flags, 0)
@@ -128,7 +127,7 @@ class UDPTestList(unittest2.TestCase):
         self.server.close(self.on_close)
 
     def timer_cb(self, timer):
-        self.client.sendlines(("127.0.0.1", TEST_PORT), [b"PING", common.linesep])
+        self.client.sendlines(("127.0.0.1", TEST_PORT), [b"PING", linesep])
         timer.close(self.on_close)
 
     def test_udp_pingpong_list(self):
@@ -145,10 +144,10 @@ class UDPTestList(unittest2.TestCase):
         self.assertEqual(self.on_close_called, 3)
 
 
-class UDPTestListNull(unittest2.TestCase):
+class UDPTestListNull(TestCase):
 
     def setUp(self):
-        self.loop = pyuv.Loop.default_loop()
+        super(UDPTestListNull, self).setUp()
         self.server = None
         self.client = None
 
@@ -160,7 +159,7 @@ class UDPTestListNull(unittest2.TestCase):
         ip, port = ip_port
         data = data.strip()
         self.assertEqual(data, b"PIN\x00G")
-        self.server.sendlines((ip, port), [b"PONG", common.linesep])
+        self.server.sendlines((ip, port), [b"PONG", linesep])
 
     def on_client_recv(self, handle, ip_port, flags, data, error):
         self.assertEqual(flags, 0)
@@ -171,7 +170,7 @@ class UDPTestListNull(unittest2.TestCase):
         self.server.close(self.on_close)
 
     def timer_cb(self, timer):
-        self.client.sendlines(("127.0.0.1", TEST_PORT), [b"PIN\x00G", common.linesep])
+        self.client.sendlines(("127.0.0.1", TEST_PORT), [b"PIN\x00G", linesep])
         timer.close(self.on_close)
 
     def test_udp_pingpong_list_null(self):
@@ -188,10 +187,10 @@ class UDPTestListNull(unittest2.TestCase):
         self.assertEqual(self.on_close_called, 3)
 
 
-class UDPTestInvalidData(unittest2.TestCase):
+class UDPTestInvalidData(TestCase):
 
     def setUp(self):
-        self.loop = pyuv.Loop.default_loop()
+        super(UDPTestInvalidData, self).setUp()
         self.server = None
         self.client = None
 
@@ -238,10 +237,10 @@ else:
         yield MULTICAST_ADDRESS
 
 
-class UDPTestMulticast(unittest2.TestCase):
+class UDPTestMulticast(TestCase):
 
     def setUp(self):
-        self.loop = pyuv.Loop.default_loop()
+        super(UDPTestMulticast, self).setUp()
         self.server = None
         self.clients = None
         self.received_data = None
@@ -294,10 +293,7 @@ class UDPTestMulticast(unittest2.TestCase):
         self.assertEqual(self.received_data, b"PING")
 
 
-class UDPTestBigDatagram(unittest2.TestCase):
-
-    def setUp(self):
-        self.loop = pyuv.Loop.default_loop()
+class UDPTestBigDatagram(TestCase):
 
     def send_cb(self, handle, error):
         self.handle.close()
@@ -312,21 +308,19 @@ class UDPTestBigDatagram(unittest2.TestCase):
         self.assertEqual(self.errorno, pyuv.errno.UV_EMSGSIZE)
 
 
-class UDPTestOpen(unittest2.TestCase):
+class UDPTestOpen(TestCase):
 
     def test_udp_open(self):
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        loop = pyuv.Loop.default_loop()
-        handle = pyuv.UDP(loop)
+        handle = pyuv.UDP(self.loop)
         handle.open(sock.fileno())
         try:
             handle.bind(("1.2.3.4", TEST_PORT))
         except pyuv.error.UDPError as e:
             self.assertEqual(e.args[0], pyuv.errno.UV_EADDRNOTAVAIL)
-        loop.run()
+        self.loop.run()
         sock.close()
 
 
 if __name__ == '__main__':
     unittest2.main(verbosity=2)
-

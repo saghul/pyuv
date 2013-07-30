@@ -1,9 +1,9 @@
 
-from common import unittest2
+from common import unittest2, TestCase
 import pyuv
 
 
-class CheckTest(unittest2.TestCase):
+class CheckTest(TestCase):
 
     def test_check1(self):
         self.check_cb_called = 0
@@ -16,15 +16,13 @@ class CheckTest(unittest2.TestCase):
             self.timer_cb_called += 1
             timer.stop()
             timer.close()
-        loop = pyuv.Loop.default_loop()
-        check = pyuv.Check(loop)
+        check = pyuv.Check(self.loop)
         check.start(check_cb)
-        timer = pyuv.Timer(loop)
+        timer = pyuv.Timer(self.loop)
         timer.start(timer_cb, 0.1, 0)
-        loop.run()
+        self.loop.run()
         self.assertEqual(self.check_cb_called, 1)
 
 
 if __name__ == '__main__':
     unittest2.main(verbosity=2)
-

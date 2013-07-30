@@ -1,20 +1,19 @@
 
-from common import unittest2
+from common import unittest2, TestCase
 import pyuv
 
 
-class LoopRunTest(unittest2.TestCase):
+class LoopRunTest(TestCase):
 
     def test_run_once(self):
         self.cb_called = 0
         def prepare_cb(handle):
             handle.close()
             self.cb_called += 1
-        loop = pyuv.Loop.default_loop()
         for i in range(500):
-            prepare = pyuv.Prepare(loop)
+            prepare = pyuv.Prepare(self.loop)
             prepare.start(prepare_cb)
-            loop.run(pyuv.UV_RUN_ONCE)
+            self.loop.run(pyuv.UV_RUN_ONCE)
         self.assertEqual(self.cb_called, 500)
 
     def test_run_nowait(self):
@@ -22,10 +21,9 @@ class LoopRunTest(unittest2.TestCase):
         def timer_cb(handle):
             handle.close()
             self.cb_called = 1
-        loop = pyuv.Loop.default_loop()
-        timer = pyuv.Timer(loop)
+        timer = pyuv.Timer(self.loop)
         timer.start(timer_cb, 10, 10)
-        loop.run(pyuv.UV_RUN_NOWAIT)
+        self.loop.run(pyuv.UV_RUN_NOWAIT)
         self.assertEqual(self.cb_called, 0)
 
     def test_stop(self):
@@ -42,7 +40,6 @@ class LoopRunTest(unittest2.TestCase):
             self.prepare_called += 1
             if self.prepare_called == self.num_ticks:
                 handle.close()
-        self.loop = pyuv.Loop.default_loop()
         timer = pyuv.Timer(self.loop)
         timer.start(timer_cb, 0.1, 0.1)
         prepare = pyuv.Prepare(self.loop)
@@ -59,4 +56,3 @@ class LoopRunTest(unittest2.TestCase):
 
 if __name__ == '__main__':
     unittest2.main(verbosity=2)
-

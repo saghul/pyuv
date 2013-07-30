@@ -3,8 +3,7 @@
 import socket
 import sys
 
-from common import unittest2
-import common
+from common import unittest2, linesep, TestCase
 import pyuv
 
 try:
@@ -16,58 +15,54 @@ except NameError:
 
 TEST_PORT = 1234
 
-class TCPErrorTest(unittest2.TestCase):
+class TCPErrorTest(TestCase):
 
     def on_client_connect_error(self, client, error):
         self.assertNotEqual(error, None)
         client.close()
 
     def test_client1(self):
-        loop = pyuv.Loop.default_loop()
-        client = pyuv.TCP(loop)
+        client = pyuv.TCP(self.loop)
         client.connect(("127.0.0.1", TEST_PORT), self.on_client_connect_error)
-        loop.run()
+        self.loop.run()
 
     def test_client2(self):
-        loop = pyuv.Loop.default_loop()
-        client = pyuv.TCP(loop)
+        client = pyuv.TCP(self.loop)
         self.assertFalse(client.readable)
         self.assertFalse(client.writable)
         client.close()
-        loop.run()
+        self.loop.run()
 
     def test_open(self):
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        loop = pyuv.Loop.default_loop()
-        client = pyuv.TCP(loop)
+        client = pyuv.TCP(self.loop)
         client.open(sock.fileno())
         client.connect(("127.0.0.1", TEST_PORT), self.on_client_connect_error)
-        loop.run()
+        self.loop.run()
         sock.close()
 
     def test_raise(self):
-        loop = pyuv.Loop.default_loop()
-        tcp = pyuv.TCP(loop)
+        tcp = pyuv.TCP(self.loop)
         self.assertRaises(pyuv.error.TCPError, tcp.write, b"PING")
         tcp.close()
-        loop.run()
+        self.loop.run()
 
 
-class TCPTest(unittest2.TestCase):
+class TCPTest(TestCase):
 
     def setUp(self):
-        self.loop = pyuv.Loop.default_loop()
+        super(TCPTest, self).setUp()
         self.server = None
         self.client = None
         self.client_connections = []
 
     def on_connection(self, server, error):
         self.assertEqual(error, None)
-        client = pyuv.TCP(pyuv.Loop.default_loop())
+        client = pyuv.TCP(self.loop)
         server.accept(client)
         self.client_connections.append(client)
         client.start_read(self.on_client_connection_read)
-        client.write(b"PING"+common.linesep)
+        client.write(b"PING"+linesep)
 
     def on_client_connection_read(self, client, data, error):
         if data is None:
@@ -84,7 +79,7 @@ class TCPTest(unittest2.TestCase):
 
     def on_client_read(self, client, data, error):
         self.assertNotEqual(data, None)
-        self.assertEqual(data, b"PING"+common.linesep)
+        self.assertEqual(data, b"PING"+linesep)
         client.close()
 
     def test_tcp1(self):
@@ -96,17 +91,17 @@ class TCPTest(unittest2.TestCase):
         self.loop.run()
 
 
-class TCPTest2(unittest2.TestCase):
+class TCPTest2(TestCase):
 
     def setUp(self):
-        self.loop = pyuv.Loop.default_loop()
+        super(TCPTest2, self).setUp()
         self.server = None
         self.client = None
         self.write_cb_count = 0
 
     def on_connection(self, server, error):
         self.assertEqual(error, None)
-        client = pyuv.TCP(pyuv.Loop.default_loop())
+        client = pyuv.TCP(self.loop)
         server.accept(client)
         for x in range(1024):
             client.write(b"PING"*1000, self.on_client_write)
@@ -131,16 +126,16 @@ class TCPTest2(unittest2.TestCase):
         self.assertEqual(self.write_cb_count, 1024)
 
 
-class TCPTest3(unittest2.TestCase):
+class TCPTest3(TestCase):
 
     def setUp(self):
-        self.loop = pyuv.Loop.default_loop()
+        super(TCPTest3, self).setUp()
         self.server = None
         self.client = None
 
     def on_connection(self, server, error):
         self.assertEqual(error, None)
-        connection = pyuv.TCP(pyuv.Loop.default_loop())
+        connection = pyuv.TCP(self.loop)
         server.accept(connection)
         while connection.write_queue_size == 0:
             connection.write(b"PING"*1000)
@@ -162,16 +157,16 @@ class TCPTest3(unittest2.TestCase):
         self.loop.run()
 
 
-class TCPTestUnicode(unittest2.TestCase):
+class TCPTestUnicode(TestCase):
 
     def setUp(self):
-        self.loop = pyuv.Loop.default_loop()
+        super(TCPTestUnicode, self).setUp()
         self.server = None
         self.client = None
 
     def on_connection(self, server, error):
         self.assertEqual(error, None)
-        client = pyuv.TCP(pyuv.Loop.default_loop())
+        client = pyuv.TCP(self.loop)
         server.accept(client)
         if sys.version_info >= (3, 0):
             data = 'PÏNG'
@@ -199,17 +194,17 @@ class TCPTestUnicode(unittest2.TestCase):
         self.loop.run()
 
 
-class TCPTestMemoryview(unittest2.TestCase):
+class TCPTestMemoryview(TestCase):
 
     def setUp(self):
-        self.loop = pyuv.Loop.default_loop()
+        super(TCPTestMemoryview, self).setUp()
         self.server = None
         self.client = None
         self.client_connections = []
 
     def on_connection(self, server, error):
         self.assertEqual(error, None)
-        client = pyuv.TCP(pyuv.Loop.default_loop())
+        client = pyuv.TCP(self.loop)
         server.accept(client)
         self.client_connections.append(client)
         client.start_read(self.on_client_connection_read)
@@ -241,21 +236,21 @@ class TCPTestMemoryview(unittest2.TestCase):
         self.loop.run()
 
 
-class TCPTestNull(unittest2.TestCase):
+class TCPTestNull(TestCase):
 
     def setUp(self):
-        self.loop = pyuv.Loop.default_loop()
+        super(TCPTestNull, self).setUp()
         self.server = None
         self.client = None
         self.client_connections = []
 
     def on_connection(self, server, error):
         self.assertEqual(error, None)
-        client = pyuv.TCP(pyuv.Loop.default_loop())
+        client = pyuv.TCP(self.loop)
         server.accept(client)
         self.client_connections.append(client)
         client.start_read(self.on_client_connection_read)
-        client.write(b"PIN\x00G"+common.linesep)
+        client.write(b"PIN\x00G"+linesep)
 
     def on_client_connection_read(self, client, data, error):
         if data is None:
@@ -270,7 +265,7 @@ class TCPTestNull(unittest2.TestCase):
 
     def on_client_read(self, client, data, error):
         self.assertNotEqual(data, None)
-        self.assertEqual(data, b"PIN\x00G"+common.linesep)
+        self.assertEqual(data, b"PIN\x00G"+linesep)
         client.close()
 
     def test_tcp_null(self):
@@ -282,16 +277,16 @@ class TCPTestNull(unittest2.TestCase):
         self.loop.run()
 
 
-class TCPTestList(unittest2.TestCase):
+class TCPTestList(TestCase):
 
     def setUp(self):
-        self.loop = pyuv.Loop.default_loop()
+        super(TCPTestList, self).setUp()
         self.server = None
         self.client = None
         self.client_connections = []
 
     def on_connection(self, server, error):
-        client = pyuv.TCP(pyuv.Loop.default_loop())
+        client = pyuv.TCP(self.loop)
         server.accept(client)
         self.client_connections.append(client)
         client.start_read(self.on_client_connection_read)
@@ -322,15 +317,15 @@ class TCPTestList(unittest2.TestCase):
         self.loop.run()
 
 
-class TCPTestListUnicode(unittest2.TestCase):
+class TCPTestListUnicode(TestCase):
 
     def setUp(self):
-        self.loop = pyuv.Loop.default_loop()
+        super(TCPTestListUnicode, self).setUp()
         self.server = None
         self.client = None
 
     def on_connection(self, server, error):
-        client = pyuv.TCP(pyuv.Loop.default_loop())
+        client = pyuv.TCP(self.loop)
         server.accept(client)
         if sys.version_info >= (3, 0):
             data = 'PÏNG'
@@ -358,16 +353,16 @@ class TCPTestListUnicode(unittest2.TestCase):
         self.loop.run()
 
 
-class TCPTestListNull(unittest2.TestCase):
+class TCPTestListNull(TestCase):
 
     def setUp(self):
-        self.loop = pyuv.Loop.default_loop()
+        super(TCPTestListNull, self).setUp()
         self.server = None
         self.client = None
         self.client_connections = []
 
     def on_connection(self, server, error):
-        client = pyuv.TCP(pyuv.Loop.default_loop())
+        client = pyuv.TCP(self.loop)
         server.accept(client)
         self.client_connections.append(client)
         client.start_read(self.on_client_connection_read)
@@ -398,16 +393,16 @@ class TCPTestListNull(unittest2.TestCase):
         self.loop.run()
 
 
-class TCPTestInvalidData(unittest2.TestCase):
+class TCPTestInvalidData(TestCase):
 
     def setUp(self):
-        self.loop = pyuv.Loop.default_loop()
+        super(TCPTestInvalidData, self).setUp()
         self.server = None
         self.client = None
         self.client_connections = []
 
     def on_connection(self, server, error):
-        client = pyuv.TCP(pyuv.Loop.default_loop())
+        client = pyuv.TCP(self.loop)
         server.accept(client)
         self.client_connections.append(client)
         client.start_read(self.on_client_connection_read)
@@ -445,27 +440,26 @@ class TCPTestInvalidData(unittest2.TestCase):
         self.loop.run()
 
 
-class TCPShutdownTest(unittest2.TestCase):
+class TCPShutdownTest(TestCase):
 
     def setUp(self):
-        self.loop = pyuv.Loop.default_loop()
+        super(TCPShutdownTest, self).setUp()
         self.server = None
         self.client = None
         self.client_connections = []
 
     def on_connection(self, server, error):
-        client = pyuv.TCP(pyuv.Loop.default_loop())
+        client = pyuv.TCP(self.loop)
         server.accept(client)
         self.client_connections.append(client)
         client.start_read(self.on_client_connection_read)
-        client.write(b"PING"+common.linesep)
+        client.write(b"PING"+linesep)
 
     def on_client_connection_read(self, client, data, error):
         if data is None:
             client.close(self.on_close)
             self.client_connections.remove(client)
             self.server.close(self.on_close)
-            return
 
     def on_client_connection(self, client, error):
         self.assertEqual(error, None)
@@ -480,7 +474,7 @@ class TCPShutdownTest(unittest2.TestCase):
 
     def on_client_read(self, client, data, error):
         self.assertNotEqual(data, None)
-        self.assertEqual(data, b"PING"+common.linesep)
+        self.assertEqual(data, b"PING"+linesep)
         client.shutdown(self.on_client_shutdown)
 
     def test_tcp_shutdown(self):
@@ -496,19 +490,16 @@ class TCPShutdownTest(unittest2.TestCase):
         self.assertEqual(self.close_cb_called, 3)
 
 
-class TCPFlagsTest(unittest2.TestCase):
+class TCPFlagsTest(TestCase):
 
     def test_tcp_flags(self):
-        loop = pyuv.Loop.default_loop()
-        tcp = pyuv.TCP(loop)
+        tcp = pyuv.TCP(self.loop)
         tcp.nodelay(True)
         tcp.keepalive(True, 60)
         tcp.simultaneous_accepts(True)
         tcp.close()
-        loop.run()
-        self.assertTrue(True)
+        self.loop.run()
 
 
 if __name__ == '__main__':
     unittest2.main(verbosity=2)
-

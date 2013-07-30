@@ -1,5 +1,5 @@
 
-from common import unittest2, platform_skip
+from common import unittest2, platform_skip, TestCase
 from functools import partial
 
 import pyuv
@@ -18,10 +18,7 @@ else:
     TEST_PIPE = 'test-pipe'
 
 
-class IPCTest(unittest2.TestCase):
-
-    def setUp(self):
-        self.loop = pyuv.Loop.default_loop()
+class IPCTest(TestCase):
 
     def proc_exit_cb(self, proc, exit_status, term_signal):
         proc.close()
@@ -77,10 +74,7 @@ class IPCTest(unittest2.TestCase):
         self._do_test("listen_after_write")
 
 
-class IPCSendRecvTest(unittest2.TestCase):
-
-    def setUp(self):
-        self.loop = pyuv.Loop.default_loop()
+class IPCSendRecvTest(TestCase):
 
     def proc_exit_cb(self, proc, exit_status, term_signal):
         proc.close()
