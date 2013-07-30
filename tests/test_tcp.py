@@ -145,13 +145,13 @@ class TCPTest3(unittest2.TestCase):
         while connection.write_queue_size == 0:
             connection.write(b"PING"*1000)
         connection.close()
-        self.client.close()
         self.server.close()
 
     def on_client_connection(self, client, error):
         self.assertEqual(error, None)
         self.assertTrue(client.readable)
         self.assertTrue(client.writable)
+        self.client.close()
 
     def test_tcp_write_saturate(self):
         self.server = pyuv.TCP(self.loop)

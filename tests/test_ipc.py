@@ -95,7 +95,7 @@ class IPCSendRecvTest(unittest2.TestCase):
             recv_handle = pyuv.UDP(self.loop)
         self.channel.accept(recv_handle)
         self.channel.close()
-        self.send_pipe.close()
+        self.send_handle.close()
         recv_handle.close()
 
     def _do_test(self):
@@ -104,21 +104,23 @@ class IPCSendRecvTest(unittest2.TestCase):
         proc = pyuv.Process(self.loop)
         proc.spawn(file=sys.executable, args=["proc_ipc_echo.py"], exit_callback=self.proc_exit_cb, stdio=stdio)
         self.channel.write2(b".", self.send_handle)
-        self.channel.start_read2(functools.partial(self.on_channel_read, self.send_handle_type))
+        self.channel.start_read2(partial(self.on_channel_read, self.send_handle_type))
         self.loop.run()
 
     @platform_skip(["win32"])
     def test_ipc_send_recv_pipe(self):
         # Handle that will be sent to the process and back
         self.send_handle = pyuv.Pipe(self.loop, True)
-        self.send_handle.bind(TEST_PIPE+'2')
+        self.send_handle.bind(TEST_PIPE + '2')
         self.send_handle_type = pyuv.UV_NAMED_PIPE
+        self._do_test()
 
     def test_ipc_send_recv_tcp(self):
         # Handle that will be sent to the process and back
         self.send_handle = pyuv.TCP(self.loop)
         self.send_handle.bind(TEST_ADDR2)
         self.send_handle_type = pyuv.UV_TCP
+        self._do_test()
 
     @platform_skip(["win32"])
     def test_ipc_send_recv_udp(self):
@@ -126,8 +128,8 @@ class IPCSendRecvTest(unittest2.TestCase):
         self.send_handle = pyuv.UDP(self.loop)
         self.send_handle.bind(TEST_ADDR2)
         self.send_handle_type = pyuv.UV_UDP
+        self._do_test()
 
 
 if __name__ == '__main__':
     unittest2.main(verbosity=2)
-
