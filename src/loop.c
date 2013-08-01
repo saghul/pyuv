@@ -31,7 +31,6 @@ init_loop(Loop *loop, int is_default)
     loop->uv_loop = uv_loop;
     loop->is_default = is_default;
     loop->weakreflist = NULL;
-    loop->excepthook_cb = NULL;
 
     return 0;
 }
@@ -277,6 +276,25 @@ error:
 
 
 static PyObject *
+Loop_func_excepthook(Loop *self, PyObject *args)
+{
+    PyObject *exc, *value, *tb;
+
+    if (!PyArg_ParseTuple(args, "OOO:excepthook", &exc, &value, &tb)) {
+        return NULL;
+    }
+    Py_INCREF(exc);
+    Py_INCREF(value);
+    Py_INCREF(args);
+    PyErr_Restore(exc, value, tb);
+    PySys_WriteStderr("Unhandled exception in callback\n");
+    PyErr_PrintEx(0);
+    PyErr_Clear();
+    Py_RETURN_NONE;
+}
+
+
+static PyObject *
 Loop_func_default_loop(PyObject *cls)
 {
     UNUSED_ARG(cls);
@@ -373,37 +391,6 @@ Loop_dict_set(Loop *self, PyObject* val, void* c)
 }
 
 
-static PyObject*
-Loop_excepthook_get(Loop *self, void* c)
-{
-    UNUSED_ARG(c);
-    return self->excepthook_cb;
-}
-
-
-static int
-Loop_excepthook_set(Loop *self, PyObject* val, void* c)
-{
-    PyObject* tmp;
-
-    UNUSED_ARG(c);
-
-    if (val == NULL) {
-        PyErr_SetString(PyExc_TypeError, "excepthook may not be deleted");
-        return -1;
-    }
-    if (val != Py_None && !PyCallable_Check(val)) {
-        PyErr_SetString(PyExc_TypeError, "a callable or None is required");
-        return -1;
-    }
-    tmp = self->excepthook_cb;
-    Py_INCREF(val);
-    self->excepthook_cb = val;
-    Py_XDECREF(tmp);
-    return 0;
-}
-
-
 static PyMethodDef
 Loop_tp_methods[] = {
     { "run", (PyCFunction)Loop_func_run, METH_VARARGS, "Run the event loop." },
@@ -415,6 +402,7 @@ Loop_tp_methods[] = {
     { "get_timeout", (PyCFunction)Loop_func_get_timeout, METH_NOARGS, "Get the poll timeout, or -1 for no timeout." },
     { "default_loop", (PyCFunction)Loop_func_default_loop, METH_CLASS|METH_NOARGS, "Instantiate the default loop." },
     { "queue_work", (PyCFunction)Loop_func_queue_work, METH_VARARGS, "Queue the given function to be run in the thread pool." },
+    { "excepthook", (PyCFunction)Loop_func_excepthook, METH_VARARGS, "Loop uncaught exception handler" },
     { NULL }
 };
 
@@ -422,7 +410,6 @@ Loop_tp_methods[] = {
 static PyGetSetDef Loop_tp_getsets[] = {
     {"__dict__", (getter)Loop_dict_get, (setter)Loop_dict_set, NULL},
     {"default", (getter)Loop_default_get, NULL, "Is this the default loop?", NULL},
-    {"excepthook", (getter)Loop_excepthook_get, (setter)Loop_excepthook_set, "Loop uncaught exception handler", NULL},
     {NULL}
 };
 

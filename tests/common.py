@@ -1,4 +1,5 @@
 
+import io
 import os
 import sys
 sys.path.insert(0, '../')
@@ -14,6 +15,7 @@ else:
 
 if sys.version_info >= (3,):
     linesep = os.linesep.encode()
+    StdBufferIO = io.StringIO
 
     def reraise(typ, value, tb):
         if value.__traceback__ is not tb:
@@ -22,6 +24,7 @@ if sys.version_info >= (3,):
 
 else:
     linesep = os.linesep
+    StdBufferIO = io.BytesIO
 
     exec("""\
 def reraise(typ, value, tb):
