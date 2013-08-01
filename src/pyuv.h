@@ -127,8 +127,10 @@ typedef int Bool;
     } while(0)                                                                      \
 
 #define PYUV_SET_NONE(x)     \
-    Py_INCREF(Py_None);      \
-    (x) = Py_None;           \
+    do {                     \
+        Py_INCREF(Py_None);  \
+        (x) = Py_None;       \
+    } while(0)               \
 
 #define PYUV_SLAB_SIZE 65536
 
@@ -138,7 +140,6 @@ typedef int Bool;
 /* Loop */
 typedef struct {
     PyObject_HEAD
-    PyObject *excepthook_cb;
     PyObject *weakreflist;
     PyObject *dict;
     uv_loop_t *uv_loop;
@@ -722,43 +723,54 @@ makesockaddr(struct sockaddr *addr, int addrlen)
 
 
 /* handle uncausht exception in a callback */
-static INLINE void
+static void
 handle_uncaught_exception(Loop *loop)
 {
-    PyObject *type, *val, *tb, *result;
+    PyObject *excepthook, *exc, *value, *tb, *result;
+    Bool exc_in_hook = False;
 
     ASSERT(loop);
     ASSERT(PyErr_Occurred());
+    PyErr_Fetch(&exc, &value, &tb);
 
-    if (loop->excepthook_cb != NULL && loop->excepthook_cb != Py_None) {
-        PyErr_Fetch(&type, &val, &tb);
-        PyErr_NormalizeException(&type, &val, &tb);
-
-        if (!val) {
-            val = Py_None;
-            Py_INCREF(Py_None);
+    excepthook = PyObject_GetAttrString((PyObject *)loop, "excepthook");
+    if (excepthook == NULL) {
+        if (!PyErr_ExceptionMatches(PyExc_AttributeError)) {
+            PySys_WriteStderr("Exception while getting excepthook\n");
+            PyErr_PrintEx(0);
+            exc_in_hook = True;
         }
-        if (!tb) {
-            tb = Py_None;
-            Py_INCREF(Py_None);
-        }
-
-        result = PyObject_CallFunctionObjArgs(loop->excepthook_cb, type, val, tb, NULL);
+        PyErr_Restore(exc, value, tb);
+    } else if (excepthook == Py_None) {
+        PyErr_Restore(exc, value, tb);
+    } else {
+        PyErr_NormalizeException(&exc, &value, &tb);
+        if (!value)
+            PYUV_SET_NONE(value);
+        if (!tb)
+            PYUV_SET_NONE(tb);
+        result = PyObject_CallFunctionObjArgs(excepthook, exc, value, tb, NULL);
         if (result == NULL) {
-            PyErr_Print();
+            PySys_WriteStderr("Unhandled exception in excepthook\n");
+            PyErr_PrintEx(0);
+            exc_in_hook = True;
+            PyErr_Restore(exc, value, tb);
+        } else {
+            Py_DECREF(exc);
+            Py_DECREF(value);
+            Py_DECREF(tb);
         }
         Py_XDECREF(result);
-
-        Py_DECREF(type);
-        Py_DECREF(val);
-        Py_DECREF(tb);
-
-        /* just in case*/
-        PyErr_Clear();
-    } else {
-        PyErr_Print();
     }
+    Py_XDECREF(excepthook);
 
+    /* Exception still pending, print it to stderr */
+    if (PyErr_Occurred()) {
+        if (exc_in_hook)
+            PySys_WriteStderr("\n");
+        PySys_WriteStderr("Unhandled exception in callback\n");
+        PyErr_PrintEx(0);
+    }
 }
 
 
