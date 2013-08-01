@@ -12,8 +12,7 @@ class IdleTest(unittest2.TestCase):
             idle.stop()
             idle.close()
         loop = pyuv.Loop.default_loop()
-        idle = pyuv.Idle(loop)
-        idle.start(idle_cb)
+        idle = pyuv.Idle(loop).start(idle_cb)
         loop.run()
         self.assertEqual(self.idle_cb_called, 1)
 
