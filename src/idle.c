@@ -56,7 +56,8 @@ Idle_func_start(Idle *self, PyObject *args)
     self->callback = callback;
     Py_XDECREF(tmp);
 
-    Py_RETURN_NONE;
+    Py_INCREF(self);
+    return (PyObject *)self;
 }
 
 
@@ -77,7 +78,8 @@ Idle_func_stop(Idle *self)
     Py_XDECREF(self->callback);
     self->callback = NULL;
 
-    Py_RETURN_NONE;
+    Py_INCREF(self);
+    return (PyObject *)self;
 }
 
 
