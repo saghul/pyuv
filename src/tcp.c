@@ -234,20 +234,20 @@ static PyObject *
 TCP_func_getsockname(TCP *self)
 {
     int r, namelen;
-    struct sockaddr sockname;
-
-    namelen = sizeof(sockname);
+    struct sockaddr_storage sockname;
 
     RAISE_IF_HANDLE_NOT_INITIALIZED(self, NULL);
     RAISE_IF_HANDLE_CLOSED(self, PyExc_HandleClosedError, NULL);
 
-    r = uv_tcp_getsockname(&self->tcp_h, &sockname, &namelen);
+    namelen = sizeof(sockname);
+
+    r = uv_tcp_getsockname(&self->tcp_h, (struct sockaddr *)&sockname, &namelen);
     if (r != 0) {
         RAISE_UV_EXCEPTION(UV_HANDLE_LOOP(self), PyExc_TCPError);
         return NULL;
     }
 
-    return makesockaddr(&sockname, namelen);
+    return makesockaddr((struct sockaddr *)&sockname, namelen);
 }
 
 
@@ -255,20 +255,20 @@ static PyObject *
 TCP_func_getpeername(TCP *self)
 {
     int r, namelen;
-    struct sockaddr peername;
-
-    namelen = sizeof(peername);
+    struct sockaddr_storage peername;
 
     RAISE_IF_HANDLE_NOT_INITIALIZED(self, NULL);
     RAISE_IF_HANDLE_CLOSED(self, PyExc_HandleClosedError, NULL);
 
-    r = uv_tcp_getpeername(&self->tcp_h, &peername, &namelen);
+    namelen = sizeof(peername);
+
+    r = uv_tcp_getpeername(&self->tcp_h, (struct sockaddr *)&peername, &namelen);
     if (r != 0) {
         RAISE_UV_EXCEPTION(UV_HANDLE_LOOP(self), PyExc_TCPError);
         return NULL;
     }
 
-    return makesockaddr(&peername, namelen);
+    return makesockaddr((struct sockaddr *)&peername, namelen);
 }
 
 

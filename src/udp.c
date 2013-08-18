@@ -387,20 +387,20 @@ static PyObject *
 UDP_func_getsockname(UDP *self)
 {
     int r, namelen;
-    struct sockaddr sockname;
-
-    namelen = sizeof(sockname);
+    struct sockaddr_storage sockname;
 
     RAISE_IF_HANDLE_NOT_INITIALIZED(self, NULL);
     RAISE_IF_HANDLE_CLOSED(self, PyExc_HandleClosedError, NULL);
 
-    r = uv_udp_getsockname(&self->udp_h, &sockname, &namelen);
+    namelen = sizeof(sockname);
+
+    r = uv_udp_getsockname(&self->udp_h, (struct sockaddr *)&sockname, &namelen);
     if (r != 0) {
         RAISE_UV_EXCEPTION(UV_HANDLE_LOOP(self), PyExc_UDPError);
         return NULL;
     }
 
-    return makesockaddr(&sockname, namelen);
+    return makesockaddr((struct sockaddr *)&sockname, namelen);
 }
 
 
