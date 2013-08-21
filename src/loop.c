@@ -91,10 +91,6 @@ Loop_func_run(Loop *self, PyObject *args)
     r = uv_run(self->uv_loop, mode);
     Py_END_ALLOW_THREADS
 
-    if (PyErr_Occurred()) {
-        handle_uncaught_exception(self);
-    }
-
     return PyBool_FromLong((long)r);
 }
 
