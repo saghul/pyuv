@@ -73,8 +73,7 @@ new_loop(PyTypeObject *type, PyObject *args, PyObject *kwargs, int is_default)
 static PyObject *
 Loop_func_run(Loop *self, PyObject *args)
 {
-    int r;
-    int mode;
+    int mode, r;
 
     mode = UV_RUN_DEFAULT;
 
