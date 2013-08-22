@@ -7,7 +7,7 @@ python:
 install:
   - if [[ $TRAVIS_PYTHON_VERSION == '2.6' ]]; then pip install --use-mirrors unittest2; fi
   - python setup.py install
-script: nosetests -v -w tests/
+script: nosetests -v
 branches:
   only:
     - master
