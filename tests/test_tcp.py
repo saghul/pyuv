@@ -132,21 +132,28 @@ class TCPTest3(TestCase):
         super(TCPTest3, self).setUp()
         self.server = None
         self.client = None
+        self.counter = 0
+
+    def on_write(self, conn, error):
+        self.assertIsNone(error)
+        self.counter -= 1
+        if self.counter == 0:
+            conn.close()
+            self.client.close()
+            self.server.close()
 
     def on_connection(self, server, error):
         self.assertEqual(error, None)
         connection = pyuv.TCP(self.loop)
         server.accept(connection)
         while connection.write_queue_size == 0:
-            connection.write(b"PING"*1000)
-        connection.close()
-        self.server.close()
+            self.counter += 1
+            connection.write(b"PING"*1000, self.on_write)
 
     def on_client_connection(self, client, error):
         self.assertEqual(error, None)
         self.assertTrue(client.readable)
         self.assertTrue(client.writable)
-        self.client.close()
 
     def test_tcp_write_saturate(self):
         self.server = pyuv.TCP(self.loop)
@@ -155,6 +162,7 @@ class TCPTest3(TestCase):
         self.client = pyuv.TCP(self.loop)
         self.client.connect(("127.0.0.1", TEST_PORT), self.on_client_connection)
         self.loop.run()
+        self.assertEqual(self.counter, 0)
 
 
 class TCPTestUnicode(TestCase):
