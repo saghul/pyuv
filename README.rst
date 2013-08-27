@@ -123,13 +123,9 @@ Running the test suite
 
 There are several ways of running the test ruite:
 
-- Running individual tests:
-
-  Go inside the tests/ directory and run the test, for example: ``python test_tcp.py``
-
 - Run the test with the current Python interpreter:
 
-  From the toplevel directory, run: ``nosetests -v -w tests/``
+  From the toplevel directory, run: ``nosetests -v``
 
 - Use Tox to run the test suite in several virtualenvs with several interpreters
 
