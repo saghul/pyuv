@@ -7,6 +7,12 @@ Version 0.11.0
  - Adapted to changes in libuv master branch
  - Raised libuv revision to XXX (master branch)
 
+Version 0.10.6
+==============
+ - Fixed allocating enough space for sockname/peername when using IPv6
+ - Always run tests in the correct directory
+ - Raised libuv revision to 851a662 (v0.10 branch)
+
 Version 0.10.5
 ==============
  - Loop.now() returns milliseconds, not nanoseconds
