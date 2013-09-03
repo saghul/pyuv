@@ -4,7 +4,7 @@ on_tcp_connection(uv_stream_t *handle, int status)
 {
     PyGILState_STATE gstate = PyGILState_Ensure();
     TCP *self;
-    PyObject *result, *py_errorno;
+    PyObject *result, *errorno;
 
     ASSERT(handle);
 
@@ -14,18 +14,16 @@ on_tcp_connection(uv_stream_t *handle, int status)
     Py_INCREF(self);
 
     if (status != 0) {
-        py_errorno = PyInt_FromLong((long)status);
+        errorno = error_to_obj(status);
     } else {
-        py_errorno = Py_None;
-        Py_INCREF(Py_None);
+        PYUV_SET_NONE(errorno);
     }
-
-    result = PyObject_CallFunctionObjArgs(self->on_new_connection_cb, self, py_errorno, NULL);
+    result = PyObject_CallFunctionObjArgs(self->on_new_connection_cb, self, errorno, NULL);
     if (result == NULL) {
         handle_uncaught_exception(HANDLE(self)->loop);
     }
     Py_XDECREF(result);
-    Py_DECREF(py_errorno);
+    Py_DECREF(errorno);
 
     Py_DECREF(self);
     PyGILState_Release(gstate);
@@ -37,25 +35,23 @@ on_tcp_client_connection(uv_connect_t *req, int status)
 {
     PyGILState_STATE gstate = PyGILState_Ensure();
     TCP *self;
-    PyObject *callback, *result, *py_errorno;
+    PyObject *callback, *result, *errorno;
 
     ASSERT(req);
     self = PYUV_CONTAINER_OF(req->handle, TCP, tcp_h);
     callback = (PyObject *)req->data;
 
     if (status != 0) {
-        py_errorno = PyInt_FromLong(status);
+        errorno = error_to_obj(status);
     } else {
-        py_errorno = Py_None;
-        Py_INCREF(Py_None);
+        PYUV_SET_NONE(errorno);
     }
-
-    result = PyObject_CallFunctionObjArgs(callback, self, py_errorno, NULL);
+    result = PyObject_CallFunctionObjArgs(callback, self, errorno, NULL);
     if (result == NULL) {
         handle_uncaught_exception(HANDLE(self)->loop);
     }
     Py_XDECREF(result);
-    Py_DECREF(py_errorno);
+    Py_DECREF(errorno);
 
     Py_DECREF(callback);
     PyMem_Free(req);

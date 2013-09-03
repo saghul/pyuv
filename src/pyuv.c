@@ -69,6 +69,8 @@ init_pyuv(void)
     /* Initialize GIL */
     PyEval_InitThreads();
 
+    uv_enomem = PyInt_FromLong(UV_ENOMEM);
+
 #ifdef PYUV_WINDOWS
     if (pyuv_setmaxstdio()) {
         return NULL;

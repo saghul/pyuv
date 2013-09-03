@@ -4,7 +4,7 @@ on_signal_callback(uv_signal_t *handle, int signum)
 {
     PyGILState_STATE gstate = PyGILState_Ensure();
     Signal *self;
-    PyObject *result;
+    PyObject *result, *py_signum;
 
     ASSERT(handle);
 
@@ -13,11 +13,13 @@ on_signal_callback(uv_signal_t *handle, int signum)
     /* Object could go out of scope in the callback, increase refcount to avoid it */
     Py_INCREF(self);
 
-    result = PyObject_CallFunctionObjArgs(self->callback, self, PyInt_FromLong((long)signum), NULL);
+    py_signum = obj_or_none(PyInt_FromLong(signum));
+    result = PyObject_CallFunctionObjArgs(self->callback, self, py_signum, NULL);
     if (result == NULL) {
         handle_uncaught_exception(HANDLE(self)->loop);
     }
     Py_XDECREF(result);
+    Py_DECREF(py_signum);
 
     Py_DECREF(self);
     PyGILState_Release(gstate);

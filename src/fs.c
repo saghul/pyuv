@@ -31,6 +31,7 @@ format_time(uv_timespec_t tspec)
 
 static INLINE void
 stat_to_pyobj(const uv_stat_t *st, PyObject *stat_data) {
+    /* TODO: Handle item allocation failures */
     PyStructSequence_SET_ITEM(stat_data, 0, PyLong_FromUnsignedLongLong(st->st_mode));
     PyStructSequence_SET_ITEM(stat_data, 1, PyLong_FromUnsignedLongLong(st->st_ino));
     PyStructSequence_SET_ITEM(stat_data, 2, PyLong_FromUnsignedLongLong(st->st_dev));
@@ -51,42 +52,37 @@ stat_to_pyobj(const uv_stat_t *st, PyObject *stat_data) {
 
 
 /*
- * NOTE: This function is called either by lubuv as a callback or by us when a synchronous
+ * NOTE: This function is called either by libuv as a callback or by us when a synchronous
  * operation is performed.
  */
 static void
 process_fs_req(uv_fs_t* req) {
     PyGILState_STATE gstate = PyGILState_Ensure();
-    int res;
+    int res, err;
     char *ptr;
     Loop *loop;
     FSRequest *fs_req;
     PyObject *result, *errorno, *r, *path, *item;
 
     ASSERT(req);
+    errorno = r = path = NULL;
     fs_req = PYUV_CONTAINER_OF(req, FSRequest, req);
     loop = REQUEST(fs_req)->loop;
 
     if (req->path != NULL) {
-        path = Py_BuildValue("s", req->path);
-    } else {
-        PYUV_SET_NONE(path);
+        path = enomem_if_null(Py_BuildValue("s", req->path), &errorno);
     }
 
     if (req->result < 0) {
-        errorno = PyInt_FromLong((long)req->result);
-        PYUV_SET_NONE(r);
+        Py_XDECREF(errorno);
+        errorno = error_to_obj(req->result);
     } else {
-        PYUV_SET_NONE(errorno);
         switch (req->fs_type) {
             case UV_FS_STAT:
             case UV_FS_LSTAT:
             case UV_FS_FSTAT:
-                r = PyStructSequence_New(&StatResultType);
-                if (!r) {
-                    PyErr_Clear();
-                    PYUV_SET_NONE(r);
-                } else {
+                r = enomem_if_null(PyStructSequence_New(&StatResultType), &errorno);
+                if (r != NULL) {
                     stat_to_pyobj(&req->statbuf, r);
                 }
                 break;
@@ -106,51 +102,40 @@ process_fs_req(uv_fs_t* req) {
             case UV_FS_FTRUNCATE:
             case UV_FS_UTIME:
             case UV_FS_FUTIME:
-                PYUV_SET_NONE(r);
                 break;
             case UV_FS_READLINK:
-                r = Py_BuildValue("s", req->ptr);
-                if (!r) {
-                    PyErr_Clear();
-                    PYUV_SET_NONE(r);
-                }
+                r = enomem_if_null(Py_BuildValue("s", req->ptr), &errorno);
                 break;
             case UV_FS_WRITE:
-                r = PyInt_FromLong((long)req->result);
-                if (!r) {
-                    PyErr_Clear();
-                    PYUV_SET_NONE(r);
-                }
+                r = enomem_if_null(PyInt_FromLong(req->result), &errorno);
                 PyMem_Free(req->buf);
                 break;
             case UV_FS_OPEN:
             case UV_FS_SENDFILE:
-                r = PyInt_FromLong((long)req->result);
-                if (!r) {
-                    PyErr_Clear();
-                    PYUV_SET_NONE(r);
-                }
+                r = enomem_if_null(PyInt_FromLong(req->result), &errorno);
                 break;
             case UV_FS_READ:
-                r = PyBytes_FromStringAndSize(req->buf, req->result);
-                if (!r) {
-                    PyErr_Clear();
-                    PYUV_SET_NONE(r);
-                }
+                r = enomem_if_null(PyBytes_FromStringAndSize(req->buf, req->result), &errorno);
                 PyMem_Free(req->buf);
                 break;
             case UV_FS_READDIR:
-                r = PyList_New(0);
-                if (!r) {
-                    PyErr_Clear();
-                    PYUV_SET_NONE(r);
-                } else {
+                r = enomem_if_null(PyList_New(0), &errorno);
+                if (r != NULL) {
                     res = req->result;
                     ptr = req->ptr;
                     while (res--) {
-                        item = Py_BuildValue("s", ptr);
-                        PyList_Append(r, item);
+                        item = enomem_if_null(Py_BuildValue("s", ptr), &errorno);
+                        if (item == NULL) {
+                            Py_CLEAR(r);
+                            break;
+                        }
+                        err = PyList_Append(r, item);
                         Py_DECREF(item);
+                        if (err < 0) {
+                            PyErr_Clear();
+                            Py_CLEAR(r);
+                            break;
+                        }
                         ptr += strlen(ptr) + 1;
                     }
                 }
@@ -162,9 +147,9 @@ process_fs_req(uv_fs_t* req) {
     }
 
     /* Save result, path and error in the FSRequest object */
-    fs_req->path = path;
-    fs_req->result = r;
-    fs_req->error = errorno;
+    fs_req->path = obj_or_none(path);
+    fs_req->result = obj_or_none(r);
+    fs_req->error = obj_or_none(errorno);
 
     if (fs_req->callback != Py_None) {
         result = PyObject_CallFunctionObjArgs(fs_req->callback, fs_req, NULL);
@@ -1471,6 +1456,7 @@ on_fsevent_callback(uv_fs_event_t *handle, const char *filename, int events, int
     PyObject *result, *py_filename, *py_events, *errorno;
 
     ASSERT(handle);
+    py_filename = py_events = errorno = NULL;
 
     self = PYUV_CONTAINER_OF(handle, FSEvent, fsevent_h);
 
@@ -1478,20 +1464,17 @@ on_fsevent_callback(uv_fs_event_t *handle, const char *filename, int events, int
     Py_INCREF(self);
 
     if (filename) {
-        py_filename = Py_BuildValue("s", filename);
-    } else {
-        py_filename = Py_None;
-        Py_INCREF(Py_None);
+        py_filename = enomem_if_null(Py_BuildValue("s", filename), &errorno);
     }
-
-    if (status < 0) {
-        errorno = PyInt_FromLong((long)status);
-    } else {
-        errorno = Py_None;
-        Py_INCREF(Py_None);
+    py_filename = obj_or_none(py_filename);
+    py_events = obj_or_none(enomem_if_null(PyInt_FromLong(events), &errorno));
+    if (errorno == NULL) {
+        if (status < 0) {
+            errorno = error_to_obj(status);
+        } else {
+            PYUV_SET_NONE(errorno);
+        }
     }
-
-    py_events = PyInt_FromLong((long)events);
 
     result = PyObject_CallFunctionObjArgs(self->callback, self, py_filename, py_events, errorno, NULL);
     if (result == NULL) {
@@ -1649,6 +1632,7 @@ on_fspoll_callback(uv_fs_poll_t *handle, int status, const uv_stat_t *prev, cons
     PyObject *result, *errorno, *prev_stat_data, *curr_stat_data;
 
     ASSERT(handle);
+    errorno = NULL;
 
     self = PYUV_CONTAINER_OF(handle, FSPoll, fspoll_h);
 
@@ -1656,30 +1640,19 @@ on_fspoll_callback(uv_fs_poll_t *handle, int status, const uv_stat_t *prev, cons
     Py_INCREF(self);
 
     if (status < 0) {
-        errorno = PyInt_FromLong((long)status);
-        prev_stat_data = Py_None;
-        curr_stat_data = Py_None;
-        Py_INCREF(Py_None);
-        Py_INCREF(Py_None);
+        PYUV_SET_NONE(prev_stat_data);
+        PYUV_SET_NONE(curr_stat_data);
+        errorno = error_to_obj(status);
     } else {
-        errorno = Py_None;
-        Py_INCREF(Py_None);
-        prev_stat_data = PyStructSequence_New(&StatResultType);
-        if (!prev_stat_data) {
-            PyErr_Clear();
-            prev_stat_data = Py_None;
-            Py_INCREF(Py_None);
-        } else {
+        prev_stat_data = obj_or_none(enomem_if_null(PyStructSequence_New(&StatResultType), &errorno));
+        if (prev_stat_data != Py_None) {
             stat_to_pyobj((uv_stat_t *)prev, prev_stat_data);
         }
-        curr_stat_data = PyStructSequence_New(&StatResultType);
-        if (!curr_stat_data) {
-            PyErr_Clear();
-            curr_stat_data = Py_None;
-            Py_INCREF(Py_None);
-        } else {
+        curr_stat_data = obj_or_none(enomem_if_null(PyStructSequence_New(&StatResultType), &errorno));
+        if (curr_stat_data != Py_None) {
             stat_to_pyobj((uv_stat_t *)curr, curr_stat_data);
         }
+        errorno = obj_or_none(errorno);
     }
 
     result = PyObject_CallFunctionObjArgs(self->callback, self, prev_stat_data, curr_stat_data, errorno, NULL);
@@ -1687,6 +1660,9 @@ on_fspoll_callback(uv_fs_poll_t *handle, int status, const uv_stat_t *prev, cons
         handle_uncaught_exception(HANDLE(self)->loop);
     }
     Py_XDECREF(result);
+    Py_DECREF(prev_stat_data);
+    Py_DECREF(curr_stat_data);
+    Py_DECREF(errorno);
 
     Py_DECREF(self);
     PyGILState_Release(gstate);

@@ -4,7 +4,8 @@ on_pipe_connection(uv_stream_t* handle, int status)
 {
     PyGILState_STATE gstate = PyGILState_Ensure();
     Pipe *self;
-    PyObject *result, *py_errorno;
+    PyObject *result, *errorno;
+
     ASSERT(handle);
 
     self = PYUV_CONTAINER_OF(handle, Pipe, pipe_h);
@@ -13,18 +14,16 @@ on_pipe_connection(uv_stream_t* handle, int status)
     Py_INCREF(self);
 
     if (status != 0) {
-        py_errorno = PyInt_FromLong((long)status);
+        errorno = error_to_obj(status);
     } else {
-        py_errorno = Py_None;
-        Py_INCREF(Py_None);
+        PYUV_SET_NONE(errorno);
     }
-
-    result = PyObject_CallFunctionObjArgs(self->on_new_connection_cb, self, py_errorno, NULL);
+    result = PyObject_CallFunctionObjArgs(self->on_new_connection_cb, self, errorno, NULL);
     if (result == NULL) {
         handle_uncaught_exception(HANDLE(self)->loop);
     }
     Py_XDECREF(result);
-    Py_DECREF(py_errorno);
+    Py_DECREF(errorno);
 
     Py_DECREF(self);
     PyGILState_Release(gstate);
@@ -36,27 +35,25 @@ on_pipe_client_connection(uv_connect_t *req, int status)
 {
     PyGILState_STATE gstate = PyGILState_Ensure();
     Pipe *self;
-    PyObject *callback, *result, *py_errorno;
-    ASSERT(req);
+    PyObject *callback, *result, *errorno;
 
+    ASSERT(req);
     self = PYUV_CONTAINER_OF(req->handle, Pipe, pipe_h);
     callback = (PyObject *)req->data;
 
     ASSERT(self);
 
     if (status != 0) {
-        py_errorno = PyInt_FromLong(status);
+        errorno = error_to_obj(status);
     } else {
-        py_errorno = Py_None;
-        Py_INCREF(Py_None);
+        PYUV_SET_NONE(errorno);
     }
-
-    result = PyObject_CallFunctionObjArgs(callback, self, py_errorno, NULL);
+    result = PyObject_CallFunctionObjArgs(callback, self, errorno, NULL);
     if (result == NULL) {
         handle_uncaught_exception(HANDLE(self)->loop);
     }
     Py_XDECREF(result);
-    Py_DECREF(py_errorno);
+    Py_DECREF(errorno);
 
     Py_DECREF(callback);
     PyMem_Free(req);
@@ -73,34 +70,35 @@ on_pipe_read2(uv_pipe_t* handle, int nread, uv_buf_t buf, uv_handle_type pending
 {
     PyGILState_STATE gstate = PyGILState_Ensure();
     Pipe *self;
-    PyObject *result, *data, *py_errorno, *py_pending;
-    ASSERT(handle);
+    PyObject *result, *data, *py_pending, *errorno;
 
+    ASSERT(handle);
+    data = errorno = NULL;
     self = PYUV_CONTAINER_OF(handle, Pipe, pipe_h);
 
     /* Object could go out of scope in the callback, increase refcount to avoid it */
     Py_INCREF(self);
 
-    py_pending = PyInt_FromLong((long)pending);
-
-    if (nread >= 0) {
-        data = PyBytes_FromStringAndSize(buf.base, nread);
-        py_errorno = Py_None;
-        Py_INCREF(Py_None);
-    } else {
-        data = Py_None;
-        Py_INCREF(Py_None);
-        py_errorno = PyInt_FromLong((long)nread);
+    py_pending = obj_or_none(enomem_if_null(PyInt_FromLong(pending), &errorno));
+    if (errorno == NULL) {
+        if (nread >= 0) {
+            data = enomem_if_null(PyBytes_FromStringAndSize(buf.base, nread), &errorno);
+            errorno = obj_or_none(errorno);
+        } else {
+            PYUV_SET_NONE(data);
+            errorno = error_to_obj(nread);
+        }
     }
+    data = obj_or_none(data);
 
-    result = PyObject_CallFunctionObjArgs(((Stream *)self)->on_read_cb, self, data, py_pending, py_errorno, NULL);
+    result = PyObject_CallFunctionObjArgs(((Stream *)self)->on_read_cb, self, data, py_pending, errorno, NULL);
     if (result == NULL) {
         handle_uncaught_exception(HANDLE(self)->loop);
     }
     Py_XDECREF(result);
     Py_DECREF(data);
     Py_DECREF(py_pending);
-    Py_DECREF(py_errorno);
+    Py_DECREF(errorno);
 
     Py_DECREF(self);
     PyGILState_Release(gstate);

@@ -202,53 +202,54 @@ getaddrinfo_cb(uv_getaddrinfo_t* req, int status, struct addrinfo* res)
     struct addrinfo *ptr;
     Loop *loop;
     GAIRequest *gai_req;
-    PyObject *addr, *item, *errorno, *dns_result, *result;
+    PyObject *result, *dns_result, *errorno, *addr, *item;
+    int err;
 
     ASSERT(req);
-
+    dns_result = errorno = NULL;
     gai_req = PYUV_CONTAINER_OF(req, GAIRequest, req);
     loop = REQUEST(gai_req)->loop;
 
     if (status != 0) {
-        errorno = PyInt_FromLong((long)status);
-        dns_result = Py_None;
-        Py_INCREF(Py_None);
+        errorno = error_to_obj(status);
         goto callback;
     }
 
-    dns_result = PyList_New(0);
-    if (!dns_result) {
-        errorno = PyInt_FromLong((long)UV_ENOMEM);
-        dns_result = Py_None;
-        Py_INCREF(Py_None);
+    dns_result = enomem_if_null(PyList_New(0), &errorno);
+    if (errorno != NULL) {
         goto callback;
     }
-
     for (ptr = res; ptr; ptr = ptr->ai_next) {
-        addr = makesockaddr(ptr->ai_addr, ptr->ai_addrlen);
-        if (!addr) {
-            PyErr_Clear();
+        addr = enomem_if_null(makesockaddr(ptr->ai_addr, ptr->ai_addrlen), &errorno);
+        if (addr == NULL) {
+            Py_CLEAR(dns_result);
             break;
         }
-
-        item = PyStructSequence_New(&AddrinfoResultType);
-        if (!item) {
-            PyErr_Clear();
+        item = enomem_if_null(PyStructSequence_New(&AddrinfoResultType), &errorno);
+        if (item == NULL) {
+            Py_CLEAR(addr);
+            Py_CLEAR(dns_result);
             break;
         }
+        /* TODO: Handle item allocation failures */
         PyStructSequence_SET_ITEM(item, 0, PyInt_FromLong((long)ptr->ai_family));
         PyStructSequence_SET_ITEM(item, 1, PyInt_FromLong((long)ptr->ai_socktype));
         PyStructSequence_SET_ITEM(item, 2, PyInt_FromLong((long)ptr->ai_protocol));
         PyStructSequence_SET_ITEM(item, 3, Py_BuildValue("s", ptr->ai_canonname ? ptr->ai_canonname : ""));
         PyStructSequence_SET_ITEM(item, 4, addr);
 
-        PyList_Append(dns_result, item);
+        err = PyList_Append(dns_result, item);
         Py_DECREF(item);
+        if (err < 0) {
+            PyErr_Clear();
+            Py_CLEAR(dns_result);
+            break;
+        }
     }
-    errorno = Py_None;
-    Py_INCREF(Py_None);
 
 callback:
+    dns_result = obj_or_none(dns_result);
+    errorno = obj_or_none(errorno);
     result = PyObject_CallFunctionObjArgs(gai_req->callback, dns_result, errorno, NULL);
     if (result == NULL) {
         handle_uncaught_exception(loop);
@@ -393,12 +394,9 @@ check_signals(uv_poll_t *handle, int status, int events)
     SignalChecker *self;
 
     ASSERT(handle);
+    ASSERT(status != 0 || events == UV_READABLE);
 
     self = PYUV_CONTAINER_OF(handle, SignalChecker, poll_h);
-
-    if (status == 0) {
-        ASSERT(events == UV_READABLE);
-    }
 
     /* Drain the fd */
     if (drain_poll_fd(self->fd) != 0) {

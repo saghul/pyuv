@@ -23,11 +23,11 @@ on_udp_read(uv_udp_t* handle, int nread, uv_buf_t buf, struct sockaddr* addr, un
     PyGILState_STATE gstate = PyGILState_Ensure();
     int addrlen;
     UDP *self;
-    PyObject *result, *address_tuple, *data, *py_errorno;
+    PyObject *result, *address_tuple, *py_flags, *data, *errorno;
 
     ASSERT(handle);
     ASSERT(flags == 0);
-
+    address_tuple = data = errorno = NULL;
     self = PYUV_CONTAINER_OF(handle, UDP, udp_h);
 
     /* Object could go out of scope in the callback, increase refcount to avoid it */
@@ -37,29 +37,33 @@ on_udp_read(uv_udp_t* handle, int nread, uv_buf_t buf, struct sockaddr* addr, un
         goto done;
     }
 
-    if (nread > 0) {
-        ASSERT(addr);
-        addrlen = sizeof(*addr);
-        address_tuple = makesockaddr(addr, addrlen);
-        data = PyBytes_FromStringAndSize(buf.base, nread);
-        py_errorno = Py_None;
-        Py_INCREF(Py_None);
-    } else {
-        address_tuple = Py_None;
-        Py_INCREF(Py_None);
-        data = Py_None;
-        Py_INCREF(Py_None);
-        py_errorno = PyInt_FromLong((long)nread);
+    py_flags = obj_or_none(enomem_if_null(PyInt_FromLong(flags), &errorno));
+    if (errorno == NULL) {
+        if (nread > 0) {
+            ASSERT(addr);
+            addrlen = sizeof(*addr);
+            address_tuple = enomem_if_null(makesockaddr(addr, addrlen), &errorno);
+            if (errorno == NULL) {
+                data = enomem_if_null(PyBytes_FromStringAndSize(buf.base, nread), &errorno);
+            }
+            errorno = obj_or_none(errorno);
+        } else {
+            errorno = error_to_obj(nread);
+        }
     }
+    address_tuple = obj_or_none(address_tuple);
+    data = obj_or_none(data);
 
-    result = PyObject_CallFunctionObjArgs(self->on_read_cb, self, address_tuple, PyInt_FromLong((long)flags), data, py_errorno, NULL);
+    result = PyObject_CallFunctionObjArgs(self->on_read_cb, self, address_tuple,
+                                          py_flags, data, errorno, NULL);
     if (result == NULL) {
         handle_uncaught_exception(HANDLE(self)->loop);
     }
     Py_XDECREF(result);
     Py_DECREF(address_tuple);
+    Py_DECREF(py_flags);
     Py_DECREF(data);
-    Py_DECREF(py_errorno);
+    Py_DECREF(errorno);
 
 done:
     Py_DECREF(self);
@@ -74,7 +78,7 @@ on_udp_send(uv_udp_send_t* req, int status)
     int i;
     udp_send_ctx *ctx;
     UDP *self;
-    PyObject *callback, *result, *py_errorno;
+    PyObject *callback, *result, *errorno;
 
     ASSERT(req);
 
@@ -86,17 +90,16 @@ on_udp_send(uv_udp_send_t* req, int status)
 
     if (callback != Py_None) {
         if (status < 0) {
-            py_errorno = PyInt_FromLong((long)status);
+            errorno = error_to_obj(status);
         } else {
-            py_errorno = Py_None;
-            Py_INCREF(Py_None);
+            PYUV_SET_NONE(errorno);
         }
-        result = PyObject_CallFunctionObjArgs(callback, self, py_errorno, NULL);
+        result = PyObject_CallFunctionObjArgs(callback, self, errorno, NULL);
         if (result == NULL) {
             handle_uncaught_exception(HANDLE(self)->loop);
         }
         Py_XDECREF(result);
-        Py_DECREF(py_errorno);
+        Py_DECREF(errorno);
     }
 
     Py_DECREF(callback);
