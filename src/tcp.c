@@ -86,12 +86,7 @@ TCP_func_bind(TCP *self, PyObject *args)
         return NULL;
     }
 
-    if (ss.ss_family == AF_INET) {
-        err = uv_tcp_bind(&self->tcp_h, *(struct sockaddr_in *)&ss);
-    } else {
-        err = uv_tcp_bind6(&self->tcp_h, *(struct sockaddr_in6 *)&ss);
-    }
-
+    err = uv_tcp_bind(&self->tcp_h, (struct sockaddr *)&ss);
     if (err < 0) {
         RAISE_UV_EXCEPTION(err, PyExc_TCPError);
         return NULL;
@@ -205,12 +200,7 @@ TCP_func_connect(TCP *self, PyObject *args)
 
     connect_req->data = callback;
 
-    if (ss.ss_family == AF_INET) {
-        err = uv_tcp_connect(connect_req, &self->tcp_h, *(struct sockaddr_in *)&ss, on_tcp_client_connection);
-    } else {
-        err = uv_tcp_connect6(connect_req, &self->tcp_h, *(struct sockaddr_in6 *)&ss, on_tcp_client_connection);
-    }
-
+    err = uv_tcp_connect(connect_req, &self->tcp_h, (struct sockaddr *)&ss, on_tcp_client_connection);
     if (err < 0) {
         RAISE_UV_EXCEPTION(err, PyExc_TCPError);
         goto error;

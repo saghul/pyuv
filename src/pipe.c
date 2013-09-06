@@ -69,7 +69,7 @@ on_pipe_client_connection(uv_connect_t *req, int status)
 
 
 static void
-on_pipe_read2(uv_pipe_t* handle, int nread, uv_buf_t buf, uv_handle_type pending)
+on_pipe_read2(uv_pipe_t* handle, int nread, const uv_buf_t* buf, uv_handle_type pending)
 {
     PyGILState_STATE gstate = PyGILState_Ensure();
     Pipe *self;
@@ -84,7 +84,7 @@ on_pipe_read2(uv_pipe_t* handle, int nread, uv_buf_t buf, uv_handle_type pending
     py_pending = PyInt_FromLong((long)pending);
 
     if (nread >= 0) {
-        data = PyBytes_FromStringAndSize(buf.base, nread);
+        data = PyBytes_FromStringAndSize(buf->base, nread);
         py_errorno = Py_None;
         Py_INCREF(Py_None);
     } else {

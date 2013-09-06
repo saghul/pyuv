@@ -185,7 +185,7 @@ static PyTypeObject StdIOType = {
     } while(0)                                                                      \
 
 static void
-on_process_exit(uv_process_t *handle, int exit_status, int term_signal)
+on_process_exit(uv_process_t *handle, int64_t exit_status, int term_signal)
 {
     PyGILState_STATE gstate = PyGILState_Ensure();
     Process *self;
@@ -388,7 +388,7 @@ Process_func_spawn(Process *self, PyObject *args, PyObject *kwargs)
     options.stdio = stdio_container;
     options.stdio_count = stdio_count;
 
-    err = uv_spawn(UV_HANDLE_LOOP(self), &self->process_h, options);
+    err = uv_spawn(UV_HANDLE_LOOP(self), &self->process_h, &options);
     if (err < 0) {
         RAISE_UV_EXCEPTION(err, PyExc_ProcessError);
         ret = NULL;

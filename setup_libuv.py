@@ -95,7 +95,7 @@ class libuv_build_ext(build_ext):
     libuv_dir      = os.path.join('deps', 'libuv')
     libuv_repo     = 'https://github.com/joyent/libuv.git'
     libuv_branch   = 'master'
-    libuv_revision = '8531046'
+    libuv_revision = '2b9c374'
     libuv_patches  = []
 
     user_options = build_ext.user_options
@@ -125,8 +125,6 @@ class libuv_build_ext(build_ext):
         self.compiler.add_include_dir(os.path.join(self.libuv_dir, 'include'))
         if sys.platform.startswith('linux'):
             self.compiler.add_library('rt')
-        elif sys.platform == 'darwin':
-            self.extensions[0].extra_link_args.extend(['-framework', 'CoreServices'])
         elif sys.platform == 'win32':
             self.extensions[0].define_macros.append(('WIN32', 1))
             self.extensions[0].extra_link_args.extend(['/NODEFAULTLIB:libcmt', '/LTCG'])

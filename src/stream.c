@@ -16,12 +16,13 @@ typedef struct {
     PyObject *callback;
 } stream_shutdown_ctx;
 
-static uv_buf_t
-on_stream_alloc(uv_stream_t* handle, size_t suggested_size)
+static void
+on_stream_alloc(uv_stream_t* handle, size_t suggested_size, uv_buf_t *buf)
 {
     static char slab[PYUV_SLAB_SIZE];
     UNUSED_ARG(handle);
-    return uv_buf_init(slab, sizeof(slab));
+    buf->base = slab;
+    buf->len = sizeof(slab);
 }
 
 
@@ -63,7 +64,7 @@ on_stream_shutdown(uv_shutdown_t* req, int status)
 
 
 static void
-on_stream_read(uv_stream_t* handle, int nread, uv_buf_t buf)
+on_stream_read(uv_stream_t* handle, int nread, const uv_buf_t* buf)
 {
     PyGILState_STATE gstate = PyGILState_Ensure();
     Stream *self;
@@ -77,7 +78,7 @@ on_stream_read(uv_stream_t* handle, int nread, uv_buf_t buf)
     Py_INCREF(self);
 
     if (nread >= 0) {
-        data = PyBytes_FromStringAndSize(buf.base, nread);
+        data = PyBytes_FromStringAndSize(buf->base, nread);
         py_errorno = Py_None;
         Py_INCREF(Py_None);
     } else {
