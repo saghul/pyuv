@@ -149,7 +149,7 @@ class libuv_build_ext(build_ext):
         def build_libuv():
             cflags = '-fPIC'
             env = os.environ.copy()
-            env['CFLAGS'] = ' '.join(x for x in (cflags, env.get('CFLAGS', None)) if x)
+            env['CFLAGS'] = ' '.join(x for x in (cflags, env.get('CFLAGS', None), env.get('ARCHFLAGS', None)) if x)
             log.info('Building libuv...')
             if sys.platform == 'win32':
                 prepare_windows_env(env)
