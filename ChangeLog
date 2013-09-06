@@ -1,3 +1,9 @@
+Version 0.10.7
+==============
+ - Use ARCHFLAGS if set when compiling libuv
+ - Fixed compilation on OSX 10.6
+ - Raised libuv revision to 983fa68 (v0.10 branch)
+
 Version 0.10.6
 ==============
  - Fixed allocating enough space for sockname/peername when using IPv6
