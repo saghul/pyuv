@@ -1,3 +1,13 @@
+Version 0.11.1
+==============
+ - Added MAC address to util.interface_addresses() output
+ - Adapt to API changes in libuv
+ - Dropped MinGW support
+ - Implement excepthook as a method rather than an attribute
+ - Fix IPC and TCP test cases
+ - Tests: Re-raise exceptions from callbacks when exiting Loop.run()
+ - Raised libuv revision to 2b9c374 (master branch)
+
 Version 0.11.0
 ==============
  - Refactored FS operations
