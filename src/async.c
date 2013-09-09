@@ -11,16 +11,19 @@ on_async_callback(uv_async_t *handle, int status)
 
     self = PYUV_CONTAINER_OF(handle, Async, async_h);
 
-    /* Object could go out of scope in the callback, increase refcount to avoid it */
-    Py_INCREF(self);
+    if (self->callback != Py_None) {
+        /* Object could go out of scope in the callback, increase refcount to avoid it */
+        Py_INCREF(self);
 
-    result = PyObject_CallFunctionObjArgs(self->callback, self, NULL);
-    if (result == NULL) {
-        handle_uncaught_exception(HANDLE(self)->loop);
+        result = PyObject_CallFunctionObjArgs(self->callback, self, NULL);
+        if (result == NULL) {
+            handle_uncaught_exception(HANDLE(self)->loop);
+        }
+        Py_XDECREF(result);
+
+        Py_DECREF(self);
     }
-    Py_XDECREF(result);
 
-    Py_DECREF(self);
     PyGILState_Release(gstate);
 }
 
@@ -48,17 +51,18 @@ Async_tp_init(Async *self, PyObject *args, PyObject *kwargs)
 {
     int err;
     Loop *loop;
-    PyObject *callback, *tmp;
+    PyObject *callback;
 
     UNUSED_ARG(kwargs);
-
     RAISE_IF_HANDLE_INITIALIZED(self, -1);
 
-    if (!PyArg_ParseTuple(args, "O!O:__init__", &LoopType, &loop, &callback)) {
+    callback = Py_None;
+
+    if (!PyArg_ParseTuple(args, "O!|O:__init__", &LoopType, &loop, &callback)) {
         return -1;
     }
 
-    if (!PyCallable_Check(callback)) {
+    if (callback != Py_None && !PyCallable_Check(callback)) {
         PyErr_SetString(PyExc_TypeError, "a callable is required");
         return -1;
     }
@@ -69,10 +73,8 @@ Async_tp_init(Async *self, PyObject *args, PyObject *kwargs)
         return -1;
     }
 
-    tmp = self->callback;
     Py_INCREF(callback);
     self->callback = callback;
-    Py_XDECREF(tmp);
 
     initialize_handle(HANDLE(self), loop);
 

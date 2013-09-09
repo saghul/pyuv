@@ -1,5 +1,6 @@
 
 import threading
+import time
 
 from common import unittest2, TestCase
 import pyuv
@@ -37,6 +38,28 @@ class AsyncTest(TestCase):
         self.loop.run()
         self.assertEqual(self.async_cb_called, 3)
         self.assertEqual(self.prepare_cb_called, 1)
+
+    def test_async2(self):
+        self.prepare_cb_called = 0
+        self.check_cb_called = 0
+        def prepare_cb(prepare):
+            self.prepare_cb_called += 1
+            self.thread = threading.Thread(target=thread_cb)
+            self.thread.start()
+        def check_cb(check):
+            self.check_cb_called += 1
+            self.loop.stop()
+        def thread_cb():
+            time.sleep(0.01)
+            self.async.send()
+        self.async = pyuv.Async(self.loop)
+        self.prepare = pyuv.Prepare(self.loop)
+        self.prepare.start(prepare_cb)
+        self.check = pyuv.Check(self.loop)
+        self.check.start(check_cb)
+        self.loop.run()
+        self.assertEqual(self.prepare_cb_called, 1)
+        self.assertEqual(self.check_cb_called, 1)
 
 
 if __name__ == '__main__':
