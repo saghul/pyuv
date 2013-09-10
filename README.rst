@@ -2,6 +2,9 @@
 pyuv: Python interface for libuv
 ================================
 
+.. image:: https://badge.fury.io/py/pyuv.png
+    :target: http://badge.fury.io/py/pyuv
+
 pyuv is a Python module which provides an interface to libuv.
 `libuv <http://github.com/joyent/libuv>`_ is a high performance
 asynchronous networking library, used as the platform layer for
