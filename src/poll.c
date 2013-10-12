@@ -65,6 +65,8 @@ Poll_func_start(Poll *self, PyObject *args)
     self->callback = callback;
     Py_XDECREF(tmp);
 
+    PYUV_HANDLE_INCREF(self);
+
     Py_RETURN_NONE;
 }
 
@@ -85,6 +87,8 @@ Poll_func_stop(Poll *self)
 
     Py_XDECREF(self->callback);
     self->callback = NULL;
+
+    PYUV_HANDLE_DECREF(self);
 
     Py_RETURN_NONE;
 }

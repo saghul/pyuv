@@ -1541,6 +1541,8 @@ FSEvent_func_start(FSEvent *self, PyObject *args, PyObject *kwargs)
     self->callback = callback;
     Py_XDECREF(tmp);
 
+    PYUV_HANDLE_INCREF(self);
+
     Py_RETURN_NONE;
 }
 
@@ -1561,6 +1563,8 @@ FSEvent_func_stop(FSEvent *self)
 
     Py_XDECREF(self->callback);
     self->callback = NULL;
+
+    PYUV_HANDLE_DECREF(self);
 
     Py_RETURN_NONE;
 }
@@ -1786,6 +1790,8 @@ FSPoll_func_start(FSPoll *self, PyObject *args, PyObject *kwargs)
     self->callback = callback;
     Py_XDECREF(tmp);
 
+    PYUV_HANDLE_INCREF(self);
+
     Py_RETURN_NONE;
 }
 
@@ -1806,6 +1812,8 @@ FSPoll_func_stop(FSPoll *self)
 
     Py_XDECREF(self->callback);
     self->callback = NULL;
+
+    PYUV_HANDLE_DECREF(self);
 
     Py_RETURN_NONE;
 }

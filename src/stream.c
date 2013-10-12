@@ -227,6 +227,8 @@ Stream_func_start_read(Stream *self, PyObject *args)
     self->on_read_cb = callback;
     Py_XDECREF(tmp);
 
+    PYUV_HANDLE_INCREF(self);
+
     Py_RETURN_NONE;
 }
 
@@ -247,6 +249,8 @@ Stream_func_stop_read(Stream *self)
 
     Py_XDECREF(self->on_read_cb);
     self->on_read_cb = NULL;
+
+    PYUV_HANDLE_DECREF(self);
 
     Py_RETURN_NONE;
 }

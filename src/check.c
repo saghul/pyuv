@@ -56,6 +56,8 @@ Check_func_start(Check *self, PyObject *args)
     self->callback = callback;
     Py_XDECREF(tmp);
 
+    PYUV_HANDLE_INCREF(self);
+
     Py_RETURN_NONE;
 }
 
@@ -76,6 +78,8 @@ Check_func_stop(Check *self)
 
     Py_XDECREF(self->callback);
     self->callback = NULL;
+
+    PYUV_HANDLE_DECREF(self);
 
     Py_RETURN_NONE;
 }
