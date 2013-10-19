@@ -1508,6 +1508,65 @@ on_fsevent_callback(uv_fs_event_t *handle, const char *filename, int events, int
 
 
 static PyObject *
+FSEvent_func_start(FSEvent *self, PyObject *args, PyObject *kwargs)
+{
+    int err, flags;
+    char *path;
+    PyObject *tmp, *callback;
+
+    static char *kwlist[] = {"path", "flags", "callback", NULL};
+
+    tmp = NULL;
+
+    RAISE_IF_HANDLE_NOT_INITIALIZED(self, NULL);
+    RAISE_IF_HANDLE_CLOSED(self, PyExc_HandleClosedError, NULL);
+
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "siO:start", kwlist, &path, &flags, &callback)) {
+        return NULL;
+    }
+
+    if (!PyCallable_Check(callback)) {
+        PyErr_SetString(PyExc_TypeError, "a callable is required");
+        return NULL;
+    }
+
+    err = uv_fs_event_start(&self->fsevent_h, on_fsevent_callback, path, flags);
+    if (err < 0) {
+        RAISE_UV_EXCEPTION(err, PyExc_FSEventError);
+        return NULL;
+    }
+
+    tmp = self->callback;
+    Py_INCREF(callback);
+    self->callback = callback;
+    Py_XDECREF(tmp);
+
+    Py_RETURN_NONE;
+}
+
+
+static PyObject *
+FSEvent_func_stop(FSEvent *self)
+{
+    int err;
+
+    RAISE_IF_HANDLE_NOT_INITIALIZED(self, NULL);
+    RAISE_IF_HANDLE_CLOSED(self, PyExc_HandleClosedError, NULL);
+
+    err = uv_fs_event_stop(&self->fsevent_h);
+    if (err < 0) {
+        RAISE_UV_EXCEPTION(err, PyExc_FSEventError);
+        return NULL;
+    }
+
+    Py_XDECREF(self->callback);
+    self->callback = NULL;
+
+    Py_RETURN_NONE;
+}
+
+
+static PyObject *
 FSEvent_filename_get(FSEvent *self, void *closure)
 {
     UNUSED_ARG(closure);
@@ -1521,36 +1580,22 @@ FSEvent_filename_get(FSEvent *self, void *closure)
 static int
 FSEvent_tp_init(FSEvent *self, PyObject *args, PyObject *kwargs)
 {
-    int err, flags;
-    char *path;
+    int err;
     Loop *loop;
-    PyObject *callback, *tmp;
-
-    static char *kwlist[] = {"loop", "path", "flags", "callback", NULL};
 
     UNUSED_ARG(kwargs);
 
     RAISE_IF_HANDLE_INITIALIZED(self, -1);
 
-    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!siO:__init__", kwlist, &LoopType, &loop, &path, &flags, &callback)) {
+    if (!PyArg_ParseTuple(args, "O!:__init__", &LoopType, &loop)) {
         return -1;
     }
 
-    if (!PyCallable_Check(callback)) {
-        PyErr_SetString(PyExc_TypeError, "a callable is required");
-        return -1;
-    }
-
-    err = uv_fs_event_init(loop->uv_loop, &self->fsevent_h, path, on_fsevent_callback, flags);
+    err = uv_fs_event_init(loop->uv_loop, &self->fsevent_h);
     if (err < 0) {
         RAISE_UV_EXCEPTION(err, PyExc_FSEventError);
         return -1;
     }
-
-    tmp = self->callback;
-    Py_INCREF(callback);
-    self->callback = callback;
-    Py_XDECREF(tmp);
 
     initialize_handle(HANDLE(self), loop);
 
@@ -1591,6 +1636,14 @@ FSEvent_tp_clear(FSEvent *self)
 }
 
 
+static PyMethodDef
+FSEvent_tp_methods[] = {
+    { "start", (PyCFunction)FSEvent_func_start, METH_VARARGS | METH_KEYWORDS, "Start the FSEvent handle." },
+    { "stop", (PyCFunction)FSEvent_func_stop, METH_NOARGS, "Stop the FSEvent handle." },
+    { NULL }
+};
+
+
 static PyGetSetDef FSEvent_tp_getsets[] = {
     {"filename", (getter)FSEvent_filename_get, NULL, "Name of the file/directory being monitored.", NULL},
     {NULL}
@@ -1625,7 +1678,7 @@ static PyTypeObject FSEventType = {
     0,                                                              /*tp_weaklistoffset*/
     0,                                                              /*tp_iter*/
     0,                                                              /*tp_iternext*/
-    0,                                                              /*tp_methods*/
+    FSEvent_tp_methods,                                             /*tp_methods*/
     0,                                                              /*tp_members*/
     FSEvent_tp_getsets,                                             /*tp_getsets*/
     0,                                                              /*tp_base*/
