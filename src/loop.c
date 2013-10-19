@@ -319,11 +319,7 @@ handles_walk_cb(uv_handle_t* handle, void* arg)
 
     ASSERT(obj);
 
-    Py_INCREF(obj);
-    if (PyList_Append(handles, obj) != 0) {
-        /* Append failed decref obj to even it out */
-        Py_DECREF(obj);
-    }
+    PyList_Append(handles, obj);
 }
 
 static PyObject *
