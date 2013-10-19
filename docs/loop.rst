@@ -96,3 +96,9 @@
 
         Returns the poll timeout.
 
+    .. py:attribute:: handles
+
+        *Read only*
+
+        List of handles in this loop.
+

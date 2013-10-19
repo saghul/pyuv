@@ -350,56 +350,35 @@
     Same as :py:func:`pyuv.fs.utime` but using a file-descriptor instead of the path.
 
 
-.. py:class:: pyuv.fs.FSEvent(loop, path, callback, flags)
+.. py:class:: pyuv.fs.FSEvent(loop)
 
     :type loop: :py:class:`Loop`
     :param loop: loop object where this handle runs (accessible through :py:attr:`FSEvent.loop`).
 
-    :param string path: Path to monitor for events.
-
-    :param callable callback: Function that will be called when an event occurs in the
-        given path.
-
-    :param int flags: Flags which control what events are watched for. Not used at the moment.
-
     `FSEvent` handles monitor a given path for changes.
+
+    .. py:method:: start(path, flags, callback)
+
+        :param string path: Path to monitor for changes.
+
+        :param int flags: Flags which control what events are watched for. Not used at the moment.
+
+        :param callable callback: Function that will be called when the given path changes any of its
+            attributes.
+
+        Start the ``FSEvent`` handle.
 
         Callback signature: ``callback(fsevent_handle, filename, events, error)``.
 
-    .. py:method:: close([callback])
+    .. py:method:: stop
 
-        :param callable callback: Function that will be called after the ``FSEvent``
-            handle is closed.
-
-        Close the ``FSEvent`` handle. After a handle has been closed no other
-        operations can be performed on it.
-
-        Callback signature: ``callback(fsevent_handle)``.
-
-    .. py:attribute:: loop
-
-        *Read only*
-
-        :py:class:`Loop` object where this handle runs.
+        Stop the ``FSEvent`` handle.
 
     .. py:attribute:: filename
 
         *Read only*
 
         Filename being monitored.
-
-    .. py:attribute:: active
-
-        *Read only*
-
-        Indicates if this handle is active.
-
-    .. py:attribute:: closed
-
-        *Read only*
-
-        Indicates if this handle is closing or already closed.
-
 
 
 .. py:class:: pyuv.fs.FSPoll(loop)
@@ -409,46 +388,22 @@
 
     ``FSPoll`` handles monitor a given path for changes by using stat syscalls.
 
-    .. py:method:: start(path, callback, interval)
+    .. py:method:: start(path, interval, callback)
 
         :param string path: Path to monitor for changes.
 
+        :param float interval: How often to poll for events (in seconds).
+
         :param callable callback: Function that will be called when the given path changes any of its
             attributes.
-
-        :param float interval: How often to poll for events (in seconds).
 
         Start the ``FSPoll`` handle.
 
         Callback signature: ``callback(fspoll_handle, prev_stat, curr_stat, error)``.
 
-    .. py:method:: close([callback])
+    .. py:method:: stop
 
-        :param callable callback: Function that will be called after the ``FSPoll``
-            handle is closed.
-
-        Close the ``FSPoll`` handle. After a handle has been closed no other
-        operations can be performed on it.
-
-        Callback signature: ``callback(fspoll_handle)``.
-
-    .. py:attribute:: loop
-
-        *Read only*
-
-        :py:class:`Loop` object where this handle runs.
-
-    .. py:attribute:: active
-
-        *Read only*
-
-        Indicates if this handle is active.
-
-    .. py:attribute:: closed
-
-        *Read only*
-
-        Indicates if this handle is closing or already closed.
+        Stop the ``FSPoll`` handle.
 
 
 Module constants
