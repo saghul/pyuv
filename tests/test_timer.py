@@ -53,6 +53,17 @@ class TimerTest(TestCase):
         self.loop.run()
         self.assertEqual(self.timer_cb_called, 1)
 
+    def test_timer_noref(self):
+        self.timer_cb_called = 0
+        def timer_cb(timer):
+            self.timer_cb_called += 1
+            timer.close()
+        t = pyuv.Timer(self.loop)
+        t.start(timer_cb, 0.1, 0)
+        t = None
+        self.loop.run()
+        self.assertEqual(self.timer_cb_called, 1)
+
 
 if __name__ == '__main__':
     unittest2.main(verbosity=2)
