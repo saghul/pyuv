@@ -69,6 +69,9 @@ on_handle_close(uv_handle_t *handle)
     /* Refcount was increased in the caller function */
     Py_DECREF(self);
 
+    /* Remove extra reference, in case it was added along the way */
+    PYUV_HANDLE_DECREF(self);
+
     PyGILState_Release(gstate);
 }
 
@@ -97,6 +100,7 @@ initialize_handle(Handle *self, Loop *loop)
     Py_INCREF(loop);
     self->loop = loop;
     Py_XDECREF(tmp);
+    self->flags = 0;
     self->initialized = True;
 }
 

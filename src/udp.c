@@ -178,6 +178,8 @@ UDP_func_start_recv(UDP *self, PyObject *args)
     self->on_read_cb = callback;
     Py_XDECREF(tmp);
 
+    PYUV_HANDLE_INCREF(self);
+
     Py_RETURN_NONE;
 }
 
@@ -198,6 +200,8 @@ UDP_func_stop_recv(UDP *self)
 
     Py_XDECREF(self->on_read_cb);
     self->on_read_cb = NULL;
+
+    PYUV_HANDLE_DECREF(self);
 
     Py_RETURN_NONE;
 }

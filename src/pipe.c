@@ -318,6 +318,8 @@ Pipe_func_start_read2(Pipe *self, PyObject *args)
     ((Stream *)self)->on_read_cb = callback;
     Py_XDECREF(tmp);
 
+    PYUV_HANDLE_INCREF(self);
+
     Py_RETURN_NONE;
 }
 

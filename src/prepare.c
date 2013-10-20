@@ -56,6 +56,8 @@ Prepare_func_start(Prepare *self, PyObject *args)
     self->callback = callback;
     Py_XDECREF(tmp);
 
+    PYUV_HANDLE_INCREF(self);
+
     Py_RETURN_NONE;
 }
 
@@ -76,6 +78,8 @@ Prepare_func_stop(Prepare *self)
 
     Py_XDECREF(self->callback);
     self->callback = NULL;
+
+    PYUV_HANDLE_DECREF(self);
 
     Py_RETURN_NONE;
 }

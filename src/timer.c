@@ -69,6 +69,8 @@ Timer_func_start(Timer *self, PyObject *args, PyObject *kwargs)
     self->callback = callback;
     Py_XDECREF(tmp);
 
+    PYUV_HANDLE_INCREF(self);
+
     Py_RETURN_NONE;
 }
 
@@ -86,6 +88,8 @@ Timer_func_stop(Timer *self)
         RAISE_UV_EXCEPTION(err, PyExc_TimerError);
         return NULL;
     }
+
+    PYUV_HANDLE_DECREF(self);
 
     Py_RETURN_NONE;
 }

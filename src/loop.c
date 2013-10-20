@@ -309,6 +309,33 @@ Loop_default_get(Loop *self, void *closure)
 }
 
 
+static void
+handles_walk_cb(uv_handle_t* handle, void* arg)
+{
+    PyObject *handles, *obj;
+
+    handles = arg;
+    obj = handle->data;
+
+    ASSERT(obj);
+
+    PyList_Append(handles, obj);
+}
+
+static PyObject *
+Loop_handles_get(Loop *self, void *closure)
+{
+    UNUSED_ARG(closure);
+    PyObject *handles;
+
+    handles = PyList_New(0);
+
+    uv_walk(self->uv_loop, (uv_walk_cb)handles_walk_cb, handles);
+
+    return handles;
+}
+
+
 static PyObject *
 Loop_tp_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
 {
@@ -405,6 +432,7 @@ Loop_tp_methods[] = {
 static PyGetSetDef Loop_tp_getsets[] = {
     {"__dict__", (getter)Loop_dict_get, (setter)Loop_dict_set, NULL},
     {"default", (getter)Loop_default_get, NULL, "Is this the default loop?", NULL},
+    {"handles", (getter)Loop_handles_get, NULL, "Returns a list with all handles in the Loop", NULL},
     {NULL}
 };
 

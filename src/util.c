@@ -431,6 +431,8 @@ SignalChecker_func_start(SignalChecker *self)
         return NULL;
     }
 
+    PYUV_HANDLE_INCREF(self);
+
     Py_RETURN_NONE;
 }
 
@@ -448,6 +450,8 @@ SignalChecker_func_stop(SignalChecker *self)
         RAISE_UV_EXCEPTION(err, PyExc_UVError);
         return NULL;
     }
+
+    PYUV_HANDLE_DECREF(self);
 
     Py_RETURN_NONE;
 }

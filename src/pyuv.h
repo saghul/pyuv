@@ -135,6 +135,26 @@ typedef int Bool;
 #define PYUV_SLAB_SIZE 65536
 
 
+/* Custom pyuv handle flags */
+#define PYUV__PYREF    (1 << 1)
+
+#define PYUV_HANDLE_INCREF(obj)                        \
+    do {                                               \
+        if (!(HANDLE(obj)->flags & PYUV__PYREF)) {     \
+            HANDLE(obj)->flags |= PYUV__PYREF;         \
+            Py_INCREF(obj);                            \
+        }                                              \
+    } while(0)                                         \
+
+#define PYUV_HANDLE_DECREF(obj)                        \
+    do {                                               \
+        if (HANDLE(obj)->flags & PYUV__PYREF) {        \
+            HANDLE(obj)->flags &= ~PYUV__PYREF;        \
+            Py_DECREF(obj);                            \
+        }                                              \
+    } while(0)                                         \
+
+
 /* Python types definitions */
 
 /* Loop */
@@ -152,6 +172,7 @@ static PyTypeObject LoopType;
 typedef struct {
     PyObject_HEAD
     uv_handle_t *uv_handle;
+    int flags;
     Bool initialized;
     PyObject *weakreflist;
     PyObject *dict;
