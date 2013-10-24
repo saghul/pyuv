@@ -1,4 +1,3 @@
-
 import signal
 import sys
 import pyuv
@@ -12,8 +11,10 @@ def on_pipe_read(handle, data, error):
         pipe_stdout.write(data)
 
 def signal_cb(handle, signum):
-    pipe_stdin.close()
-    pipe_stdout.close()
+    if not pipe_stdin.closed:
+        pipe_stdin.close()
+    if not pipe_stdin.closed:
+        pipe_stdout.close()
     signal_h.close()
 
 
