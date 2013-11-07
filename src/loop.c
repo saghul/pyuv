@@ -325,8 +325,8 @@ handles_walk_cb(uv_handle_t* handle, void* arg)
 static PyObject *
 Loop_handles_get(Loop *self, void *closure)
 {
-    UNUSED_ARG(closure);
     PyObject *handles;
+    UNUSED_ARG(closure);
 
     handles = PyList_New(0);
 
