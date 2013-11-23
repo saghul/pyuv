@@ -1,3 +1,8 @@
+Version 0.10.8
+==============
+ - Fixed echo-pipe.py
+ - Raised libuv revision to 33959f7 (v0.10 branch)
+
 Version 0.10.7
 ==============
  - Use ARCHFLAGS if set when compiling libuv
