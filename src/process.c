@@ -220,7 +220,7 @@ Process_func_spawn(Process *self, PyObject *args, PyObject *kwargs)
 {
     int err, flags, len, stdio_count;
     unsigned int uid, gid;
-    char *cwd, *cwd2, *file, *file2, *arg_str, *tmp_str, *key_str, *value_str;
+    char *cwd, *file, *arg_str, *tmp_str, *key_str, *value_str;
     char **ptr, **process_args, **process_env;
     Py_ssize_t i, n, pos;
     PyObject *key, *value, *item, *tmp, *callback, *arguments, *env, *stdio, *ret;
@@ -258,30 +258,22 @@ Process_func_spawn(Process *self, PyObject *args, PyObject *kwargs)
 
     memset(&options, 0, sizeof(uv_process_options_t));
 
+    options.cwd = cwd;
+    options.file = file;
     options.uid = uid;
     options.gid = gid;
     options.flags = flags;
     options.exit_cb = on_process_exit;
-
-    file2 = PyMem_Malloc(strlen(file) + 1);
-    if (!file2) {
-        PyErr_NoMemory();
-        ret = NULL;
-        goto cleanup;
-    }
-    strcpy(file2, file);
-    options.file = file2;
 
     if (arguments) {
         n = PySequence_Length(arguments);
         process_args = PyMem_Malloc(sizeof *process_args * (n + 2));
         if (!process_args) {
             PyErr_NoMemory();
-            PyMem_Free(file2);
             ret = NULL;
             goto cleanup;
         }
-        process_args[0] = file2;
+        process_args[0] = file;
         i = 0;
         while (i < n) {
             item = PySequence_GetItem(arguments, i);
@@ -290,14 +282,7 @@ Process_func_spawn(Process *self, PyObject *args, PyObject *kwargs)
                 ret = NULL;
                 goto cleanup;
             }
-            tmp_str = PyMem_Malloc(strlen(arg_str) + 1);
-            if (!tmp_str) {
-                Py_DECREF(item);
-                ret = NULL;
-                goto cleanup;
-            }
-            strcpy(tmp_str, arg_str);
-            process_args[i+1] = tmp_str;
+            process_args[i+1] = strdup(arg_str);
             Py_DECREF(item);
             i++;
         }
@@ -306,25 +291,13 @@ Process_func_spawn(Process *self, PyObject *args, PyObject *kwargs)
         process_args = PyMem_Malloc(sizeof *process_args * 2);
         if (!process_args) {
             PyErr_NoMemory();
-            PyMem_Free(file2);
             ret = NULL;
             goto cleanup;
         }
-        process_args[0] = file2;
+        process_args[0] = file;
         process_args[1] = NULL;
     }
     options.args = process_args;
-
-    if (cwd) {
-        cwd2 = PyMem_Malloc(strlen(cwd) + 1);
-        if (!cwd2) {
-            PyErr_NoMemory();
-            ret = NULL;
-            goto cleanup;
-        }
-        strcpy(cwd2, cwd);
-        options.cwd = cwd2;
-    }
 
     if (env) {
         n = PyDict_Size(env);
@@ -415,7 +388,7 @@ Process_func_spawn(Process *self, PyObject *args, PyObject *kwargs)
 
 cleanup:
     if (options.args) {
-        for (ptr = options.args; *ptr != NULL; ptr++) {
+        for (ptr = options.args+1; *ptr != NULL; ptr++) {
             PyMem_Free(*ptr);
         }
     }
@@ -427,7 +400,6 @@ cleanup:
     }
 
     PyMem_Free(options.args);
-    PyMem_Free(options.cwd);
     PyMem_Free(options.env);
     PyMem_Free(options.stdio);
 
