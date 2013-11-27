@@ -30,6 +30,20 @@ class ProcessTest(TestCase):
         self.assertEqual(self.close_cb_called, 1)
         self.assertNotEqual(pid, None)
 
+    def test_process_noargs(self):
+        self.exit_cb_called = 0
+        self.close_cb_called = 0
+        def handle_close_cb(proc):
+            self.close_cb_called += 1
+        def proc_exit_cb(proc, exit_status, term_signal):
+            self.exit_cb_called += 1
+            proc.close(handle_close_cb)
+        proc = pyuv.Process(self.loop)
+        proc.spawn(file=sys.executable, exit_callback=proc_exit_cb)
+        self.loop.run()
+        self.assertEqual(self.exit_cb_called, 1)
+        self.assertEqual(self.close_cb_called, 1)
+
     def test_process_cwd(self):
         self.exit_cb_called = 0
         self.close_cb_called = 0
