@@ -1,3 +1,12 @@
+Version 0.11.2
+==============
+ - Allow None callback for Async handles
+ - Added Loop.handles property
+ - Adapted to API changes in uv_fs_event handle
+ - Avoid malloc()-ing unnecessary things in Process.spawn
+ - Keep handles alive when they are started
+ - Raised libuv revision to f6c1a27 (master branch)
+
 Version 0.11.1
 ==============
  - Added MAC address to util.interface_addresses() output
