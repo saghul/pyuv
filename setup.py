@@ -1,5 +1,7 @@
 # coding=utf8
 
+import codecs
+
 try:
     from setuptools import setup, Extension
 except ImportError:
@@ -15,7 +17,7 @@ setup(name             = "pyuv",
       author_email     = "saghul@gmail.com",
       url              = "http://github.com/saghul/pyuv",
       description      = "Python interface for libuv",
-      long_description = open("README.rst").read(),
+      long_description = codecs.open("README.rst", encoding="utf-8").read(),
       platforms        = ["POSIX", "Microsoft Windows"],
       classifiers      = [
           "Development Status :: 4 - Beta",
