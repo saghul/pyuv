@@ -513,5 +513,49 @@ class TCPFlagsTest(TestCase):
         self.loop.run()
 
 
+class TCPTryTest(TestCase):
+
+    def setUp(self):
+        super(TCPTryTest, self).setUp()
+        self.server = None
+        self.client = None
+        self.connections = None
+
+    def on_connection(self, server, error):
+        self.assertEqual(error, None)
+        client = pyuv.TCP(self.loop)
+        server.accept(client)
+        self.connection = client
+        client.start_read(self.on_client_connection_read)
+        while True:
+            try:
+                r = client.try_write(b"x")
+            except pyuv.error.TCPError:
+                pass
+            if r != 0:
+                break
+
+    def on_client_connection_read(self, client, data, error):
+        if data is None:
+            client.close()
+            self.connection = None
+            self.server.close()
+
+    def on_client_connection(self, client, error):
+        self.assertEqual(error, None)
+        client.start_read(self.on_client_read)
+
+    def on_client_read(self, client, data, error):
+        client.close()
+
+    def test_tcp1_try(self):
+        self.server = pyuv.TCP(self.loop)
+        self.server.bind(("0.0.0.0", TEST_PORT))
+        self.server.listen(self.on_connection)
+        self.client = pyuv.TCP(self.loop)
+        self.client.connect(("127.0.0.1", TEST_PORT), self.on_client_connection)
+        self.loop.run()
+
+
 if __name__ == '__main__':
     unittest2.main(verbosity=2)

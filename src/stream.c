@@ -301,6 +301,33 @@ error:
 
 
 static PyObject *
+Stream_func_try_write(Stream *self, PyObject *args)
+{
+    int err;
+    uv_buf_t buf;
+    Py_buffer view;
+
+    RAISE_IF_HANDLE_NOT_INITIALIZED(self, NULL);
+    RAISE_IF_HANDLE_CLOSED(self, PyExc_HandleClosedError, NULL);
+
+    if (!PyArg_ParseTuple(args, PYUV_BYTES"*:try_write", &view)) {
+        return NULL;
+    }
+
+    buf = uv_buf_init(view.buf, view.len);
+    err = uv_try_write((uv_stream_t *)UV_HANDLE(self), &buf, 1);
+    if (err < 0) {
+        RAISE_STREAM_EXCEPTION(err, UV_HANDLE(self));
+        PyBuffer_Release(&view);
+        return NULL;
+    }
+
+    PyBuffer_Release(&view);
+    return PyInt_FromLong((long)err);
+}
+
+
+static PyObject *
 Stream_func_write(Stream *self, PyObject *args)
 {
     uv_buf_t buf;
@@ -445,6 +472,7 @@ Stream_tp_clear(Stream *self)
 static PyMethodDef
 Stream_tp_methods[] = {
     { "shutdown", (PyCFunction)Stream_func_shutdown, METH_VARARGS, "Shutdown the write side of this Stream." },
+    { "try_write", (PyCFunction)Stream_func_try_write, METH_VARARGS, "Try to write data on the stream." },
     { "write", (PyCFunction)Stream_func_write, METH_VARARGS, "Write data on the stream." },
     { "writelines", (PyCFunction)Stream_func_writelines, METH_VARARGS, "Write a sequence of data on the stream." },
     { "start_read", (PyCFunction)Stream_func_start_read, METH_VARARGS, "Start read data from the connected endpoint." },
