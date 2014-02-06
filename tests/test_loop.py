@@ -54,5 +54,16 @@ class LoopRunTest(TestCase):
         self.assertEqual(self.prepare_called, 10)
 
 
+class LoopAliveTest(TestCase):
+
+    def test_loop_alive(self):
+        def prepare_cb(handle):
+            self.assertEqual(self.loop.alive, 1)
+            handle.close()
+        prepare = pyuv.Prepare(self.loop)
+        prepare.start(prepare_cb)
+        self.loop.run(pyuv.UV_RUN_ONCE)
+
+
 if __name__ == '__main__':
     unittest2.main(verbosity=2)

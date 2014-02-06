@@ -337,6 +337,14 @@ Loop_handles_get(Loop *self, void *closure)
 
 
 static PyObject *
+Loop_alive_get(Loop *self, void *closure)
+{
+    UNUSED_ARG(closure);
+    return PyBool_FromLong((long)uv_loop_alive(self->uv_loop));
+}
+
+
+static PyObject *
 Loop_tp_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
 {
     return new_loop(type, args, kwargs, 0);
@@ -431,6 +439,7 @@ Loop_tp_methods[] = {
 
 static PyGetSetDef Loop_tp_getsets[] = {
     {"__dict__", (getter)Loop_dict_get, (setter)Loop_dict_set, NULL},
+    {"alive", (getter)Loop_alive_get, NULL, "Indicates if the loop is still running / alive", NULL},
     {"default", (getter)Loop_default_get, NULL, "Is this the default loop?", NULL},
     {"handles", (getter)Loop_handles_get, NULL, "Returns a list with all handles in the Loop", NULL},
     {NULL}
