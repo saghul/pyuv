@@ -70,14 +70,16 @@ on_tcp_client_connection(uv_connect_t *req, int status)
 static PyObject *
 TCP_func_bind(TCP *self, PyObject *args)
 {
-    int err;
+    int err, flags;
     struct sockaddr_storage ss;
     PyObject *addr;
 
     RAISE_IF_HANDLE_NOT_INITIALIZED(self, NULL);
     RAISE_IF_HANDLE_CLOSED(self, PyExc_HandleClosedError, NULL);
 
-    if (!PyArg_ParseTuple(args, "O:bind", &addr)) {
+    flags = 0;
+
+    if (!PyArg_ParseTuple(args, "O|i:bind", &addr, &flags)) {
         return NULL;
     }
 
@@ -86,7 +88,7 @@ TCP_func_bind(TCP *self, PyObject *args)
         return NULL;
     }
 
-    err = uv_tcp_bind(&self->tcp_h, (struct sockaddr *)&ss);
+    err = uv_tcp_bind(&self->tcp_h, (struct sockaddr *)&ss, flags);
     if (err < 0) {
         RAISE_UV_EXCEPTION(err, PyExc_TCPError);
         return NULL;
