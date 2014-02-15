@@ -102,3 +102,10 @@
 
         List of handles in this loop.
 
+    .. py:attribute:: alive
+
+        *Read only*
+
+        Checks whether the reference count, that is, the number of active handles or requests left in the event
+        loop is non-zero aka if the loop is currently running.
+

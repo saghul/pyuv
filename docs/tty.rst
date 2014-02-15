@@ -50,6 +50,14 @@
 
         Callback signature: ``callback(tcp_handle, error)``.
 
+    .. py:method:: try_write(data)
+
+        :param object data: Data to be written on the ``TTY`` connection. It can be any Python object conforming
+            to the buffer interface.
+
+        Try to write data on the ``TTY`` connection. It will raise an exception if data cannot be written immediately
+        or a number indicating the amount of data written.
+
     .. py:method:: start_read(callback)
 
         :param callable callback: Callback to be called when data is read.

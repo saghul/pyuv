@@ -16,7 +16,7 @@
 
     The ``TCP`` handle provides asynchronous TCP functionality both as a client and server.
 
-    .. py:method:: bind((ip, port, [flowinfo, [scope_id]]))
+    .. py:method:: bind((ip, port, [flowinfo, [scope_id]]), [flags])
 
         :param string ip: IP address to bind to.
 
@@ -25,6 +25,9 @@
         :param int flowinfo: Flow info, used only for IPv6. Defaults to 0.
 
         :param int scope_id: Scope ID, used only for IPv6. Defaults to 0.
+
+        :param int flags: Binding flags. Only pyuv.UV_TCP_IPV6ONLY is supported at the moment, which
+            disables dual stack support on IPv6 handles.
 
         Bind to the specified IP address and port.
 
@@ -116,6 +119,14 @@
         Write data on the ``TCP`` connection.
 
         Callback signature: ``callback(tcp_handle, error)``.
+
+    .. py:method:: try_write(data)
+
+        :param object data: Data to be written on the ``TCP`` connection. It can be any Python object conforming
+            to the buffer interface.
+
+        Try to write data on the ``TCP`` connection. It will raise an exception if data cannot be written immediately
+        or a number indicating the amount of data written.
 
     .. py:method:: start_read(callback)
 
