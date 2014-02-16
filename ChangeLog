@@ -1,3 +1,13 @@
+Version 0.11.3
+==============
+ - Added flags argument to TCP.bind
+ - Add Stream.try_write() function
+ - Added Loop.alive attribute
+ - Define and expose UV_TCP_IPV6ONLY constant
+ - Read README file using proper encoding
+ - Updated documentation
+ - Raised libuv revision to 6f62d62 (master branch)
+
 Version 0.11.2
 ==============
  - Allow None callback for Async handles
