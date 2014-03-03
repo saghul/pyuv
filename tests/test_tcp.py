@@ -145,7 +145,9 @@ class TCPTest3(unittest2.TestCase):
         server.accept(connection)
         while connection.write_queue_size == 0:
             connection.write(b"PING"*1000)
-        connection.close()
+        connection.close(self.on_connection_close)
+
+    def on_connection_close(self, connection):
         self.client.close()
         self.server.close()
 
