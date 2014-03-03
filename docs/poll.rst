@@ -36,9 +36,6 @@
             be prepared to handle EAGAIN or equivalent when it attempts to read from or
             write to the fd.
 
-            It is not okay to have multiple active uv_poll watchers for the same socket.
-            This can cause libuv to busyloop or otherwise malfunction.
-
             The user should not close a file descriptor while it is being polled by an
             active uv_poll watcher. This can cause the poll watcher to report an error,
             but it might also start polling another socket. However the fd can be safely
@@ -46,6 +43,9 @@
 
             On windows only sockets can be polled with uv_poll. On unix any file
             descriptor that would be accepted by poll(2) can be used with uv_poll.
+
+            IMPORTANT: It is not okay to have multiple active uv_poll watchers for the same socket.
+            This can cause libuv to assert. See this issue: https://github.com/saghul/pyuv/issues/54
 
     .. py:method:: start(events, callback)
 
