@@ -36,6 +36,12 @@ Version 0.11.0
  - Adapted to changes in libuv master branch
  - Raised libuv revision to XXX (master branch)
 
+Version 0.10.9
+==============
+ - Fixed TCP saturation test
+ - Clarify that only one Poll handle per fd is allowed
+ - Raised libuv revision to c0c9480 (v0.10 branch)
+
 Version 0.10.8
 ==============
  - Fixed echo-pipe.py
