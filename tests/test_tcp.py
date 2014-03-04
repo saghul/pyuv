@@ -4,7 +4,7 @@ import os
 import socket
 import sys
 
-from common import unittest2, linesep, TestCase
+from common import unittest2, linesep, platform_skip, TestCase
 import pyuv
 
 try:
@@ -507,6 +507,7 @@ class TCPFlagsTest(TestCase):
         self.loop.run()
 
 
+@platform_skip(["win32"])
 class TCPTryTest(TestCase):
 
     def setUp(self):
@@ -525,7 +526,7 @@ class TCPTryTest(TestCase):
             try:
                 r = client.try_write(b"x")
             except pyuv.error.TCPError:
-                pass
+                continue
             if r != 0:
                 break
 
