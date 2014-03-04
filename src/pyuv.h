@@ -162,6 +162,7 @@ typedef struct {
     PyObject_HEAD
     PyObject *weakreflist;
     PyObject *dict;
+    uv_loop_t loop_struct;
     uv_loop_t *uv_loop;
     int is_default;
 } Loop;
