@@ -420,6 +420,10 @@ typedef struct {
     PyObject *path;
     PyObject *result;
     PyObject *error;
+    /* for write requests */
+    Py_buffer view;
+    /* for read requests */
+    uv_buf_t buf;
 } FSRequest;
 
 static PyTypeObject FSRequestType;
