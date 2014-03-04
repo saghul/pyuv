@@ -42,7 +42,8 @@ class IPCTest(TestCase):
         self.tcp_server.close()
         self.local_conn_accepted = True
 
-    def on_channel_read(self, handle, data, pending, error):
+    def on_channel_read(self, handle, data, error):
+        pending = self.channel.pending_handle_type()
         if self.tcp_server is None:
             self.assertEqual(pending, pyuv.UV_TCP)
             self.tcp_server = pyuv.TCP(self.loop)
@@ -64,7 +65,7 @@ class IPCTest(TestCase):
         stdio = [pyuv.StdIO(stream=self.channel, flags=pyuv.UV_CREATE_PIPE|pyuv.UV_READABLE_PIPE|pyuv.UV_WRITABLE_PIPE)]
         proc = pyuv.Process(self.loop)
         proc.spawn(file=sys.executable, args=["proc_ipc.py", test_type, str(TEST_PORT)], exit_callback=self.proc_exit_cb, stdio=stdio)
-        self.channel.start_read2(self.on_channel_read)
+        self.channel.start_read(self.on_channel_read)
         self.loop.run()
 
     def test_ipc1(self):
@@ -79,7 +80,8 @@ class IPCSendRecvTest(TestCase):
     def proc_exit_cb(self, proc, exit_status, term_signal):
         proc.close()
 
-    def on_channel_read(self, expected_type, handle, data, pending, error):
+    def on_channel_read(self, expected_type, handle, data, error):
+        pending = self.channel.pending_handle_type()
         self.assertEqual(pending, expected_type)
         if pending == pyuv.UV_NAMED_PIPE:
             recv_handle = pyuv.Pipe(self.loop)
@@ -98,7 +100,7 @@ class IPCSendRecvTest(TestCase):
         proc = pyuv.Process(self.loop)
         proc.spawn(file=sys.executable, args=["proc_ipc_echo.py"], exit_callback=self.proc_exit_cb, stdio=stdio)
         self.channel.write2(b".", self.send_handle)
-        self.channel.start_read2(partial(self.on_channel_read, self.send_handle_type))
+        self.channel.start_read(partial(self.on_channel_read, self.send_handle_type))
         self.loop.run()
 
     @platform_skip(["win32"])

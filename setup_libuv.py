@@ -49,7 +49,9 @@ def exec_process(cmdline, silent=True, input=None, **kwargs):
 
 
 def prepare_windows_env(env):
+    env.pop('VS120COMNTOOLS', None)
     env.pop('VS110COMNTOOLS', None)
+    env.pop('WindowsSDKDir', None)
     if sys.version_info < (3, 3):
         env.pop('VS100COMNTOOLS', None)
 
@@ -95,7 +97,7 @@ class libuv_build_ext(build_ext):
     libuv_dir      = os.path.join('deps', 'libuv')
     libuv_repo     = 'https://github.com/joyent/libuv.git'
     libuv_branch   = 'master'
-    libuv_revision = '6f62d62'
+    libuv_revision = 'f326820'
     libuv_patches  = []
 
     user_options = build_ext.user_options

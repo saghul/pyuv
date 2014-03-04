@@ -68,45 +68,6 @@ on_pipe_client_connection(uv_connect_t *req, int status)
 }
 
 
-static void
-on_pipe_read2(uv_pipe_t* handle, int nread, const uv_buf_t* buf, uv_handle_type pending)
-{
-    PyGILState_STATE gstate = PyGILState_Ensure();
-    Pipe *self;
-    PyObject *result, *data, *py_errorno, *py_pending;
-    ASSERT(handle);
-
-    self = PYUV_CONTAINER_OF(handle, Pipe, pipe_h);
-
-    /* Object could go out of scope in the callback, increase refcount to avoid it */
-    Py_INCREF(self);
-
-    py_pending = PyInt_FromLong((long)pending);
-
-    if (nread >= 0) {
-        data = PyBytes_FromStringAndSize(buf->base, nread);
-        py_errorno = Py_None;
-        Py_INCREF(Py_None);
-    } else {
-        data = Py_None;
-        Py_INCREF(Py_None);
-        py_errorno = PyInt_FromLong((long)nread);
-    }
-
-    result = PyObject_CallFunctionObjArgs(((Stream *)self)->on_read_cb, self, data, py_pending, py_errorno, NULL);
-    if (result == NULL) {
-        handle_uncaught_exception(HANDLE(self)->loop);
-    }
-    Py_XDECREF(result);
-    Py_DECREF(data);
-    Py_DECREF(py_pending);
-    Py_DECREF(py_errorno);
-
-    Py_DECREF(self);
-    PyGILState_Release(gstate);
-}
-
-
 static PyObject *
 Pipe_func_bind(Pipe *self, PyObject *args)
 {
@@ -288,39 +249,12 @@ Pipe_func_pending_instances(Pipe *self, PyObject *args)
 
 
 static PyObject *
-Pipe_func_start_read2(Pipe *self, PyObject *args)
+Pipe_func_pending_handle_type(Pipe *self)
 {
-    int err;
-    PyObject *tmp, *callback;
-
-    tmp = NULL;
-
     RAISE_IF_HANDLE_NOT_INITIALIZED(self, NULL);
     RAISE_IF_HANDLE_CLOSED(self, PyExc_HandleClosedError, NULL);
 
-    if (!PyArg_ParseTuple(args, "O:start_read2", &callback)) {
-        return NULL;
-    }
-
-    if (!PyCallable_Check(callback)) {
-        PyErr_SetString(PyExc_TypeError, "a callable is required");
-        return NULL;
-    }
-
-    err = uv_read2_start((uv_stream_t *)&self->pipe_h, (uv_alloc_cb)on_stream_alloc, (uv_read2_cb)on_pipe_read2);
-    if (err < 0) {
-        RAISE_UV_EXCEPTION(err, PyExc_PipeError);
-        return NULL;
-    }
-
-    tmp = ((Stream *)self)->on_read_cb;
-    Py_INCREF(callback);
-    ((Stream *)self)->on_read_cb = callback;
-    Py_XDECREF(tmp);
-
-    PYUV_HANDLE_INCREF(self);
-
-    Py_RETURN_NONE;
+    return PyInt_FromLong(uv_pipe_pending_type(&self->pipe_h));
 }
 
 
@@ -446,7 +380,7 @@ Pipe_tp_methods[] = {
     { "connect", (PyCFunction)Pipe_func_connect, METH_VARARGS, "Start connecion to the remote Pipe." },
     { "open", (PyCFunction)Pipe_func_open, METH_VARARGS, "Open the specified file descriptor and manage it as a Pipe." },
     { "pending_instances", (PyCFunction)Pipe_func_pending_instances, METH_VARARGS, "Set the number of pending pipe instance handles when the pipe server is waiting for connections." },
-    { "start_read2", (PyCFunction)Pipe_func_start_read2, METH_VARARGS, "Extended read methods for receiving handles over a pipe. The pipe must be initialized with ipc set to True." },
+    { "pending_handle_type", (PyCFunction)Pipe_func_pending_handle_type, METH_NOARGS, "Returns the type of the next pending handle. Can be called multiple times." },
     { "write2", (PyCFunction)Pipe_func_write2, METH_VARARGS, "Write data and send handle over a pipe." },
     { NULL }
 };

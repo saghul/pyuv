@@ -121,7 +121,7 @@ process_fs_req(uv_fs_t* req) {
                     PyErr_Clear();
                     PYUV_SET_NONE(r);
                 }
-                PyMem_Free(req->buf);
+                PyBuffer_Release(&fs_req->view);
                 break;
             case UV_FS_OPEN:
             case UV_FS_SENDFILE:
@@ -132,12 +132,12 @@ process_fs_req(uv_fs_t* req) {
                 }
                 break;
             case UV_FS_READ:
-                r = PyBytes_FromStringAndSize(req->buf, req->result);
+                r = PyBytes_FromStringAndSize(fs_req->buf.base, req->result);
                 if (!r) {
                     PyErr_Clear();
                     PYUV_SET_NONE(r);
                 }
-                PyMem_Free(req->buf);
+                PyMem_Free(fs_req->buf.base);
                 break;
             case UV_FS_READDIR:
                 r = PyList_New(0);
@@ -990,7 +990,10 @@ FS_func_read(PyObject *obj, PyObject *args, PyObject *kwargs)
         return NULL;
     }
 
-    err = uv_fs_read(loop->uv_loop, &fs_req->req, (uv_file)fd, buf, length, offset, (callback != Py_None) ? process_fs_req : NULL);
+    fs_req->buf.base = buf;
+    fs_req->buf.len = length;
+
+    err = uv_fs_read(loop->uv_loop, &fs_req->req, (uv_file)fd, &fs_req->buf, 1, offset, (callback != Py_None) ? process_fs_req : NULL);
     if (err < 0) {
         RAISE_UV_EXCEPTION(err, PyExc_FSError);
         PyMem_Free(buf);
@@ -1018,45 +1021,42 @@ FS_func_write(PyObject *obj, PyObject *args, PyObject *kwargs)
     int err;
     int64_t offset;
     long fd;
-    char *pbuf, *buf;
     Loop *loop;
     FSRequest *fs_req;
-    Py_ssize_t length;
     PyObject *callback, *ret;
+    Py_buffer view;
+    uv_buf_t buf;
 
     static char *kwlist[] = {"loop", "fd", "write_data", "offset", "callback", NULL};
 
     UNUSED_ARG(obj);
     fs_req = NULL;
-    buf = NULL;
     callback = Py_None;
 
-    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!ls#L|O:write", kwlist, &LoopType, &loop, &fd, &pbuf, &length, &offset, &callback)) {
-        return NULL;
-    }
-
-    if (callback != Py_None && !PyCallable_Check(callback)) {
-        PyErr_SetString(PyExc_TypeError, "a callable is required");
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!ls*L|O:write", kwlist, &LoopType, &loop, &fd, &view, &offset, &callback)) {
         return NULL;
     }
 
     fs_req = (FSRequest *)PyObject_CallFunctionObjArgs((PyObject *)&FSRequestType, loop, callback, NULL);
     if (!fs_req) {
+        PyBuffer_Release(&view);
         return NULL;
     }
 
-    buf = PyMem_Malloc(length);
-    if (!buf) {
-        PyErr_NoMemory();
+    if (callback != Py_None && !PyCallable_Check(callback)) {
+        PyErr_SetString(PyExc_TypeError, "a callable is required");
+        PyBuffer_Release(&view);
         Py_DECREF(fs_req);
         return NULL;
     }
-    memcpy(buf, pbuf, length);
 
-    err = uv_fs_write(loop->uv_loop, &fs_req->req, (uv_file)fd, buf, length, offset, (callback != Py_None) ? process_fs_req : NULL);
+    memcpy(&fs_req->view, &view, sizeof(Py_buffer));
+    buf = uv_buf_init(fs_req->view.buf, fs_req->view.len);
+
+    err = uv_fs_write(loop->uv_loop, &fs_req->req, (uv_file)fd, &buf, 1, offset, (callback != Py_None) ? process_fs_req : NULL);
     if (err < 0) {
         RAISE_UV_EXCEPTION(err, PyExc_FSError);
-        PyMem_Free(buf);
+        PyBuffer_Release(&fs_req->view);
         Py_DECREF(fs_req);
         return NULL;
     }
@@ -1069,6 +1069,7 @@ FS_func_write(PyObject *obj, PyObject *args, PyObject *kwargs)
         process_fs_req(&fs_req->req);
         Py_INCREF(fs_req->result);
         ret = fs_req->result;
+        /* buffer view is released in process_fs_req */
         Py_DECREF(fs_req);
         return ret;
     }
@@ -1573,11 +1574,27 @@ FSEvent_func_stop(FSEvent *self)
 static PyObject *
 FSEvent_filename_get(FSEvent *self, void *closure)
 {
+#ifdef _WIN32
+    /* MAX_PATH is in characters, not bytes. Make sure we have enough headroom. */
+    char buf[MAX_PATH * 4];
+#else
+    char buf[PATH_MAX];
+#endif
+    size_t buf_len;
+    int err;
+
     UNUSED_ARG(closure);
 
     RAISE_IF_HANDLE_NOT_INITIALIZED(self, NULL);
 
-    return Py_BuildValue("s", self->fsevent_h.filename);
+    buf_len = sizeof(buf);
+    err = uv_fs_event_getpath(&self->fsevent_h, buf, &buf_len);
+    if (err < 0) {
+        RAISE_UV_EXCEPTION(err, PyExc_FSEventError);
+        return NULL;
+    }
+
+    return PyBytes_FromStringAndSize(buf, buf_len);
 }
 
 

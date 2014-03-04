@@ -14,16 +14,14 @@ init_loop(Loop *loop, int is_default)
 {
     uv_loop_t *uv_loop;
 
-    uv_loop = NULL;
-
     if (is_default) {
         uv_loop = uv_default_loop();
     } else {
-        uv_loop = uv_loop_new();
+        uv_loop = &loop->loop_struct;
     }
 
-    if (!uv_loop) {
-        PyErr_NoMemory();
+    if (uv_loop_init(uv_loop) < 0) {
+        PyErr_SetString(PyExc_RuntimeError, "Error initializing loop");
         return -1;
     }
     uv_loop->data = loop;
@@ -372,7 +370,7 @@ Loop_tp_dealloc(Loop *self)
 {
     if (self->uv_loop) {
         self->uv_loop->data = NULL;
-        uv_loop_delete(self->uv_loop);
+        uv_loop_close(self->uv_loop);
     }
     if (self->weakreflist != NULL) {
         PyObject_ClearWeakRefs((PyObject *)self);
