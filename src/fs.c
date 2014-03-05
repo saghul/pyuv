@@ -1033,7 +1033,7 @@ FS_func_write(PyObject *obj, PyObject *args, PyObject *kwargs)
     fs_req = NULL;
     callback = Py_None;
 
-    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!ls*L|O:write", kwlist, &LoopType, &loop, &fd, &view, &offset, &callback)) {
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!l"PYUV_BYTES"*L|O:write", kwlist, &LoopType, &loop, &fd, &view, &offset, &callback)) {
         return NULL;
     }
 
