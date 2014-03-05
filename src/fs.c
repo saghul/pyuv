@@ -1835,6 +1835,32 @@ FSPoll_func_stop(FSPoll *self)
 }
 
 
+static PyObject *
+FSPoll_path_get(FSPoll *self, void *closure)
+{
+#ifdef _WIN32
+    /* MAX_PATH is in characters, not bytes. Make sure we have enough headroom. */
+    char buf[MAX_PATH * 4];
+#else
+    char buf[PATH_MAX];
+#endif
+    size_t buf_len;
+    int err;
+
+    UNUSED_ARG(closure);
+
+    RAISE_IF_HANDLE_NOT_INITIALIZED(self, NULL);
+
+    buf_len = sizeof(buf);
+    err = uv_fs_poll_getpath(&self->fspoll_h, buf, &buf_len);
+    if (err < 0) {
+        return PyBytes_FromString("");
+    }
+
+    return PyBytes_FromStringAndSize(buf, buf_len-1);
+}
+
+
 static int
 FSPoll_tp_init(FSPoll *self, PyObject *args, PyObject *kwargs)
 {
@@ -1902,6 +1928,12 @@ FSPoll_tp_methods[] = {
 };
 
 
+static PyGetSetDef FSPoll_tp_getsets[] = {
+    {"path", (getter)FSPoll_path_get, NULL, "Path being monitored.", NULL},
+    {NULL}
+};
+
+
 static PyTypeObject FSPollType = {
     PyVarObject_HEAD_INIT(NULL, 0)
     "pyuv.fs.FSPoll",                                               /*tp_name*/
@@ -1932,7 +1964,7 @@ static PyTypeObject FSPollType = {
     0,                                                              /*tp_iternext*/
     FSPoll_tp_methods,                                              /*tp_methods*/
     0,                                                              /*tp_members*/
-    0,                                                              /*tp_getsets*/
+    FSPoll_tp_getsets,                                              /*tp_getsets*/
     0,                                                              /*tp_base*/
     0,                                                              /*tp_dict*/
     0,                                                              /*tp_descr_get*/
