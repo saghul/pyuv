@@ -1590,11 +1590,10 @@ FSEvent_path_get(FSEvent *self, void *closure)
     buf_len = sizeof(buf);
     err = uv_fs_event_getpath(&self->fsevent_h, buf, &buf_len);
     if (err < 0) {
-        RAISE_UV_EXCEPTION(err, PyExc_FSEventError);
-        return NULL;
+        return PyBytes_FromString("");
     }
 
-    return PyBytes_FromStringAndSize(buf, buf_len);
+    return PyBytes_FromStringAndSize(buf, buf_len-1);
 }
 
 
