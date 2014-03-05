@@ -1572,7 +1572,7 @@ FSEvent_func_stop(FSEvent *self)
 
 
 static PyObject *
-FSEvent_filename_get(FSEvent *self, void *closure)
+FSEvent_path_get(FSEvent *self, void *closure)
 {
 #ifdef _WIN32
     /* MAX_PATH is in characters, not bytes. Make sure we have enough headroom. */
@@ -1666,7 +1666,7 @@ FSEvent_tp_methods[] = {
 
 
 static PyGetSetDef FSEvent_tp_getsets[] = {
-    {"filename", (getter)FSEvent_filename_get, NULL, "Name of the file/directory being monitored.", NULL},
+    {"path", (getter)FSEvent_path_get, NULL, "Path being monitored.", NULL},
     {NULL}
 };
 
