@@ -546,7 +546,7 @@ class FSTestWrite(TestCase):
     def test_write(self):
         self.bytes_written = None
         self.errorno = None
-        pyuv.fs.write(self.loop, self.fd, "TEST", -1, self.write_cb)
+        pyuv.fs.write(self.loop, self.fd, b"TEST", -1, self.write_cb)
         self.loop.run()
         self.assertEqual(self.bytes_written, 4)
         self.assertEqual(self.errorno, None)
@@ -556,7 +556,7 @@ class FSTestWrite(TestCase):
     def test_write_null(self):
         self.bytes_written = None
         self.errorno = None
-        pyuv.fs.write(self.loop, self.fd, "TES\x00T", -1, self.write_cb)
+        pyuv.fs.write(self.loop, self.fd, b"TES\x00T", -1, self.write_cb)
         self.loop.run()
         self.assertEqual(self.bytes_written, 5)
         self.assertEqual(self.errorno, None)
@@ -564,7 +564,7 @@ class FSTestWrite(TestCase):
             self.assertEqual(fobj.read(), "TES\x00T")
 
     def test_write_sync(self):
-        self.bytes_written = pyuv.fs.write(self.loop, self.fd, "TEST", -1)
+        self.bytes_written = pyuv.fs.write(self.loop, self.fd, b"TEST", -1)
         pyuv.fs.close(self.loop, self.fd)
         self.assertEqual(self.bytes_written, 4)
         with open(TEST_FILE, 'r') as fobj:
@@ -572,7 +572,7 @@ class FSTestWrite(TestCase):
 
     def test_write_offset(self):
         offset = MAX_INT32_VALUE + 4
-        self.bytes_written = pyuv.fs.write(self.loop, self.fd, "TEST", offset)
+        self.bytes_written = pyuv.fs.write(self.loop, self.fd, b"TEST", offset)
         pyuv.fs.close(self.loop, self.fd)
         with open(TEST_FILE, 'r') as fobj:
             fobj.seek(offset)
@@ -595,7 +595,7 @@ class FSTestFsync(TestCase):
 
     def test_fsync(self):
         self.fd = pyuv.fs.open(self.loop, TEST_FILE, os.O_RDWR|os.O_CREAT|os.O_TRUNC, stat.S_IREAD|stat.S_IWRITE)
-        pyuv.fs.write(self.loop, self.fd, "TEST", -1, self.write_cb)
+        pyuv.fs.write(self.loop, self.fd, b"TEST", -1, self.write_cb)
         self.loop.run()
         pyuv.fs.close(self.loop, self.fd)
         with open(TEST_FILE, 'r') as fobj:
@@ -603,7 +603,7 @@ class FSTestFsync(TestCase):
 
     def test_fsync_sync(self):
         self.fd = pyuv.fs.open(self.loop, TEST_FILE, os.O_RDWR|os.O_CREAT|os.O_TRUNC, stat.S_IREAD|stat.S_IWRITE)
-        pyuv.fs.write(self.loop, self.fd, "TEST", -1)
+        pyuv.fs.write(self.loop, self.fd, b"TEST", -1)
         pyuv.fs.fdatasync(self.loop, self.fd)
         pyuv.fs.fsync(self.loop, self.fd)
         pyuv.fs.close(self.loop, self.fd)
