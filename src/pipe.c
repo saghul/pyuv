@@ -312,6 +312,40 @@ error:
 }
 
 
+static PyObject *
+Pipe_func_getsockname(Pipe *self)
+{
+#ifdef _WIN32
+    /* MAX_PATH is in characters, not bytes. Make sure we have enough headroom. */
+    char buf[MAX_PATH * 4];
+#else
+    char buf[PATH_MAX];
+#endif
+    size_t buf_len;
+    int err;
+
+    RAISE_IF_HANDLE_NOT_INITIALIZED(self, NULL);
+    RAISE_IF_HANDLE_CLOSED(self, PyExc_HandleClosedError, NULL);
+
+    buf_len = sizeof(buf);
+    err = uv_pipe_getsockname(&self->pipe_h, buf, &buf_len);
+    if (err < 0) {
+        RAISE_UV_EXCEPTION(err, PyExc_PipeError);
+        return NULL;
+    }
+
+    if (buf_len == 0) {
+        return PyBytes_FromString("");
+    } else if (buf[0] == '\0') {
+        /* Linux abstract namespace */
+        return PyBytes_FromStringAndSize(buf, buf_len);
+    } else {
+        return PyBytes_FromStringAndSize(buf, buf_len-1);
+    }
+
+}
+
+
 static int
 Pipe_tp_init(Pipe *self, PyObject *args, PyObject *kwargs)
 {
@@ -382,6 +416,7 @@ Pipe_tp_methods[] = {
     { "pending_instances", (PyCFunction)Pipe_func_pending_instances, METH_VARARGS, "Set the number of pending pipe instance handles when the pipe server is waiting for connections." },
     { "pending_handle_type", (PyCFunction)Pipe_func_pending_handle_type, METH_NOARGS, "Returns the type of the next pending handle. Can be called multiple times." },
     { "write2", (PyCFunction)Pipe_func_write2, METH_VARARGS, "Write data and send handle over a pipe." },
+    { "getsockname", (PyCFunction)Pipe_func_getsockname, METH_NOARGS, "Get bound pipe name." },
     { NULL }
 };
 
