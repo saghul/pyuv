@@ -115,46 +115,6 @@ Loop_func_update_time(Loop *self)
 }
 
 
-static void
-walk_cb(uv_handle_t* handle, void* arg)
-{
-    PyObject *result;
-    PyObject *callback = (PyObject *)arg;
-    PyObject *obj = (PyObject *)handle->data;
-
-    ASSERT(obj);
-
-    Py_INCREF(obj);
-    result = PyObject_CallFunctionObjArgs(callback, obj, NULL);
-    if (result == NULL) {
-        handle_uncaught_exception(((Handle *)obj)->loop);
-    }
-    Py_DECREF(obj);
-    Py_XDECREF(result);
-}
-
-static PyObject *
-Loop_func_walk(Loop *self, PyObject *args)
-{
-    PyObject *callback;
-
-    if (!PyArg_ParseTuple(args, "O:walk", &callback)) {
-        return NULL;
-    }
-
-    if (!PyCallable_Check(callback)) {
-        PyErr_SetString(PyExc_TypeError, "a callable is required");
-        return NULL;
-    }
-
-    Py_INCREF(callback);
-    uv_walk(self->uv_loop, (uv_walk_cb)walk_cb, callback);
-    Py_DECREF(callback);
-
-    Py_RETURN_NONE;
-}
-
-
 static PyObject *
 Loop_func_fileno(Loop *self)
 {
@@ -425,7 +385,6 @@ Loop_tp_methods[] = {
     { "stop", (PyCFunction)Loop_func_stop, METH_NOARGS, "Stop running the event loop." },
     { "now", (PyCFunction)Loop_func_now, METH_NOARGS, "Return event loop time, expressed in nanoseconds." },
     { "update_time", (PyCFunction)Loop_func_update_time, METH_NOARGS, "Update event loop's notion of time by querying the kernel." },
-    { "walk", (PyCFunction)Loop_func_walk, METH_VARARGS, "Walk all handles in the loop." },
     { "fileno", (PyCFunction)Loop_func_fileno, METH_NOARGS, "Get the loop backend file descriptor." },
     { "get_timeout", (PyCFunction)Loop_func_get_timeout, METH_NOARGS, "Get the poll timeout, or -1 for no timeout." },
     { "default_loop", (PyCFunction)Loop_func_default_loop, METH_CLASS|METH_NOARGS, "Instantiate the default loop." },

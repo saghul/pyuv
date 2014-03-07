@@ -54,11 +54,6 @@ class TestLoop(pyuv.Loop):
         super(TestLoop, self).run(*args, **kwargs)
         self._reraise()
 
-    def walk(self, *args, **kwargs):
-        self._callback_exc_info = None
-        super(TestLoop, self).walk(*args, **kwargs)
-        self._reraise()
-
     def _handle_exception_in_callback(self, typ, value, tb):
         if self._callback_exc_info is None:
             self._callback_exc_info = typ, value, tb
