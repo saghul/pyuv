@@ -1,6 +1,7 @@
 
 #include "pyuv.h"
 
+#include "common.c"
 #include "errno.c"
 #include "error.c"
 #include "loop.c"
