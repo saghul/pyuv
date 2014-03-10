@@ -39,7 +39,8 @@ class ProcessTest(TestCase):
             self.exit_cb_called += 1
             proc.close(handle_close_cb)
         proc = pyuv.Process(self.loop)
-        proc.spawn(file=sys.executable, exit_callback=proc_exit_cb)
+        exe = 'ls' if not os.name == 'nt' else 'dir'
+        proc.spawn(file=exe, exit_callback=proc_exit_cb)
         self.loop.run()
         self.assertEqual(self.exit_cb_called, 1)
         self.assertEqual(self.close_cb_called, 1)
