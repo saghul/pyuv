@@ -9,16 +9,6 @@ typedef struct {
 
 
 static void
-on_udp_alloc(uv_udp_t* handle, size_t suggested_size, uv_buf_t* buf)
-{
-    static char slab[PYUV_SLAB_SIZE];
-    UNUSED_ARG(handle);
-    buf->base = slab;
-    buf->len = sizeof(slab);
-}
-
-
-static void
 on_udp_read(uv_udp_t* handle, int nread, const uv_buf_t* buf, struct sockaddr* addr, unsigned flags)
 {
     PyGILState_STATE gstate = PyGILState_Ensure();
@@ -167,7 +157,7 @@ UDP_func_start_recv(UDP *self, PyObject *args)
         return NULL;
     }
 
-    err = uv_udp_recv_start(&self->udp_h, (uv_alloc_cb)on_udp_alloc, (uv_udp_recv_cb)on_udp_read);
+    err = uv_udp_recv_start(&self->udp_h, (uv_alloc_cb)on_alloc, (uv_udp_recv_cb)on_udp_read);
     if (err < 0) {
         RAISE_UV_EXCEPTION(err, PyExc_UDPError);
         return NULL;

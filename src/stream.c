@@ -16,15 +16,6 @@ typedef struct {
     PyObject *callback;
 } stream_shutdown_ctx;
 
-static void
-on_stream_alloc(uv_stream_t* handle, size_t suggested_size, uv_buf_t *buf)
-{
-    static char slab[PYUV_SLAB_SIZE];
-    UNUSED_ARG(handle);
-    buf->base = slab;
-    buf->len = sizeof(slab);
-}
-
 
 static void
 on_stream_shutdown(uv_shutdown_t* req, int status)
@@ -216,7 +207,7 @@ Stream_func_start_read(Stream *self, PyObject *args)
         return NULL;
     }
 
-    err = uv_read_start((uv_stream_t *)UV_HANDLE(self), (uv_alloc_cb)on_stream_alloc, (uv_read_cb)on_stream_read);
+    err = uv_read_start((uv_stream_t *)UV_HANDLE(self), (uv_alloc_cb)on_alloc, (uv_read_cb)on_stream_read);
     if (err < 0) {
         RAISE_STREAM_EXCEPTION(err, UV_HANDLE(self));
         return NULL;
