@@ -310,7 +310,7 @@ Util_func_getaddrinfo(PyObject *obj, PyObject *args, PyObject *kwargs)
         PyErr_SetString(PyExc_ValueError, "port must be between 0 and 65535");
         goto error;
     }
-    snprintf(port_str, sizeof(port_str), "%d", port);
+    PyOS_snprintf(port_str, sizeof(port_str), "%d", port);
 
     gai_req = (GAIRequest *)PyObject_CallFunctionObjArgs((PyObject *)&GAIRequestType, loop, callback, NULL);
     if (!gai_req) {
