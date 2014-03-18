@@ -165,6 +165,10 @@ typedef struct {
     uv_loop_t loop_struct;
     uv_loop_t *uv_loop;
     int is_default;
+    struct {
+        char slab[PYUV_SLAB_SIZE];
+        Bool in_use;
+    } buffer;
 } Loop;
 
 static PyTypeObject LoopType;

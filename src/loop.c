@@ -29,6 +29,7 @@ init_loop(Loop *loop, int is_default)
     loop->uv_loop = uv_loop;
     loop->is_default = is_default;
     loop->weakreflist = NULL;
+    loop->buffer.in_use = False;
 
     return 0;
 }

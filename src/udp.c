@@ -12,7 +12,7 @@ static void
 on_udp_read(uv_udp_t* handle, int nread, const uv_buf_t* buf, struct sockaddr* addr, unsigned flags)
 {
     PyGILState_STATE gstate = PyGILState_Ensure();
-    int addrlen;
+    Loop *loop;
     UDP *self;
     PyObject *result, *address_tuple, *data, *py_errorno;
 
@@ -30,8 +30,7 @@ on_udp_read(uv_udp_t* handle, int nread, const uv_buf_t* buf, struct sockaddr* a
 
     if (nread > 0) {
         ASSERT(addr);
-        addrlen = sizeof(*addr);
-        address_tuple = makesockaddr(addr, addrlen);
+        address_tuple = makesockaddr(addr, sizeof(*addr));
         data = PyBytes_FromStringAndSize(buf->base, nread);
         py_errorno = Py_None;
         Py_INCREF(Py_None);
@@ -53,6 +52,11 @@ on_udp_read(uv_udp_t* handle, int nread, const uv_buf_t* buf, struct sockaddr* a
     Py_DECREF(py_errorno);
 
 done:
+    /* data has been read, unlock the buffer */
+    loop = handle->loop->data;
+    ASSERT(loop);
+    loop->buffer.in_use = False;
+
     Py_DECREF(self);
     PyGILState_Release(gstate);
 }

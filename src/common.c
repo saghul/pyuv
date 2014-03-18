@@ -236,10 +236,17 @@ handle_uncaught_exception(Loop *loop)
 static void
 on_alloc(uv_handle_t* handle, size_t suggested_size, uv_buf_t *buf)
 {
-    /* TODO have a slab per loop to avoid potential races */
-    static char slab[PYUV_SLAB_SIZE];
-    UNUSED_ARG(handle);
-    buf->base = slab;
-    buf->len = sizeof(slab);
+    Loop *loop;
+    loop = handle->loop->data;
+    ASSERT(loop);
+
+    if (loop->buffer.in_use) {
+        buf->base = NULL;
+        buf->len = 0;
+    } else {
+        buf->base = loop->buffer.slab;
+        buf->len = sizeof(loop->buffer.slab);
+        loop->buffer.in_use = True;
+    }
 }
 

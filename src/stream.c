@@ -58,6 +58,7 @@ static void
 on_stream_read(uv_stream_t* handle, int nread, const uv_buf_t* buf)
 {
     PyGILState_STATE gstate = PyGILState_Ensure();
+    Loop *loop;
     Stream *self;
     PyObject *result, *data, *py_errorno;
     ASSERT(handle);
@@ -87,6 +88,11 @@ on_stream_read(uv_stream_t* handle, int nread, const uv_buf_t* buf)
     Py_XDECREF(result);
     Py_DECREF(data);
     Py_DECREF(py_errorno);
+
+    /* data has been read, unlock the buffer */
+    loop = handle->loop->data;
+    ASSERT(loop);
+    loop->buffer.in_use = False;
 
     Py_DECREF(self);
     PyGILState_Release(gstate);
