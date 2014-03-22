@@ -6,9 +6,9 @@ import invoke
 
 @invoke.task
 def release(version):
-    invoke.run("git tag -a release-{0} -m \"Tagged {0} release\"".format(version))
+    invoke.run("git tag -a pyuv-{0} -m \"pyuv {0} release\"".format(version))
     invoke.run("git push --tags")
 
     invoke.run("python setup.py sdist")
-    invoke.run("twine upload dist/pyuv-{0}*".format(version))
+    invoke.run("twine upload -r pypi dist/pyuv-{0}*".format(version))
 
