@@ -1,3 +1,8 @@
+Version 0.10.10
+===============
+ - Fixed installation on Windows Python 3
+ - Raised libuv revision to cd6db8b (v0.10 branch)
+
 Version 0.10.9
 ==============
  - Fixed TCP saturation test
