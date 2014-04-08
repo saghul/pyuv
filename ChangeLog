@@ -1,3 +1,9 @@
+Version 0.10.11
+===============
+ - Added Python 3.4 support classifier
+ - Small fixes for the release tool
+ - Raised libuv revision to d864907 (v0.10 branch)
+
 Version 0.10.10
 ===============
  - Fixed installation on Windows Python 3
