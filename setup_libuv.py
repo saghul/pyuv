@@ -96,7 +96,7 @@ class libuv_build_ext(build_ext):
     libuv_dir      = os.path.join('deps', 'libuv')
     libuv_repo     = 'https://github.com/joyent/libuv.git'
     libuv_branch   = 'master'
-    libuv_revision = 'f326820'
+    libuv_revision = '69f9f6f'
     libuv_patches  = []
 
     user_options = build_ext.user_options
