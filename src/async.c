@@ -1,14 +1,12 @@
 
 static void
-on_async_callback(uv_async_t *handle, int status)
+on_async_callback(uv_async_t *handle)
 {
     PyGILState_STATE gstate = PyGILState_Ensure();
     Async *self;
     PyObject *result;
 
     ASSERT(handle);
-    ASSERT(status == 0);
-
     self = PYUV_CONTAINER_OF(handle, Async, async_h);
 
     if (self->callback != Py_None) {

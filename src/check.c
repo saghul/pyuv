@@ -1,14 +1,12 @@
 
 static void
-on_check_callback(uv_check_t *handle, int status)
+on_check_callback(uv_check_t *handle)
 {
     PyGILState_STATE gstate = PyGILState_Ensure();
     Check *self;
     PyObject *result;
 
     ASSERT(handle);
-    ASSERT(status == 0);
-
     self = PYUV_CONTAINER_OF(handle, Check, check_h);
 
     /* Object could go out of scope in the callback, increase refcount to avoid it */

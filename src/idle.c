@@ -1,14 +1,12 @@
 
 static void
-on_idle_callback(uv_idle_t *handle, int status)
+on_idle_callback(uv_idle_t *handle)
 {
     PyGILState_STATE gstate = PyGILState_Ensure();
     Idle *self;
     PyObject *result;
 
     ASSERT(handle);
-    ASSERT(status == 0);
-
     self = PYUV_CONTAINER_OF(handle, Idle, idle_h);
 
     /* Object could go out of scope in the callback, increase refcount to avoid it */

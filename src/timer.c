@@ -1,14 +1,12 @@
 
 static void
-on_timer_callback(uv_timer_t *handle, int status)
+on_timer_callback(uv_timer_t *handle)
 {
     PyGILState_STATE gstate = PyGILState_Ensure();
     Timer *self;
     PyObject *result;
 
     ASSERT(handle);
-    ASSERT(status == 0);
-
     self = PYUV_CONTAINER_OF(handle, Timer, timer_h);
 
     /* Object could go out of scope in the callback, increase refcount to avoid it */

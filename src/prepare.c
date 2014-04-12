@@ -1,14 +1,12 @@
 
 static void
-on_prepare_callback(uv_prepare_t *handle, int status)
+on_prepare_callback(uv_prepare_t *handle)
 {
     PyGILState_STATE gstate = PyGILState_Ensure();
     Prepare *self;
     PyObject *result;
 
     ASSERT(handle);
-    ASSERT(status == 0);
-
     self = PYUV_CONTAINER_OF(handle, Prepare, prepare_h);
 
     /* Object could go out of scope in the callback, increase refcount to avoid it */
