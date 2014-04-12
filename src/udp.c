@@ -367,6 +367,31 @@ UDP_func_set_membership(UDP *self, PyObject *args)
 
 
 static PyObject *
+UDP_func_set_multicast_interface(UDP *self, PyObject *args)
+{
+    int err;
+    char *interface_address;
+
+    interface_address = NULL;
+
+    RAISE_IF_HANDLE_NOT_INITIALIZED(self, NULL);
+    RAISE_IF_HANDLE_CLOSED(self, PyExc_HandleClosedError, NULL);
+
+    if (!PyArg_ParseTuple(args, "|s:set_multicast_interface", &interface_address)) {
+        return NULL;
+    }
+
+    err = uv_udp_set_multicast_interface(&self->udp_h, interface_address);
+    if (err < 0) {
+        RAISE_UV_EXCEPTION(err, PyExc_UDPError);
+        return NULL;
+    }
+
+    Py_RETURN_NONE;
+}
+
+
+static PyObject *
 UDP_func_getsockname(UDP *self)
 {
     int err, namelen;
@@ -574,6 +599,7 @@ UDP_tp_methods[] = {
     { "getsockname", (PyCFunction)UDP_func_getsockname, METH_NOARGS, "Get local socket information." },
     { "open", (PyCFunction)UDP_func_open, METH_VARARGS, "Open the specified file descriptor and manage it as a UDP handle." },
     { "set_membership", (PyCFunction)UDP_func_set_membership, METH_VARARGS, "Set membership for multicast address." },
+    { "set_multicast_interface", (PyCFunction)UDP_func_set_multicast_interface, METH_VARARGS, "Set the multicast interface." },
     { "set_multicast_ttl", (PyCFunction)UDP_func_set_multicast_ttl, METH_VARARGS, "Set the multicast TTL." },
     { "set_multicast_loop", (PyCFunction)UDP_func_set_multicast_loop, METH_VARARGS, "Set IP multicast loop flag. Makes multicast packets loop back to local sockets." },
     { "set_broadcast", (PyCFunction)UDP_func_set_broadcast, METH_VARARGS, "Set broadcast on or off." },
