@@ -192,6 +192,7 @@ init_pyuv(void)
     PyModule_AddIntMacro(pyuv, UV_LEAVE_GROUP);
     PyModule_AddIntMacro(pyuv, UV_UDP_PARTIAL);
     PyModule_AddIntMacro(pyuv, UV_UDP_IPV6ONLY);
+    PyModule_AddIntMacro(pyuv, UV_UDP_REUSEADDR);
 
     /* TCP constants */
     PyModule_AddIntMacro(pyuv, UV_TCP_IPV6ONLY);
