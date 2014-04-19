@@ -321,6 +321,12 @@ class UDPTestOpen(TestCase):
         self.loop.run()
         sock.close()
 
+    def test_udp_bind(self):
+        handle = pyuv.UDP(self.loop)
+        handle.bind(("", TEST_PORT))
+        handle.close()
+        self.loop.run()
+
 
 if __name__ == '__main__':
     unittest2.main(verbosity=2)

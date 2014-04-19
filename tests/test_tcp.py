@@ -91,6 +91,12 @@ class TCPTest(TestCase):
         self.client.connect(("127.0.0.1", TEST_PORT), self.on_client_connection)
         self.loop.run()
 
+    def test_tcp_bind(self):
+        self.server = pyuv.TCP(self.loop)
+        self.server.bind(("", TEST_PORT))
+        self.server.close()
+        self.loop.run()
+
 
 class TCPTest2(TestCase):
 
