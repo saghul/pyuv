@@ -1206,6 +1206,7 @@ FS_func_unlink(PyObject *obj, PyObject *args, PyObject *kwargs)
         Py_INCREF(fs_req);
         return (PyObject *)fs_req;
     } else {
+        uv_fs_req_cleanup(&fs_req->req);
         Py_DECREF(fs_req);
         Py_RETURN_NONE;
     }
@@ -1253,6 +1254,7 @@ FS_func_mkdir(PyObject *obj, PyObject *args, PyObject *kwargs)
         Py_INCREF(fs_req);
         return (PyObject *)fs_req;
     } else {
+        uv_fs_req_cleanup(&fs_req->req);
         Py_DECREF(fs_req);
         Py_RETURN_NONE;
     }
@@ -1300,6 +1302,7 @@ FS_func_rmdir(PyObject *obj, PyObject *args, PyObject *kwargs)
         Py_INCREF(fs_req);
         return (PyObject *)fs_req;
     } else {
+        uv_fs_req_cleanup(&fs_req->req);
         Py_DECREF(fs_req);
         Py_RETURN_NONE;
     }
@@ -1347,6 +1350,7 @@ FS_func_rename(PyObject *obj, PyObject *args, PyObject *kwargs)
         Py_INCREF(fs_req);
         return (PyObject *)fs_req;
     } else {
+        uv_fs_req_cleanup(&fs_req->req);
         Py_DECREF(fs_req);
         Py_RETURN_NONE;
     }
@@ -1394,6 +1398,7 @@ FS_func_chmod(PyObject *obj, PyObject *args, PyObject *kwargs)
         Py_INCREF(fs_req);
         return (PyObject *)fs_req;
     } else {
+        uv_fs_req_cleanup(&fs_req->req);
         Py_DECREF(fs_req);
         Py_RETURN_NONE;
     }
@@ -1441,6 +1446,7 @@ FS_func_fchmod(PyObject *obj, PyObject *args, PyObject *kwargs)
         Py_INCREF(fs_req);
         return (PyObject *)fs_req;
     } else {
+        uv_fs_req_cleanup(&fs_req->req);
         Py_DECREF(fs_req);
         Py_RETURN_NONE;
     }
@@ -1488,6 +1494,7 @@ FS_func_link(PyObject *obj, PyObject *args, PyObject *kwargs)
         Py_INCREF(fs_req);
         return (PyObject *)fs_req;
     } else {
+        uv_fs_req_cleanup(&fs_req->req);
         Py_DECREF(fs_req);
         Py_RETURN_NONE;
     }
@@ -1535,6 +1542,7 @@ FS_func_symlink(PyObject *obj, PyObject *args, PyObject *kwargs)
         Py_INCREF(fs_req);
         return (PyObject *)fs_req;
     } else {
+        uv_fs_req_cleanup(&fs_req->req);
         Py_DECREF(fs_req);
         Py_RETURN_NONE;
     }
@@ -1633,6 +1641,7 @@ FS_func_chown(PyObject *obj, PyObject *args, PyObject *kwargs)
         Py_INCREF(fs_req);
         return (PyObject *)fs_req;
     } else {
+        uv_fs_req_cleanup(&fs_req->req);
         Py_DECREF(fs_req);
         Py_RETURN_NONE;
     }
@@ -1680,6 +1689,7 @@ FS_func_fchown(PyObject *obj, PyObject *args, PyObject *kwargs)
         Py_INCREF(fs_req);
         return (PyObject *)fs_req;
     } else {
+        uv_fs_req_cleanup(&fs_req->req);
         Py_DECREF(fs_req);
         Py_RETURN_NONE;
     }
@@ -1779,6 +1789,7 @@ FS_func_close(PyObject *obj, PyObject *args, PyObject *kwargs)
         Py_INCREF(fs_req);
         return (PyObject *)fs_req;
     } else {
+        uv_fs_req_cleanup(&fs_req->req);
         Py_DECREF(fs_req);
         Py_RETURN_NONE;
     }
@@ -1956,6 +1967,7 @@ FS_func_fsync(PyObject *obj, PyObject *args, PyObject *kwargs)
         Py_INCREF(fs_req);
         return (PyObject *)fs_req;
     } else {
+        uv_fs_req_cleanup(&fs_req->req);
         Py_DECREF(fs_req);
         Py_RETURN_NONE;
     }
@@ -2003,6 +2015,7 @@ FS_func_fdatasync(PyObject *obj, PyObject *args, PyObject *kwargs)
         Py_INCREF(fs_req);
         return (PyObject *)fs_req;
     } else {
+        uv_fs_req_cleanup(&fs_req->req);
         Py_DECREF(fs_req);
         Py_RETURN_NONE;
     }
@@ -2051,6 +2064,7 @@ FS_func_ftruncate(PyObject *obj, PyObject *args, PyObject *kwargs)
         Py_INCREF(fs_req);
         return (PyObject *)fs_req;
     } else {
+        uv_fs_req_cleanup(&fs_req->req);
         Py_DECREF(fs_req);
         Py_RETURN_NONE;
     }
@@ -2204,6 +2218,7 @@ FS_func_utime(PyObject *obj, PyObject *args, PyObject *kwargs)
         Py_INCREF(fs_req);
         return (PyObject *)fs_req;
     } else {
+        uv_fs_req_cleanup(&fs_req->req);
         Py_DECREF(fs_req);
         Py_RETURN_NONE;
     }
@@ -2252,6 +2267,7 @@ FS_func_futime(PyObject *obj, PyObject *args, PyObject *kwargs)
         Py_INCREF(fs_req);
         return (PyObject *)fs_req;
     } else {
+        uv_fs_req_cleanup(&fs_req->req);
         Py_DECREF(fs_req);
         Py_RETURN_NONE;
     }
