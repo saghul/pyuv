@@ -3,7 +3,7 @@ import pyuv
 import signal
 import sys
 import os
-import argparse
+import optparse
 
 
 def fsevent_callback(fsevent_handle, filename, events, error):
@@ -12,7 +12,7 @@ def fsevent_callback(fsevent_handle, filename, events, error):
 
 def sig_cb(handle, signum):
     handle.close()
-    print('\ntype ctrl-c again to exit')
+    print('\nType ctrl-c again to exit')
 
 
 def main(path):
@@ -31,6 +31,11 @@ def main(path):
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser()
-    parser.add_argument('-p', '--path', help='a path to watch', required=True)
-    main(parser.parse_args().path)
+
+    parser = optparse.OptionParser()
+    parser.add_option('-p', '--path', help='a path to watch')
+    (opts, args) = parser.parse_args()
+    if opts.path is None:
+        parser.print_help()
+        sys.exit(2)
+    main(opts.path)
