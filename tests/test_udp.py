@@ -328,5 +328,23 @@ class UDPTestOpen(TestCase):
         self.loop.run()
 
 
+class UDPTestFileno(TestCase):
+
+    def check_fileno(self, handle):
+        self.assertTrue(hasattr(handle, '_fileno'))
+        fd = handle._fileno()
+        self.assertIsInstance(fd, int)
+        if sys.platform.startswith('win'):
+            self.assertEqual(fd, -1)
+        else:
+            self.assertGreater(fd, -1)
+
+    def test_udp_fileno(self):
+        server = pyuv.UDP(self.loop)
+        server.bind(("0.0.0.0", TEST_PORT))
+        self.check_fileno(server)
+        server.close()
+
+
 if __name__ == '__main__':
     unittest2.main(verbosity=2)
