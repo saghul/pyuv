@@ -530,6 +530,20 @@ UDP_func_open(UDP *self, PyObject *args)
 }
 
 
+static PyObject *
+UDP_func__fileno(UDP *self)
+{
+    RAISE_IF_HANDLE_NOT_INITIALIZED(self, NULL);
+    RAISE_IF_HANDLE_CLOSED(self, PyExc_HandleClosedError, NULL);
+
+#ifdef PYUV_WINDOWS
+    return PyInt_FromLong(-1);
+#else
+    return PyInt_FromLong(self->udp_h.io_watcher.fd);
+#endif
+}
+
+
 static int
 UDP_tp_init(UDP *self, PyObject *args, PyObject *kwargs)
 {
@@ -604,6 +618,7 @@ UDP_tp_methods[] = {
     { "set_multicast_loop", (PyCFunction)UDP_func_set_multicast_loop, METH_VARARGS, "Set IP multicast loop flag. Makes multicast packets loop back to local sockets." },
     { "set_broadcast", (PyCFunction)UDP_func_set_broadcast, METH_VARARGS, "Set broadcast on or off." },
     { "set_ttl", (PyCFunction)UDP_func_set_ttl, METH_VARARGS, "Set the Time To Live." },
+    { "_fileno", (PyCFunction)UDP_func__fileno, METH_NOARGS, "Returns the libuv file descriptor. Private API, Unix only." },
     { NULL }
 };
 

@@ -223,5 +223,41 @@ class PipeShutdownTest(PipeTestCase):
         self.assertEqual(self.close_cb_called, 3)
 
 
+class PipeTestFileno(TestCase):
+
+    def check_fileno(self, handle):
+        self.assertTrue(hasattr(handle, '_fileno'))
+        fd = handle._fileno()
+        self.assertIsInstance(fd, int)
+        if sys.platform.startswith('win'):
+            self.assertEqual(fd, -1)
+        else:
+            self.assertGreater(fd, -1)
+
+    def on_connection(self, server, error):
+        self.assertEqual(error, None)
+        self.check_fileno(server)
+        client = pyuv.Pipe(self.loop)
+        server.accept(client)
+        self.check_fileno(client)
+        client.close()
+        server.close()
+
+    def on_client_connection(self, client, error):
+        self.assertEqual(error, None)
+        self.check_fileno(client)
+        client.close()
+
+    def test_fileno(self):
+        server = pyuv.Pipe(self.loop)
+        server.bind(TEST_PIPE)
+        self.check_fileno(server)
+        server.listen(self.on_connection)
+        client = pyuv.Pipe(self.loop)
+        client.connect(TEST_PIPE, self.on_client_connection)
+        self.check_fileno(client)
+        self.loop.run()
+
+
 if __name__ == '__main__':
     unittest2.main(verbosity=2)

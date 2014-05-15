@@ -407,6 +407,20 @@ Stream_func_writelines(Stream *self, PyObject *args)
 
 
 static PyObject *
+Stream_func__fileno(Stream *self)
+{
+    RAISE_IF_HANDLE_NOT_INITIALIZED(self, NULL);
+    RAISE_IF_HANDLE_CLOSED(self, PyExc_HandleClosedError, NULL);
+
+#ifdef PYUV_WINDOWS
+    return PyInt_FromLong(-1);
+#else
+    return PyInt_FromLong(((uv_stream_t *)UV_HANDLE(self))->io_watcher.fd);
+#endif
+}
+
+
+static PyObject *
 Stream_readable_get(Stream *self, void *closure)
 {
     UNUSED_ARG(closure);
@@ -474,6 +488,7 @@ Stream_tp_methods[] = {
     { "writelines", (PyCFunction)Stream_func_writelines, METH_VARARGS, "Write a sequence of data on the stream." },
     { "start_read", (PyCFunction)Stream_func_start_read, METH_VARARGS, "Start read data from the connected endpoint." },
     { "stop_read", (PyCFunction)Stream_func_stop_read, METH_NOARGS, "Stop read data from the connected endpoint." },
+    { "_fileno", (PyCFunction)Stream_func__fileno, METH_NOARGS, "Returns the libuv file descriptor. Private API, Unix only." },
     { NULL }
 };
 
