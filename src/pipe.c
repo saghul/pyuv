@@ -73,11 +73,12 @@ Pipe_func_bind(Pipe *self, PyObject *args)
 {
     int err;
     char *name;
+    Py_ssize_t len;
 
     RAISE_IF_HANDLE_NOT_INITIALIZED(self, NULL);
     RAISE_IF_HANDLE_CLOSED(self, PyExc_HandleClosedError, NULL);
 
-    if (!PyArg_ParseTuple(args, "s:bind", &name)) {
+    if (!PyArg_ParseTuple(args, "s#:bind", &name, &len)) {
         return NULL;
     }
 
