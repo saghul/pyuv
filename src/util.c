@@ -225,7 +225,10 @@ getaddrinfo_cb(uv_getaddrinfo_t* req, int status, struct addrinfo* res)
     }
 
     for (ptr = res; ptr; ptr = ptr->ai_next) {
-        addr = makesockaddr(ptr->ai_addr, ptr->ai_addrlen);
+        if (!ptr->ai_addrlen)
+            continue;
+
+        addr = makesockaddr(ptr->ai_addr);
         if (!addr) {
             PyErr_Clear();
             break;

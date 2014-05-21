@@ -237,7 +237,7 @@ TCP_func_getsockname(TCP *self)
         return NULL;
     }
 
-    return makesockaddr((struct sockaddr *)&sockname, namelen);
+    return makesockaddr((struct sockaddr *)&sockname);
 }
 
 
@@ -258,7 +258,7 @@ TCP_func_getpeername(TCP *self)
         return NULL;
     }
 
-    return makesockaddr((struct sockaddr *)&peername, namelen);
+    return makesockaddr((struct sockaddr *)&peername);
 }
 
 

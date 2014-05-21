@@ -30,7 +30,7 @@ on_udp_read(uv_udp_t* handle, int nread, const uv_buf_t* buf, struct sockaddr* a
 
     if (nread > 0) {
         ASSERT(addr);
-        address_tuple = makesockaddr(addr, sizeof(*addr));
+        address_tuple = makesockaddr(addr);
         data = PyBytes_FromStringAndSize(buf->base, nread);
         py_errorno = Py_None;
         Py_INCREF(Py_None);
@@ -408,7 +408,7 @@ UDP_func_getsockname(UDP *self)
         return NULL;
     }
 
-    return makesockaddr((struct sockaddr *)&sockname, namelen);
+    return makesockaddr((struct sockaddr *)&sockname);
 }
 
 

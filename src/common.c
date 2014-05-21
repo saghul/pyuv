@@ -156,16 +156,11 @@ pyuv_parse_addr_tuple(PyObject *addr, struct sockaddr_storage *ss)
 
 /* Modified from Python Modules/socketmodule.c */
 static PyObject *
-makesockaddr(struct sockaddr *addr, int addrlen)
+makesockaddr(struct sockaddr *addr)
 {
     static char buf[INET6_ADDRSTRLEN+1];
     struct sockaddr_in *addr4;
     struct sockaddr_in6 *addr6;
-
-    if (addrlen == 0) {
-        /* No address */
-        Py_RETURN_NONE;
-    }
 
     switch (addr->sa_family) {
     case AF_INET:
@@ -183,8 +178,8 @@ makesockaddr(struct sockaddr *addr, int addrlen)
     }
 
     default:
-        /* If we don't know the address family, don't raise an exception -- return it as a tuple. */
-        return Py_BuildValue("is#", addr->sa_family, addr->sa_data, sizeof(addr->sa_data));
+        /* If we don't know the address family, don't raise an exception -- return None. */
+        Py_RETURN_NONE;
     }
 }
 
