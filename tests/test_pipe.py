@@ -259,5 +259,15 @@ class PipeTestFileno(TestCase):
         self.loop.run()
 
 
+@platform_skip(["win32"])
+class PipeBytesBind(TestCase):
+
+    def test_bind_bytes(self):
+        p = pyuv.Pipe(self.loop)
+        p.bind(b'test-pipe')
+        p.close()
+        self.loop.run()
+
+
 if __name__ == '__main__':
     unittest2.main(verbosity=2)
