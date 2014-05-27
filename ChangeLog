@@ -1,3 +1,27 @@
+Version 0.11.4
+==============
+ - Adapted to API changes in libuv
+ - Add UDP.set_multicast_interface function
+ - Export UV_UDP_REUSEADDR constant
+ - Accept '' as a valid address to bind to
+ - Added filesystem watch example
+ - Implement _fileno() for Stream and UDP
+ - Accept bytes objects in Pipe.bind
+ - Added Pipe.getsockname function
+ - Fix build on FreeBSD
+ - Use a 64KB slab buffer per loop
+ - Fixed process noargs test on Windows
+ - Speed up offset tests on Windows
+ - Allow compilation using Windows SDK
+ - Move common functions to common.c
+ - Removed Loop.walk
+ - Only accept bytes on fs.write
+ - Add FSPoll.path property
+ - Renamed FSEvent.filename property to path
+ - Avoid using VS 2013 when compiling libuv
+ - Fixed TCP try_write test
+ - Raised libuv revision to 69f9f6f (master branch)
+
 Version 0.11.3
 ==============
  - Added flags argument to TCP.bind
