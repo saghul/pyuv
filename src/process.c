@@ -60,6 +60,7 @@ StdIO_stream_get(StdIO *self, void *closure)
     if (!self->stream) {
         Py_RETURN_NONE;
     } else {
+        Py_INCREF(self->stream);
         return self->stream;
     }
 }
