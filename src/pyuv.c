@@ -182,6 +182,10 @@ init_pyuv(void)
     PyUVModule_AddType(pyuv, "StdIO", &StdIOType);
     PyUVModule_AddType(pyuv, "Process", &ProcessType);
 
+    /* Handle and Stream base classes */
+    PyUVModule_AddType(pyuv, "Handle", &HandleType);
+    PyUVModule_AddType(pyuv, "Stream", &StreamType);
+
     /* Loop.run modes */
     PyModule_AddIntMacro(pyuv, UV_RUN_DEFAULT);
     PyModule_AddIntMacro(pyuv, UV_RUN_ONCE);
