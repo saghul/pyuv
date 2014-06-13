@@ -221,17 +221,16 @@ Process_func_spawn(Process *self, PyObject *args, PyObject *kwargs)
 {
     int err, flags, len, stdio_count;
     unsigned int uid, gid;
-    char *cwd, *file, *arg_str, *tmp_str, *key_str, *value_str;
-    char *default_process_args[2];
+    char *cwd, *executable, *arg_str, *tmp_str, *key_str, *value_str;
     char **ptr, **process_env;
     Py_ssize_t i, n, pos;
     PyObject *key, *value, *item, *tmp, *callback, *arguments, *env, *stdio, *ret;
     uv_process_options_t options;
     uv_stdio_container_t *stdio_container;
 
-    static char *kwlist[] = {"file", "exit_callback", "args", "env", "cwd", "uid", "gid", "flags", "stdio", NULL};
+    static char *kwlist[] = {"args", "executable", "env", "cwd", "uid", "gid", "flags", "stdio", "exit_callback", NULL};
 
-    cwd = NULL;
+    cwd = executable = NULL;
     ptr = process_env = NULL;
     tmp = arguments = env = stdio = NULL;
     stdio_container = NULL;
@@ -239,7 +238,7 @@ Process_func_spawn(Process *self, PyObject *args, PyObject *kwargs)
 
     RAISE_IF_SPAWNED(self, NULL);
 
-    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "s|OOO!sIIiO:__init__", kwlist, &file, &callback, &arguments, &PyDict_Type, &env, &cwd, &uid, &gid, &flags, &stdio)) {
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O|zO!sIIiOO:__init__", kwlist, &arguments, &executable, &PyDict_Type, &env, &cwd, &uid, &gid, &flags, &stdio, &callback)) {
         return NULL;
     }
 
@@ -258,46 +257,55 @@ Process_func_spawn(Process *self, PyObject *args, PyObject *kwargs)
         return NULL;
     }
 
+    if (PySequence_Length(arguments) < 1) {
+        PyErr_SetString(PyExc_ValueError, "'args' must contain at least one element");
+        return NULL;
+    }
+
     memset(&options, 0, sizeof(uv_process_options_t));
 
     options.cwd = cwd;
-    options.file = file;
     options.uid = uid;
     options.gid = gid;
     options.flags = flags;
     options.exit_cb = on_process_exit;
 
-    if (arguments) {
-        n = PySequence_Length(arguments);
-        options.args = PyMem_Malloc(sizeof *(options.args) * (n + 2));
-        if (!options.args) {
+    /* process args */
+
+    n = PySequence_Length(arguments);
+    options.args = PyMem_Malloc(sizeof *(options.args) * (n + 1));
+    if (!options.args) {
+        PyErr_NoMemory();
+        ret = NULL;
+        goto cleanup;
+    }
+    for (i = 0; i < n; i++) {
+        item = PySequence_GetItem(arguments, i);
+        if (!item || !PyArg_Parse(item, "s;args contains a non-string value", &arg_str)) {
+            Py_XDECREF(item);
+            ret = NULL;
+            goto cleanup;
+        }
+        Py_DECREF(item);
+        tmp_str = strdup(arg_str);
+        if (!tmp_str) {
             PyErr_NoMemory();
             ret = NULL;
             goto cleanup;
         }
-        options.args[0] = file;
-        for (i = 0; i < n; i++) {
-            item = PySequence_GetItem(arguments, i);
-            if (!item || !PyArg_Parse(item, "s;args contains a non-string value", &arg_str)) {
-                Py_XDECREF(item);
-                ret = NULL;
-                goto cleanup;
-            }
-            Py_DECREF(item);
-            tmp_str = strdup(arg_str);
-            if (!tmp_str) {
-                PyErr_NoMemory();
-                ret = NULL;
-                goto cleanup;
-            }
-            options.args[i+1] = tmp_str;
-        }
-        options.args[n+1] = NULL;
-    } else {
-        options.args = default_process_args;
-        options.args[0] = file;
-        options.args[1] = NULL;
+        options.args[i] = tmp_str;
     }
+    options.args[n] = NULL;
+
+    /* process file */
+
+    if (executable) {
+        options.file = executable;
+    } else {
+        options.file = options.args[0];
+    }
+
+    /* process env */
 
     if (env) {
         n = PyDict_Size(env);
@@ -330,6 +338,8 @@ Process_func_spawn(Process *self, PyObject *args, PyObject *kwargs)
         }
     }
     options.env = process_env;
+
+    /* process stdio container */
 
     if (stdio) {
         n = PySequence_Length(stdio);
@@ -387,8 +397,8 @@ Process_func_spawn(Process *self, PyObject *args, PyObject *kwargs)
     Py_INCREF(self);
 
 cleanup:
-    if (options.args && options.args != default_process_args) {
-        for (ptr = options.args+1; *ptr != NULL; ptr++) {
+    if (options.args) {
+        for (ptr = options.args; *ptr != NULL; ptr++) {
             free(*ptr);    /* strdup-ed */
         }
         PyMem_Free(options.args);
