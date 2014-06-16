@@ -45,6 +45,36 @@ class ProcessTest(TestCase):
         self.assertEqual(self.exit_cb_called, 1)
         self.assertEqual(self.close_cb_called, 1)
 
+    def test_process_bytesargs(self):
+        self.exit_cb_called = 0
+        self.close_cb_called = 0
+        def handle_close_cb(proc):
+            self.close_cb_called += 1
+        def proc_exit_cb(proc, exit_status, term_signal):
+            self.exit_cb_called += 1
+            proc.close(handle_close_cb)
+        proc = pyuv.Process(self.loop)
+        exe = b'ls' if not os.name == 'nt' else b'dir'
+        proc.spawn(args=exe, exit_callback=proc_exit_cb)
+        self.loop.run()
+        self.assertEqual(self.exit_cb_called, 1)
+        self.assertEqual(self.close_cb_called, 1)
+
+    def test_process_executable(self):
+        self.exit_cb_called = 0
+        self.close_cb_called = 0
+        def handle_close_cb(proc):
+            self.close_cb_called += 1
+        def proc_exit_cb(proc, exit_status, term_signal):
+            self.exit_cb_called += 1
+            proc.close(handle_close_cb)
+        proc = pyuv.Process(self.loop)
+        exe = 'ls' if not os.name == 'nt' else 'dir'
+        proc.spawn(args=[exe], executable=exe, exit_callback=proc_exit_cb)
+        self.loop.run()
+        self.assertEqual(self.exit_cb_called, 1)
+        self.assertEqual(self.close_cb_called, 1)
+
     def test_process_cwd(self):
         self.exit_cb_called = 0
         self.close_cb_called = 0
