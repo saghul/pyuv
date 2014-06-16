@@ -245,18 +245,13 @@ Process_func_spawn(Process *self, PyObject *args, PyObject *kwargs)
         return NULL;
     }
 
-    if (arguments && !PySequence_Check(arguments)) {
-        PyErr_SetString(PyExc_TypeError, "only iterable objects are supported for 'args'");
+    if (!PyBytes_Check(arguments) && !PySequence_Check(arguments)) {
+        PyErr_SetString(PyExc_TypeError, "only bytes or iterable objects are supported for 'args'");
         return NULL;
     }
 
     if (stdio && !PySequence_Check(stdio)) {
         PyErr_SetString(PyExc_TypeError, "only iterable objects are supported for 'stdio'");
-        return NULL;
-    }
-
-    if (PySequence_Length(arguments) < 1) {
-        PyErr_SetString(PyExc_ValueError, "'args' must contain at least one element");
         return NULL;
     }
 
@@ -270,39 +265,64 @@ Process_func_spawn(Process *self, PyObject *args, PyObject *kwargs)
 
     /* process args */
 
-    n = PySequence_Length(arguments);
-    options.args = PyMem_Malloc(sizeof *(options.args) * (n + 1));
-    if (!options.args) {
-        PyErr_NoMemory();
-        ret = NULL;
-        goto cleanup;
-    }
-    for (i = 0; i < n; i++) {
-        item = PySequence_GetItem(arguments, i);
-        if (!item) {
-            options.args[i] = NULL;
-            ret = NULL;
-            goto cleanup;
-        }
-        data = PyBytes_AsString(item);
+    if (PyBytes_Check(arguments)) {
+        /* it's a bytes object */
+        options.args = PyMem_Malloc(sizeof *(options.args) * 2);
+        data = PyBytes_AsString(arguments);
         if (!data) {
-            Py_XDECREF(item);
-            options.args[i] = NULL;
+            options.args[0] = NULL;
             ret = NULL;
             goto cleanup;
         }
-        size = PyBytes_GET_SIZE(item) + 1;
-        options.args[i] = PyMem_Malloc(size);
-        if (!options.args[i]) {
-            Py_XDECREF(item);
+        size = PyBytes_GET_SIZE(arguments) + 1;
+        options.args[0] = PyMem_Malloc(size);
+        if (!options.args[0]) {
             PyErr_NoMemory();
             ret = NULL;
             goto cleanup;
         }
-        memcpy(options.args[i], data, size);
-        Py_DECREF(item);
+        memcpy(options.args[0], data, size);
+        options.args[1] = NULL;
+    } else {
+        /* it's a sequence object */
+        n = PySequence_Length(arguments);
+        if (n < 1) {
+            PyErr_SetString(PyExc_ValueError, "'args' must contain at least one element");
+            return NULL;
+        }
+        options.args = PyMem_Malloc(sizeof *(options.args) * (n + 1));
+        if (!options.args) {
+            PyErr_NoMemory();
+            ret = NULL;
+            goto cleanup;
+        }
+        for (i = 0; i < n; i++) {
+            item = PySequence_GetItem(arguments, i);
+            if (!item) {
+                options.args[i] = NULL;
+                ret = NULL;
+                goto cleanup;
+            }
+            data = PyBytes_AsString(item);
+            if (!data) {
+                Py_XDECREF(item);
+                options.args[i] = NULL;
+                ret = NULL;
+                goto cleanup;
+            }
+            size = PyBytes_GET_SIZE(item) + 1;
+            options.args[i] = PyMem_Malloc(size);
+            if (!options.args[i]) {
+                Py_XDECREF(item);
+                PyErr_NoMemory();
+                ret = NULL;
+                goto cleanup;
+            }
+            memcpy(options.args[i], data, size);
+            Py_DECREF(item);
+        }
+        options.args[n] = NULL;
     }
-    options.args[n] = NULL;
 
     /* process file */
 
