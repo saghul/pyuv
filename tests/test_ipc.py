@@ -64,7 +64,7 @@ class IPCTest(TestCase):
         self.channel = pyuv.Pipe(self.loop, True)
         stdio = [pyuv.StdIO(stream=self.channel, flags=pyuv.UV_CREATE_PIPE|pyuv.UV_READABLE_PIPE|pyuv.UV_WRITABLE_PIPE)]
         proc = pyuv.Process(self.loop)
-        proc.spawn(file=sys.executable, args=["proc_ipc.py", test_type, str(TEST_PORT)], exit_callback=self.proc_exit_cb, stdio=stdio)
+        proc.spawn(args=[sys.executable, "proc_ipc.py", test_type, str(TEST_PORT)], exit_callback=self.proc_exit_cb, stdio=stdio)
         self.channel.start_read(self.on_channel_read)
         self.loop.run()
 
@@ -98,7 +98,7 @@ class IPCSendRecvTest(TestCase):
         self.channel = pyuv.Pipe(self.loop, True)
         stdio = [pyuv.StdIO(stream=self.channel, flags=pyuv.UV_CREATE_PIPE|pyuv.UV_READABLE_PIPE|pyuv.UV_WRITABLE_PIPE)]
         proc = pyuv.Process(self.loop)
-        proc.spawn(file=sys.executable, args=["proc_ipc_echo.py"], exit_callback=self.proc_exit_cb, stdio=stdio)
+        proc.spawn(args=[sys.executable, "proc_ipc_echo.py"], exit_callback=self.proc_exit_cb, stdio=stdio)
         self.channel.write2(b".", self.send_handle)
         self.channel.start_read(partial(self.on_channel_read, self.send_handle_type))
         self.loop.run()
