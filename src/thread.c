@@ -2,13 +2,15 @@
 static PyObject *
 Barrier_func_wait(Barrier *self)
 {
+    int r;
+
     RAISE_IF_NOT_INITIALIZED(self, NULL);
 
     Py_BEGIN_ALLOW_THREADS
-    uv_barrier_wait(&self->uv_barrier);
+    r = uv_barrier_wait(&self->uv_barrier);
     Py_END_ALLOW_THREADS
 
-    Py_RETURN_NONE;
+    return PyBool_FromLong((long)r);
 }
 
 
