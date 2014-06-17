@@ -28,6 +28,87 @@ PyUVModule_AddObject(PyObject *module, const char *name, PyObject *value)
 }
 
 
+/* Encode a Python unicode object into bytes using the default filesystem encoding.
+ * Falls back to utf-8. On Windows, this function always uses utf-8, because libuv
+ * expects to get utf-8. */
+static PyObject *
+pyuv_PyUnicode_EncodeFSDefault(PyObject *unicode)
+{
+#ifndef PYUV_WINDOWS
+    if (Py_FileSystemDefaultEncoding)
+        return PyUnicode_AsEncodedString(unicode, Py_FileSystemDefaultEncoding, "surrogateescape");
+    else
+#endif
+        return PyUnicode_EncodeUTF8(PyUnicode_AS_UNICODE(unicode), PyUnicode_GET_SIZE(unicode), "surrogateescape");
+}
+
+
+/* Converter: encode unicode (or str in Python 3) objects into bytes using the default encoding. */
+static int
+pyuv_PyUnicode_FSConverter(PyObject *arg, void* addr)
+{
+    PyObject *output;
+    Py_ssize_t size;
+    void *data;
+
+    if (arg == NULL)
+        return 0;
+
+    if (PyBytes_Check(arg)) {
+        output = arg;
+        Py_INCREF(output);
+    } else {
+        arg = PyUnicode_FromObject(arg);
+        if (!arg)
+            return 0;
+        output = pyuv_PyUnicode_EncodeFSDefault(arg);
+        Py_DECREF(arg);
+        if (!output)
+            return 0;
+        if (!PyBytes_Check(output)) {
+            Py_DECREF(output);
+            PyErr_SetString(PyExc_TypeError, "encoder failed to return bytes");
+            return 0;
+        }
+    }
+    size = PyBytes_GET_SIZE(output);
+    data = PyBytes_AS_STRING(output);
+    if (size != strlen(data)) {
+        PyErr_SetString(PyExc_TypeError, "embedded NUL character");
+        Py_DECREF(output);
+        return 0;
+    }
+    *(PyObject**)addr = output;
+    return 1;
+}
+
+
+/* Extract the content of a unicode or bytes object and duplicate it. */
+static char*
+pyuv_dup_strobj(PyObject *obj)
+{
+    PyObject *bytes;
+    char *data, *out;
+    Py_ssize_t size;
+
+    if (pyuv_PyUnicode_FSConverter(obj, &bytes) > 0) {
+        data = PyBytes_AS_STRING(bytes);
+        size = PyBytes_GET_SIZE(bytes) + 1;
+        out = PyMem_Malloc(size);
+        if (!out) {
+            PyErr_NoMemory();
+            Py_DECREF(bytes);
+            return NULL;
+        }
+        memcpy(out, data, size);
+        Py_DECREF(bytes);
+        return out;
+    }
+
+    return NULL;
+}
+
+
 static INLINE int
 pyseq2uvbuf(PyObject *seq, Py_buffer **rviews, uv_buf_t **rbufs, int *rbuf_count)
 {
