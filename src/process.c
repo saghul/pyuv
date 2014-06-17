@@ -221,22 +221,21 @@ Process_func_spawn(Process *self, PyObject *args, PyObject *kwargs)
 {
     int err, flags, stdio_count;
     unsigned int uid, gid;
-    char *cwd, *data, *executable, *key_str, *value_str;
     Py_ssize_t i, n, pos, size;
-    PyObject *key, *value, *item, *tmp, *callback, *arguments, *env, *stdio, *ret;
+    PyObject *key, *value, *item, *tmp, *callback, *arguments, *env, *stdio, *ret, *executable, *cwd;
     uv_process_options_t options;
     uv_stdio_container_t *stdio_container;
 
     static char *kwlist[] = {"args", "executable", "env", "cwd", "uid", "gid", "flags", "stdio", "exit_callback", NULL};
 
-    cwd = executable = NULL;
+    cwd = executable = Py_None;
     tmp = arguments = env = stdio = NULL;
     stdio_container = NULL;
     flags = uid = gid = stdio_count = 0;
 
     RAISE_IF_SPAWNED(self, NULL);
 
-    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O|zO!sIIiOO:__init__", kwlist, &arguments, &executable, &PyDict_Type, &env, &cwd, &uid, &gid, &flags, &stdio, &callback)) {
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O|OO!OIIiOO:__init__", kwlist, &arguments, &executable, &PyDict_Type, &env, &cwd, &uid, &gid, &flags, &stdio, &callback)) {
         return NULL;
     }
 
@@ -245,8 +244,8 @@ Process_func_spawn(Process *self, PyObject *args, PyObject *kwargs)
         return NULL;
     }
 
-    if (!PyBytes_Check(arguments) && !PySequence_Check(arguments)) {
-        PyErr_SetString(PyExc_TypeError, "only bytes or iterable objects are supported for 'args'");
+    if (!PyBytes_Check(arguments) && !PyUnicode_Check(arguments) && !PySequence_Check(arguments)) {
+        PyErr_SetString(PyExc_TypeError, "only string or iterable objects are supported for 'args'");
         return NULL;
     }
 
@@ -257,7 +256,6 @@ Process_func_spawn(Process *self, PyObject *args, PyObject *kwargs)
 
     memset(&options, 0, sizeof(uv_process_options_t));
 
-    options.cwd = cwd;
     options.uid = uid;
     options.gid = gid;
     options.flags = flags;
@@ -265,23 +263,18 @@ Process_func_spawn(Process *self, PyObject *args, PyObject *kwargs)
 
     /* process args */
 
-    if (PyBytes_Check(arguments)) {
-        /* it's a bytes object */
+    if (PyBytes_Check(arguments) || PyUnicode_Check(arguments)) {
         options.args = PyMem_Malloc(sizeof *(options.args) * 2);
-        data = PyBytes_AsString(arguments);
-        if (!data) {
-            options.args[0] = NULL;
-            ret = NULL;
-            goto cleanup;
-        }
-        size = PyBytes_GET_SIZE(arguments) + 1;
-        options.args[0] = PyMem_Malloc(size);
-        if (!options.args[0]) {
+        if (!options.args) {
             PyErr_NoMemory();
             ret = NULL;
             goto cleanup;
         }
-        memcpy(options.args[0], data, size);
+        options.args[0] = pyuv_dup_strobj(arguments);
+        if (!options.args[0]) {
+            ret = NULL;
+            goto cleanup;
+        }
         options.args[1] = NULL;
     } else {
         /* it's a sequence object */
@@ -303,22 +296,12 @@ Process_func_spawn(Process *self, PyObject *args, PyObject *kwargs)
                 ret = NULL;
                 goto cleanup;
             }
-            data = PyBytes_AsString(item);
-            if (!data) {
-                Py_XDECREF(item);
-                options.args[i] = NULL;
-                ret = NULL;
-                goto cleanup;
-            }
-            size = PyBytes_GET_SIZE(item) + 1;
-            options.args[i] = PyMem_Malloc(size);
+            options.args[i] = pyuv_dup_strobj(item);
             if (!options.args[i]) {
-                Py_XDECREF(item);
-                PyErr_NoMemory();
+                Py_DECREF(item);
                 ret = NULL;
                 goto cleanup;
             }
-            memcpy(options.args[i], data, size);
             Py_DECREF(item);
         }
         options.args[n] = NULL;
@@ -326,15 +309,37 @@ Process_func_spawn(Process *self, PyObject *args, PyObject *kwargs)
 
     /* process file */
 
-    if (executable) {
-        options.file = executable;
+    if (executable != Py_None) {
+        options.file = pyuv_dup_strobj(executable);
+        if (!options.file) {
+            ret = NULL;
+            goto cleanup;
+        }
     } else {
-        options.file = options.args[0];
+        size = strlen(options.args[0]) + 1;
+        options.file = PyMem_Malloc(size);
+        if (!options.file) {
+            PyErr_NoMemory();
+            ret = NULL;
+            goto cleanup;
+        }
+        memcpy((void*)options.file, options.args[0], size);
+    }
+
+    /* process cwd */
+    if (cwd != Py_None) {
+        options.cwd = pyuv_dup_strobj(cwd);
+        if (!options.cwd) {
+            ret = NULL;
+            goto cleanup;
+        }
     }
 
     /* process env */
 
     if (env) {
+        char *key_str, *value_str;
+        PyObject *key_bytes, *value_bytes;
         n = PyDict_Size(env);
         if (n > 0) {
             options.env = PyMem_Malloc(sizeof *(options.env) * (n + 1));
@@ -346,22 +351,33 @@ Process_func_spawn(Process *self, PyObject *args, PyObject *kwargs)
             i = 0;
             pos = 0;
             while (PyDict_Next(env, &pos, &key, &value)) {
-                key_str = PyBytes_AsString(key);
-                value_str = PyBytes_AsString(value);
-                if (!key_str || !value_str) {
+                key_bytes = value_bytes = NULL;
+                if (!pyuv_PyUnicode_FSConverter(key, &key_bytes)) {
                     options.env[i] = NULL;
                     ret = NULL;
                     goto cleanup;
                 }
-                size = PyBytes_GET_SIZE(key) + PyBytes_GET_SIZE(value) + 2;
+                if (!pyuv_PyUnicode_FSConverter(value, &value_bytes)) {
+                    Py_DECREF(key_bytes);
+                    options.env[i] = NULL;
+                    ret = NULL;
+                    goto cleanup;
+                }
+                key_str = PyBytes_AS_STRING(key_bytes);
+                value_str = PyBytes_AS_STRING(value_bytes);
+                size = PyBytes_GET_SIZE(key_bytes) + PyBytes_GET_SIZE(value_bytes) + 2;
                 options.env[i] = PyMem_Malloc(size);
                 if (!options.env[i]) {
                     options.env[i] = NULL;
                     PyErr_NoMemory();
+                    Py_DECREF(key_bytes);
+                    Py_DECREF(value_bytes);
                     ret = NULL;
                     goto cleanup;
                 }
                 PyOS_snprintf(options.env[i], size, "%s=%s", key_str, value_str);
+                Py_DECREF(key_bytes);
+                Py_DECREF(value_bytes);
                 i++;
             }
             options.env[i] = NULL;
@@ -440,9 +456,9 @@ cleanup:
         PyMem_Free(options.env);
     }
 
-    if (options.stdio) {
-        PyMem_Free(options.stdio);
-    }
+    PyMem_Free((void*)options.cwd);
+    PyMem_Free((void*)options.file);
+    PyMem_Free(options.stdio);
 
     Py_XINCREF(ret);
     return ret;
