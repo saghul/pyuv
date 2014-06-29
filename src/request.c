@@ -281,6 +281,111 @@ static PyTypeObject GAIRequestType = {
 
 
 static PyObject *
+GNIRequest_tp_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
+{
+    GNIRequest *self = (GNIRequest *)RequestType.tp_new(type, args, kwargs);
+    if (!self) {
+        return NULL;
+    }
+    UV_REQUEST(self) = (uv_req_t *)&self->req;
+    return (PyObject *)self;
+}
+
+
+static int
+GNIRequest_tp_init(GNIRequest *self, PyObject *args, PyObject *kwargs)
+{
+    int r;
+    Loop *loop;
+    PyObject *callback, *tmp, *loopargs;
+
+    UNUSED_ARG(kwargs);
+
+    if (!PyArg_ParseTuple(args, "O!O:__init__", &LoopType, &loop, &callback)) {
+        return -1;
+    }
+
+    loopargs = PySequence_GetSlice(args, 0, 1);
+    if (!loopargs) {
+        return -1;
+    }
+
+    r = RequestType.tp_init((PyObject *)self, loopargs, kwargs);
+    if (r < 0) {
+        Py_DECREF(loopargs);
+        return r;
+    }
+
+    tmp = (PyObject *)self->callback;
+    Py_INCREF(callback);
+    self->callback = callback;
+    Py_XDECREF(tmp);
+
+    Py_DECREF(loopargs);
+
+    return 0;
+}
+
+
+static int
+GNIRequest_tp_traverse(GNIRequest *self, visitproc visit, void *arg)
+{
+    Py_VISIT(self->callback);
+    return RequestType.tp_traverse((PyObject *)self, visit, arg);
+}
+
+
+static int
+GNIRequest_tp_clear(GNIRequest *self)
+{
+    Py_CLEAR(self->callback);
+    return RequestType.tp_clear((PyObject *)self);
+}
+
+
+static PyTypeObject GNIRequestType = {
+    PyVarObject_HEAD_INIT(NULL, 0)
+    "pyuv.GNIRequest",                                              /*tp_name*/
+    sizeof(GNIRequest),                                             /*tp_basicsize*/
+    0,                                                              /*tp_itemsize*/
+    0,                                                              /*tp_dealloc*/
+    0,                                                              /*tp_print*/
+    0,                                                              /*tp_getattr*/
+    0,                                                              /*tp_setattr*/
+    0,                                                              /*tp_compare*/
+    0,                                                              /*tp_repr*/
+    0,                                                              /*tp_as_number*/
+    0,                                                              /*tp_as_sequence*/
+    0,                                                              /*tp_as_mapping*/
+    0,                                                              /*tp_hash */
+    0,                                                              /*tp_call*/
+    0,                                                              /*tp_str*/
+    0,                                                              /*tp_getattro*/
+    0,                                                              /*tp_setattro*/
+    0,                                                              /*tp_as_buffer*/
+    Py_TPFLAGS_DEFAULT | Py_TPFLAGS_HAVE_GC,                        /*tp_flags*/
+    0,                                                              /*tp_doc*/
+    (traverseproc)GNIRequest_tp_traverse,                           /*tp_traverse*/
+    (inquiry)GNIRequest_tp_clear,                                   /*tp_clear*/
+    0,                                                              /*tp_richcompare*/
+    0,                                                              /*tp_weaklistoffset*/
+    0,                                                              /*tp_iter*/
+    0,                                                              /*tp_iternext*/
+    0,                                                              /*tp_methods*/
+    0,                                                              /*tp_members*/
+    0,                                                              /*tp_getsets*/
+    0,                                                              /*tp_base*/
+    0,                                                              /*tp_dict*/
+    0,                                                              /*tp_descr_get*/
+    0,                                                              /*tp_descr_set*/
+    0,                                                              /*tp_dictoffset*/
+    (initproc)GNIRequest_tp_init,                                   /*tp_init*/
+    0,                                                              /*tp_alloc*/
+    GNIRequest_tp_new,                                              /*tp_new*/
+};
+
+
+static PyObject *
 WorkRequest_tp_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
 {
     WorkRequest *self = (WorkRequest *)RequestType.tp_new(type, args, kwargs);

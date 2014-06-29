@@ -406,6 +406,15 @@ typedef struct {
 
 static PyTypeObject GAIRequestType;
 
+/* GNIRequest */
+typedef struct {
+    Request request;
+    uv_getnameinfo_t req;
+    PyObject *callback;
+} GNIRequest;
+
+static PyTypeObject GNIRequestType;
+
 /* WorkRequest */
 typedef struct {
     Request request;

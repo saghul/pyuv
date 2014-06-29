@@ -267,6 +267,54 @@ callback:
     PyGILState_Release(gstate);
 }
 
+
+static void
+getnameinfo_cb(uv_getnameinfo_t* req, int status, const char *hostname, const char *service)
+{
+    PyGILState_STATE gstate = PyGILState_Ensure();
+    Loop *loop;
+    GNIRequest *gni_req;
+    PyObject *errorno, *gni_result, *result;
+
+    ASSERT(req);
+
+    gni_req = PYUV_CONTAINER_OF(req, GNIRequest, req);
+    loop = REQUEST(gni_req)->loop;
+
+    if (status != 0) {
+        errorno = PyInt_FromLong((long)status);
+        gni_result = Py_None;
+        Py_INCREF(Py_None);
+        goto callback;
+    }
+
+    gni_result = Py_BuildValue("ss", hostname, service);
+    if (!gni_result) {
+        errorno = PyInt_FromLong((long)UV_ENOMEM);
+        gni_result = Py_None;
+        Py_INCREF(Py_None);
+        goto callback;
+    }
+
+    errorno = Py_None;
+    Py_INCREF(Py_None);
+
+callback:
+    result = PyObject_CallFunctionObjArgs(gni_req->callback, gni_result, errorno, NULL);
+    if (result == NULL) {
+        handle_uncaught_exception(loop);
+    }
+    Py_XDECREF(result);
+    Py_DECREF(gni_result);
+    Py_DECREF(errorno);
+
+    UV_REQUEST(gni_req) = NULL;
+    Py_DECREF(gni_req);
+
+    PyGILState_Release(gstate);
+}
+
+
 static PyObject *
 Util_func_getaddrinfo(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
@@ -345,6 +393,52 @@ error:
 }
 
 
+static PyObject *
+Util_func_getnameinfo(PyObject *obj, PyObject *args, PyObject *kwargs)
+{
+    int err, flags;
+    struct sockaddr_storage ss;
+    Loop *loop;
+    GNIRequest *gni_req;
+    PyObject *callback, *addr;
+
+    static char *kwlist[] = {"loop", "callback", "address", "flags", NULL};
+
+    gni_req = NULL;
+    flags = 0;
+
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!OO|i:getaddrinfo", kwlist, &LoopType, &loop, &callback, &addr, &flags)) {
+        return NULL;
+    }
+
+    if (!PyCallable_Check(callback)) {
+        PyErr_SetString(PyExc_TypeError, "a callable is required");
+        return NULL;
+    }
+
+    if (pyuv_parse_addr_tuple(addr, &ss) < 0) {
+        /* Error is set by the function itself */
+        return NULL;
+    }
+
+    gni_req = (GNIRequest *)PyObject_CallFunctionObjArgs((PyObject *)&GNIRequestType, loop, callback, NULL);
+    if (!gni_req) {
+        PyErr_NoMemory();
+        return NULL;
+    }
+
+    err = uv_getnameinfo(loop->uv_loop, &gni_req->req, &getnameinfo_cb, (struct sockaddr*) &ss, flags);
+    if (err < 0) {
+        RAISE_UV_EXCEPTION(err, PyExc_UVError);
+        Py_XDECREF(gni_req);
+        return NULL;
+    }
+
+    Py_INCREF(gni_req);
+    return (PyObject *)gni_req;
+}
+
+
 static PyMethodDef
 Util_methods[] = {
     { "hrtime", (PyCFunction)Util_func_hrtime, METH_NOARGS, "High resolution time." },
@@ -356,6 +450,7 @@ Util_methods[] = {
     { "interface_addresses", (PyCFunction)Util_func_interface_addresses, METH_NOARGS, "Gets network interface addresses." },
     { "cpu_info", (PyCFunction)Util_func_cpu_info, METH_NOARGS, "Gets system CPU information." },
     { "getaddrinfo", (PyCFunction)Util_func_getaddrinfo, METH_VARARGS|METH_KEYWORDS, "Getaddrinfo" },
+    { "getnameinfo", (PyCFunction)Util_func_getnameinfo, METH_VARARGS|METH_KEYWORDS, "Getnameinfo" },
     { NULL }
 };
 

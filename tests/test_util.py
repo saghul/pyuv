@@ -45,6 +45,18 @@ class UtilTest(TestCase):
         pyuv.util.getaddrinfo(self.loop, getaddrinfo_cb, 'localhost', 80, socket.AF_INET)
         self.loop.run()
 
+    def test_getnameinfo_ipv4(self):
+        def cb(result, errorno):
+            self.assertEqual(errorno, None)
+        pyuv.util.getnameinfo(self.loop, cb, ('127.0.0.1', 80))
+        self.loop.run()
+
+    def test_getnameinfo_ipv6(self):
+        def cb(result, errorno):
+            self.assertEqual(errorno, None)
+            pyuv.util.getnameinfo(self.loop, cb, ('::1', 80))
+        self.loop.run()
+
 
 if __name__ == '__main__':
     unittest2.main(verbosity=2)

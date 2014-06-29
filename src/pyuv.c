@@ -158,6 +158,10 @@ init_pyuv(void)
     if (PyType_Ready(&GAIRequestType) < 0) {
         return NULL;
     }
+    GNIRequestType.tp_base = &RequestType;
+    if (PyType_Ready(&GNIRequestType) < 0) {
+        return NULL;
+    }
     WorkRequestType.tp_base = &RequestType;
     if (PyType_Ready(&WorkRequestType) < 0) {
         return NULL;
