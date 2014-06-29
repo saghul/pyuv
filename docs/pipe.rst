@@ -45,6 +45,16 @@
 
         Open the given file descriptor (or HANDLE in Windows) as a ``Pipe``.
 
+        ..note::
+            The file descriptor will be closed when the `UDP` handle is closed, so if it
+            was tasken from a Python socket object, it will be useless afterwards.
+
+        .. note::
+            Once a file desctiptor has been passed to the open function, the handle 'owns' it.
+            When calling close() on the handle, the file descriptor will be closed. If you'd like
+            to keep using it afterwards it's recommended to duplicate it (using os.dup) before
+            passing it to this function.
+
     .. py:method:: accept(client)
 
         :param object client: Client object where to accept the connection.

@@ -78,6 +78,12 @@
             The file descriptor will be closed when the `TCP` handle is closed, so if it
             was tasken from a Python socket object, it will be useless afterwards.
 
+        .. note::
+            Once a file desctiptor has been passed to the open function, the handle 'owns' it.
+            When calling close() on the handle, the file descriptor will be closed. If you'd like
+            to keep using it afterwards it's recommended to duplicate it (using os.dup) before
+            passing it to this function.
+
     .. py:method:: getsockname
 
         Return tuple containing IP address and port of the local socket. In case of IPv6 sockets, it also returns
