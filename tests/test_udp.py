@@ -321,10 +321,31 @@ class UDPTestOpen(TestCase):
         self.loop.run()
         sock.close()
 
+
+class UDPTestBind(TestCase):
+
     def test_udp_bind(self):
         handle = pyuv.UDP(self.loop)
         handle.bind(("", TEST_PORT))
         handle.close()
+        self.loop.run()
+
+    def test_udp_bind_reuse(self):
+        handle = pyuv.UDP(self.loop)
+        handle.bind(("", TEST_PORT), pyuv.UV_UDP_REUSEADDR)
+        handle2 = pyuv.UDP(self.loop)
+        handle2.bind(("", TEST_PORT), pyuv.UV_UDP_REUSEADDR)
+        handle.close()
+        handle2.close()
+        self.loop.run()
+
+    def test_udp_bind_noreuse(self):
+        handle = pyuv.UDP(self.loop)
+        handle.bind(("", TEST_PORT))
+        handle2 = pyuv.UDP(self.loop)
+        self.assertRaises(pyuv.error.UDPError, handle2.bind, ("", TEST_PORT))
+        handle.close()
+        handle2.close()
         self.loop.run()
 
 
