@@ -367,5 +367,15 @@ class UDPTestFileno(TestCase):
         server.close()
 
 
+class UDPTestMulticastInterface(TestCase):
+
+    def test_udp_multicast_interface(self):
+        handle = pyuv.UDP(self.loop)
+        handle.bind(("", TEST_PORT))
+        handle.set_multicast_interface("0.0.0.0")
+        handle.close()
+        self.loop.run()
+
+
 if __name__ == '__main__':
     unittest2.main(verbosity=2)
