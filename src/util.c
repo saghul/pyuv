@@ -318,23 +318,25 @@ callback:
 static PyObject *
 Util_func_getaddrinfo(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
-    char *host_str;
+    char *host_str, *service_str;
     char port_str[6];
-    int port, family, socktype, protocol, flags, err;
+    int family, socktype, protocol, flags, err;
+    long port;
     struct addrinfo hints;
     Loop *loop;
     GAIRequest *gai_req;
-    PyObject *callback, *host, *idna;
+    PyObject *callback, *host, *service, *idna, *ascii;
 
     static char *kwlist[] = {"loop", "callback", "host", "port", "family", "socktype", "protocol", "flags", NULL};
 
     UNUSED_ARG(obj);
     gai_req = NULL;
-    idna = NULL;
+    idna = ascii = NULL;
     port = socktype = protocol = flags = 0;
     family = AF_UNSPEC;
+    service = Py_None;
 
-    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!OO|iiiii:getaddrinfo", kwlist, &LoopType, &loop, &callback, &host, &port, &family, &socktype, &protocol, &flags)) {
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!OO|Oiiii:getaddrinfo", kwlist, &LoopType, &loop, &callback, &host, &service, &family, &socktype, &protocol, &flags)) {
         return NULL;
     }
 
@@ -357,11 +359,27 @@ Util_func_getaddrinfo(PyObject *obj, PyObject *args, PyObject *kwargs)
         goto error;
     }
 
-    if (port < 0 || port > 0xffff) {
-        PyErr_SetString(PyExc_ValueError, "port must be between 0 and 65535");
+    if (service == Py_None) {
+        service_str = NULL;
+    } else if (PyUnicode_Check(service)) {
+        ascii = PyObject_CallMethod(service, "encode", "s", "ascii");
+        if (!ascii)
+            return NULL;
+        service_str = PyBytes_AS_STRING(ascii);
+    } else if (PyBytes_Check(service)) {
+        service_str = PyBytes_AS_STRING(service);
+    } else if (PyInt_Check(service)) {
+        port = PyInt_AsLong(service);
+        if (port < 0 || port > 0xffff) {
+            PyErr_SetString(PyExc_ValueError, "port must be between 0 and 65535");
+            goto error;
+        }
+        PyOS_snprintf(port_str, sizeof(port_str), "%ld", port);
+        service_str = port_str;
+    } else {
+        PyErr_SetString(PyExc_TypeError, "getaddrinfo() argument 4 must be string or int");
         goto error;
     }
-    PyOS_snprintf(port_str, sizeof(port_str), "%d", port);
 
     gai_req = (GAIRequest *)PyObject_CallFunctionObjArgs((PyObject *)&GAIRequestType, loop, callback, NULL);
     if (!gai_req) {
@@ -375,19 +393,21 @@ Util_func_getaddrinfo(PyObject *obj, PyObject *args, PyObject *kwargs)
     hints.ai_protocol = protocol;
     hints.ai_flags = flags;
 
-    err = uv_getaddrinfo(loop->uv_loop, &gai_req->req, &getaddrinfo_cb, host_str, port_str, &hints);
+    err = uv_getaddrinfo(loop->uv_loop, &gai_req->req, &getaddrinfo_cb, host_str, service_str, &hints);
     if (err < 0) {
         RAISE_UV_EXCEPTION(err, PyExc_UVError);
         goto error;
     }
 
     Py_XDECREF(idna);
+    Py_XDECREF(ascii);
 
     Py_INCREF(gai_req);
     return (PyObject *)gai_req;
 
 error:
     Py_XDECREF(idna);
+    Py_XDECREF(ascii);
     Py_XDECREF(gai_req);
     return NULL;
 }
