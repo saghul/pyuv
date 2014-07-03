@@ -9,6 +9,7 @@ TEST_PORT = 12345
 TEST_PORT2 = 12346
 MULTICAST_ADDRESS = "239.255.0.1"
 
+
 class UDPTest(TestCase):
 
     def setUp(self):
@@ -56,6 +57,35 @@ class UDPTest(TestCase):
         timer.start(self.timer_cb, 0.1, 0)
         self.loop.run()
         self.assertEqual(self.on_close_called, 3)
+
+
+class UDPEmptyDatagramTest(TestCase):
+
+    def setUp(self):
+        super(UDPEmptyDatagramTest, self).setUp()
+        self.server = None
+        self.client = None
+        self.on_close_called = 0
+
+    def on_close(self, handle):
+        self.on_close_called += 1
+
+    def on_client_recv(self, handle, ip_port, flags, data, error):
+        self.assertEqual(flags, 0)
+        ip, port = ip_port
+        self.assertEqual(error, None)
+        self.assertEqual(data, b"")
+        self.client.close(self.on_close)
+        self.server.close(self.on_close)
+
+    def test_udp_empty_datagram(self):
+        self.server = pyuv.UDP(self.loop)
+        self.client = pyuv.UDP(self.loop)
+        self.client.bind(("0.0.0.0", TEST_PORT2))
+        self.client.start_recv(self.on_client_recv)
+        self.server.send(("127.0.0.1", TEST_PORT2), b"")
+        self.loop.run()
+        self.assertEqual(self.on_close_called, 2)
 
 
 class UDPTestNull(TestCase):

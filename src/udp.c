@@ -24,14 +24,19 @@ on_udp_read(uv_udp_t* handle, int nread, const uv_buf_t* buf, struct sockaddr* a
     /* Object could go out of scope in the callback, increase refcount to avoid it */
     Py_INCREF(self);
 
-    if (nread == 0) {
+    if (nread == 0 && addr == NULL) {
+        /* libuv got EAGAIN and is returning the buffer to us */
         goto done;
     }
 
-    if (nread > 0) {
+    if (nread >= 0) {
         ASSERT(addr);
         address_tuple = makesockaddr(addr);
-        data = PyBytes_FromStringAndSize(buf->base, nread);
+        if (nread == 0) {
+            data = PyBytes_FromString("");
+        } else {
+            data = PyBytes_FromStringAndSize(buf->base, nread);
+        }
         py_errorno = Py_None;
         Py_INCREF(Py_None);
     } else {
