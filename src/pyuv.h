@@ -578,5 +578,36 @@ static PyStructSequence_Desc cpu_info_times_result_desc = {
 };
 
 
+/* used by getrusage */
+static PyTypeObject RusageResultType;
+
+static PyStructSequence_Field rusage_result_fields[] = {
+    {"ru_utime",        "user time used"},
+    {"ru_stime",        "system time used"},
+    {"ru_maxrss",       "max. resident set size"},
+    {"ru_ixrss",        "shared memory size"},
+    {"ru_idrss",        "unshared data size"},
+    {"ru_isrss",        "unshared stack size"},
+    {"ru_minflt",       "page faults not requiring I/O"},
+    {"ru_majflt",       "page faults requiring I/O"},
+    {"ru_nswap",        "number of swap outs"},
+    {"ru_inblock",      "block input operations"},
+    {"ru_oublock",      "block output operations"},
+    {"ru_msgsnd",       "IPC messages sent"},
+    {"ru_msgrcv",       "IPC messages received"},
+    {"ru_nsignals",     "signals received"},
+    {"ru_nvcsw",        "voluntary context switches"},
+    {"ru_nivcsw",       "involuntary context switches"},
+    {NULL}
+};
+
+static PyStructSequence_Desc rusage_result_desc = {
+    "rusage_result",
+    NULL,
+    rusage_result_fields,
+    16
+};
+
+
 #endif
 

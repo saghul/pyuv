@@ -459,6 +459,53 @@ Util_func_getnameinfo(PyObject *obj, PyObject *args, PyObject *kwargs)
 }
 
 
+static PyObject *
+Util_func_getrusage(PyObject *obj)
+{
+    int err;
+    uv_rusage_t ru;
+    PyObject *result;
+
+    UNUSED_ARG(obj);
+
+    err = uv_getrusage(&ru);
+    if (err < 0) {
+        RAISE_UV_EXCEPTION(err, PyExc_UVError);
+        return NULL;
+    }
+
+    result = PyStructSequence_New(&RusageResultType);
+    if (!result)
+        return NULL;
+
+#define pyuv__doubletime(TV) ((double)(TV).tv_sec + 1e-6*(TV).tv_usec)
+    PyStructSequence_SET_ITEM(result, 0, PyFloat_FromDouble(pyuv__doubletime(ru.ru_utime)));
+    PyStructSequence_SET_ITEM(result, 1, PyFloat_FromDouble(pyuv__doubletime(ru.ru_stime)));
+    PyStructSequence_SET_ITEM(result, 2, PyLong_FromLong(ru.ru_maxrss));
+    PyStructSequence_SET_ITEM(result, 3, PyLong_FromLong(ru.ru_ixrss));
+    PyStructSequence_SET_ITEM(result, 4, PyLong_FromLong(ru.ru_idrss));
+    PyStructSequence_SET_ITEM(result, 5, PyLong_FromLong(ru.ru_isrss));
+    PyStructSequence_SET_ITEM(result, 6, PyLong_FromLong(ru.ru_minflt));
+    PyStructSequence_SET_ITEM(result, 7, PyLong_FromLong(ru.ru_majflt));
+    PyStructSequence_SET_ITEM(result, 8, PyLong_FromLong(ru.ru_nswap));
+    PyStructSequence_SET_ITEM(result, 9, PyLong_FromLong(ru.ru_inblock));
+    PyStructSequence_SET_ITEM(result, 10, PyLong_FromLong(ru.ru_oublock));
+    PyStructSequence_SET_ITEM(result, 11, PyLong_FromLong(ru.ru_msgsnd));
+    PyStructSequence_SET_ITEM(result, 12, PyLong_FromLong(ru.ru_msgrcv));
+    PyStructSequence_SET_ITEM(result, 13, PyLong_FromLong(ru.ru_nsignals));
+    PyStructSequence_SET_ITEM(result, 14, PyLong_FromLong(ru.ru_nvcsw));
+    PyStructSequence_SET_ITEM(result, 15, PyLong_FromLong(ru.ru_nivcsw));
+#undef pyuv__doubletime
+
+    if (PyErr_Occurred()) {
+        Py_DECREF(result);
+        return NULL;
+    }
+
+    return result;
+}
+
+
 static PyMethodDef
 Util_methods[] = {
     { "hrtime", (PyCFunction)Util_func_hrtime, METH_NOARGS, "High resolution time." },
@@ -471,6 +518,7 @@ Util_methods[] = {
     { "cpu_info", (PyCFunction)Util_func_cpu_info, METH_NOARGS, "Gets system CPU information." },
     { "getaddrinfo", (PyCFunction)Util_func_getaddrinfo, METH_VARARGS|METH_KEYWORDS, "Getaddrinfo" },
     { "getnameinfo", (PyCFunction)Util_func_getnameinfo, METH_VARARGS|METH_KEYWORDS, "Getnameinfo" },
+    { "getrusage", (PyCFunction)Util_func_getrusage, METH_NOARGS, "Get information about OS resource utilization for the current process." },
     { NULL }
 };
 
@@ -717,6 +765,8 @@ init_util(void)
         PyStructSequence_InitType(&CPUInfoTimesResultType, &cpu_info_times_result_desc);
     if (InterfaceAddressesResultType.tp_name == 0)
         PyStructSequence_InitType(&InterfaceAddressesResultType, &interface_addresses_result_desc);
+    if (RusageResultType.tp_name == 0)
+        PyStructSequence_InitType(&RusageResultType, &rusage_result_desc);
 
     SignalCheckerType.tp_base = &HandleType;
     PyUVModule_AddType(module, "SignalChecker", &SignalCheckerType);
