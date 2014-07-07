@@ -49,6 +49,9 @@
             to keep using it afterwards it's recommended to duplicate it (using os.dup) before
             passing it to this function.
 
+        .. note::
+            The fd won't be put in non-blocking mode, the user is responsible for doing it.
+
     .. py:method:: getsockname
 
         Return tuple containing IP address and port of the local socket. In case of IPv6 sockets, it also returns

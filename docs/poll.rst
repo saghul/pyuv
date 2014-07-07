@@ -47,6 +47,9 @@
             IMPORTANT: It is not okay to have multiple active uv_poll watchers for the same socket.
             This can cause libuv to assert. See this issue: https://github.com/saghul/pyuv/issues/54
 
+        .. note::
+            The fd won't be put in non-blocking mode, the user is responsible for doing it.
+
     .. py:method:: start(events, callback)
 
         :param int events: Mask of events that will be detected. The possible events are `pyuv.UV_READABLE`

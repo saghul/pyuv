@@ -55,6 +55,9 @@
             to keep using it afterwards it's recommended to duplicate it (using os.dup) before
             passing it to this function.
 
+        .. note::
+            The fd won't be put in non-blocking mode, the user is responsible for doing it.
+
     .. py:method:: accept(client)
 
         :param object client: Client object where to accept the connection.
