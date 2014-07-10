@@ -207,6 +207,41 @@ UDP_func_stop_recv(UDP *self)
 
 
 static PyObject *
+UDP_func_try_send(UDP *self, PyObject *args)
+{
+    int err;
+    uv_buf_t buf;
+    Py_buffer view;
+    PyObject *addr;
+    struct sockaddr_storage ss;
+
+    RAISE_IF_HANDLE_NOT_INITIALIZED(self, NULL);
+    RAISE_IF_HANDLE_CLOSED(self, PyExc_HandleClosedError, NULL);
+
+    if (!PyArg_ParseTuple(args, "O"PYUV_BYTES"*:try_send", &addr, &view)) {
+        return NULL;
+    }
+
+    if (pyuv_parse_addr_tuple(addr, &ss) < 0) {
+        /* Error is set by the function itself */
+        PyBuffer_Release(&view);
+        return NULL;
+    }
+
+    buf = uv_buf_init(view.buf, view.len);
+    err = uv_udp_try_send(&self->udp_h, &buf, 1, (struct sockaddr*) &ss);
+    if (err < 0) {
+        RAISE_UV_EXCEPTION(err, PyExc_UDPError);
+        PyBuffer_Release(&view);
+        return NULL;
+    }
+
+    PyBuffer_Release(&view);
+    return PyInt_FromLong((long)err);
+}
+
+
+static PyObject *
 UDP_func_send(UDP *self, PyObject *args)
 {
     int err;
@@ -613,6 +648,7 @@ UDP_tp_methods[] = {
     { "bind", (PyCFunction)UDP_func_bind, METH_VARARGS, "Bind to the specified IP and port." },
     { "start_recv", (PyCFunction)UDP_func_start_recv, METH_VARARGS, "Start accepting data." },
     { "stop_recv", (PyCFunction)UDP_func_stop_recv, METH_NOARGS, "Stop receiving data." },
+    { "try_send", (PyCFunction)UDP_func_try_send, METH_VARARGS, "Try to send data over UDP." },
     { "send", (PyCFunction)UDP_func_send, METH_VARARGS, "Send data over UDP." },
     { "sendlines", (PyCFunction)UDP_func_sendlines, METH_VARARGS, "Send a sequence of data over UDP." },
     { "getsockname", (PyCFunction)UDP_func_getsockname, METH_NOARGS, "Get local socket information." },

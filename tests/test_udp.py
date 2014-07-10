@@ -407,5 +407,48 @@ class UDPTestMulticastInterface(TestCase):
         self.loop.run()
 
 
+@platform_skip(["win32"])
+class UDPTryTest(TestCase):
+
+    def setUp(self):
+        super(UDPTryTest, self).setUp()
+        self.server = None
+        self.client = None
+
+    def on_close(self, handle):
+        self.on_close_called += 1
+
+    def on_server_recv(self, handle, ip_port, flags, data, error):
+        self.assertEqual(flags, 0)
+        ip, port = ip_port
+        data = data.strip()
+        self.assertEqual(data, b"PING")
+        self.server.close(self.on_close)
+        self.client.close(self.on_close)
+
+    def timer_cb(self, timer):
+        timer.close(self.on_close)
+        while True:
+            try:
+                r = self.client.try_send(("127.0.0.1", TEST_PORT), b"PING")
+            except pyuv.error.UDPError as e:
+                self.assertEqual(e.args[0], pyuv.errno.UV_EAGAIN)
+            else:
+                self.assertEqual(r, 4)
+                break
+
+    def test_udp_try_send(self):
+        self.on_close_called = 0
+        self.server = pyuv.UDP(self.loop)
+        self.server.bind(("0.0.0.0", TEST_PORT))
+        self.server.start_recv(self.on_server_recv)
+        self.client = pyuv.UDP(self.loop)
+        self.client.bind(("0.0.0.0", TEST_PORT2))
+        timer = pyuv.Timer(self.loop)
+        timer.start(self.timer_cb, 0.1, 0)
+        self.loop.run()
+        self.assertEqual(self.on_close_called, 3)
+
+
 if __name__ == '__main__':
     unittest2.main(verbosity=2)
