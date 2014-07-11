@@ -84,6 +84,7 @@ class PollTest(TestCase):
         self.loop.run()
         self.assertTrue(self.poll.closed)
         self.assertEqual(self.poll.fileno(), -1)
+        self.sock.close()
 
 
 if __name__ == '__main__':
