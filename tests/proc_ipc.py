@@ -36,7 +36,7 @@ tcp_server.bind(("0.0.0.0", port))
 if not listen_after_write:
     tcp_server.listen(on_ipc_connection, 12)
 
-channel.write2(b"hello", tcp_server)
+channel.write(b"hello", None, tcp_server)
 
 if listen_after_write:
     tcp_server.listen(on_ipc_connection, 12)

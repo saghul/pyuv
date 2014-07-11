@@ -6,7 +6,7 @@ sys.path.insert(0, '../')
 import pyuv
 
 
-def on_write2(handle, error):
+def on_write(handle, error):
     global channel, recv_handle
     recv_handle.close()
     channel.close()
@@ -22,7 +22,7 @@ def on_channel_read(handle, data, error):
     elif pending == pyuv.UV_UDP:
         recv_handle = pyuv.UDP(loop)
     channel.accept(recv_handle)
-    channel.write2(b".", recv_handle, on_write2)
+    channel.write(b".", on_write, recv_handle)
 
 
 loop = pyuv.Loop.default_loop()

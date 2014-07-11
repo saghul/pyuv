@@ -51,6 +51,8 @@ typedef int Bool;
     #define INLINE inline
 #endif
 
+#define ARRAY_SIZE(a) (sizeof(a) / sizeof((a)[0]))
+
 #define ASSERT(x)                                                           \
     do {                                                                    \
         if (!(x)) {                                                         \

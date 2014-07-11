@@ -113,7 +113,7 @@ class PipeTestList(PipeTestCase):
         server.accept(client)
         self.client_connections.append(client)
         client.start_read(self.on_client_connection_read)
-        client.writelines([b"PING", linesep])
+        client.write([b"PING", linesep])
 
     def on_client_connection_read(self, client, data, error):
         if data is None:
@@ -149,7 +149,7 @@ class PipeTestListNull(PipeTestCase):
         server.accept(client)
         self.client_connections.append(client)
         client.start_read(self.on_client_connection_read)
-        client.writelines([b"PING", b"\x00", linesep])
+        client.write([b"PING", b"\x00", linesep])
 
     def on_client_connection_read(self, client, data, error):
         if data is None:

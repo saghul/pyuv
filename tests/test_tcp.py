@@ -169,43 +169,6 @@ class TCPTest3(TestCase):
         self.loop.run()
 
 
-class TCPTestUnicode(TestCase):
-
-    def setUp(self):
-        super(TCPTestUnicode, self).setUp()
-        self.server = None
-        self.client = None
-
-    def on_connection(self, server, error):
-        self.assertEqual(error, None)
-        client = pyuv.TCP(self.loop)
-        server.accept(client)
-        if sys.version_info >= (3, 0):
-            data = 'PÏNG'
-            exc_type = TypeError
-        else:
-            data = unicode('PÏNG', 'utf-8')
-            exc_type = UnicodeEncodeError
-        self.assertRaises(exc_type, client.write, data)
-        client.close()
-        self.server.close()
-
-    def on_client_connection(self, client, error):
-        self.assertEqual(error, None)
-        client.start_read(self.on_client_read)
-
-    def on_client_read(self, client, data, error):
-        client.close()
-
-    def test_tcp_unicode(self):
-        self.server = pyuv.TCP(self.loop)
-        self.server.bind(("0.0.0.0", TEST_PORT))
-        self.server.listen(self.on_connection)
-        self.client = pyuv.TCP(self.loop)
-        self.client.connect(("127.0.0.1", TEST_PORT), self.on_client_connection)
-        self.loop.run()
-
-
 class TCPTestMemoryview(TestCase):
 
     def setUp(self):
@@ -302,7 +265,7 @@ class TCPTestList(TestCase):
         server.accept(client)
         self.client_connections.append(client)
         client.start_read(self.on_client_connection_read)
-        client.writelines([b"PING1", b"PING2", b"PING3", b"PING4", b"PING5", b"PING6", b"PING7", b"PING8", b"PING9", b"PING10", b"PING11", b"PING12"])
+        client.write([b"PING1", b"PING2", b"PING3", b"PING4", b"PING5", b"PING6", b"PING7", b"PING8", b"PING9", b"PING10", b"PING11", b"PING12"])
 
     def on_client_connection_read(self, client, data, error):
         if data is None:
@@ -329,42 +292,6 @@ class TCPTestList(TestCase):
         self.loop.run()
 
 
-class TCPTestListUnicode(TestCase):
-
-    def setUp(self):
-        super(TCPTestListUnicode, self).setUp()
-        self.server = None
-        self.client = None
-
-    def on_connection(self, server, error):
-        client = pyuv.TCP(self.loop)
-        server.accept(client)
-        if sys.version_info >= (3, 0):
-            data = 'PÏNG'
-            exc_type = TypeError
-        else:
-            data = unicode('PÏNG', 'utf-8')
-            exc_type = UnicodeEncodeError
-        self.assertRaises(exc_type, client.writelines, [data for x in range(100)])
-        client.close()
-        self.server.close()
-
-    def on_client_connection(self, client, error):
-        self.assertEqual(error, None)
-        client.start_read(self.on_client_read)
-
-    def on_client_read(self, client, data, error):
-        client.close()
-
-    def test_tcp_list_unicode(self):
-        self.server = pyuv.TCP(self.loop)
-        self.server.bind(("0.0.0.0", TEST_PORT))
-        self.server.listen(self.on_connection)
-        self.client = pyuv.TCP(self.loop)
-        self.client.connect(("127.0.0.1", TEST_PORT), self.on_client_connection)
-        self.loop.run()
-
-
 class TCPTestListNull(TestCase):
 
     def setUp(self):
@@ -378,7 +305,7 @@ class TCPTestListNull(TestCase):
         server.accept(client)
         self.client_connections.append(client)
         client.start_read(self.on_client_connection_read)
-        client.writelines([b"PING1", b"PING2", b"PING3", b"PING4", b"PING5", b"PING\x00\xFF6"])
+        client.write([b"PING1", b"PING2", b"PING3", b"PING4", b"PING5", b"PING\x00\xFF6"])
 
     def on_client_connection_read(self, client, data, error):
         if data is None:
@@ -421,8 +348,11 @@ class TCPTestInvalidData(TestCase):
 
         self.assertRaises(TypeError, client.write, 1234)
         self.assertRaises(TypeError, client.write, object())
-        self.assertRaises(TypeError, client.writelines, 1234)
-        self.assertRaises(TypeError, client.writelines, object())
+        self.assertRaises(TypeError, client.write, u"PING")
+        self.assertRaises(ValueError, client.write, [])
+        self.assertRaises(ValueError, client.write, ())
+        self.assertRaises(TypeError, client.write, list(range(5)))
+        self.assertRaises(TypeError, client.write, [b"PING", 123, u"PING"])
 
         client.close()
         self.client_connections.remove(client)

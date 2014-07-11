@@ -260,56 +260,47 @@ Pipe_func_pending_handle_type(Pipe *self)
 
 
 static PyObject *
-Pipe_func_write2(Pipe *self, PyObject *args)
+Pipe_func_write(Pipe *self, PyObject *args)
 {
-    uv_buf_t buf;
-    stream_write_ctx *ctx;
-    Py_buffer *view;
+    PyObject *data;
     PyObject *callback, *send_handle;
-
-    callback = Py_None;
 
     RAISE_IF_HANDLE_NOT_INITIALIZED(self, NULL);
     RAISE_IF_HANDLE_CLOSED(self, PyExc_HandleClosedError, NULL);
 
-    ctx = PyMem_Malloc(sizeof *ctx);
-    if (!ctx) {
-        PyErr_NoMemory();
+    callback = send_handle = Py_None;
+
+    if (!PyArg_ParseTuple(args, "O|OO:write", &data, &callback, &send_handle)) {
         return NULL;
     }
 
-    view = &ctx->view[0];
-
-    if (!PyArg_ParseTuple(args, PYUV_BYTES"*O|O:write", view, &send_handle, &callback)) {
-        PyMem_Free(ctx);
+    if (callback != Py_None && !PyCallable_Check(callback)) {
+        PyErr_SetString(PyExc_TypeError, "'callback' must be a callable or None");
         return NULL;
     }
 
-    if (PyObject_IsSubclass((PyObject *)send_handle->ob_type, (PyObject *)&StreamType)) {
+    if (send_handle == Py_None) {
+        send_handle = NULL;
+    } else if (PyObject_IsSubclass((PyObject *)send_handle->ob_type, (PyObject *)&StreamType)) {
         if (UV_HANDLE(send_handle)->type != UV_TCP && UV_HANDLE(send_handle)->type != UV_NAMED_PIPE) {
-            PyErr_SetString(PyExc_TypeError, "Only TCP and Pipe objects are supported for write2");
-            goto error;
+            PyErr_SetString(PyExc_TypeError, "Only TCP and Pipe objects are supported");
+            return NULL;
         }
     } else if (PyObject_IsSubclass((PyObject *)send_handle->ob_type, (PyObject *)&UDPType)) {
         /* empty */
     } else {
         PyErr_SetString(PyExc_TypeError, "Only Stream and UDP objects are supported");
-        goto error;
-    }
-
-    if (callback != Py_None && !PyCallable_Check(callback)) {
-        PyErr_SetString(PyExc_TypeError, "a callable or None is required");
-        goto error;
-    }
-
-    buf = uv_buf_init(view->buf, view->len);
-
-    return pyuv_stream_write((Stream *)self, ctx, view, &buf, 1, callback, send_handle);
-
-error:
-        PyBuffer_Release(view);
-        PyMem_Free(ctx);
         return NULL;
+    }
+
+    if (PyObject_CheckBuffer(data)) {
+        return pyuv__stream_write_bytes((Stream *)self, data, callback, send_handle);
+    } else if (!PyUnicode_Check(data) && PySequence_Check(data)) {
+        return pyuv__stream_write_sequence((Stream *)self, data, callback, send_handle);
+    } else {
+        PyErr_SetString(PyExc_TypeError, "only bytes and sequences are supported");
+        return NULL;
+    }
 }
 
 
@@ -420,7 +411,7 @@ Pipe_tp_methods[] = {
     { "open", (PyCFunction)Pipe_func_open, METH_VARARGS, "Open the specified file descriptor and manage it as a Pipe." },
     { "pending_instances", (PyCFunction)Pipe_func_pending_instances, METH_VARARGS, "Set the number of pending pipe instance handles when the pipe server is waiting for connections." },
     { "pending_handle_type", (PyCFunction)Pipe_func_pending_handle_type, METH_NOARGS, "Returns the type of the next pending handle. Can be called multiple times." },
-    { "write2", (PyCFunction)Pipe_func_write2, METH_VARARGS, "Write data and send handle over a pipe." },
+    { "write", (PyCFunction)Pipe_func_write, METH_VARARGS, "Write data and send handle over a pipe." },
     { "getsockname", (PyCFunction)Pipe_func_getsockname, METH_NOARGS, "Get bound pipe name." },
     { NULL }
 };
