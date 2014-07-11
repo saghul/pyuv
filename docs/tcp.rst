@@ -134,8 +134,8 @@
         :param object data: Data to be written on the ``TCP`` connection. It can be any Python object conforming
             to the buffer interface.
 
-        Try to write data on the ``TCP`` connection. It will raise an exception if data cannot be written immediately
-        or a number indicating the amount of data written.
+        Try to write data on the ``TCP`` connection. It will raise an exception (with UV_EAGAIN errno) if data cannot
+        be written immediately or return a number indicating the amount of data written.
 
     .. py:method:: start_read(callback)
 
