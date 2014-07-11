@@ -66,11 +66,11 @@ on_handle_close(uv_handle_t *handle)
     self->loop = (Loop *)Py_None;
     Py_INCREF(Py_None);
 
-    /* Refcount was increased in the caller function */
-    Py_DECREF(self);
-
     /* Remove extra reference, in case it was added along the way */
     PYUV_HANDLE_DECREF(self);
+
+    /* Refcount was increased in the caller function */
+    Py_DECREF(self);
 
     PyGILState_Release(gstate);
 }
