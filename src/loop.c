@@ -239,7 +239,7 @@ Loop_func_excepthook(Loop *self, PyObject *args)
     }
     Py_INCREF(exc);
     Py_INCREF(value);
-    Py_INCREF(args);
+    Py_INCREF(tb);
     PyErr_Restore(exc, value, tb);
     PySys_WriteStderr("Unhandled exception in callback\n");
     PyErr_PrintEx(0);
