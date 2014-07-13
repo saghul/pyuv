@@ -329,7 +329,7 @@ pyuv__udp_send_sequence(UDP *self, struct sockaddr *addr, PyObject *data, PyObje
     ctx->view_count = buf_count;
 
     {
-        uv_buf_t bufs[buf_count];
+        STACK_ARRAY(uv_buf_t, bufs, buf_count);
 
         for (i = 0; i < buf_count; i++) {
             item = PySequence_Fast_GET_ITEM(data_fast, i);

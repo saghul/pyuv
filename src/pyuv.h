@@ -51,6 +51,13 @@ typedef int Bool;
     #define INLINE inline
 #endif
 
+#if defined(_MSC_VER)
+# include <malloc.h>
+# define STACK_ARRAY(type, name, size) type* name = (type*)_alloca((size) * sizeof(type))
+#else
+# define STACK_ARRAY(type, name, size) type name[size]
+#endif
+
 #define ARRAY_SIZE(a) (sizeof(a) / sizeof((a)[0]))
 
 #define ASSERT(x)                                                           \

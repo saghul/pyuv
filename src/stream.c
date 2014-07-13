@@ -377,7 +377,7 @@ pyuv__stream_write_sequence(Stream *self, PyObject *data, PyObject *callback, Py
     ctx->view_count = buf_count;
 
     {
-        uv_buf_t bufs[buf_count];
+        STACK_ARRAY(uv_buf_t, bufs, buf_count);
 
         for (i = 0; i < buf_count; i++) {
             item = PySequence_Fast_GET_ITEM(data_fast, i);
