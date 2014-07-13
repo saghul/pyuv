@@ -3,7 +3,7 @@ typedef struct {
     uv_udp_send_t req;
     PyObject *callback;
     Py_buffer *views;
-    Py_buffer view[1];
+    Py_buffer viewsml[4];
     int view_count;
 } udp_send_ctx;
 
@@ -100,12 +100,11 @@ on_udp_send(uv_udp_send_t* req, int status)
     }
 
     Py_DECREF(callback);
-    for (i = 0; i < ctx->view_count; i++) {
+
+    for (i = 0; i < ctx->view_count; i++)
         PyBuffer_Release(&ctx->views[i]);
-    }
-    if (ctx->views != ctx->view) {
+    if (ctx->views != ctx->viewsml)
         PyMem_Free(ctx->views);
-    }
     PyMem_Free(ctx);
 
     /* Refcount was increased in the caller function */
@@ -242,19 +241,12 @@ UDP_func_try_send(UDP *self, PyObject *args)
 
 
 static PyObject *
-UDP_func_send(UDP *self, PyObject *args)
+pyuv__udp_send_bytes(UDP *self, struct sockaddr *addr, PyObject *data, PyObject *callback)
 {
     int err;
-    struct sockaddr_storage ss;
     uv_buf_t buf;
-    Py_buffer *view;
-    PyObject *addr, *callback;
     udp_send_ctx *ctx;
-
-    RAISE_IF_HANDLE_NOT_INITIALIZED(self, NULL);
-    RAISE_IF_HANDLE_CLOSED(self, PyExc_HandleClosedError, NULL);
-
-    callback = Py_None;
+    Py_buffer *view;
 
     ctx = PyMem_Malloc(sizeof *ctx);
     if (!ctx) {
@@ -262,31 +254,97 @@ UDP_func_send(UDP *self, PyObject *args)
         return NULL;
     }
 
-    view = &ctx->view[0];
+    ctx->views = ctx->viewsml;
+    view = &ctx->views[0];
 
-    if (!PyArg_ParseTuple(args, "O"PYUV_BYTES"*|O:send", &addr, view, &callback)) {
+    if (PyObject_GetBuffer(data, view, PyBUF_SIMPLE) != 0) {
         PyMem_Free(ctx);
         return NULL;
     }
 
-    if (callback != Py_None && !PyCallable_Check(callback)) {
-        PyErr_SetString(PyExc_TypeError, "a callable or None is required");
-        goto error;
-    }
-
-    if (pyuv_parse_addr_tuple(addr, &ss) < 0) {
-        /* Error is set by the function itself */
-        goto error;
-    }
+    ctx->view_count = 1;
+    ctx->callback = callback;
 
     Py_INCREF(callback);
 
     buf = uv_buf_init(view->buf, view->len);
-    ctx->callback = callback;
-    ctx->view_count = 1;
-    ctx->views = view;
 
-    err = uv_udp_send(&ctx->req, &self->udp_h, &buf, 1, (struct sockaddr *)&ss, (uv_udp_send_cb)on_udp_send);
+    err = uv_udp_send(&ctx->req, &self->udp_h, &buf, 1, addr, (uv_udp_send_cb)on_udp_send);
+    if (err < 0) {
+        RAISE_UV_EXCEPTION(err, PyExc_UDPError);
+        Py_DECREF(callback);
+        PyBuffer_Release(view);
+        PyMem_Free(ctx);
+        return NULL;
+    }
+
+    /* Increase refcount so that object is not removed before the callback is called */
+    Py_INCREF(self);
+
+    Py_RETURN_NONE;
+}
+
+
+static PyObject *
+pyuv__udp_send_sequence(UDP *self, struct sockaddr *addr, PyObject *data, PyObject *callback)
+{
+    int err;
+    udp_send_ctx *ctx;
+    PyObject *data_fast, *item;
+    Py_ssize_t i, j, buf_count;
+
+    data_fast = PySequence_Fast(data, "data must be an iterable");
+    if (data_fast == NULL)
+        return NULL;
+
+    buf_count = PySequence_Fast_GET_SIZE(data_fast);
+    if (buf_count > INT_MAX) {
+        PyErr_SetString(PyExc_ValueError, "iterable is too long");
+        Py_DECREF(data_fast);
+        return NULL;
+    }
+
+    if (buf_count == 0) {
+        PyErr_SetString(PyExc_ValueError, "iterable is empty");
+        Py_DECREF(data_fast);
+        return NULL;
+    }
+
+    ctx = PyMem_Malloc(sizeof *ctx);
+    if (!ctx) {
+        PyErr_NoMemory();
+        Py_DECREF(data_fast);
+        return NULL;
+    }
+
+    ctx->views = ctx->viewsml;
+    if (buf_count > ARRAY_SIZE(ctx->viewsml))
+        ctx->views = PyMem_Malloc(sizeof(Py_buffer) * buf_count);
+    if (!ctx->views) {
+        PyErr_NoMemory();
+        PyMem_Free(ctx);
+        Py_DECREF(data_fast);
+        return NULL;
+    }
+    ctx->view_count = buf_count;
+
+    {
+        uv_buf_t bufs[buf_count];
+
+        for (i = 0; i < buf_count; i++) {
+            item = PySequence_Fast_GET_ITEM(data_fast, i);
+            if (PyObject_GetBuffer(item, &ctx->views[i], PyBUF_SIMPLE) != 0)
+                goto error;
+            bufs[i].base = ctx->views[i].buf;
+            bufs[i].len = ctx->views[i].len;
+        }
+
+        ctx->callback = callback;
+        Py_INCREF(callback);
+
+        err = uv_udp_send(&ctx->req, &self->udp_h, bufs, buf_count, addr, (uv_udp_send_cb)on_udp_send);
+    }
+
     if (err < 0) {
         RAISE_UV_EXCEPTION(err, PyExc_UDPError);
         Py_DECREF(callback);
@@ -299,34 +357,33 @@ UDP_func_send(UDP *self, PyObject *args)
     Py_RETURN_NONE;
 
 error:
-    PyBuffer_Release(view);
+    for (j = 0; j < i; j++)
+        PyBuffer_Release(&ctx->views[j]);
+    if (ctx->views != ctx->viewsml)
+        PyMem_Free(ctx->views);
     PyMem_Free(ctx);
+    Py_XDECREF(data_fast);
     return NULL;
 }
 
 
 static PyObject *
-UDP_func_sendlines(UDP *self, PyObject *args)
+UDP_func_send(UDP *self, PyObject *args)
 {
-    int i, err, buf_count;
+    PyObject *addr, *callback, *data;
     struct sockaddr_storage ss;
-    PyObject *addr, *callback, *seq;
-    Py_buffer *views;
-    uv_buf_t *bufs;
-    udp_send_ctx *ctx;
-
-    callback = Py_None;
-    ctx = NULL;
 
     RAISE_IF_HANDLE_NOT_INITIALIZED(self, NULL);
     RAISE_IF_HANDLE_CLOSED(self, PyExc_HandleClosedError, NULL);
 
-    if (!PyArg_ParseTuple(args, "OO|O:sendlines", &addr, &seq, &callback)) {
+    callback = Py_None;
+
+    if (!PyArg_ParseTuple(args, "OO|O:send", &addr, &data, &callback)) {
         return NULL;
     }
 
     if (callback != Py_None && !PyCallable_Check(callback)) {
-        PyErr_SetString(PyExc_TypeError, "a callable or None is required");
+        PyErr_SetString(PyExc_TypeError, "'callback' must be a callable or None");
         return NULL;
     }
 
@@ -335,49 +392,14 @@ UDP_func_sendlines(UDP *self, PyObject *args)
         return NULL;
     }
 
-    err = pyseq2uvbuf(seq, &views, &bufs, &buf_count);
-    if (err != 0) {
-        /* error is already set */
+    if (PyObject_CheckBuffer(data)) {
+        return pyuv__udp_send_bytes(self, (struct sockaddr*) &ss, data, callback);
+    } else if (!PyUnicode_Check(data) && PySequence_Check(data)) {
+        return pyuv__udp_send_sequence(self, (struct sockaddr*) &ss, data, callback);
+    } else {
+        PyErr_SetString(PyExc_TypeError, "only bytes and sequences are supported");
         return NULL;
     }
-
-    Py_INCREF(callback);
-
-    ctx = PyMem_Malloc(sizeof *ctx);
-    if (!ctx) {
-        PyErr_NoMemory();
-        goto error;
-    }
-
-    ctx->callback = callback;
-    ctx->view_count = buf_count;
-    ctx->views = views;
-
-    err = uv_udp_send(&ctx->req, &self->udp_h, bufs, buf_count, (struct sockaddr *)&ss, (uv_udp_send_cb)on_udp_send);
-
-    /* uv_write copies the uv_buf_t structures, so we can free them now */
-    PyMem_Free(bufs);
-    bufs = NULL;
-
-    if (err < 0) {
-        RAISE_UV_EXCEPTION(err, PyExc_UDPError);
-        goto error;
-    }
-
-    /* Increase refcount so that object is not removed before the callback is called */
-    Py_INCREF(self);
-
-    Py_RETURN_NONE;
-
-error:
-    Py_DECREF(callback);
-    for (i = 0; i < buf_count; i++) {
-        PyBuffer_Release(&views[i]);
-    }
-    PyMem_Free(views);
-    PyMem_Free(bufs);
-    PyMem_Free(ctx);
-    return NULL;
 }
 
 
@@ -650,7 +672,6 @@ UDP_tp_methods[] = {
     { "stop_recv", (PyCFunction)UDP_func_stop_recv, METH_NOARGS, "Stop receiving data." },
     { "try_send", (PyCFunction)UDP_func_try_send, METH_VARARGS, "Try to send data over UDP." },
     { "send", (PyCFunction)UDP_func_send, METH_VARARGS, "Send data over UDP." },
-    { "sendlines", (PyCFunction)UDP_func_sendlines, METH_VARARGS, "Send a sequence of data over UDP." },
     { "getsockname", (PyCFunction)UDP_func_getsockname, METH_NOARGS, "Get local socket information." },
     { "open", (PyCFunction)UDP_func_open, METH_VARARGS, "Open the specified file descriptor and manage it as a UDP handle." },
     { "set_membership", (PyCFunction)UDP_func_set_membership, METH_VARARGS, "Set membership for multicast address." },

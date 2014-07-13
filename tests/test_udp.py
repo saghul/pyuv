@@ -146,7 +146,7 @@ class UDPTestList(TestCase):
         ip, port = ip_port
         data = data.strip()
         self.assertEqual(data, b"PING")
-        self.server.sendlines((ip, port), [b"PONG", linesep])
+        self.server.send((ip, port), [b"PONG", linesep])
 
     def on_client_recv(self, handle, ip_port, flags, data, error):
         self.assertEqual(flags, 0)
@@ -157,7 +157,7 @@ class UDPTestList(TestCase):
         self.server.close(self.on_close)
 
     def timer_cb(self, timer):
-        self.client.sendlines(("127.0.0.1", TEST_PORT), [b"PING", linesep])
+        self.client.send(("127.0.0.1", TEST_PORT), [b"PING", linesep])
         timer.close(self.on_close)
 
     def test_udp_pingpong_list(self):
@@ -189,7 +189,7 @@ class UDPTestListNull(TestCase):
         ip, port = ip_port
         data = data.strip()
         self.assertEqual(data, b"PIN\x00G")
-        self.server.sendlines((ip, port), [b"PONG", linesep])
+        self.server.send((ip, port), [b"PONG", linesep])
 
     def on_client_recv(self, handle, ip_port, flags, data, error):
         self.assertEqual(flags, 0)
@@ -200,7 +200,7 @@ class UDPTestListNull(TestCase):
         self.server.close(self.on_close)
 
     def timer_cb(self, timer):
-        self.client.sendlines(("127.0.0.1", TEST_PORT), [b"PIN\x00G", linesep])
+        self.client.send(("127.0.0.1", TEST_PORT), [b"PIN\x00G", linesep])
         timer.close(self.on_close)
 
     def test_udp_pingpong_list_null(self):
@@ -237,8 +237,8 @@ class UDPTestInvalidData(TestCase):
     def timer_cb(self, timer):
         self.assertRaises(TypeError, self.client.send, ("127.0.0.1", TEST_PORT), object())
         self.assertRaises(TypeError, self.client.send, ("127.0.0.1", TEST_PORT), 1)
-        self.assertRaises(TypeError, self.client.sendlines, ("127.0.0.1", TEST_PORT), object())
-        self.assertRaises(TypeError, self.client.sendlines, ("127.0.0.1", TEST_PORT), 1)
+        self.assertRaises(TypeError, self.client.send, ("127.0.0.1", TEST_PORT), object())
+        self.assertRaises(TypeError, self.client.send, ("127.0.0.1", TEST_PORT), 1)
 
         self.client.close(self.on_close)
         self.server.close(self.on_close)

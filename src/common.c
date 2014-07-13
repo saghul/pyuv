@@ -109,66 +109,6 @@ pyuv_dup_strobj(PyObject *obj)
 }
 
 
-static INLINE int
-pyseq2uvbuf(PyObject *seq, Py_buffer **rviews, uv_buf_t **rbufs, int *rbuf_count)
-{
-    int i, j, buf_count;
-    uv_buf_t *uv_bufs = NULL;
-    Py_buffer *views = NULL;
-    PyObject *data_fast = NULL;
-
-    i = 0;
-    *rviews = NULL;
-    *rbufs = NULL;
-    *rbuf_count = 0;
-
-    if ((data_fast = PySequence_Fast(seq, "argument 1 must be an iterable")) == NULL) {
-        goto error;
-    }
-
-    buf_count = PySequence_Fast_GET_SIZE(data_fast);
-    if (buf_count > INT_MAX) {
-        PyErr_SetString(PyExc_ValueError, "argument 1 is too long");
-        goto error;
-    }
-
-    if (buf_count == 0) {
-        PyErr_SetString(PyExc_ValueError, "argument 1 is empty");
-        goto error;
-    }
-
-    uv_bufs = PyMem_Malloc(sizeof *uv_bufs * buf_count);
-    views = PyMem_Malloc(sizeof *views * buf_count);
-    if (!uv_bufs || !views) {
-        PyErr_NoMemory();
-        goto error;
-    }
-
-    for (i = 0; i < buf_count; i++) {
-        if (!PyArg_Parse(PySequence_Fast_GET_ITEM(data_fast, i), PYUV_BYTES"*;argument 1 must be an iterable of buffer-compatible objects", &views[i])) {
-            goto error;
-        }
-        uv_bufs[i].base = views[i].buf;
-        uv_bufs[i].len = views[i].len;
-    }
-
-    *rviews = views;
-    *rbufs = uv_bufs;
-    *rbuf_count = buf_count;
-    Py_XDECREF(data_fast);
-    return 0;
-
-error:
-    for (j = 0; j < i; j++) {
-        PyBuffer_Release(&views[j]);
-    }
-    PyMem_Free(views);
-    PyMem_Free(uv_bufs);
-    Py_XDECREF(data_fast);
-    return -1;
-}
-
-
 /* parse a Python tuple containing host, port, flowinfo, scope_id into a sockaddr struct */
 static int
 pyuv_parse_addr_tuple(PyObject *addr, struct sockaddr_storage *ss)
