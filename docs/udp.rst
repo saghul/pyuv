@@ -67,28 +67,8 @@
 
         :param int scope_id: Scope ID, used only for IPv6. Defaults to 0.
 
-        :param object data: Data to be sent over the ``UDP`` connection. It can be either
-            a string or any iterable containing strings.
-
-        :param callable callback: Callback to be called after the send operation
-            has been performed.
-
-        Send data over the ``UDP`` connection.
-
-        Callback signature: ``callback(udp_handle, error)``.
-
-    .. py:method:: sendlines((ip, port, [flowinfo, [scope_id]]), seq, [callback])
-
-        :param string ip: IP address where data will be sent.
-
-        :param int port: Port number where data will be sent.
-
-        :param int flowinfo: Flow info, used only for IPv6. Defaults to 0.
-
-        :param int scope_id: Scope ID, used only for IPv6. Defaults to 0.
-
-        :param object seq: Data to be written on the ``UDP`` connection. It can be any iterable object and the same
-            logic is applied for the contained elements as in the ``send`` method.
+        :param object data: Data to be sent over the ``UDP`` connection. It can be any Python object conforming
+            to the buffer interface or a sequence of such objects.
 
         :param callable callback: Callback to be called after the send operation
             has been performed.
