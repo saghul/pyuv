@@ -1,3 +1,26 @@
+Version 0.11.5
+==============
+ - process: fix refcounting bug in StdIO
+ - core: expose Handle and Stream base classes
+ - barrier: Barrier.wait returns a boolean now
+ - process: make Process.spawn more similar with Popen
+ - process: accept bytes and unicode in all arguments
+ - test: add UV_UDP_REUSEADDR test cases
+ - test: add test for UDP.set_multicast_interface
+ - doc: updated documentation
+ - util: add getnameinfo support
+ - util: support service names in getaddrinfo
+ - util: add getrusage()
+ - udp: fix handling empty datagrams
+ - udp: added UDP.try_send function
+ - test: add a missing close() for socket
+ - core: fix refcount bug in func_excepthook()
+ - core: fix access of potentially freed memory
+ - build: add Python 3.4 to tox and remove 3.0-3.2 from classifiers
+ - streams: refactor Stream.write / writelines and Pipe.write2
+ - udp: refactor UDP.send / sendlines
+ - core: raised libuv revision to 817c092 (master branch)
+
 Version 0.11.4
 ==============
  - Adapted to API changes in libuv
