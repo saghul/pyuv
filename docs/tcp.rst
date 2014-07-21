@@ -38,7 +38,7 @@
             incoming connection.
 
         :param int backlog: Indicates the length of the queue of incoming connections. It
-            defaults to 128.
+            defaults to 511.
 
         Start listening for new connections.
 
