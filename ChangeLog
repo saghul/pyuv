@@ -19,6 +19,7 @@ Version 0.11.5
  - build: add Python 3.4 to tox and remove 3.0-3.2 from classifiers
  - streams: refactor Stream.write / writelines and Pipe.write2
  - udp: refactor UDP.send / sendlines
+ - stream: use a default backlog size of 511
  - core: raised libuv revision to 817c092 (master branch)
 
 Version 0.11.4
