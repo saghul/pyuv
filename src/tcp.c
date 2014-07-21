@@ -104,7 +104,7 @@ TCP_func_listen(TCP *self, PyObject *args)
     int err, backlog;
     PyObject *callback, *tmp;
 
-    backlog = 128;
+    backlog = 511;
     tmp = NULL;
 
     RAISE_IF_HANDLE_NOT_INITIALIZED(self, NULL);
