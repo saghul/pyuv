@@ -1,13 +1,13 @@
-"""Tests for Loop.excepthook"""
 
-from common import unittest2, StdBufferIO
-
-import pyuv
 import re
 import sys
+import unittest
+
+from common import StdBufferIO
+import pyuv
 
 
-class ExcepthookTestCase(unittest2.TestCase):
+class ExcepthookTestCase(unittest.TestCase):
     """Base class for excepthook tests"""
 
     def assertOutput(self, regexp):
@@ -15,7 +15,7 @@ class ExcepthookTestCase(unittest2.TestCase):
         match = re.match(regexp, output)
         if match is None:
             self.fail("Output doesn't match %s\n\nOutput:\n-------\n%s"
-                      % (unittest2.util.safe_repr(regexp), output))
+                      % (unittest.util.safe_repr(regexp), output))
 
     def setUp(self):
         super(ExcepthookTestCase, self).setUp()
@@ -151,4 +151,4 @@ class TestExcepthookOverride(TestExcepthookAttribute):
 
 
 if __name__ == '__main__':
-    unittest2.main(verbosity=2)
+    unittest.main(verbosity=2)

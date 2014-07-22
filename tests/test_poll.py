@@ -1,10 +1,12 @@
 
-from common import unittest2, linesep, TestCase
 
 import errno
-import pyuv
 import socket
 import sys
+import unittest
+
+from common import linesep, TestCase
+import pyuv
 
 
 TEST_PORT = 1234
@@ -88,4 +90,4 @@ class PollTest(TestCase):
 
 
 if __name__ == '__main__':
-    unittest2.main(verbosity=2)
+    unittest.main(verbosity=2)

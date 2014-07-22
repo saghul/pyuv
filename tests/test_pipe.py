@@ -1,7 +1,8 @@
 
 import sys
+import unittest
 
-from common import unittest2, linesep, platform_skip, TestCase
+from common import linesep, platform_skip, TestCase
 import pyuv
 
 if sys.platform == 'win32':
@@ -270,4 +271,4 @@ class PipeBytesBind(TestCase):
 
 
 if __name__ == '__main__':
-    unittest2.main(verbosity=2)
+    unittest.main(verbosity=2)

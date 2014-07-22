@@ -1,8 +1,10 @@
 
-from common import unittest2, linesep, platform_skip, TestCase
-import pyuv
 import socket
 import sys
+import unittest
+
+from common import linesep, platform_skip, TestCase
+import pyuv
 
 
 TEST_PORT = 12345
@@ -451,4 +453,4 @@ class UDPTryTest(TestCase):
 
 
 if __name__ == '__main__':
-    unittest2.main(verbosity=2)
+    unittest.main(verbosity=2)

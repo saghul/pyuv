@@ -1,16 +1,18 @@
 
-from common import unittest2, platform_skip, TestCase
-from functools import partial
-
-import pyuv
 import random
 import sys
+import unittest
+
+from functools import partial
+
+from common import platform_skip, TestCase
+import pyuv
+
 
 TEST_PORT = random.randint(2000, 3000)
 TEST_PORT2 = random.randint(2000, 3000)
 TEST_ADDR = ("127.0.0.1", TEST_PORT)
 TEST_ADDR2 = ("127.0.0.1", TEST_PORT2)
-
 
 if sys.platform == 'win32':
     TEST_PIPE = '\\\\.\\pipe\\test-pipe'
@@ -128,4 +130,4 @@ class IPCSendRecvTest(TestCase):
 
 
 if __name__ == '__main__':
-    unittest2.main(verbosity=2)
+    unittest.main(verbosity=2)

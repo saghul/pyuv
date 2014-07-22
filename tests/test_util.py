@@ -1,8 +1,9 @@
 
-from common import unittest2, TestCase
-
-import pyuv
 import socket
+import unittest
+
+from common import TestCase
+import pyuv
 
 
 class UtilTest(TestCase):
@@ -80,4 +81,4 @@ class UtilTest(TestCase):
 
 
 if __name__ == '__main__':
-    unittest2.main(verbosity=2)
+    unittest.main(verbosity=2)

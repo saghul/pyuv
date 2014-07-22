@@ -2,15 +2,10 @@
 import io
 import os
 import sys
+import unittest
+
 sys.path.insert(0, '../')
 import pyuv
-
-
-if sys.version_info < (2, 7) or (0x03000000 <= sys.hexversion < 0x03010000):
-    # py26 or py30
-    import unittest2
-else:
-    import unittest as unittest2
 
 
 if sys.version_info >= (3,):
@@ -21,7 +16,6 @@ if sys.version_info >= (3,):
         if value.__traceback__ is not tb:
             raise value.with_traceback(tb)
         raise value
-
 else:
     linesep = os.linesep
     StdBufferIO = io.BytesIO
@@ -39,7 +33,7 @@ def platform_skip(platform_list):
     def _noop(obj):
         return obj
     if platform in platform_list:
-        return unittest2.skip("Test disabled in the current platform")
+        return unittest.skip("Test disabled in the current platform")
     return _noop
 
 
@@ -66,7 +60,8 @@ class TestLoop(pyuv.Loop):
             reraise(typ, value, tb)
 
 
-class TestCase(unittest2.TestCase):
+class TestCase(unittest.TestCase):
 
     def setUp(self):
         self.loop = TestLoop()
+

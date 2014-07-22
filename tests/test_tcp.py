@@ -3,15 +3,10 @@
 import os
 import socket
 import sys
+import unittest
 
-from common import unittest2, linesep, platform_skip, TestCase
+from common import linesep, platform_skip, TestCase
 import pyuv
-
-try:
-    memoryview
-except NameError:
-    # Fix for Python 2.6
-    memoryview = str
 
 
 TEST_PORT = 1234
@@ -525,4 +520,4 @@ class TCPTestFileno(TestCase):
 
 
 if __name__ == '__main__':
-    unittest2.main(verbosity=2)
+    unittest.main(verbosity=2)

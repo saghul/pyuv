@@ -57,7 +57,7 @@ def prepare_windows_env(env):
     if env.get('PYTHON'):
         return  # Already manually set by user.
 
-    if (2, 6) <= sys.version_info[:2] <= (2, 7):
+    if sys.version_info[:2] == (2, 7):
         env['PYTHON'] = sys.executable
         return  # The current executable is fine.
 
@@ -71,25 +71,23 @@ def prepare_windows_env(env):
         sub = subprocess.Popen(cmd, stdout=subprocess.PIPE)
         stdout, _ = sub.communicate()
         version = ast.literal_eval(stdout.decode('utf-8').strip())
-        if (2, 6) <= version <= (2, 7):
+        if version == (2, 7):
             return  # Python on PATH is fine
     except OSError:
         pass
 
     # Check default install locations
-    for v in ('26', '27'):
-        path = os.path.join('%SYSTEMDRIVE%', 'Python%s' % v, 'python.exe')
-        path = os.path.expandvars(path)
-        if os.path.isfile(path):
-            log.info('Using "%s" to build libuv...' % path)
-            env['PYTHON'] = path
-            return
-
-    raise DistutilsError('No appropriate Python version found. An '
-                         'installation of 2.6 or 2.7 is required to '
-                         'build libuv. You can set the environment '
-                         'variable "PYTHON" to point to a custom '
-                         'installation location.')
+    path = os.path.join('%SYSTEMDRIVE%', 'Python27', 'python.exe')
+    path = os.path.expandvars(path)
+    if os.path.isfile(path):
+        log.info('Using "%s" to build libuv...' % path)
+        env['PYTHON'] = path
+    else:
+        raise DistutilsError('No appropriate Python version found. An '
+                             'installation of 2.7 is required to '
+                             'build libuv. You can set the environment '
+                             'variable "PYTHON" to point to a custom '
+                             'installation location.')
 
 
 class libuv_build_ext(build_ext):

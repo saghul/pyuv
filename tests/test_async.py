@@ -1,8 +1,9 @@
 
 import threading
 import time
+import unittest
 
-from common import unittest2, TestCase
+from common import TestCase
 import pyuv
 
 
@@ -63,4 +64,4 @@ class AsyncTest(TestCase):
 
 
 if __name__ == '__main__':
-    unittest2.main(verbosity=2)
+    unittest.main(verbosity=2)

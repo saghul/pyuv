@@ -3,8 +3,9 @@ import os
 import signal
 import time
 import threading
+import unittest
 
-from common import unittest2, platform_skip, TestCase
+from common import platform_skip, TestCase
 import pyuv
 
 
@@ -36,7 +37,7 @@ class SignalTest(TestCase):
 
 
 @platform_skip(["win32"])
-class MultiLoopSignalTest(unittest2.TestCase):
+class MultiLoopSignalTest(unittest.TestCase):
 
     def setUp(self):
         self.lock = threading.Lock()
@@ -65,4 +66,4 @@ class MultiLoopSignalTest(unittest2.TestCase):
 
 
 if __name__ == '__main__':
-    unittest2.main(verbosity=2)
+    unittest.main(verbosity=2)

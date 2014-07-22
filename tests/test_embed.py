@@ -1,11 +1,12 @@
 
-from common import unittest2
-from threading import Thread
-
-import pyuv
-
 import errno
 import select
+import unittest
+
+from threading import Thread
+
+import common; common
+import pyuv
 
 try:
     poller = select.epoll
@@ -18,7 +19,7 @@ except AttributeError:
         poller = None
 
 
-class EmbedTest(unittest2.TestCase):
+class EmbedTest(unittest.TestCase):
 
     def embed_cb(self, handle):
         self.loop.run(pyuv.UV_RUN_ONCE)
@@ -77,5 +78,5 @@ class EmbedTest(unittest2.TestCase):
 
 
 if __name__ == '__main__':
-    unittest2.main(verbosity=2)
+    unittest.main(verbosity=2)
 

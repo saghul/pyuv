@@ -3,8 +3,9 @@ import functools
 import sys
 import threading
 import time
+import unittest
 
-from common import unittest2, TestCase
+from common import TestCase
 import pyuv
 
 
@@ -64,7 +65,7 @@ class ThreadPoolTest(TestCase):
         self.loop.run()
 
 
-class ThreadPoolMultiLoopTest(unittest2.TestCase):
+class ThreadPoolMultiLoopTest(unittest.TestCase):
 
     def setUp(self):
         self.pool_cb_called = 0
@@ -90,5 +91,5 @@ class ThreadPoolMultiLoopTest(unittest2.TestCase):
 
 
 if __name__ == '__main__':
-    unittest2.main(verbosity=2)
+    unittest.main(verbosity=2)
 

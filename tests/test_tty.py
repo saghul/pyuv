@@ -1,7 +1,8 @@
 
 import sys
+import unittest
 
-from common import unittest2, platform_skip, TestCase
+from common import platform_skip, TestCase
 import pyuv
 
 
@@ -20,4 +21,4 @@ class TYTest(TestCase):
 
 
 if __name__ == '__main__':
-    unittest2.main(verbosity=2)
+    unittest.main(verbosity=2)

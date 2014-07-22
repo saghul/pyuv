@@ -2,9 +2,11 @@
 import os
 import shutil
 import stat
+import unittest
 
-from common import unittest2, TestCase
+from common import TestCase
 import pyuv
+
 
 # Make stat return integers
 os.stat_float_times(False)
@@ -92,7 +94,7 @@ class FSTestLstat(FileTestCase):
             pyuv.fs.symlink(self.loop, TEST_FILE, TEST_LINK, 0)
         except pyuv.error.FSError as e:
             if e.args[0] == pyuv.errno.UV_EPERM:
-                raise unittest2.SkipTest("Symlinks not permitted")
+                raise unittest.SkipTest("Symlinks not permitted")
 
     def tearDown(self):
         try:
@@ -357,7 +359,7 @@ class FSTestSymlink(FileTestCase):
         pyuv.fs.symlink(self.loop, TEST_FILE, TEST_LINK, 0, self.symlink_cb)
         self.loop.run()
         if self.errorno == pyuv.errno.UV_EPERM:
-            raise unittest2.SkipTest("Symlinks not permitted")
+            raise unittest.SkipTest("Symlinks not permitted")
         self.assertEqual(self.errorno, None)
         self.assertTrue(os.stat(TEST_LINK).st_mode & stat.S_IFLNK)
 
@@ -366,7 +368,7 @@ class FSTestSymlink(FileTestCase):
             pyuv.fs.symlink(self.loop, TEST_FILE, TEST_LINK, 0)
         except pyuv.error.FSError as e:
             if e.args[0] == pyuv.errno.UV_EPERM:
-                raise unittest2.SkipTest("Symlinks not permitted")
+                raise unittest.SkipTest("Symlinks not permitted")
         self.assertTrue(os.stat(TEST_LINK).st_mode & stat.S_IFLNK)
 
 
@@ -378,7 +380,7 @@ class FSTestReadlink(FileTestCase):
             pyuv.fs.symlink(self.loop, TEST_FILE, TEST_LINK, 0)
         except pyuv.error.FSError as e:
             if e.args[0] == pyuv.errno.UV_EPERM:
-                raise unittest2.SkipTest("Symlinks not permitted")
+                raise unittest.SkipTest("Symlinks not permitted")
 
     def tearDown(self):
         try:
@@ -946,4 +948,4 @@ class FSPollTest(TestCase):
 
 
 if __name__ == '__main__':
-    unittest2.main(verbosity=2)
+    unittest.main(verbosity=2)

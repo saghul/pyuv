@@ -1,5 +1,7 @@
 
-from common import unittest2, TestCase
+import unittest
+
+from common import TestCase
 import pyuv
 
 
@@ -25,4 +27,4 @@ class CheckTest(TestCase):
 
 
 if __name__ == '__main__':
-    unittest2.main(verbosity=2)
+    unittest.main(verbosity=2)
