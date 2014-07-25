@@ -144,7 +144,7 @@ Unless stated otherwise on-file pyuv uses the MIT license, check LICENSE file.
 Python versions
 ===============
 
-Python 2.6, 2.7, 3.3 and 3.4 versions are supported.
+Python 2.7, 3.3 and 3.4 versions are supported.
 
 
 Contributing
