@@ -1,6 +1,6 @@
 
 static void
-on_tcp_connection(uv_stream_t *handle, int status)
+pyuv__tcp_listen_cb(uv_stream_t *handle, int status)
 {
     PyGILState_STATE gstate = PyGILState_Ensure();
     TCP *self;
@@ -33,7 +33,7 @@ on_tcp_connection(uv_stream_t *handle, int status)
 
 
 static void
-on_tcp_client_connection(uv_connect_t *req, int status)
+pyuv__tcp_connect_cb(uv_connect_t *req, int status)
 {
     PyGILState_STATE gstate = PyGILState_Ensure();
     TCP *self;
@@ -124,7 +124,7 @@ TCP_func_listen(TCP *self, PyObject *args)
         return NULL;
     }
 
-    err = uv_listen((uv_stream_t *)&self->tcp_h, backlog, on_tcp_connection);
+    err = uv_listen((uv_stream_t *)&self->tcp_h, backlog, pyuv__tcp_listen_cb);
     if (err < 0) {
         RAISE_UV_EXCEPTION(err, PyExc_TCPError);
         return NULL;
@@ -202,7 +202,7 @@ TCP_func_connect(TCP *self, PyObject *args)
 
     connect_req->data = callback;
 
-    err = uv_tcp_connect(connect_req, &self->tcp_h, (struct sockaddr *)&ss, on_tcp_client_connection);
+    err = uv_tcp_connect(connect_req, &self->tcp_h, (struct sockaddr *)&ss, pyuv__tcp_connect_cb);
     if (err < 0) {
         RAISE_UV_EXCEPTION(err, PyExc_TCPError);
         goto error;

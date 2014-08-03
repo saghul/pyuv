@@ -1,6 +1,6 @@
 
 static void
-on_pipe_connection(uv_stream_t* handle, int status)
+pyuv__pipe_listen_cb(uv_stream_t* handle, int status)
 {
     PyGILState_STATE gstate = PyGILState_Ensure();
     Pipe *self;
@@ -32,7 +32,7 @@ on_pipe_connection(uv_stream_t* handle, int status)
 
 
 static void
-on_pipe_client_connection(uv_connect_t *req, int status)
+pyuv__pipe_connect_cb(uv_connect_t *req, int status)
 {
     PyGILState_STATE gstate = PyGILState_Ensure();
     Pipe *self;
@@ -118,7 +118,7 @@ Pipe_func_listen(Pipe *self, PyObject *args)
         return NULL;
     }
 
-    err = uv_listen((uv_stream_t *)&self->pipe_h, backlog, on_pipe_connection);
+    err = uv_listen((uv_stream_t *)&self->pipe_h, backlog, pyuv__pipe_listen_cb);
     if (err < 0) {
         RAISE_UV_EXCEPTION(err, PyExc_PipeError);
         return NULL;
@@ -198,7 +198,7 @@ Pipe_func_connect(Pipe *self, PyObject *args)
 
     connect_req->data = callback;
 
-    uv_pipe_connect(connect_req, &self->pipe_h, name, on_pipe_client_connection);
+    uv_pipe_connect(connect_req, &self->pipe_h, name, pyuv__pipe_connect_cb);
 
     /* Increase refcount so that object is not removed before the callback is called */
     Py_INCREF(self);

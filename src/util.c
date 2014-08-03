@@ -196,7 +196,7 @@ Util_func_cpu_info(PyObject *obj)
 
 
 static void
-getaddrinfo_cb(uv_getaddrinfo_t* req, int status, struct addrinfo* res)
+pyuv__getaddrinfo_cb(uv_getaddrinfo_t* req, int status, struct addrinfo* res)
 {
     PyGILState_STATE gstate = PyGILState_Ensure();
     struct addrinfo *ptr;
@@ -269,7 +269,7 @@ callback:
 
 
 static void
-getnameinfo_cb(uv_getnameinfo_t* req, int status, const char *hostname, const char *service)
+pyuv__getnameinfo_cb(uv_getnameinfo_t* req, int status, const char *hostname, const char *service)
 {
     PyGILState_STATE gstate = PyGILState_Ensure();
     Loop *loop;
@@ -393,7 +393,7 @@ Util_func_getaddrinfo(PyObject *obj, PyObject *args, PyObject *kwargs)
     hints.ai_protocol = protocol;
     hints.ai_flags = flags;
 
-    err = uv_getaddrinfo(loop->uv_loop, &gai_req->req, &getaddrinfo_cb, host_str, service_str, &hints);
+    err = uv_getaddrinfo(loop->uv_loop, &gai_req->req, &pyuv__getaddrinfo_cb, host_str, service_str, &hints);
     if (err < 0) {
         RAISE_UV_EXCEPTION(err, PyExc_UVError);
         goto error;
@@ -447,7 +447,7 @@ Util_func_getnameinfo(PyObject *obj, PyObject *args, PyObject *kwargs)
         return NULL;
     }
 
-    err = uv_getnameinfo(loop->uv_loop, &gni_req->req, &getnameinfo_cb, (struct sockaddr*) &ss, flags);
+    err = uv_getnameinfo(loop->uv_loop, &gni_req->req, &pyuv__getnameinfo_cb, (struct sockaddr*) &ss, flags);
     if (err < 0) {
         RAISE_UV_EXCEPTION(err, PyExc_UVError);
         Py_XDECREF(gni_req);
@@ -532,7 +532,7 @@ Util_methods[] = {
 #endif
 
 static int
-drain_poll_fd(uv_os_sock_t fd)
+pyuv__drain_poll_fd(uv_os_sock_t fd)
 {
     static char buffer[1024];
     int r;
@@ -553,7 +553,7 @@ drain_poll_fd(uv_os_sock_t fd)
 
 
 static void
-check_signals(uv_poll_t *handle, int status, int events)
+pyuv__check_signals(uv_poll_t *handle, int status, int events)
 {
     PyGILState_STATE gstate = PyGILState_Ensure();
     SignalChecker *self;
@@ -567,7 +567,7 @@ check_signals(uv_poll_t *handle, int status, int events)
     }
 
     /* Drain the fd */
-    if (drain_poll_fd(self->fd) != 0) {
+    if (pyuv__drain_poll_fd(self->fd) != 0) {
         uv_poll_stop(handle);
     }
 
@@ -591,7 +591,7 @@ SignalChecker_func_start(SignalChecker *self)
     RAISE_IF_HANDLE_NOT_INITIALIZED(self, NULL);
     RAISE_IF_HANDLE_CLOSED(self, PyExc_HandleClosedError, NULL);
 
-    err = uv_poll_start(&self->poll_h, UV_READABLE, check_signals);
+    err = uv_poll_start(&self->poll_h, UV_READABLE, pyuv__check_signals);
     if (err < 0) {
         RAISE_UV_EXCEPTION(err, PyExc_UVError);
         return NULL;

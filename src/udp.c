@@ -9,7 +9,7 @@ typedef struct {
 
 
 static void
-on_udp_read(uv_udp_t* handle, int nread, const uv_buf_t* buf, struct sockaddr* addr, unsigned flags)
+pyuv__udp_recv_cd(uv_udp_t* handle, int nread, const uv_buf_t* buf, struct sockaddr* addr, unsigned flags)
 {
     PyGILState_STATE gstate = PyGILState_Ensure();
     Loop *loop;
@@ -68,7 +68,7 @@ done:
 
 
 static void
-on_udp_send(uv_udp_send_t* req, int status)
+pyuv__udp_send_cb(uv_udp_send_t* req, int status)
 {
     PyGILState_STATE gstate = PyGILState_Ensure();
     int i;
@@ -165,7 +165,7 @@ UDP_func_start_recv(UDP *self, PyObject *args)
         return NULL;
     }
 
-    err = uv_udp_recv_start(&self->udp_h, (uv_alloc_cb)on_alloc, (uv_udp_recv_cb)on_udp_read);
+    err = uv_udp_recv_start(&self->udp_h, (uv_alloc_cb)pyuv__alloc_cb, (uv_udp_recv_cb)pyuv__udp_recv_cd);
     if (err < 0) {
         RAISE_UV_EXCEPTION(err, PyExc_UDPError);
         return NULL;
@@ -269,7 +269,7 @@ pyuv__udp_send_bytes(UDP *self, struct sockaddr *addr, PyObject *data, PyObject 
 
     buf = uv_buf_init(view->buf, view->len);
 
-    err = uv_udp_send(&ctx->req, &self->udp_h, &buf, 1, addr, (uv_udp_send_cb)on_udp_send);
+    err = uv_udp_send(&ctx->req, &self->udp_h, &buf, 1, addr, (uv_udp_send_cb)pyuv__udp_send_cb);
     if (err < 0) {
         RAISE_UV_EXCEPTION(err, PyExc_UDPError);
         Py_DECREF(callback);
@@ -342,7 +342,7 @@ pyuv__udp_send_sequence(UDP *self, struct sockaddr *addr, PyObject *data, PyObje
         ctx->callback = callback;
         Py_INCREF(callback);
 
-        err = uv_udp_send(&ctx->req, &self->udp_h, bufs, buf_count, addr, (uv_udp_send_cb)on_udp_send);
+        err = uv_udp_send(&ctx->req, &self->udp_h, bufs, buf_count, addr, (uv_udp_send_cb)pyuv__udp_send_cb);
     }
 
     if (err < 0) {

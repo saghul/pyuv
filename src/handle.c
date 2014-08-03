@@ -41,7 +41,7 @@ resurrect_object(PyObject *self)
 
 
 static void
-on_handle_close(uv_handle_t *handle)
+pyuv__handle_close_cb(uv_handle_t *handle)
 {
     PyGILState_STATE gstate = PyGILState_Ensure();
     Handle *self;
@@ -77,7 +77,7 @@ on_handle_close(uv_handle_t *handle)
 
 
 static void
-on_handle_dealloc_close(uv_handle_t *handle)
+pyuv__handle_dealloc_close_cb(uv_handle_t *handle)
 {
     PyGILState_STATE gstate = PyGILState_Ensure();
     Handle *self;
@@ -128,7 +128,7 @@ Handle_func_close(Handle *self, PyObject *args)
     /* Increase refcount so that object is not removed before the callback is called */
     Py_INCREF(self);
 
-    uv_close(self->uv_handle, on_handle_close);
+    uv_close(self->uv_handle, pyuv__handle_close_cb);
 
     Py_RETURN_NONE;
 }
@@ -228,7 +228,7 @@ Handle_tp_dealloc(Handle *self)
 {
     ASSERT(self->uv_handle);
     if (self->initialized && !uv_is_closing(self->uv_handle)) {
-        uv_close(self->uv_handle, on_handle_dealloc_close);
+        uv_close(self->uv_handle, pyuv__handle_dealloc_close_cb);
         ASSERT(uv_is_closing(self->uv_handle));
         /* resurrect the Python object until the close callback is called */
         Py_INCREF(self);

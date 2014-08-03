@@ -18,7 +18,7 @@ typedef struct {
 
 
 static void
-on_stream_shutdown(uv_shutdown_t* req, int status)
+pyuv__stream_shutdown_cb(uv_shutdown_t* req, int status)
 {
     PyGILState_STATE gstate = PyGILState_Ensure();
     stream_shutdown_ctx *ctx;
@@ -55,7 +55,7 @@ on_stream_shutdown(uv_shutdown_t* req, int status)
 
 
 static void
-on_stream_read(uv_stream_t* handle, int nread, const uv_buf_t* buf)
+pyuv__stream_read_cb(uv_stream_t* handle, int nread, const uv_buf_t* buf)
 {
     PyGILState_STATE gstate = PyGILState_Ensure();
     Loop *loop;
@@ -100,7 +100,7 @@ on_stream_read(uv_stream_t* handle, int nread, const uv_buf_t* buf)
 
 
 static void
-on_stream_write(uv_write_t* req, int status)
+pyuv__stream_write_cb(uv_write_t* req, int status)
 {
     PyGILState_STATE gstate = PyGILState_Ensure();
     int i;
@@ -174,7 +174,7 @@ Stream_func_shutdown(Stream *self, PyObject *args)
     ctx->obj = self;
     ctx->callback = callback;
 
-    err = uv_shutdown(&ctx->req, (uv_stream_t *)UV_HANDLE(self), on_stream_shutdown);
+    err = uv_shutdown(&ctx->req, (uv_stream_t *)UV_HANDLE(self), pyuv__stream_shutdown_cb);
     if (err < 0) {
         RAISE_STREAM_EXCEPTION(err, UV_HANDLE(self));
         goto error;
@@ -212,7 +212,7 @@ Stream_func_start_read(Stream *self, PyObject *args)
         return NULL;
     }
 
-    err = uv_read_start((uv_stream_t *)UV_HANDLE(self), (uv_alloc_cb)on_alloc, (uv_read_cb)on_stream_read);
+    err = uv_read_start((uv_stream_t *)UV_HANDLE(self), (uv_alloc_cb)pyuv__alloc_cb, (uv_read_cb)pyuv__stream_read_cb);
     if (err < 0) {
         RAISE_STREAM_EXCEPTION(err, UV_HANDLE(self));
         return NULL;
@@ -312,9 +312,9 @@ pyuv__stream_write_bytes(Stream *self, PyObject *data, PyObject *callback, PyObj
     buf = uv_buf_init(view->buf, view->len);
     if (send_handle != NULL) {
         ASSERT(UV_HANDLE(self)->type == UV_NAMED_PIPE);
-        err = uv_write2(&ctx->req, (uv_stream_t *)UV_HANDLE(self), &buf, 1, (uv_stream_t *)UV_HANDLE(send_handle), on_stream_write);
+        err = uv_write2(&ctx->req, (uv_stream_t *)UV_HANDLE(self), &buf, 1, (uv_stream_t *)UV_HANDLE(send_handle), pyuv__stream_write_cb);
     } else {
-        err = uv_write(&ctx->req, (uv_stream_t *)UV_HANDLE(self), &buf, 1, on_stream_write);
+        err = uv_write(&ctx->req, (uv_stream_t *)UV_HANDLE(self), &buf, 1, pyuv__stream_write_cb);
     }
 
     if (err < 0) {
@@ -396,9 +396,9 @@ pyuv__stream_write_sequence(Stream *self, PyObject *data, PyObject *callback, Py
 
         if (send_handle != NULL) {
             ASSERT(UV_HANDLE(self)->type == UV_NAMED_PIPE);
-            err = uv_write2(&ctx->req, (uv_stream_t *)UV_HANDLE(self), bufs, buf_count, (uv_stream_t *)UV_HANDLE(send_handle), on_stream_write);
+            err = uv_write2(&ctx->req, (uv_stream_t *)UV_HANDLE(self), bufs, buf_count, (uv_stream_t *)UV_HANDLE(send_handle), pyuv__stream_write_cb);
         } else {
-            err = uv_write(&ctx->req, (uv_stream_t *)UV_HANDLE(self), bufs, buf_count, on_stream_write);
+            err = uv_write(&ctx->req, (uv_stream_t *)UV_HANDLE(self), bufs, buf_count, pyuv__stream_write_cb);
         }
     }
 

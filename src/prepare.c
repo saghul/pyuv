@@ -1,6 +1,6 @@
 
 static void
-on_prepare_callback(uv_prepare_t *handle)
+pyuv__prepare_cb(uv_prepare_t *handle)
 {
     PyGILState_STATE gstate = PyGILState_Ensure();
     Prepare *self;
@@ -43,7 +43,7 @@ Prepare_func_start(Prepare *self, PyObject *args)
         return NULL;
     }
 
-    err = uv_prepare_start(&self->prepare_h, on_prepare_callback);
+    err = uv_prepare_start(&self->prepare_h, pyuv__prepare_cb);
     if (err < 0) {
         RAISE_UV_EXCEPTION(err, PyExc_PrepareError);
         return NULL;

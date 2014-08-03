@@ -1,6 +1,6 @@
 
 static void
-on_async_callback(uv_async_t *handle)
+pyuv__async_cb(uv_async_t *handle)
 {
     PyGILState_STATE gstate = PyGILState_Ensure();
     Async *self;
@@ -65,7 +65,7 @@ Async_tp_init(Async *self, PyObject *args, PyObject *kwargs)
         return -1;
     }
 
-    err = uv_async_init(loop->uv_loop, &self->async_h, on_async_callback);
+    err = uv_async_init(loop->uv_loop, &self->async_h, pyuv__async_cb);
     if (err != 0) {
         RAISE_UV_EXCEPTION(err, PyExc_AsyncError);
         return -1;

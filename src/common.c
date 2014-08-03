@@ -258,7 +258,7 @@ handle_uncaught_exception(Loop *loop)
 
 
 static void
-on_alloc(uv_handle_t* handle, size_t suggested_size, uv_buf_t *buf)
+pyuv__alloc_cb(uv_handle_t* handle, size_t suggested_size, uv_buf_t *buf)
 {
     Loop *loop;
     loop = handle->loop->data;

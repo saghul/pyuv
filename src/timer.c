@@ -1,6 +1,6 @@
 
 static void
-on_timer_callback(uv_timer_t *handle)
+pyuv__timer_cb(uv_timer_t *handle)
 {
     PyGILState_STATE gstate = PyGILState_Ensure();
     Timer *self;
@@ -56,7 +56,7 @@ Timer_func_start(Timer *self, PyObject *args, PyObject *kwargs)
         return NULL;
     }
 
-    err = uv_timer_start(&self->timer_h, on_timer_callback, (uint64_t)(timeout * 1000), (uint64_t)(repeat * 1000));
+    err = uv_timer_start(&self->timer_h, pyuv__timer_cb, (uint64_t)(timeout * 1000), (uint64_t)(repeat * 1000));
     if (err < 0) {
         RAISE_UV_EXCEPTION(err, PyExc_TimerError);
         return NULL;

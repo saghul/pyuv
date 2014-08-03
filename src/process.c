@@ -185,8 +185,9 @@ static PyTypeObject StdIOType = {
         }                                                                           \
     } while(0)                                                                      \
 
+
 static void
-on_process_exit(uv_process_t *handle, int64_t exit_status, int term_signal)
+pyuv__process_exit_cb(uv_process_t *handle, int64_t exit_status, int term_signal)
 {
     PyGILState_STATE gstate = PyGILState_Ensure();
     Process *self;
@@ -259,7 +260,7 @@ Process_func_spawn(Process *self, PyObject *args, PyObject *kwargs)
     options.uid = uid;
     options.gid = gid;
     options.flags = flags;
-    options.exit_cb = on_process_exit;
+    options.exit_cb = pyuv__process_exit_cb;
 
     /* process args */
 

@@ -39,7 +39,7 @@ static PyModuleDef pyuv_module = {
 /* borrowed from pyev */
 #ifdef PYUV_WINDOWS
 static int
-pyuv_setmaxstdio(void)
+pyuv__setmaxstdio(void)
 {
     if (_setmaxstdio(PYUV_MAXSTDIO) != PYUV_MAXSTDIO) {
         if (errno) {
@@ -71,7 +71,7 @@ init_pyuv(void)
     PyEval_InitThreads();
 
 #ifdef PYUV_WINDOWS
-    if (pyuv_setmaxstdio()) {
+    if (pyuv__setmaxstdio()) {
         return NULL;
     }
 #endif

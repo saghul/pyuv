@@ -131,7 +131,7 @@ Loop_func_get_timeout(Loop *self)
 
 
 static void
-threadpool_work_cb(uv_work_t *req)
+pyuv__tp_work_cb(uv_work_t *req)
 {
     PyGILState_STATE gstate = PyGILState_Ensure();
     WorkRequest *work_req;
@@ -151,7 +151,7 @@ threadpool_work_cb(uv_work_t *req)
 }
 
 static void
-threadpool_done_cb(uv_work_t *req, int status)
+pyuv__tp_done_cb(uv_work_t *req, int status)
 {
     PyGILState_STATE gstate = PyGILState_Ensure();
     WorkRequest *work_req;
@@ -214,7 +214,7 @@ Loop_func_queue_work(Loop *self, PyObject *args)
         return NULL;
     }
 
-    err = uv_queue_work(self->uv_loop, &work_req->req, threadpool_work_cb, threadpool_done_cb);
+    err = uv_queue_work(self->uv_loop, &work_req->req, pyuv__tp_work_cb, pyuv__tp_done_cb);
     if (err < 0) {
         RAISE_UV_EXCEPTION(err, PyExc_Exception);
         goto error;
@@ -444,5 +444,4 @@ static PyTypeObject LoopType = {
     0,                                                              /*tp_alloc*/
     Loop_tp_new,                                                    /*tp_new*/
 };
-
 

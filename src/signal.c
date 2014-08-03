@@ -1,6 +1,6 @@
 
 static void
-on_signal_callback(uv_signal_t *handle, int signum)
+pyuv__signal_cb(uv_signal_t *handle, int signum)
 {
     PyGILState_STATE gstate = PyGILState_Ensure();
     Signal *self;
@@ -44,7 +44,7 @@ Signal_func_start(Signal *self, PyObject *args)
         return NULL;
     }
 
-    err = uv_signal_start(&self->signal_h, (uv_signal_cb)on_signal_callback, signum);
+    err = uv_signal_start(&self->signal_h, (uv_signal_cb)pyuv__signal_cb, signum);
     if (err < 0) {
         RAISE_UV_EXCEPTION(err, PyExc_SignalError);
         return NULL;

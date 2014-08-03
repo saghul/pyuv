@@ -1,6 +1,6 @@
 
 static void
-on_poll_callback(uv_poll_t *handle, int status, int events)
+pyuv__poll_cb(uv_poll_t *handle, int status, int events)
 {
     PyGILState_STATE gstate = PyGILState_Ensure();
     Poll *self;
@@ -54,7 +54,7 @@ Poll_func_start(Poll *self, PyObject *args)
         return NULL;
     }
 
-    err = uv_poll_start(&self->poll_h, events, on_poll_callback);
+    err = uv_poll_start(&self->poll_h, events, pyuv__poll_cb);
     if (err < 0) {
         RAISE_UV_EXCEPTION(err, PyExc_PollError);
         return NULL;

@@ -1,6 +1,6 @@
 
 static void
-on_check_callback(uv_check_t *handle)
+pyuv__check_cb(uv_check_t *handle)
 {
     PyGILState_STATE gstate = PyGILState_Ensure();
     Check *self;
@@ -43,7 +43,7 @@ Check_func_start(Check *self, PyObject *args)
         return NULL;
     }
 
-    err = uv_check_start(&self->check_h, on_check_callback);
+    err = uv_check_start(&self->check_h, pyuv__check_cb);
     if (err < 0) {
         RAISE_UV_EXCEPTION(err, PyExc_CheckError);
         return NULL;

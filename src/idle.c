@@ -1,6 +1,6 @@
 
 static void
-on_idle_callback(uv_idle_t *handle)
+pyuv__idle_cb(uv_idle_t *handle)
 {
     PyGILState_STATE gstate = PyGILState_Ensure();
     Idle *self;
@@ -43,7 +43,7 @@ Idle_func_start(Idle *self, PyObject *args)
         return NULL;
     }
 
-    err = uv_idle_start(&self->idle_h, on_idle_callback);
+    err = uv_idle_start(&self->idle_h, pyuv__idle_cb);
     if (err < 0) {
         RAISE_UV_EXCEPTION(err, PyExc_IdleError);
         return NULL;
