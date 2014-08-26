@@ -150,5 +150,17 @@ class TestExcepthookOverride(TestExcepthookAttribute):
         return LoopOverride()
 
 
+class TestExcepthookIgnore(ExcepthookTestCase):
+
+    def make_loop(self):
+        return pyuv.Loop()
+
+    def test_ignore_excepthook(self):
+        self.setup_idle(RuntimeError("Boom!"))
+        self.loop.excepthook = lambda *args: None
+        self.loop.run()
+        self.assertOutput("(?s)^$")
+
+
 if __name__ == '__main__':
     unittest.main(verbosity=2)
