@@ -1,12 +1,5 @@
 
-static Loop *default_loop = NULL;
-
-
-static void
-_loop_cleanup(void)
-{
-    Py_XDECREF(default_loop);
-}
+static PyObject *default_loop = NULL;
 
 
 static int
@@ -45,26 +38,28 @@ new_loop(PyTypeObject *type, PyObject *args, PyObject *kwargs, int is_default)
 
     if (is_default) {
         if (!default_loop) {
-            default_loop = (Loop *)PyType_GenericNew(type, args, kwargs);
+            default_loop = PyType_GenericNew(type, args, kwargs);
             if (!default_loop) {
                 return NULL;
             }
-            if (init_loop(default_loop, True) != 0) {
+            if (init_loop((Loop *)default_loop, True) != 0) {
+                Py_DECREF(default_loop);
+                default_loop = NULL;
                 return NULL;
             }
-            Py_AtExit(_loop_cleanup);
         }
         Py_INCREF(default_loop);
-        return (PyObject *)default_loop;
+        return default_loop;
     } else {
-        Loop *self = (Loop *)PyType_GenericNew(type, args, kwargs);
+        PyObject *self = PyType_GenericNew(type, args, kwargs);
         if (!self) {
             return NULL;
         }
-        if (init_loop(self, False) != 0) {
+        if (init_loop((Loop *)self, False) != 0) {
+            Py_DECREF(self);
             return NULL;
         }
-        return (PyObject *)self;
+        return self;
     }
 }
 
@@ -251,8 +246,7 @@ Loop_func_excepthook(Loop *self, PyObject *args)
 static PyObject *
 Loop_func_default_loop(PyObject *cls)
 {
-    UNUSED_ARG(cls);
-    return new_loop(&LoopType, NULL, NULL, 1);
+    return new_loop((PyTypeObject *)cls, NULL, NULL, 1);
 }
 
 
@@ -336,7 +330,7 @@ Loop_tp_dealloc(Loop *self)
     if (self->weakreflist != NULL) {
         PyObject_ClearWeakRefs((PyObject *)self);
     }
-    Loop_tp_clear(self);
+    Py_TYPE(self)->tp_clear((PyObject *)self);
     Py_TYPE(self)->tp_free((PyObject *)self);
 }
 
