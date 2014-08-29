@@ -455,16 +455,24 @@ Stream_func_write(Stream *self, PyObject *args)
 
 
 static PyObject *
-Stream_func__fileno(Stream *self)
+Stream_func_fileno(Stream *self)
 {
+    int err;
+    uv_os_fd_t fd;
+
     RAISE_IF_HANDLE_NOT_INITIALIZED(self, NULL);
     RAISE_IF_HANDLE_CLOSED(self, PyExc_HandleClosedError, NULL);
 
-#ifdef PYUV_WINDOWS
-    return PyInt_FromLong(-1);
-#else
-    return PyInt_FromLong(((uv_stream_t *)UV_HANDLE(self))->io_watcher.fd);
-#endif
+    err = uv_fileno(UV_HANDLE(self), &fd);
+    if (err < 0) {
+        RAISE_STREAM_EXCEPTION(err, UV_HANDLE(self));
+        return NULL;
+    }
+
+    /* us_os_fd_t is a HANDLE on Windows which is a 64-bit data type but which
+     * is guaranteed to contain only values < 2^24.
+     * For more information, see: http://www.viva64.com/en/k/0005/ */
+    return PyInt_FromLong((long) fd);
 }
 
 
@@ -535,7 +543,7 @@ Stream_tp_methods[] = {
     { "write", (PyCFunction)Stream_func_write, METH_VARARGS, "Write data on the stream." },
     { "start_read", (PyCFunction)Stream_func_start_read, METH_VARARGS, "Start read data from the connected endpoint." },
     { "stop_read", (PyCFunction)Stream_func_stop_read, METH_NOARGS, "Stop read data from the connected endpoint." },
-    { "_fileno", (PyCFunction)Stream_func__fileno, METH_NOARGS, "Returns the libuv file descriptor. Private API, Unix only." },
+    { "fileno", (PyCFunction)Stream_func_fileno, METH_NOARGS, "Returns the libuv OS handle." },
     { NULL }
 };
 

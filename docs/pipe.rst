@@ -137,6 +137,15 @@
         This setting applies to Windows only. Set the number of pending pipe instance
         handles when the pipe server is waiting for connections.
 
+    .. py:method:: fileno
+
+        Return the internal file descriptor (or HANDLE in Windows) used by the
+        ``Pipe`` handle.
+
+        .. warning::
+            libuv expects you not to modify the file descriptor in any way, and
+            if you do, things will very likely break.
+
     .. py:attribute:: write_queue_size
 
         *Read only*

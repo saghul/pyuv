@@ -486,13 +486,9 @@ class TCPTryTest(TestCase):
 class TCPTestFileno(TestCase):
 
     def check_fileno(self, handle):
-        self.assertTrue(hasattr(handle, '_fileno'))
-        fd = handle._fileno()
+        fd = handle.fileno()
         self.assertIsInstance(fd, int)
-        if sys.platform.startswith('win'):
-            self.assertEqual(fd, -1)
-        else:
-            self.assertGreater(fd, -1)
+        self.assertGreaterEqual(fd, 0)
 
     def on_connection(self, server, error):
         self.assertEqual(error, None)

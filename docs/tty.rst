@@ -68,6 +68,15 @@
 
         Get terminal window size.
 
+    .. py:method:: fileno
+
+        Return the internal file descriptor (or HANDLE in Windows) used by the
+        ``TTY`` handle.
+
+        .. warning::
+            libuv expects you not to modify the file descriptor in any way, and
+            if you do, things will very likely break.
+
     .. py:classmethod:: reset_mode
 
         Reset TTY settings. To be called when program exits.

@@ -163,6 +163,15 @@
         is why it is enabled by default) but may lead to uneven load distribution in
         multi-process setups.
 
+    .. py:method:: fileno
+
+        Return the internal file descriptor (or SOCKET in Windows) used by the
+        ``TCP`` handle.
+
+        .. warning::
+            libuv expects you not to modify the file descriptor in any way, and
+            if you do, things will very likely break.
+
     .. py:attribute:: write_queue_size
 
         *Read only*
