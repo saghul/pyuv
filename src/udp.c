@@ -593,16 +593,22 @@ UDP_func_open(UDP *self, PyObject *args)
 
 
 static PyObject *
-UDP_func__fileno(UDP *self)
+UDP_func_fileno(UDP *self)
 {
+    int err;
+    uv_os_fd_t fd;
+
     RAISE_IF_HANDLE_NOT_INITIALIZED(self, NULL);
     RAISE_IF_HANDLE_CLOSED(self, PyExc_HandleClosedError, NULL);
 
-#ifdef PYUV_WINDOWS
-    return PyInt_FromLong(-1);
-#else
-    return PyInt_FromLong(self->udp_h.io_watcher.fd);
-#endif
+    err = uv_fileno(UV_HANDLE(self), &fd);
+    if (err < 0) {
+        RAISE_UV_EXCEPTION(err, PyExc_UDPError);
+        return NULL;
+    }
+
+    /* This is safe. See note in Stream_func_fileno() */
+    return PyInt_FromLong((long) fd);
 }
 
 
@@ -680,7 +686,7 @@ UDP_tp_methods[] = {
     { "set_multicast_loop", (PyCFunction)UDP_func_set_multicast_loop, METH_VARARGS, "Set IP multicast loop flag. Makes multicast packets loop back to local sockets." },
     { "set_broadcast", (PyCFunction)UDP_func_set_broadcast, METH_VARARGS, "Set broadcast on or off." },
     { "set_ttl", (PyCFunction)UDP_func_set_ttl, METH_VARARGS, "Set the Time To Live." },
-    { "_fileno", (PyCFunction)UDP_func__fileno, METH_NOARGS, "Returns the libuv file descriptor. Private API, Unix only." },
+    { "fileno", (PyCFunction)UDP_func_fileno, METH_NOARGS, "Returns the libuv OS handle." },
     { NULL }
 };
 

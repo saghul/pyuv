@@ -135,3 +135,11 @@
 
         Set the Time To Live (TTL).
 
+    .. py:method:: fileno
+
+        Return the internal file descriptor (or SOCKET in Windows) used by the
+        ``UDP`` handle.
+
+        .. warning::
+            libuv expects you not to modify the file descriptor in any way, and
+            if you do, things will very likely break.
