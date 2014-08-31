@@ -57,8 +57,6 @@ stat_to_pyobj(const uv_stat_t *st, PyObject *stat_data) {
 static void
 pyuv__process_fs_req(uv_fs_t* req) {
     PyGILState_STATE gstate = PyGILState_Ensure();
-    int res;
-    char *ptr;
     Loop *loop;
     FSRequest *fs_req;
     PyObject *result, *errorno, *r, *path, *item;
@@ -140,18 +138,17 @@ pyuv__process_fs_req(uv_fs_t* req) {
                 PyMem_Free(fs_req->buf.base);
                 break;
             case UV_FS_READDIR:
+                /* TODO: add (name, type) tuples instead? */
                 r = PyList_New(0);
                 if (!r) {
                     PyErr_Clear();
                     PYUV_SET_NONE(r);
                 } else {
-                    res = req->result;
-                    ptr = req->ptr;
-                    while (res--) {
-                        item = Py_BuildValue("s", ptr);
+                    uv_dirent_t ent;
+                    while (uv_fs_readdir_next(req, &ent) != UV_EOF) {
+                        item = Py_BuildValue("s", ent.name);
                         PyList_Append(r, item);
                         Py_DECREF(item);
-                        ptr += strlen(ptr) + 1;
                     }
                 }
                 break;
