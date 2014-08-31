@@ -97,11 +97,20 @@ Poll_func_stop(Poll *self)
 static PyObject *
 Poll_func_fileno(Poll *self)
 {
+    int err;
+    uv_os_fd_t fd;
+
     RAISE_IF_HANDLE_NOT_INITIALIZED(self, NULL);
-    if (uv_is_closing((uv_handle_t *)&self->poll_h)) {
-        return PyInt_FromLong(-1);
+    RAISE_IF_HANDLE_CLOSED(self, PyExc_HandleClosedError, NULL);
+
+    err = uv_fileno(UV_HANDLE(self), &fd);
+    if (err < 0) {
+        RAISE_UV_EXCEPTION(err, PyExc_PollError);
+        return NULL;
     }
-    return PyInt_FromLong(self->fd);
+
+    /* This is safe. See note in Stream_func_fileno() */
+    return PyInt_FromLong((long) fd);
 }
 
 
@@ -125,8 +134,6 @@ Poll_tp_init(Poll *self, PyObject *args, PyObject *kwargs)
         RAISE_UV_EXCEPTION(err, PyExc_PollError);
         return -1;
     }
-
-    self->fd = fd;
 
     initialize_handle(HANDLE(self), loop);
 

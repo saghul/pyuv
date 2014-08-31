@@ -85,7 +85,7 @@ class PollTest(TestCase):
         self.poll.start(pyuv.UV_WRITABLE, self.poll_cb)
         self.loop.run()
         self.assertTrue(self.poll.closed)
-        self.assertEqual(self.poll.fileno(), -1)
+        self.assertRaises(pyuv.error.HandleClosedError, self.poll.fileno)
         self.sock.close()
 
 

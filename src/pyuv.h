@@ -309,7 +309,6 @@ typedef struct {
     Handle handle;
     uv_poll_t poll_h;
     PyObject *callback;
-    long fd;
 } Poll;
 
 static PyTypeObject PollType;

@@ -46,6 +46,7 @@ init_error(void)
     PyUVModule_AddType(module, "UVError", (PyTypeObject *)PyExc_UVError);
     PyUVModule_AddType(module, "ThreadError", (PyTypeObject *)PyExc_ThreadError);
     PyUVModule_AddType(module, "HandleError", (PyTypeObject *)PyExc_HandleError);
+    PyUVModule_AddType(module, "HandleClosedError", (PyTypeObject *)PyExc_HandleClosedError);
     PyUVModule_AddType(module, "AsyncError", (PyTypeObject *)PyExc_AsyncError);
     PyUVModule_AddType(module, "TimerError", (PyTypeObject *)PyExc_TimerError);
     PyUVModule_AddType(module, "PrepareError", (PyTypeObject *)PyExc_PrepareError);
