@@ -490,6 +490,18 @@ Process_func_kill(Process *self, PyObject *args)
 
 
 static PyObject *
+Process_func_close(Process *self, PyObject *args)
+{
+    if (!((Handle*)self)->initialized) {
+        PyErr_SetString(PyExc_RuntimeError, "Object was not initialized, spawn was not called.");
+        return NULL;
+    }
+
+    return Handle_func_close((Handle *) self, args);
+}
+
+
+static PyObject *
 Process_pid_get(Process *self, void *closure)
 {
     UNUSED_ARG(closure);
@@ -580,6 +592,7 @@ static PyMethodDef
 Process_tp_methods[] = {
     { "spawn", (PyCFunction)Process_func_spawn, METH_VARARGS|METH_KEYWORDS, "Spawn the child process." },
     { "kill", (PyCFunction)Process_func_kill, METH_VARARGS, "Kill this process with the specified signal number." },
+    { "close", (PyCFunction)Process_func_close, METH_VARARGS, "Close process handle." },
     { "disable_stdio_inheritance", (PyCFunction)Process_func_disable_stdio_inheritance, METH_NOARGS|METH_CLASS, "Disables inheritance for file descriptors / handles that this process inherited from its parent." },
     { NULL }
 };
