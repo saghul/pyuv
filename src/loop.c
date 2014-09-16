@@ -2,11 +2,24 @@
 static PyObject *default_loop = NULL;
 
 
-static int
-init_loop(Loop *loop, int is_default)
+static PyObject *
+new_loop(PyTypeObject *type, PyObject *args, PyObject *kwargs, int is_default)
 {
+    PyObject *obj;
+    Loop *loop;
     uv_loop_t *uv_loop;
 
+    if ((args && PyTuple_GET_SIZE(args)) || (kwargs && PyDict_Check(kwargs) && PyDict_Size(kwargs))) {
+        PyErr_SetString(PyExc_TypeError, "Loop initialization takes no parameters");
+        return NULL;
+    }
+
+    obj = PyType_GenericNew(type, args, kwargs);
+    if (!obj) {
+        return NULL;
+    }
+
+    loop = (Loop *) obj;
     if (is_default) {
         uv_loop = uv_default_loop();
     } else {
@@ -15,52 +28,17 @@ init_loop(Loop *loop, int is_default)
 
     if (uv_loop_init(uv_loop) < 0) {
         PyErr_SetString(PyExc_RuntimeError, "Error initializing loop");
-        return -1;
+        Py_DECREF(obj);
+        return NULL;
     }
-    uv_loop->data = loop;
 
+    uv_loop->data = loop;
     loop->uv_loop = uv_loop;
     loop->is_default = is_default;
     loop->weakreflist = NULL;
     loop->buffer.in_use = False;
 
-    return 0;
-}
-
-
-static PyObject *
-new_loop(PyTypeObject *type, PyObject *args, PyObject *kwargs, int is_default)
-{
-    if ((args && PyTuple_GET_SIZE(args)) || (kwargs && PyDict_Check(kwargs) && PyDict_Size(kwargs))) {
-        PyErr_SetString(PyExc_TypeError, "Loop initialization takes no parameters");
-        return NULL;
-    }
-
-    if (is_default) {
-        if (!default_loop) {
-            default_loop = PyType_GenericNew(type, args, kwargs);
-            if (!default_loop) {
-                return NULL;
-            }
-            if (init_loop((Loop *)default_loop, True) != 0) {
-                Py_DECREF(default_loop);
-                default_loop = NULL;
-                return NULL;
-            }
-        }
-        Py_INCREF(default_loop);
-        return default_loop;
-    } else {
-        PyObject *self = PyType_GenericNew(type, args, kwargs);
-        if (!self) {
-            return NULL;
-        }
-        if (init_loop((Loop *)self, False) != 0) {
-            Py_DECREF(self);
-            return NULL;
-        }
-        return self;
-    }
+    return obj;
 }
 
 
@@ -246,7 +224,22 @@ Loop_func_excepthook(Loop *self, PyObject *args)
 static PyObject *
 Loop_func_default_loop(PyObject *cls)
 {
-    return new_loop((PyTypeObject *)cls, NULL, NULL, 1);
+    PyTypeObject *type = (PyTypeObject *) cls;
+    if (!default_loop) {
+        default_loop = new_loop((PyTypeObject *)cls, NULL, NULL, True);
+        if (!default_loop) {
+            return NULL;
+        }
+        if (type->tp_init != PyBaseObject_Type.tp_init) {
+            if (type->tp_init(default_loop, PyTuple_New(0), NULL) < 0) {
+                Py_XDECREF(default_loop);
+                default_loop = NULL;
+                return NULL;
+            }
+        }
+    }
+    Py_INCREF(default_loop);
+    return default_loop;
 }
 
 
@@ -300,7 +293,7 @@ Loop_alive_get(Loop *self, void *closure)
 static PyObject *
 Loop_tp_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
 {
-    return new_loop(type, args, kwargs, 0);
+    return new_loop(type, args, kwargs, False);
 }
 
 
