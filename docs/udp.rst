@@ -143,3 +143,12 @@
         .. warning::
             libuv expects you not to modify the file descriptor in any way, and
             if you do, things will very likely break.
+
+    .. py:attribute:: send_buffer_size
+
+        Gets / sets the send buffer size.
+
+    .. py:attribute:: receive_buffer_size
+
+        Gets / sets the receive buffer size.
+

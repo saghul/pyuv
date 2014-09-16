@@ -342,6 +342,100 @@ Pipe_func_getsockname(Pipe *self)
 }
 
 
+static PyObject *
+Pipe_sndbuf_get(Pipe *self, void *closure)
+{
+    int err;
+    int sndbuf_value;
+
+    UNUSED_ARG(closure);
+    RAISE_IF_HANDLE_NOT_INITIALIZED(self, NULL);
+
+    sndbuf_value = 0;
+    err = uv_send_buffer_size(UV_HANDLE(self), &sndbuf_value);
+    if (err < 0) {
+        RAISE_UV_EXCEPTION(err, PyExc_PipeError);
+        return NULL;
+    }
+    return PyInt_FromLong((long) sndbuf_value);
+}
+
+
+static int
+Pipe_sndbuf_set(Pipe *self, PyObject *value, void *closure)
+{
+    int err;
+    int sndbuf_value;
+
+    UNUSED_ARG(closure);
+    RAISE_IF_HANDLE_NOT_INITIALIZED(self, -1);
+
+    if (!value) {
+        PyErr_SetString(PyExc_TypeError, "cannot delete attribute");
+        return -1;
+    }
+
+    sndbuf_value = (int) PyInt_AsLong(value);
+    if (sndbuf_value == -1 && PyErr_Occurred()) {
+        return -1;
+    }
+
+    err = uv_send_buffer_size(UV_HANDLE(self), &sndbuf_value);
+    if (err < 0) {
+        RAISE_UV_EXCEPTION(err, PyExc_PipeError);
+        return -1;
+    }
+    return 0;
+}
+
+
+static PyObject *
+Pipe_rcvbuf_get(Pipe *self, void *closure)
+{
+    int err;
+    int rcvbuf_value;
+
+    UNUSED_ARG(closure);
+    RAISE_IF_HANDLE_NOT_INITIALIZED(self, NULL);
+
+    rcvbuf_value = 0;
+    err = uv_recv_buffer_size(UV_HANDLE(self), &rcvbuf_value);
+    if (err < 0) {
+        RAISE_UV_EXCEPTION(err, PyExc_PipeError);
+        return NULL;
+    }
+    return PyInt_FromLong((long) rcvbuf_value);
+}
+
+
+static int
+Pipe_rcvbuf_set(Pipe *self, PyObject *value, void *closure)
+{
+    int err;
+    int rcvbuf_value;
+
+    UNUSED_ARG(closure);
+    RAISE_IF_HANDLE_NOT_INITIALIZED(self, -1);
+
+    if (!value) {
+        PyErr_SetString(PyExc_TypeError, "cannot delete attribute");
+        return -1;
+    }
+
+    rcvbuf_value = (int) PyInt_AsLong(value);
+    if (rcvbuf_value == -1 && PyErr_Occurred()) {
+        return -1;
+    }
+
+    err = uv_recv_buffer_size(UV_HANDLE(self), &rcvbuf_value);
+    if (err < 0) {
+        RAISE_UV_EXCEPTION(err, PyExc_PipeError);
+        return -1;
+    }
+    return 0;
+}
+
+
 static int
 Pipe_tp_init(Pipe *self, PyObject *args, PyObject *kwargs)
 {
@@ -417,6 +511,13 @@ Pipe_tp_methods[] = {
 };
 
 
+static PyGetSetDef Pipe_tp_getsets[] = {
+    {"send_buffer_size", (getter)Pipe_sndbuf_get, (setter)Pipe_sndbuf_set, "Send buffer size.", NULL},
+    {"receive_buffer_size", (getter)Pipe_rcvbuf_get, (setter)Pipe_rcvbuf_set, "Receive buffer size.", NULL},
+    {NULL}
+};
+
+
 static PyTypeObject PipeType = {
     PyVarObject_HEAD_INIT(NULL, 0)
     "pyuv.Pipe",                                                   /*tp_name*/
@@ -447,7 +548,7 @@ static PyTypeObject PipeType = {
     0,                                                             /*tp_iternext*/
     Pipe_tp_methods,                                               /*tp_methods*/
     0,                                                             /*tp_members*/
-    0,                                                             /*tp_getsets*/
+    Pipe_tp_getsets,                                               /*tp_getsets*/
     0,                                                             /*tp_base*/
     0,                                                             /*tp_dict*/
     0,                                                             /*tp_descr_get*/

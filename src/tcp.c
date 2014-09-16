@@ -355,6 +355,100 @@ TCP_func_open(TCP *self, PyObject *args)
 }
 
 
+static PyObject *
+TCP_sndbuf_get(TCP *self, void *closure)
+{
+    int err;
+    int sndbuf_value;
+
+    UNUSED_ARG(closure);
+    RAISE_IF_HANDLE_NOT_INITIALIZED(self, NULL);
+
+    sndbuf_value = 0;
+    err = uv_send_buffer_size(UV_HANDLE(self), &sndbuf_value);
+    if (err < 0) {
+        RAISE_UV_EXCEPTION(err, PyExc_TCPError);
+        return NULL;
+    }
+    return PyInt_FromLong((long) sndbuf_value);
+}
+
+
+static int
+TCP_sndbuf_set(TCP *self, PyObject *value, void *closure)
+{
+    int err;
+    int sndbuf_value;
+
+    UNUSED_ARG(closure);
+    RAISE_IF_HANDLE_NOT_INITIALIZED(self, -1);
+
+    if (!value) {
+        PyErr_SetString(PyExc_TypeError, "cannot delete attribute");
+        return -1;
+    }
+
+    sndbuf_value = (int) PyInt_AsLong(value);
+    if (sndbuf_value == -1 && PyErr_Occurred()) {
+        return -1;
+    }
+
+    err = uv_send_buffer_size(UV_HANDLE(self), &sndbuf_value);
+    if (err < 0) {
+        RAISE_UV_EXCEPTION(err, PyExc_TCPError);
+        return -1;
+    }
+    return 0;
+}
+
+
+static PyObject *
+TCP_rcvbuf_get(TCP *self, void *closure)
+{
+    int err;
+    int rcvbuf_value;
+
+    UNUSED_ARG(closure);
+    RAISE_IF_HANDLE_NOT_INITIALIZED(self, NULL);
+
+    rcvbuf_value = 0;
+    err = uv_recv_buffer_size(UV_HANDLE(self), &rcvbuf_value);
+    if (err < 0) {
+        RAISE_UV_EXCEPTION(err, PyExc_TCPError);
+        return NULL;
+    }
+    return PyInt_FromLong((long) rcvbuf_value);
+}
+
+
+static int
+TCP_rcvbuf_set(TCP *self, PyObject *value, void *closure)
+{
+    int err;
+    int rcvbuf_value;
+
+    UNUSED_ARG(closure);
+    RAISE_IF_HANDLE_NOT_INITIALIZED(self, -1);
+
+    if (!value) {
+        PyErr_SetString(PyExc_TypeError, "cannot delete attribute");
+        return -1;
+    }
+
+    rcvbuf_value = (int) PyInt_AsLong(value);
+    if (rcvbuf_value == -1 && PyErr_Occurred()) {
+        return -1;
+    }
+
+    err = uv_recv_buffer_size(UV_HANDLE(self), &rcvbuf_value);
+    if (err < 0) {
+        RAISE_UV_EXCEPTION(err, PyExc_TCPError);
+        return -1;
+    }
+    return 0;
+}
+
+
 static int
 TCP_tp_init(TCP *self, PyObject *args, PyObject *kwargs)
 {
@@ -430,6 +524,13 @@ TCP_tp_methods[] = {
 };
 
 
+static PyGetSetDef TCP_tp_getsets[] = {
+    {"send_buffer_size", (getter)TCP_sndbuf_get, (setter)TCP_sndbuf_set, "Send buffer size.", NULL},
+    {"receive_buffer_size", (getter)TCP_rcvbuf_get, (setter)TCP_rcvbuf_set, "Receive buffer size.", NULL},
+    {NULL}
+};
+
+
 static PyTypeObject TCPType = {
     PyVarObject_HEAD_INIT(NULL, 0)
     "pyuv.TCP",                                                    /*tp_name*/
@@ -460,7 +561,7 @@ static PyTypeObject TCPType = {
     0,                                                             /*tp_iternext*/
     TCP_tp_methods,                                                /*tp_methods*/
     0,                                                             /*tp_members*/
-    0,                                                             /*tp_getsets*/
+    TCP_tp_getsets,                                                /*tp_getsets*/
     0,                                                             /*tp_base*/
     0,                                                             /*tp_dict*/
     0,                                                             /*tp_descr_get*/

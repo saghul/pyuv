@@ -612,6 +612,100 @@ UDP_func_fileno(UDP *self)
 }
 
 
+static PyObject *
+UDP_sndbuf_get(UDP *self, void *closure)
+{
+    int err;
+    int sndbuf_value;
+
+    UNUSED_ARG(closure);
+    RAISE_IF_HANDLE_NOT_INITIALIZED(self, NULL);
+
+    sndbuf_value = 0;
+    err = uv_send_buffer_size(UV_HANDLE(self), &sndbuf_value);
+    if (err < 0) {
+        RAISE_UV_EXCEPTION(err, PyExc_UDPError);
+        return NULL;
+    }
+    return PyInt_FromLong((long) sndbuf_value);
+}
+
+
+static int
+UDP_sndbuf_set(UDP *self, PyObject *value, void *closure)
+{
+    int err;
+    int sndbuf_value;
+
+    UNUSED_ARG(closure);
+    RAISE_IF_HANDLE_NOT_INITIALIZED(self, -1);
+
+    if (!value) {
+        PyErr_SetString(PyExc_TypeError, "cannot delete attribute");
+        return -1;
+    }
+
+    sndbuf_value = (int) PyInt_AsLong(value);
+    if (sndbuf_value == -1 && PyErr_Occurred()) {
+        return -1;
+    }
+
+    err = uv_send_buffer_size(UV_HANDLE(self), &sndbuf_value);
+    if (err < 0) {
+        RAISE_UV_EXCEPTION(err, PyExc_UDPError);
+        return -1;
+    }
+    return 0;
+}
+
+
+static PyObject *
+UDP_rcvbuf_get(UDP *self, void *closure)
+{
+    int err;
+    int rcvbuf_value;
+
+    UNUSED_ARG(closure);
+    RAISE_IF_HANDLE_NOT_INITIALIZED(self, NULL);
+
+    rcvbuf_value = 0;
+    err = uv_recv_buffer_size(UV_HANDLE(self), &rcvbuf_value);
+    if (err < 0) {
+        RAISE_UV_EXCEPTION(err, PyExc_UDPError);
+        return NULL;
+    }
+    return PyInt_FromLong((long) rcvbuf_value);
+}
+
+
+static int
+UDP_rcvbuf_set(UDP *self, PyObject *value, void *closure)
+{
+    int err;
+    int rcvbuf_value;
+
+    UNUSED_ARG(closure);
+    RAISE_IF_HANDLE_NOT_INITIALIZED(self, -1);
+
+    if (!value) {
+        PyErr_SetString(PyExc_TypeError, "cannot delete attribute");
+        return -1;
+    }
+
+    rcvbuf_value = (int) PyInt_AsLong(value);
+    if (rcvbuf_value == -1 && PyErr_Occurred()) {
+        return -1;
+    }
+
+    err = uv_recv_buffer_size(UV_HANDLE(self), &rcvbuf_value);
+    if (err < 0) {
+        RAISE_UV_EXCEPTION(err, PyExc_UDPError);
+        return -1;
+    }
+    return 0;
+}
+
+
 static int
 UDP_tp_init(UDP *self, PyObject *args, PyObject *kwargs)
 {
@@ -691,6 +785,13 @@ UDP_tp_methods[] = {
 };
 
 
+static PyGetSetDef UDP_tp_getsets[] = {
+    {"send_buffer_size", (getter)UDP_sndbuf_get, (setter)UDP_sndbuf_set, "Send buffer size.", NULL},
+    {"receive_buffer_size", (getter)UDP_rcvbuf_get, (setter)UDP_rcvbuf_set, "Receive buffer size.", NULL},
+    {NULL}
+};
+
+
 static PyTypeObject UDPType = {
     PyVarObject_HEAD_INIT(NULL, 0)
     "pyuv.UDP",                                                     /*tp_name*/
@@ -721,7 +822,7 @@ static PyTypeObject UDPType = {
     0,                                                              /*tp_iternext*/
     UDP_tp_methods,                                                 /*tp_methods*/
     0,                                                              /*tp_members*/
-    0,                                                              /*tp_getsets*/
+    UDP_tp_getsets,                                                 /*tp_getsets*/
     0,                                                              /*tp_base*/
     0,                                                              /*tp_dict*/
     0,                                                              /*tp_descr_get*/
