@@ -22,9 +22,9 @@ class ProcessTest(TestCase):
             self.assertEqual(exit_status, 0)
             self.exit_cb_called += 1
             proc.close(proc_close_cb)
-        proc = pyuv.Process(self.loop)
-        proc.spawn(args=[sys.executable, "proc_basic.py"],
-                   exit_callback=proc_exit_cb)
+        proc = pyuv.Process.spawn(self.loop,
+                                  args=[sys.executable, "proc_basic.py"],
+                                  exit_callback=proc_exit_cb)
         pid = proc.pid
         self.loop.run()
         self.assertEqual(self.exit_cb_called, 1)
@@ -43,9 +43,10 @@ class ProcessTest(TestCase):
         def proc_exit_cb(proc, exit_status, term_signal):
             self.exit_cb_called += 1
             proc.close(handle_close_cb)
-        proc = pyuv.Process(self.loop)
         exe = 'ls' if not os.name == 'nt' else 'dir'
-        proc.spawn(args=[exe], exit_callback=proc_exit_cb)
+        proc = pyuv.Process.spawn(self.loop,
+                                  args=[exe],
+                                  exit_callback=proc_exit_cb)
         self.loop.run()
         self.assertEqual(self.exit_cb_called, 1)
         self.assertEqual(self.close_cb_called, 1)
@@ -58,9 +59,10 @@ class ProcessTest(TestCase):
         def proc_exit_cb(proc, exit_status, term_signal):
             self.exit_cb_called += 1
             proc.close(handle_close_cb)
-        proc = pyuv.Process(self.loop)
         exe = b'ls' if not os.name == 'nt' else b'dir'
-        proc.spawn(args=exe, exit_callback=proc_exit_cb)
+        proc = pyuv.Process.spawn(self.loop,
+                                  args=exe,
+                                  exit_callback=proc_exit_cb)
         self.loop.run()
         self.assertEqual(self.exit_cb_called, 1)
         self.assertEqual(self.close_cb_called, 1)
@@ -73,9 +75,11 @@ class ProcessTest(TestCase):
         def proc_exit_cb(proc, exit_status, term_signal):
             self.exit_cb_called += 1
             proc.close(handle_close_cb)
-        proc = pyuv.Process(self.loop)
         exe = 'ls' if not os.name == 'nt' else 'dir'
-        proc.spawn(args=[exe], executable=exe, exit_callback=proc_exit_cb)
+        proc = pyuv.Process.spawn(self.loop,
+                                  args=[exe],
+                                  executable=exe,
+                                  exit_callback=proc_exit_cb)
         self.loop.run()
         self.assertEqual(self.exit_cb_called, 1)
         self.assertEqual(self.close_cb_called, 1)
@@ -89,9 +93,10 @@ class ProcessTest(TestCase):
             self.assertEqual(exit_status, 0)
             self.exit_cb_called += 1
             proc.close(proc_close_cb)
-        proc = pyuv.Process(self.loop)
-        proc.spawn(args=[sys.executable, "proc_basic.py"],
-                   exit_callback=proc_exit_cb, cwd=".")
+        proc = pyuv.Process.spawn(self.loop,
+                                  args=[sys.executable, "proc_basic.py"],
+                                  exit_callback=proc_exit_cb,
+                                  cwd=".")
         self.loop.run()
         self.assertEqual(self.exit_cb_called, 1)
         self.assertEqual(self.close_cb_called, 1)
@@ -114,9 +119,10 @@ class ProcessTest(TestCase):
         stdio = []
         stdio.append(pyuv.StdIO(flags=pyuv.UV_IGNORE))
         stdio.append(pyuv.StdIO(stream=stdout_pipe, flags=pyuv.UV_CREATE_PIPE|pyuv.UV_WRITABLE_PIPE))
-        proc = pyuv.Process(self.loop)
-        proc.spawn(args=["python", "proc_stdout.py"],
-                   exit_callback=proc_exit_cb, stdio=stdio)
+        proc = pyuv.Process.spawn(self.loop,
+                                  args=["python", "proc_stdout.py"],
+                                  exit_callback=proc_exit_cb,
+                                  stdio=stdio)
         stdout_pipe.start_read(stdout_read_cb)
         self.loop.run()
         self.assertEqual(self.exit_cb_called, 1)
@@ -140,9 +146,10 @@ class ProcessTest(TestCase):
         stdio = []
         stdio.append(pyuv.StdIO(flags=pyuv.UV_IGNORE))
         stdio.append(pyuv.StdIO(stream=stdout_pipe, flags=pyuv.UV_CREATE_PIPE|pyuv.UV_WRITABLE_PIPE))
-        proc = pyuv.Process(self.loop)
-        proc.spawn(args=[sys.executable, "proc_args_stdout.py", "TEST"],
-                   exit_callback=proc_exit_cb, stdio=stdio)
+        proc = pyuv.Process.spawn(self.loop,
+                                  args=[sys.executable, "proc_args_stdout.py", "TEST"],
+                                  exit_callback=proc_exit_cb,
+                                  stdio=stdio)
         stdout_pipe.start_read(stdout_read_cb)
         self.loop.run()
         self.assertEqual(self.exit_cb_called, 1)
@@ -166,10 +173,11 @@ class ProcessTest(TestCase):
         stdio = []
         stdio.append(pyuv.StdIO(flags=pyuv.UV_IGNORE))
         stdio.append(pyuv.StdIO(stream=stdout_pipe, flags=pyuv.UV_CREATE_PIPE|pyuv.UV_WRITABLE_PIPE))
-        proc = pyuv.Process(self.loop)
-        proc.spawn(args=[sys.executable, "proc_env_stdout.py"],
-                   env={"TEST": "TEST"}, exit_callback=proc_exit_cb,
-                   stdio=stdio)
+        proc = pyuv.Process.spawn(self.loop,
+                                  args=[sys.executable, "proc_env_stdout.py"],
+                                  env={"TEST": "TEST"},
+                                  exit_callback=proc_exit_cb,
+                                  stdio=stdio)
         stdout_pipe.start_read(stdout_read_cb)
         self.loop.run()
         self.assertEqual(self.exit_cb_called, 1)
@@ -200,9 +208,10 @@ class ProcessTest(TestCase):
         stdio = []
         stdio.append(pyuv.StdIO(stream=stdin_pipe, flags=pyuv.UV_CREATE_PIPE|pyuv.UV_READABLE_PIPE))
         stdio.append(pyuv.StdIO(stream=stdout_pipe, flags=pyuv.UV_CREATE_PIPE|pyuv.UV_WRITABLE_PIPE))
-        proc = pyuv.Process(self.loop)
-        proc.spawn(args=[sys.executable, "proc_stdin_stdout.py"],
-                   exit_callback=proc_exit_cb, stdio=stdio)
+        proc = pyuv.Process.spawn(self.loop,
+                                  args=[sys.executable, "proc_stdin_stdout.py"],
+                                  exit_callback=proc_exit_cb,
+                                  stdio=stdio)
         stdout_pipe.start_read(stdout_read_cb)
         stdin_pipe.write(b"TEST"+linesep, stdin_write_cb)
         self.loop.run()
@@ -227,9 +236,9 @@ class ProcessTest(TestCase):
             proc.kill(15)
         timer = pyuv.Timer(self.loop)
         timer.start(timer_cb, 0.1, 0)
-        proc = pyuv.Process(self.loop)
-        proc.spawn(args=[sys.executable, "proc_infinite.py"],
-                   exit_callback=proc_exit_cb)
+        proc = pyuv.Process.spawn(self.loop,
+                                  args=[sys.executable, "proc_infinite.py"],
+                                  exit_callback=proc_exit_cb)
         self.loop.run()
         self.assertEqual(self.exit_cb_called, 1)
         self.assertEqual(self.close_cb_called, 2)
@@ -253,8 +262,12 @@ class ProcessTest(TestCase):
             self.skipTest("test disabled if running as non-root")
             return
         p_info = pwd.getpwnam("nobody")
-        proc = pyuv.Process(self.loop)
-        proc.spawn(args=[sys.executable, "proc_basic.py"], exit_callback=proc_exit_cb, uid=p_info.pw_uid, gid=p_info.pw_gid, flags=pyuv.UV_PROCESS_SETUID|pyuv.UV_PROCESS_SETGID)
+        proc = pyuv.Process.spawn(self.loop,
+                                  args=[sys.executable, "proc_basic.py"],
+                                  exit_callback=proc_exit_cb,
+                                  uid=p_info.pw_uid,
+                                  gid=p_info.pw_gid,
+                                  flags=pyuv.UV_PROCESS_SETUID|pyuv.UV_PROCESS_SETGID)
         pid = proc.pid
         self.loop.run()
         self.assertEqual(self.exit_cb_called, 1)
@@ -274,8 +287,11 @@ class ProcessTest(TestCase):
         if os.getuid() != 0:
             self.skipTest("test disabled if running as non-root")
             return
-        proc = pyuv.Process(self.loop)
-        proc.spawn(args=[sys.executable, "proc_basic.py"], exit_callback=proc_exit_cb, uid=-42424242, flags=pyuv.UV_PROCESS_SETUID)
+        proc = pyuv.Process.spawn(self.loop,
+                                  args=[sys.executable, "proc_basic.py"],
+                                  exit_callback=proc_exit_cb,
+                                  uid=-42424242,
+                                  flags=pyuv.UV_PROCESS_SETUID)
         self.loop.run()
         self.assertEqual(self.exit_cb_called, 1)
         self.assertEqual(self.close_cb_called, 1)
@@ -284,9 +300,10 @@ class ProcessTest(TestCase):
         self.exit_cb_called = 0
         def proc_exit_cb(proc, exit_status, term_signal):
             self.exit_cb_called += 1
-        proc = pyuv.Process(self.loop)
-        proc.spawn(args=[sys.executable, "proc_basic.py"],
-                   exit_callback=proc_exit_cb, flags=pyuv.UV_PROCESS_DETACHED)
+        proc = pyuv.Process.spawn(self.loop,
+                                  args=[sys.executable, "proc_basic.py"],
+                                  exit_callback=proc_exit_cb,
+                                  flags=pyuv.UV_PROCESS_DETACHED)
         proc.ref = False
         pid = proc.pid
         self.loop.run()

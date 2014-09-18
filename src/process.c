@@ -169,21 +169,8 @@ static PyTypeObject StdIOType = {
 
 /* Process handle */
 
-#define RAISE_IF_SPAWNED(obj, retval)                                               \
-    do {                                                                            \
-        if ((obj)->spawned) {                                                       \
-            PyErr_SetString(PyExc_ProcessError, "Process already spawned");         \
-            return retval;                                                          \
-        }                                                                           \
-    } while(0)                                                                      \
-
-#define RAISE_IF_NOT_SPAWNED(obj, retval)                                           \
-    do {                                                                            \
-        if (!((obj)->spawned)) {                                                    \
-            PyErr_SetString(PyExc_ProcessError, "Process was not spawned");         \
-            return retval;                                                          \
-        }                                                                           \
-    } while(0)                                                                      \
+/* forward declaration */
+static PyObject* Process_tp_new(PyTypeObject *type, PyObject *args, PyObject *kwargs);
 
 
 static void
@@ -218,25 +205,25 @@ pyuv__process_exit_cb(uv_process_t *handle, int64_t exit_status, int term_signal
 
 
 static PyObject *
-Process_func_spawn(Process *self, PyObject *args, PyObject *kwargs)
+Process_func_spawn(PyObject *cls, PyObject *args, PyObject *kwargs)
 {
     int err, flags, stdio_count;
     unsigned int uid, gid;
     Py_ssize_t i, n, pos, size;
     PyObject *key, *value, *item, *tmp, *callback, *arguments, *env, *stdio, *ret, *executable, *cwd;
+    Process *self;
+    Loop *loop;
     uv_process_options_t options;
     uv_stdio_container_t *stdio_container;
 
-    static char *kwlist[] = {"args", "executable", "env", "cwd", "uid", "gid", "flags", "stdio", "exit_callback", NULL};
+    static char *kwlist[] = {"loop", "args", "executable", "env", "cwd", "uid", "gid", "flags", "stdio", "exit_callback", NULL};
 
     cwd = executable = Py_None;
     tmp = arguments = env = stdio = NULL;
     stdio_container = NULL;
     flags = uid = gid = stdio_count = 0;
 
-    RAISE_IF_SPAWNED(self, NULL);
-
-    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O|OO!OIIiOO:__init__", kwlist, &arguments, &executable, &PyDict_Type, &env, &cwd, &uid, &gid, &flags, &stdio, &callback)) {
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!O|OO!OIIiOO:__init__", kwlist, &LoopType, &loop, &arguments, &executable, &PyDict_Type, &env, &cwd, &uid, &gid, &flags, &stdio, &callback)) {
         return NULL;
     }
 
@@ -255,6 +242,19 @@ Process_func_spawn(Process *self, PyObject *args, PyObject *kwargs)
         return NULL;
     }
 
+    self = (Process *)Process_tp_new((PyTypeObject *) cls, args, kwargs);
+    if (!self) {
+        return NULL;
+    }
+
+    initialize_handle(HANDLE(self), loop);
+    /* Don't consider the handle initialized until uv_spawn is called. Unline other handles,
+     * there is no uv_process_init, it's called at the begining of uv_spawn, so don't
+     * consider the handle initialized until then, or we'd call uv_close when the Python
+     * object is deallocated, which is not A Good Thing (TM).
+     */
+    HANDLE(self)->initialized = False;
+
     memset(&options, 0, sizeof(uv_process_options_t));
 
     options.uid = uid;
@@ -268,13 +268,11 @@ Process_func_spawn(Process *self, PyObject *args, PyObject *kwargs)
         options.args = PyMem_Malloc(sizeof *(options.args) * 2);
         if (!options.args) {
             PyErr_NoMemory();
-            ret = NULL;
-            goto cleanup;
+            goto error;
         }
         options.args[0] = pyuv_dup_strobj(arguments);
         if (!options.args[0]) {
-            ret = NULL;
-            goto cleanup;
+            goto error;
         }
         options.args[1] = NULL;
     } else {
@@ -282,26 +280,23 @@ Process_func_spawn(Process *self, PyObject *args, PyObject *kwargs)
         n = PySequence_Length(arguments);
         if (n < 1) {
             PyErr_SetString(PyExc_ValueError, "'args' must contain at least one element");
-            return NULL;
+            goto error;
         }
         options.args = PyMem_Malloc(sizeof *(options.args) * (n + 1));
         if (!options.args) {
             PyErr_NoMemory();
-            ret = NULL;
-            goto cleanup;
+            goto error;
         }
         for (i = 0; i < n; i++) {
             item = PySequence_GetItem(arguments, i);
             if (!item) {
                 options.args[i] = NULL;
-                ret = NULL;
-                goto cleanup;
+                goto error;
             }
             options.args[i] = pyuv_dup_strobj(item);
             if (!options.args[i]) {
                 Py_DECREF(item);
-                ret = NULL;
-                goto cleanup;
+                goto error;
             }
             Py_DECREF(item);
         }
@@ -313,16 +308,14 @@ Process_func_spawn(Process *self, PyObject *args, PyObject *kwargs)
     if (executable != Py_None) {
         options.file = pyuv_dup_strobj(executable);
         if (!options.file) {
-            ret = NULL;
-            goto cleanup;
+            goto error;
         }
     } else {
         size = strlen(options.args[0]) + 1;
         options.file = PyMem_Malloc(size);
         if (!options.file) {
             PyErr_NoMemory();
-            ret = NULL;
-            goto cleanup;
+            goto error;
         }
         memcpy((void*)options.file, options.args[0], size);
     }
@@ -331,8 +324,7 @@ Process_func_spawn(Process *self, PyObject *args, PyObject *kwargs)
     if (cwd != Py_None) {
         options.cwd = pyuv_dup_strobj(cwd);
         if (!options.cwd) {
-            ret = NULL;
-            goto cleanup;
+            goto error;
         }
     }
 
@@ -346,8 +338,7 @@ Process_func_spawn(Process *self, PyObject *args, PyObject *kwargs)
             options.env = PyMem_Malloc(sizeof *(options.env) * (n + 1));
             if (!options.env) {
                 PyErr_NoMemory();
-                ret = NULL;
-                goto cleanup;
+                goto error;
             }
             i = 0;
             pos = 0;
@@ -355,14 +346,12 @@ Process_func_spawn(Process *self, PyObject *args, PyObject *kwargs)
                 key_bytes = value_bytes = NULL;
                 if (!pyuv_PyUnicode_FSConverter(key, &key_bytes)) {
                     options.env[i] = NULL;
-                    ret = NULL;
-                    goto cleanup;
+                    goto error;
                 }
                 if (!pyuv_PyUnicode_FSConverter(value, &value_bytes)) {
                     Py_DECREF(key_bytes);
                     options.env[i] = NULL;
-                    ret = NULL;
-                    goto cleanup;
+                    goto error;
                 }
                 key_str = PyBytes_AS_STRING(key_bytes);
                 value_str = PyBytes_AS_STRING(value_bytes);
@@ -373,8 +362,7 @@ Process_func_spawn(Process *self, PyObject *args, PyObject *kwargs)
                     PyErr_NoMemory();
                     Py_DECREF(key_bytes);
                     Py_DECREF(value_bytes);
-                    ret = NULL;
-                    goto cleanup;
+                    goto error;
                 }
                 PyOS_snprintf(options.env[i], size, "%s=%s", key_str, value_str);
                 Py_DECREF(key_bytes);
@@ -392,8 +380,7 @@ Process_func_spawn(Process *self, PyObject *args, PyObject *kwargs)
         stdio_container = PyMem_Malloc(sizeof *stdio_container * n);
         if (!stdio_container) {
             PyErr_NoMemory();
-            ret = NULL;
-            goto cleanup;
+            goto error;
         }
         item = NULL;
         for (i = 0;i < n; i++) {
@@ -401,8 +388,7 @@ Process_func_spawn(Process *self, PyObject *args, PyObject *kwargs)
             if (!item || !PyObject_TypeCheck(item, &StdIOType)) {
                 Py_XDECREF(item);
                 PyErr_SetString(PyExc_TypeError, "a StdIO instance is required");
-                ret = NULL;
-                goto cleanup;
+                goto error;
             }
             stdio_count++;
             stdio_container[i].flags = ((StdIO *)item)->flags;
@@ -417,12 +403,15 @@ Process_func_spawn(Process *self, PyObject *args, PyObject *kwargs)
     options.stdio = stdio_container;
     options.stdio_count = stdio_count;
 
+    HANDLE(self)->initialized = True;
+
     err = uv_spawn(UV_HANDLE_LOOP(self), &self->process_h, &options);
     if (err < 0) {
         RAISE_UV_EXCEPTION(err, PyExc_ProcessError);
-        ret = NULL;
-        goto cleanup;
+        goto error;
     }
+
+    ret = (PyObject *) self;
 
     tmp = (PyObject *)self->on_exit_cb;
     Py_INCREF(callback);
@@ -434,13 +423,14 @@ Process_func_spawn(Process *self, PyObject *args, PyObject *kwargs)
     self->stdio = stdio;
     Py_XDECREF(tmp);
 
-    HANDLE(self)->initialized = True;
-    self->spawned = True;
-
-    ret = Py_None;
-
     /* Increase refcount so that object is not removed before the exit callback is called */
     Py_INCREF(self);
+
+    goto cleanup;
+
+error:
+    ret = NULL;
+    Py_DECREF(self);
 
 cleanup:
     if (options.args) {
@@ -461,7 +451,6 @@ cleanup:
     PyMem_Free((void*)options.file);
     PyMem_Free(options.stdio);
 
-    Py_XINCREF(ret);
     return ret;
 }
 
@@ -472,7 +461,6 @@ Process_func_kill(Process *self, PyObject *args)
     int signum, err;
 
     RAISE_IF_HANDLE_NOT_INITIALIZED(self, NULL);
-    RAISE_IF_NOT_SPAWNED(self, NULL);
     RAISE_IF_HANDLE_CLOSED(self, PyExc_HandleClosedError, NULL);
 
     if (!PyArg_ParseTuple(args, "i:kill", &signum)) {
@@ -492,12 +480,12 @@ Process_func_kill(Process *self, PyObject *args)
 static PyObject *
 Process_func_close(Process *self, PyObject *args)
 {
-    if (!((Handle*)self)->initialized) {
+    if (!HANDLE(self)->initialized) {
         PyErr_SetString(PyExc_RuntimeError, "Object was not initialized, spawn was not called.");
         return NULL;
     }
 
-    return Handle_func_close((Handle *) self, args);
+    return Handle_func_close(HANDLE(self), args);
 }
 
 
@@ -506,32 +494,10 @@ Process_pid_get(Process *self, void *closure)
 {
     UNUSED_ARG(closure);
 
-    if (!HANDLE(self)->initialized || !self->spawned) {
+    if (!HANDLE(self)->initialized) {
         Py_RETURN_NONE;
     }
     return PyInt_FromLong((long)self->process_h.pid);
-}
-
-
-static int
-Process_tp_init(Process *self, PyObject *args, PyObject *kwargs)
-{
-    Loop *loop;
-
-    UNUSED_ARG(kwargs);
-
-    RAISE_IF_HANDLE_INITIALIZED(self, -1);
-
-    if (!PyArg_ParseTuple(args, "O!:__init__", &LoopType, &loop)) {
-        return -1;
-    }
-
-    initialize_handle(HANDLE(self), loop);
-
-    /* uv_process_t handles are not initialized explicitly, so workaround it. See tp_dealloc for the rest */
-    HANDLE(self)->initialized = False;
-
-    return 0;
 }
 
 
@@ -556,17 +522,8 @@ Process_tp_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
 
     self->process_h.data = self;
     UV_HANDLE(self) = (uv_handle_t *)&self->process_h;
-    self->spawned = False;
 
     return (PyObject *)self;
-}
-
-
-static void
-Process_tp_dealloc(Process *self)
-{
-    HANDLE(self)->initialized = self->spawned;
-    HandleType.tp_dealloc((PyObject *)self);
 }
 
 
@@ -590,7 +547,7 @@ Process_tp_clear(Process *self)
 
 static PyMethodDef
 Process_tp_methods[] = {
-    { "spawn", (PyCFunction)Process_func_spawn, METH_VARARGS|METH_KEYWORDS, "Spawn the child process." },
+    { "spawn", (PyCFunction)Process_func_spawn, METH_CLASS|METH_VARARGS|METH_KEYWORDS, "Spawn the child process." },
     { "kill", (PyCFunction)Process_func_kill, METH_VARARGS, "Kill this process with the specified signal number." },
     { "close", (PyCFunction)Process_func_close, METH_VARARGS, "Close process handle." },
     { "disable_stdio_inheritance", (PyCFunction)Process_func_disable_stdio_inheritance, METH_NOARGS|METH_CLASS, "Disables inheritance for file descriptors / handles that this process inherited from its parent." },
@@ -609,7 +566,7 @@ static PyTypeObject ProcessType = {
     "pyuv.Process",                                                 /*tp_name*/
     sizeof(Process),                                                /*tp_basicsize*/
     0,                                                              /*tp_itemsize*/
-    (destructor)Process_tp_dealloc,                                 /*tp_dealloc*/
+    0,                                                              /*tp_dealloc*/
     0,                                                              /*tp_print*/
     0,                                                              /*tp_getattr*/
     0,                                                              /*tp_setattr*/
@@ -640,7 +597,7 @@ static PyTypeObject ProcessType = {
     0,                                                              /*tp_descr_get*/
     0,                                                              /*tp_descr_set*/
     0,                                                              /*tp_dictoffset*/
-    (initproc)Process_tp_init,                                      /*tp_init*/
+    0,                                                              /*tp_init*/
     0,                                                              /*tp_alloc*/
     Process_tp_new,                                                 /*tp_new*/
 };

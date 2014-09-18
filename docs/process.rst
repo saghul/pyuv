@@ -9,13 +9,8 @@
 =====================================================
 
 
-.. py:class:: Process(loop)
-
-    :type loop: :py:class:`Loop`
-    :param loop: loop object where this handle runs (accessible through :py:attr:`Check.loop`).
-
-    ``Process`` handles allow spawning child processes which can be controlled (their stdin and
-    stdout) with ``Pipe`` handles within an event loop.
+``Process`` handles allow spawning child processes which can be controlled (their stdin and
+stdout) with ``Pipe`` handles within an event loop.
 
 
     .. py:classmethod:: disable_stdio_inheritance
@@ -31,13 +26,16 @@
         that libuv can discover all file descriptors that were inherited. In general
         it does a better job on Windows than it does on unix.
 
-    .. py:method:: spawn(signal)
+    .. py:classmethod:: spawn(loop, args, [executable, [env, [cwd, [uid, [gid, [flags, [stdio, [exit_callback]]]]]]]])
 
-        :param string file: File to be executed.
+        :param: Loop loop: `pyuv.Loop` instance where this handle belongs.
+
+        :param list args: Arguments for the new process. In case it's just the executable, it's
+            possible to specify it as a string instead of a single element list.
+
+        :param string executable: File to be executed. args[0] is taken in case it's not specified.
 
         :param callable exit_callback: Callback to be called when the process exits.
-
-        :param tuple args: Arguments to be passed to the executable.
 
         :param dict env: Overrides the environment for the child process. If none is
             specified the one from the parent is used.
