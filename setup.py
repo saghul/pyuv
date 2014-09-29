@@ -9,7 +9,7 @@ except ImportError:
 from setup_libuv import libuv_build_ext, libuv_sdist
 
 
-__version__ = "1.0.0-dev"
+__version__ = "1.0.0.dev1"
 
 setup(name             = "pyuv",
       version          = __version__,
