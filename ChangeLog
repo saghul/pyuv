@@ -1,3 +1,18 @@
+Version 1.0.0.dev1
+==================
+ - fs: add pyuv.fs.access function
+ - fs: rename readdir to scandir
+ - process: make Process.spawn a class method
+ - loop: call LoopSubclass.__init__ when calling LoopSubclass.default_loop
+ - tcp, pipe, udp: add send_buffer_size and receive_buffer_size
+ - udp: add fileno() method
+ - stream: add fileno() method
+ - process: give better error message on Process.close
+ - core: fix subclassing Loop
+ - test: add test which ignores exceptions in a excepthook
+ - core: drop support for Python 2.6
+ - core: raised libuv version to 1.0.0-rc2
+
 Version 0.11.5
 ==============
  - process: fix refcounting bug in StdIO
