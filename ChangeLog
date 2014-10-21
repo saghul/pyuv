@@ -1,3 +1,9 @@
+Version 0.10.12
+===============
+ - Fixed multiple memory leaks when using sync fs functions
+ - Cleanup fs requests when using sync mode
+ - Raised libuv version to 0.10.29
+
 Version 0.10.11
 ===============
  - Added Python 3.4 support classifier
