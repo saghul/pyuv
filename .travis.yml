@@ -9,5 +9,6 @@ script: nosetests -v
 branches:
   only:
     - master
+    - v1.x
     - v0.10
 
