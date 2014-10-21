@@ -294,7 +294,7 @@
     Callback signature: ``callback(loop, path, errorno)``
 
 
-.. py:function:: pyuv.fs.readdir(loop, path, flags, [callback])
+.. py:function:: pyuv.fs.scandir(loop, path, flags, [callback])
 
     :param string path: Directory to list.
 
