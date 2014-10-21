@@ -137,7 +137,7 @@ pyuv__process_fs_req(uv_fs_t* req) {
                 }
                 PyMem_Free(fs_req->buf.base);
                 break;
-            case UV_FS_READDIR:
+            case UV_FS_SCANDIR:
                 /* TODO: add (name, type) tuples instead? */
                 r = PyList_New(0);
                 if (!r) {
@@ -145,7 +145,7 @@ pyuv__process_fs_req(uv_fs_t* req) {
                     PYUV_SET_NONE(r);
                 } else {
                     uv_dirent_t ent;
-                    while (uv_fs_readdir_next(req, &ent) != UV_EOF) {
+                    while (uv_fs_scandir_next(req, &ent) != UV_EOF) {
                         item = Py_BuildValue("s", ent.name);
                         PyList_Append(r, item);
                         Py_DECREF(item);
@@ -1225,7 +1225,7 @@ FS_func_ftruncate(PyObject *obj, PyObject *args, PyObject *kwargs)
 
 
 static PyObject *
-FS_func_readdir(PyObject *obj, PyObject *args, PyObject *kwargs)
+FS_func_scandir(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
     int err, flags;
     char *path;
@@ -1239,7 +1239,7 @@ FS_func_readdir(PyObject *obj, PyObject *args, PyObject *kwargs)
     fs_req = NULL;
     callback = Py_None;
 
-    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!si|O:readdir", kwlist, &LoopType, &loop, &path, &flags, &callback)) {
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!si|O:scandir", kwlist, &LoopType, &loop, &path, &flags, &callback)) {
         return NULL;
     }
 
@@ -1253,7 +1253,7 @@ FS_func_readdir(PyObject *obj, PyObject *args, PyObject *kwargs)
         return NULL;
     }
 
-    err = uv_fs_readdir(loop->uv_loop, &fs_req->req, path, flags, (callback != Py_None) ? pyuv__process_fs_req : NULL);
+    err = uv_fs_scandir(loop->uv_loop, &fs_req->req, path, flags, (callback != Py_None) ? pyuv__process_fs_req : NULL);
     if (err < 0) {
         RAISE_UV_EXCEPTION(err, PyExc_FSError);
         Py_DECREF(fs_req);
@@ -1450,7 +1450,7 @@ FS_methods[] = {
     { "fsync", (PyCFunction)FS_func_fsync, METH_VARARGS|METH_KEYWORDS, "Sync all changes made to a file." },
     { "fdatasync", (PyCFunction)FS_func_fdatasync, METH_VARARGS|METH_KEYWORDS, "Sync data changes made to a file." },
     { "ftruncate", (PyCFunction)FS_func_ftruncate, METH_VARARGS|METH_KEYWORDS, "Truncate the contents of a file to the specified offset." },
-    { "readdir", (PyCFunction)FS_func_readdir, METH_VARARGS|METH_KEYWORDS, "List files from a directory." },
+    { "scandir", (PyCFunction)FS_func_scandir, METH_VARARGS|METH_KEYWORDS, "List files from a directory." },
     { "sendfile", (PyCFunction)FS_func_sendfile, METH_VARARGS|METH_KEYWORDS, "Sends a regular file to a stream socket." },
     { "utime", (PyCFunction)FS_func_utime, METH_VARARGS|METH_KEYWORDS, "Update file times." },
     { "futime", (PyCFunction)FS_func_futime, METH_VARARGS|METH_KEYWORDS, "Update file times." },

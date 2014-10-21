@@ -648,10 +648,10 @@ class FSTestFtruncate(FileTestCase):
             self.assertEqual(fobj.read(), "")
 
 
-class FSTestReaddir(TestCase):
+class FSTestScandir(TestCase):
 
     def setUp(self):
-        super(FSTestReaddir, self).setUp()
+        super(FSTestScandir, self).setUp()
         os.mkdir(TEST_DIR, 0o755)
         os.mkdir(os.path.join(TEST_DIR, TEST_DIR2), 0o755)
         with open(os.path.join(TEST_DIR, TEST_FILE), 'w') as f:
@@ -661,39 +661,39 @@ class FSTestReaddir(TestCase):
 
     def tearDown(self):
         shutil.rmtree(TEST_DIR)
-        super(FSTestReaddir, self).tearDown()
+        super(FSTestScandir, self).tearDown()
 
-    def readdir_cb(self, req):
+    def scandir_cb(self, req):
         self.errorno = req.error
         self.files = req.result
 
-    def test_bad_readdir(self):
+    def test_bad_scandir(self):
         self.errorno = None
         self.files = None
-        pyuv.fs.readdir(self.loop, BAD_DIR, 0, self.readdir_cb)
+        pyuv.fs.scandir(self.loop, BAD_DIR, 0, self.scandir_cb)
         self.loop.run()
         self.assertEqual(self.errorno, pyuv.errno.UV_ENOENT)
 
-    def test_readdir(self):
+    def test_scandir(self):
         self.errorno = None
         self.files = None
-        pyuv.fs.readdir(self.loop, TEST_DIR, 0, self.readdir_cb)
+        pyuv.fs.scandir(self.loop, TEST_DIR, 0, self.scandir_cb)
         self.loop.run()
         self.assertEqual(self.errorno, None)
         self.assertTrue(TEST_FILE in self.files)
         self.assertTrue(TEST_FILE2 in self.files)
         self.assertTrue(TEST_DIR2 in self.files)
 
-    def test_readdir_sync(self):
-        self.files = pyuv.fs.readdir(self.loop, TEST_DIR, 0)
+    def test_scandir_sync(self):
+        self.files = pyuv.fs.scandir(self.loop, TEST_DIR, 0)
         self.assertNotEqual(self.files, None)
         self.assertTrue(TEST_FILE in self.files)
         self.assertTrue(TEST_FILE2 in self.files)
         self.assertTrue(TEST_DIR2 in self.files)
 
-    def test_readdir_error_sync(self):
+    def test_scandir_error_sync(self):
         try:
-            pyuv.fs.readdir(self.loop, BAD_DIR, 0)
+            pyuv.fs.scandir(self.loop, BAD_DIR, 0)
         except pyuv.error.FSError as e:
             self.errorno = e.args[0]
         else:
