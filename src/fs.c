@@ -104,6 +104,7 @@ pyuv__process_fs_req(uv_fs_t* req) {
             case UV_FS_FTRUNCATE:
             case UV_FS_UTIME:
             case UV_FS_FUTIME:
+            case UV_FS_ACCESS:
                 PYUV_SET_NONE(r);
                 break;
             case UV_FS_READLINK:
@@ -1427,6 +1428,56 @@ FS_func_futime(PyObject *obj, PyObject *args, PyObject *kwargs)
 }
 
 
+static PyObject *
+FS_func_access(PyObject *obj, PyObject *args, PyObject *kwargs)
+{
+    int err, flags;
+    char *path;
+    Loop *loop;
+    FSRequest *fs_req;
+    PyObject *callback, *ret;
+
+    static char *kwlist[] = {"loop", "path", "flags", "callback", NULL};
+
+    UNUSED_ARG(obj);
+    fs_req = NULL;
+    callback = Py_None;
+
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!si|O:access", kwlist, &LoopType, &loop, &path, &flags, &callback)) {
+        return NULL;
+    }
+
+    if (callback != Py_None && !PyCallable_Check(callback)) {
+        PyErr_SetString(PyExc_TypeError, "a callable is required");
+        return NULL;
+    }
+
+    fs_req = (FSRequest *)PyObject_CallFunctionObjArgs((PyObject *)&FSRequestType, loop, callback, NULL);
+    if (!fs_req) {
+        return NULL;
+    }
+
+    err = uv_fs_access(loop->uv_loop, &fs_req->req, path, flags, (callback != Py_None) ? pyuv__process_fs_req : NULL);
+    if (err < 0) {
+        RAISE_UV_EXCEPTION(err, PyExc_FSError);
+        Py_DECREF(fs_req);
+        return NULL;
+    }
+
+    Py_INCREF(fs_req);
+    if (callback != Py_None) {
+        /* No need to cleanup, it will be done in the callback */
+        return (PyObject *)fs_req;
+    } else {
+        pyuv__process_fs_req(&fs_req->req);
+        Py_INCREF(fs_req->result);
+        ret = fs_req->result;
+        Py_DECREF(fs_req);
+        return ret;
+    }
+}
+
+
 static PyMethodDef
 FS_methods[] = {
     { "stat", (PyCFunction)FS_func_stat, METH_VARARGS|METH_KEYWORDS, "stat" },
@@ -1454,6 +1505,7 @@ FS_methods[] = {
     { "sendfile", (PyCFunction)FS_func_sendfile, METH_VARARGS|METH_KEYWORDS, "Sends a regular file to a stream socket." },
     { "utime", (PyCFunction)FS_func_utime, METH_VARARGS|METH_KEYWORDS, "Update file times." },
     { "futime", (PyCFunction)FS_func_futime, METH_VARARGS|METH_KEYWORDS, "Update file times." },
+    { "access", (PyCFunction)FS_func_access, METH_VARARGS|METH_KEYWORDS, "Check access to file." },
     { "stat_float_times", (PyCFunction)stat_float_times, METH_VARARGS, "Use floats for times in stat structs." },
     { NULL }
 };

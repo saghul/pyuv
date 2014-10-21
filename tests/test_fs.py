@@ -809,6 +809,48 @@ class FSTestUtime(FileTestCase):
         self.assertEqual(s.st_mtime, mtime)
 
 
+class FSTestAccess(TestCase):
+
+    def setUp(self):
+        super(FSTestAccess, self).setUp()
+        with open(TEST_FILE, 'w') as f:
+            f.write("test")
+
+    def tearDown(self):
+        try:
+            os.remove(TEST_FILE)
+        except OSError:
+            pass
+        super(FSTestAccess, self).tearDown()
+
+    def access_cb(self, req):
+        self.errorno = req.error
+
+    def test_bad_access(self):
+        self.errorno = None
+        pyuv.fs.access(self.loop, BAD_FILE, os.F_OK, self.access_cb)
+        self.loop.run()
+        self.assertEqual(self.errorno, pyuv.errno.UV_ENOENT)
+
+    def test_access(self):
+        self.errorno = None
+        pyuv.fs.access(self.loop, TEST_FILE, os.F_OK, self.access_cb)
+        self.loop.run()
+        self.assertEqual(self.errorno, None)
+
+    def test_access_sync(self):
+        pyuv.fs.access(self.loop, TEST_FILE, os.F_OK)
+
+    def test_access_error_sync(self):
+        try:
+            pyuv.fs.access(self.loop, BAD_FILE, os.F_OK)
+        except pyuv.error.FSError as e:
+            self.errorno = e.args[0]
+        else:
+            self.errorno = None
+        self.assertEqual(self.errorno, pyuv.errno.UV_ENOENT)
+
+
 class FSEventTestBasic(FileTestCase):
 
     def tearDown(self):
