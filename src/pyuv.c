@@ -24,7 +24,6 @@
 #include "util.c"
 #include "thread.c"
 
-#define LIBUV_VERSION UV_VERSION_MAJOR.UV_VERSION_MINOR-LIBUV_REVISION
 
 #ifdef PYUV_PYTHON3
 static PyModuleDef pyuv_module = {
