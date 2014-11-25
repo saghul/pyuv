@@ -200,6 +200,9 @@ class libuv_sdist(sdist):
     libuv_revision = libuv_build_ext.libuv_revision
     libuv_patches  = libuv_build_ext.libuv_patches
 
+    gyp_dir = os.path.join(libuv_dir, 'build', 'gyp')
+    gyp_repo = 'https://git.chromium.org/external/gyp.git'
+
     def initialize_options(self):
         sdist.initialize_options(self)
         rmtree('deps')
@@ -213,3 +216,6 @@ class libuv_sdist(sdist):
                 exec_process(['patch', '--forward', '-d', self.libuv_dir, '-p0', '-i', os.path.abspath(patch_file)])
         rmtree(os.path.join(self.libuv_dir, '.git'))
 
+        log.info('Downloading gyp...')
+        exec_process(['git', 'clone', self.gyp_repo, self.gyp_dir])
+        rmtree(os.path.join(self.gyp_dir, '.git'))
