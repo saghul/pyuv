@@ -52,6 +52,9 @@ def prepare_windows_env(env):
     env.pop('VS110COMNTOOLS', None)
     if sys.version_info < (3, 3):
         env.pop('VS100COMNTOOLS', None)
+        env['GYP_MSVS_VERSION'] = '2008'
+    else:
+        env['GYP_MSVS_VERSION'] = '2010'
 
     if env.get('PYTHON'):
         return  # Already manually set by user.
