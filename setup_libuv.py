@@ -13,6 +13,9 @@ from distutils.command.sdist import sdist
 from distutils.errors import DistutilsError
 
 
+PY3 = sys.version_info[0] == 3
+
+
 def makedirs(path):
     try:
         os.makedirs(path)
@@ -44,9 +47,12 @@ def exec_process(cmdline, silent=True, input=None, **kwargs):
         else:
             raise
     if returncode != 0:
+        if PY3:
+            stderr = stderr.decode('utf-8')
+            stdout = stdout.decode('utf-8')
         output = (
-            'stderr:\n%s\nstdout:\n%s' % (stderr.decode("utf-8").rstrip("\n"),
-                                          stdout.decode("utf-8").rstrip("\n"))
+            'stderr:\n%s\nstdout:\n%s' % (stderr.rstrip("\n"),
+                                          stdout.rstrip("\n"))
         )
         raise DistutilsError('Got return value %d while executing "%s", output was:\n%s' % (returncode, " ".join(cmdline), output))
     return stdout
