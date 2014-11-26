@@ -49,6 +49,7 @@ def exec_process(cmdline, silent=True, input=None, **kwargs):
 
 
 def prepare_windows_env(env):
+    env.pop('VS120COMNTOOLS', None)
     env.pop('VS110COMNTOOLS', None)
     if sys.version_info < (3, 3):
         env.pop('VS100COMNTOOLS', None)
