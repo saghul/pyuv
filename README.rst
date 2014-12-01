@@ -38,17 +38,17 @@ CI status
 
 Stable branch (v1.x):
 
-.. image:: https://secure.travis-ci.org/saghul/pyuv.png?branch=v1.x
+.. image:: https://travis-ci.org/saghul/pyuv.svg?branch=v1.x
     :target: http://travis-ci.org/saghul/pyuv
 
 Old stable branch (v0.10):
 
-.. image:: https://secure.travis-ci.org/saghul/pyuv.png?branch=v0.10
+.. image:: https://travis-ci.org/saghul/pyuv.svg?branch=v0.10
     :target: http://travis-ci.org/saghul/pyuv
 
 Development (master):
 
-.. image:: https://secure.travis-ci.org/saghul/pyuv.png?branch=master
+.. image:: https://travis-ci.org/saghul/pyuv.svg?branch=master
     :target: http://travis-ci.org/saghul/pyuv
 
 
