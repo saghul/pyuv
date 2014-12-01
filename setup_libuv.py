@@ -13,6 +13,9 @@ from distutils.command.sdist import sdist
 from distutils.errors import DistutilsError
 
 
+PY3 = sys.version_info[0] == 3
+
+
 def makedirs(path):
     try:
         os.makedirs(path)
@@ -44,7 +47,14 @@ def exec_process(cmdline, silent=True, input=None, **kwargs):
         else:
             raise
     if returncode != 0:
-        raise DistutilsError('Got return value %d while executing "%s", stderr output was:\n%s' % (returncode, " ".join(cmdline), stderr.decode("utf-8").rstrip("\n")))
+        if PY3:
+            stderr = stderr.decode('utf-8')
+            stdout = stdout.decode('utf-8')
+        output = (
+            'stderr:\n%s\nstdout:\n%s' % (stderr.rstrip("\n"),
+                                          stdout.rstrip("\n"))
+        )
+        raise DistutilsError('Got return value %d while executing "%s", output was:\n%s' % (returncode, " ".join(cmdline), output))
     return stdout
 
 
@@ -53,6 +63,9 @@ def prepare_windows_env(env):
     env.pop('VS110COMNTOOLS', None)
     if sys.version_info < (3, 3):
         env.pop('VS100COMNTOOLS', None)
+        env['GYP_MSVS_VERSION'] = '2008'
+    else:
+        env['GYP_MSVS_VERSION'] = '2010'
 
     if env.get('PYTHON'):
         return  # Already manually set by user.
@@ -194,6 +207,9 @@ class libuv_sdist(sdist):
     libuv_revision = libuv_build_ext.libuv_revision
     libuv_patches  = libuv_build_ext.libuv_patches
 
+    gyp_dir = os.path.join(libuv_dir, 'build', 'gyp')
+    gyp_repo = 'https://git.chromium.org/external/gyp.git'
+
     def initialize_options(self):
         sdist.initialize_options(self)
         rmtree('deps')
@@ -206,4 +222,9 @@ class libuv_sdist(sdist):
             for patch_file in self.libuv_patches:
                 exec_process(['patch', '--forward', '-d', self.libuv_dir, '-p0', '-i', os.path.abspath(patch_file)])
         rmtree(os.path.join(self.libuv_dir, '.git'))
+
+        log.info('Downloading gyp...')
+        exec_process(['git', 'clone', self.gyp_repo, self.gyp_dir])
+        rmtree(os.path.join(self.gyp_dir, 'test'))
+        rmtree(os.path.join(self.gyp_dir, '.git'))
 
