@@ -46,7 +46,7 @@ Old stable branch (v0.10):
 .. image:: https://secure.travis-ci.org/saghul/pyuv.png?branch=v0.10
     :target: http://travis-ci.org/saghul/pyuv
 
-Master:
+Development (master):
 
 .. image:: https://secure.travis-ci.org/saghul/pyuv.png?branch=master
     :target: http://travis-ci.org/saghul/pyuv
