@@ -6,12 +6,10 @@ pyuv: Python interface for libuv
     :target: http://badge.fury.io/py/pyuv
 
 pyuv is a Python module which provides an interface to libuv.
-`libuv <http://github.com/joyent/libuv>`_ is a high performance
-asynchronous networking library, used as the platform layer for
-`NodeJS <http://nodejs.org>`_.
+`libuv <http://github.com/libuv/libuv>`_ is a high performance
+asynchronous networking and platform abstraction library.
 
-libuv is written and maintained by Joyent Inc. and contributors.
-It’s built on top of epoll/kequeue/event ports/etc on Unix and
+libuv is built on top of epoll/kequeue/event ports/etc on Unix and
 IOCP on Windows systems providing a consistent API on top of them.
 
 pyuv's features:
@@ -38,7 +36,12 @@ pyuv's features:
 CI status
 =========
 
-Stable branch (v0.10):
+Stable branch (v1.x):
+
+.. image:: https://secure.travis-ci.org/saghul/pyuv.png?branch=v1.x
+    :target: http://travis-ci.org/saghul/pyuv
+
+Old stable branch (v0.10):
 
 .. image:: https://secure.travis-ci.org/saghul/pyuv.png?branch=v0.10
     :target: http://travis-ci.org/saghul/pyuv
@@ -52,13 +55,11 @@ Master:
 Versioning
 ==========
 
-pyuv follows the versioning scheme used by Node and libuv, that is, odd numbered releases are
-considered *unstable* and even numbered releases *stable*. This doesn't necessarily mean that an
-odd numbered release is supposed to crash, but the API may change between stable releases.
+Starting with version 1.0.0, pyuv follows the `Semantic Versioning <http://semver.org/>`_
+spacification, like libuv does.
 
-The so called *unstable* releases will not be released on PyPI, as that would confuse users. PyPI
-will always contain the latest *stable* build. All versions (both stable and unstable) are downloadable
-from `the GitHub tags page <https://github.com/saghul/pyuv/tags>`_.
+All releases are downloadable from `the GitHub tags page <https://github.com/saghul/pyuv/tags>`_,
+and the latest stable release from `PyPI <https://pypi.python.org/pypi/pyuv>`_.
 
 
 Documentation
@@ -75,12 +76,6 @@ pyuv can be installed via pip as follows:
 ::
 
     pip install pyuv
-
-If you'd like to use the `development version <https://github.com/saghul/pyuv/zipball/master#egg=pyuv-dev>`_ use the following command:
-
-::
-
-    pip install pyuv==dev
 
 
 Building
@@ -126,7 +121,7 @@ There are several ways of running the test ruite:
 - Use Tox to run the test suite in several virtualenvs with several interpreters
 
   From the toplevel directory, run: ``tox`` this will run the test suite
-  on Python 2.6, 2.7, 3.3 and 3.4 (you'll need to have them installed beforehand)
+  on Python 2.7, 3.3 and 3.4 (you'll need to have them installed beforehand)
 
 
 Author
