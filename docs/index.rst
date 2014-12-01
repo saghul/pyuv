@@ -5,13 +5,8 @@
 Welcome to pyuv's documentation!
 ################################
 
-Python interface for libuv.
-
-libuv is a high performance asynchronous networking library used as the platform layer
-for NodeJS. It's built on top of liev and libeio on Unix and IOCP on Windows systems
-providing a consistent API on top of them.
-
-libuv is written and maintained by Joyent Inc. and contributors.
+Python interface for libuv, a high performance asynchronous networking
+and platform abstraction library.
 
 
 .. note::
@@ -25,7 +20,7 @@ Features:
  * UDP support
  * Timers
  * Child process spawning
- * Asynchronous DNS resolution (getaddrinfo)
+ * Asynchronous DNS resolution (getaddrinfo & getnameinfo)
  * Asynchronous file system APIs
  * Thread pool scheduling
  * High resolution time
@@ -39,10 +34,10 @@ Features:
  * Thread synchronization primitives
 
 .. seealso::
-    `libuv's source code <http://github.com/joyent/libuv>`_
+    `libuv's source code <http://github.com/libuv/libuv>`_
 
 .. seealso::
-    `uvbook, a book on libuv <http://nikhilm.github.com/uvbook/>`_
+    `Official libuv documentation <http://docs.libuv.org>`_
 
 
 Contents
