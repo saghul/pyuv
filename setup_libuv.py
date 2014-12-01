@@ -93,9 +93,9 @@ def prepare_windows_env(env):
 
 class libuv_build_ext(build_ext):
     libuv_dir      = os.path.join('deps', 'libuv')
-    libuv_repo     = 'https://github.com/joyent/libuv.git'
+    libuv_repo     = 'https://github.com/libuv/libuv.git'
     libuv_branch   = 'v0.10'
-    libuv_revision = '2d72854'
+    libuv_revision = '0bcac64'
     libuv_patches  = []
 
     user_options = build_ext.user_options
