@@ -21,6 +21,7 @@
 #include "poll.c"
 #include "fs.c"
 #include "process.c"
+#include "dns.c"
 #include "util.c"
 #include "thread.c"
 
@@ -63,6 +64,7 @@ init_pyuv(void)
     PyObject *errno_module;
     PyObject *error_module;
     PyObject *fs_module;
+    PyObject *dns_module;
     PyObject *util_module;
     PyObject *thread_module;
 
@@ -113,6 +115,17 @@ init_pyuv(void)
 #ifdef PYUV_PYTHON3
     PyDict_SetItemString(PyImport_GetModuleDict(), pyuv_fs_module.m_name, fs_module);
     Py_DECREF(fs_module);
+#endif
+
+    /* DNS module */
+    dns_module = init_dns();
+    if (dns_module == NULL) {
+        goto fail;
+    }
+    PyUVModule_AddObject(pyuv, "dns", dns_module);
+#ifdef PYUV_PYTHON3
+    PyDict_SetItemString(PyImport_GetModuleDict(), pyuv_dns_module.m_name, dns_module);
+    Py_DECREF(dns_module);
 #endif
 
     /* Util module */

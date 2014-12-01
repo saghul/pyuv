@@ -47,22 +47,6 @@
     Get information about resource utilization. getrusage(2) implementation
     which always uses RUSAGE_SELF. Limited support on Windows.
 
-.. py:function:: pyuv.util.getaddrinfo(loop, cb, ...)
-
-    Asyncronous equivalent of `socket.getaddrinfo`. This function returns
-    a `GAIRequest` object which has a `cancel()` method that can be called
-    in order to cancel the request.
-
-    Callback signature: ``callback(result, errorno)``.
-
-.. py:function:: pyuv.util.getnameinfo(loop, cb, ...)
-
-    Asyncronous equivalent of `socket.getnameinfo`. This function returns
-    a `GNIRequest` object which has a `cancel()` method that can be called
-    in order to cancel the request.
-
-    Callback signature: ``callback(result, errorno)``.
-
 .. py:class:: pyuv.util.SignalChecker(loop, fd)
 
     :type loop: :py:class:`Loop`
