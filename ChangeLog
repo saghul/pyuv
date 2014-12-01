@@ -1,3 +1,11 @@
+Version 0.10.13
+===============
+ - Build: fix build with VS 2013 installed
+ - Build: fix build with Windows SDK
+ - Build: show stdout on build errors as well
+ - Build: bundle gyp on sdist
+ - Raised libuv version to 0bcac64 (v0.10 branch)
+
 Version 0.10.12
 ===============
  - Fixed multiple memory leaks when using sync fs functions
