@@ -232,4 +232,6 @@ class libuv_sdist(sdist):
 
         log.info('Downloading gyp...')
         exec_process(['git', 'clone', self.gyp_repo, self.gyp_dir])
+        rmtree(os.path.join(self.gyp_dir, 'test'))
         rmtree(os.path.join(self.gyp_dir, '.git'))
+
