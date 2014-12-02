@@ -1,3 +1,9 @@
+Version 1.0.0
+=============
+ - dns: move getaddrinfo and getnameinfo to a 'dns' submodule
+ - doc: updated documentation
+ - core: raised libuv version to 1.0.1
+
 Version 1.0.0.dev1
 ==================
  - fs: add pyuv.fs.access function
