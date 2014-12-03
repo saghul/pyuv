@@ -4,6 +4,7 @@ import errno
 import os
 import platform
 import shutil
+import stat
 import subprocess
 import sys
 
@@ -24,12 +25,18 @@ def makedirs(path):
             return
         raise
 
+
 def rmtree(path):
+    def remove_readonly(func, path, excinfo):
+        os.chmod(path, stat.S_IWRITE)
+        func(path)
+
     try:
-        shutil.rmtree(path)
+        shutil.rmtree(path, onerror=remove_readonly)
     except OSError as e:
         if e.errno != errno.ENOENT:
             raise
+
 
 def exec_process(cmdline, silent=True, input=None, **kwargs):
     """Execute a subprocess and returns the returncode, stdout buffer and stderr buffer.
