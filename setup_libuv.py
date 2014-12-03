@@ -114,27 +114,32 @@ class libuv_build_ext(build_ext):
     user_options.extend([
         ("libuv-clean-compile", None, "Clean libuv tree before compilation"),
         ("libuv-force-fetch", None, "Remove libuv (if present) and fetch it again"),
-        ("libuv-verbose-build", None, "Print output of libuv build process")
+        ("libuv-verbose-build", None, "Print output of libuv build process"),
+        ("use-system-libuv", None, "Use the system provided libuv, instead of the bundled one")
     ])
     boolean_options = build_ext.boolean_options
-    boolean_options.extend(["libuv-clean-compile", "libuv-force-fetch", "libuv-verbose-build"])
+    boolean_options.extend(["libuv-clean-compile", "libuv-force-fetch", "libuv-verbose-build", "use-system-libuv"])
 
     def initialize_options(self):
         build_ext.initialize_options(self)
         self.libuv_clean_compile = 0
         self.libuv_force_fetch = 0
         self.libuv_verbose_build = 0
+        self.use_system_libuv = 0
 
     def build_extensions(self):
         self.force = self.libuv_force_fetch or self.libuv_clean_compile
-        if sys.platform == 'win32':
-            self.libuv_lib = os.path.join(self.libuv_dir, 'Release', 'lib', 'libuv.lib')
+        if self.use_system_libuv:
+            self.compiler.add_library('uv')
         else:
-            self.libuv_lib = os.path.join(self.libuv_dir, '.libs', 'libuv.a')
-        self.get_libuv()
-        # Set compiler options
-        self.extensions[0].extra_objects.extend([self.libuv_lib])
-        self.compiler.add_include_dir(os.path.join(self.libuv_dir, 'include'))
+            if sys.platform == 'win32':
+                self.libuv_lib = os.path.join(self.libuv_dir, 'Release', 'lib', 'libuv.lib')
+            else:
+                self.libuv_lib = os.path.join(self.libuv_dir, '.libs', 'libuv.a')
+            self.get_libuv()
+            # Set compiler options
+            self.extensions[0].extra_objects.extend([self.libuv_lib])
+            self.compiler.add_include_dir(os.path.join(self.libuv_dir, 'include'))
         if sys.platform.startswith('linux'):
             self.compiler.add_library('rt')
         elif sys.platform == 'win32':
