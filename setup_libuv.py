@@ -128,7 +128,7 @@ class libuv_build_ext(build_ext):
         self.use_system_libuv = 0
 
     def build_extensions(self):
-        self.force = self.libuv_force_fetch or self.libuv_clean_compile
+        self.force = self.force or self.libuv_force_fetch or self.libuv_clean_compile
         if self.use_system_libuv:
             self.compiler.add_library('uv')
         else:
