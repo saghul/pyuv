@@ -52,15 +52,6 @@
 
         This are advanced functions not be used in standard applications.
 
-    .. py:method:: walk(callback)
-
-        :param callable callback: Function that will be called for each handle in the loop.
-
-        Call the given callback for every handle in the loop. Useful for debugging and cleanup
-        purposes.
-
-        Callback signature: ``callback(handle)``.
-
     .. py:method:: queue_work(work_callback, [done_callback])
 
         :param callable work_callback: Function that will be called in the thread pool.
