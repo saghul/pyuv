@@ -6,6 +6,7 @@ build/*
 dist/*
 MANIFEST
 __pycache__/
+*.egg-info/
 
 ## generic files to ignore
 *~
