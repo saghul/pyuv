@@ -43,7 +43,7 @@ class ProcessTest(TestCase):
         def proc_exit_cb(proc, exit_status, term_signal):
             self.exit_cb_called += 1
             proc.close(handle_close_cb)
-        exe = 'ls' if not os.name == 'nt' else 'dir'
+        exe = 'ls' if not os.name == 'nt' else 'rundll32'
         proc = pyuv.Process.spawn(self.loop,
                                   args=[exe],
                                   exit_callback=proc_exit_cb)
@@ -59,7 +59,7 @@ class ProcessTest(TestCase):
         def proc_exit_cb(proc, exit_status, term_signal):
             self.exit_cb_called += 1
             proc.close(handle_close_cb)
-        exe = b'ls' if not os.name == 'nt' else b'dir'
+        exe = b'ls' if not os.name == 'nt' else b'rundll32'
         proc = pyuv.Process.spawn(self.loop,
                                   args=exe,
                                   exit_callback=proc_exit_cb)
@@ -75,7 +75,7 @@ class ProcessTest(TestCase):
         def proc_exit_cb(proc, exit_status, term_signal):
             self.exit_cb_called += 1
             proc.close(handle_close_cb)
-        exe = 'ls' if not os.name == 'nt' else 'dir'
+        exe = 'ls' if not os.name == 'nt' else 'rundll32'
         proc = pyuv.Process.spawn(self.loop,
                                   args=[exe],
                                   executable=exe,
