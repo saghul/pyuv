@@ -1,3 +1,12 @@
+Version 1.0.1
+=============
+ - build: add --use-system-libuv build time option
+ - build: fix rebuilding when -f is specified
+ - doc: remove Loop.walk from documentation
+ - build: fix sdist on Windows
+ - test: fix process tests on Windows
+ - core: raised libuv version to 1.0.2
+
 Version 1.0.0
 =============
  - dns: move getaddrinfo and getnameinfo to a 'dns' submodule
