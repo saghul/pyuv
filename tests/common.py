@@ -4,7 +4,9 @@ import os
 import sys
 import unittest
 
-sys.path.insert(0, '../')
+if 'PYUV_INSIDE_TOX' not in os.environ:
+    sys.path.insert(0, '../')
+
 import pyuv
 
 
