@@ -45,6 +45,9 @@ def exec_process(cmdline, silent=True, input=None, **kwargs):
         sub = subprocess.Popen(args=cmdline, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, **kwargs)
         stdout, stderr = sub.communicate(input=input)
         returncode = sub.returncode
+        if PY3:
+            stderr = stderr.decode('utf-8')
+            stdout = stdout.decode('utf-8')
         if not silent:
             sys.stdout.write(stdout)
             sys.stderr.write(stderr)
@@ -54,13 +57,7 @@ def exec_process(cmdline, silent=True, input=None, **kwargs):
         else:
             raise
     if returncode != 0:
-        if PY3:
-            stderr = stderr.decode('utf-8')
-            stdout = stdout.decode('utf-8')
-        output = (
-            'stderr:\n%s\nstdout:\n%s' % (stderr.rstrip("\n"),
-                                          stdout.rstrip("\n"))
-        )
+        output = 'stderr:\n%s\nstdout:\n%s' % (stderr.rstrip("\n"), stdout.rstrip("\n"))
         raise DistutilsError('Got return value %d while executing "%s", output was:\n%s' % (returncode, " ".join(cmdline), output))
     return stdout
 
