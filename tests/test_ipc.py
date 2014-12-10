@@ -1,4 +1,5 @@
 
+import os
 import random
 import sys
 import unittest
@@ -46,18 +47,19 @@ class IPCTest(TestCase):
 
     def on_channel_read(self, handle, data, error):
         pending = self.channel.pending_handle_type()
-        if self.tcp_server is None:
-            self.assertEqual(pending, pyuv.UV_TCP)
-            self.tcp_server = pyuv.TCP(self.loop)
-            self.channel.accept(self.tcp_server)
-            self.tcp_server.listen(self.on_ipc_connection, 12)
-            self.assertEqual(data.strip(), b"hello")
-            self.channel.write(b"world")
-            self.make_many_connections()
-        else:
-            if data.strip() == b"accepted_connection":
-                self.assertEqual(pending, pyuv.UV_UNKNOWN_HANDLE)
-                self.channel.close()
+        if pending:
+            if self.tcp_server is None:
+                self.assertEqual(pending, pyuv.UV_TCP)
+                self.tcp_server = pyuv.TCP(self.loop)
+                self.channel.accept(self.tcp_server)
+                self.tcp_server.listen(self.on_ipc_connection, 12)
+                self.assertEqual(data.strip(), b"hello")
+                self.channel.write(b"world")
+                self.make_many_connections()
+            else:
+                if data.strip() == b"accepted_connection":
+                    self.assertEqual(pending, pyuv.UV_UNKNOWN_HANDLE)
+                    self.channel.close()
 
     def _do_test(self, test_type):
         self.connections = []
@@ -86,17 +88,17 @@ class IPCSendRecvTest(TestCase):
 
     def on_channel_read(self, expected_type, handle, data, error):
         pending = self.channel.pending_handle_type()
-        self.assertEqual(pending, expected_type)
-        if pending == pyuv.UV_NAMED_PIPE:
-            recv_handle = pyuv.Pipe(self.loop)
-        elif pending == pyuv.UV_TCP:
-            recv_handle = pyuv.TCP(self.loop)
-        elif pending == pyuv.UV_UDP:
-            recv_handle = pyuv.UDP(self.loop)
-        self.channel.accept(recv_handle)
-        self.channel.close()
-        self.send_handle.close()
-        recv_handle.close()
+        if pending == expected_type:
+            if pending == pyuv.UV_NAMED_PIPE:
+                recv_handle = pyuv.Pipe(self.loop)
+            elif pending == pyuv.UV_TCP:
+                recv_handle = pyuv.TCP(self.loop)
+            elif pending == pyuv.UV_UDP:
+                recv_handle = pyuv.UDP(self.loop)
+            self.channel.accept(recv_handle)
+            self.channel.close()
+            self.send_handle.close()
+            recv_handle.close()
 
     def _do_test(self):
         self.channel = pyuv.Pipe(self.loop, True)
@@ -111,9 +113,14 @@ class IPCSendRecvTest(TestCase):
 
     @platform_skip(["win32"])
     def test_ipc_send_recv_pipe(self):
+        TEST_PIPE2 = TEST_PIPE + '2'
+        try:
+            os.remove(TEST_PIPE2)
+        except OSError:
+            pass
         # Handle that will be sent to the process and back
         self.send_handle = pyuv.Pipe(self.loop, True)
-        self.send_handle.bind(TEST_PIPE + '2')
+        self.send_handle.bind(TEST_PIPE2)
         self.send_handle_type = pyuv.UV_NAMED_PIPE
         self._do_test()
 
