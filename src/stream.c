@@ -558,7 +558,7 @@ static PyGetSetDef Stream_tp_getsets[] = {
 
 static PyTypeObject StreamType = {
     PyVarObject_HEAD_INIT(NULL, 0)
-    "pyuv.Stream",                                                 /*tp_name*/
+    "pyuv._cpyuv.Stream",                                          /*tp_name*/
     sizeof(Stream),                                                /*tp_basicsize*/
     0,                                                             /*tp_itemsize*/
     0,                                                             /*tp_dealloc*/

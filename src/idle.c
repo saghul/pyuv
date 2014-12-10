@@ -152,7 +152,7 @@ Idle_tp_methods[] = {
 
 static PyTypeObject IdleType = {
     PyVarObject_HEAD_INIT(NULL, 0)
-    "pyuv.Idle",                                                    /*tp_name*/
+    "pyuv._cpyuv.Idle",                                             /*tp_name*/
     sizeof(Idle),                                                   /*tp_basicsize*/
     0,                                                              /*tp_itemsize*/
     0,                                                              /*tp_dealloc*/

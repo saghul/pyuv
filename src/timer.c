@@ -228,7 +228,7 @@ static PyGetSetDef Timer_tp_getsets[] = {
 
 static PyTypeObject TimerType = {
     PyVarObject_HEAD_INIT(NULL, 0)
-    "pyuv.Timer",                                                   /*tp_name*/
+    "pyuv._cpyuv.Timer",                                            /*tp_name*/
     sizeof(Timer),                                                  /*tp_basicsize*/
     0,                                                              /*tp_itemsize*/
     0,                                                              /*tp_dealloc*/

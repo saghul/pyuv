@@ -185,7 +185,7 @@ Poll_tp_methods[] = {
 
 static PyTypeObject PollType = {
     PyVarObject_HEAD_INIT(NULL, 0)
-    "pyuv.Poll",                                                    /*tp_name*/
+    "pyuv._cpyuv.Poll",                                             /*tp_name*/
     sizeof(Poll),                                                   /*tp_basicsize*/
     0,                                                              /*tp_itemsize*/
     0,                                                              /*tp_dealloc*/

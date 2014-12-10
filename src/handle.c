@@ -317,7 +317,7 @@ static PyGetSetDef Handle_tp_getsets[] = {
 
 static PyTypeObject HandleType = {
     PyVarObject_HEAD_INIT(NULL, 0)
-    "pyuv.Handle",                                                 /*tp_name*/
+    "pyuv._cpyuv.Handle",                                          /*tp_name*/
     sizeof(Handle),                                                /*tp_basicsize*/
     0,                                                             /*tp_itemsize*/
     (destructor)Handle_tp_dealloc,                                 /*tp_dealloc*/

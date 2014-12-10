@@ -150,7 +150,7 @@ Signal_tp_methods[] = {
 
 static PyTypeObject SignalType = {
     PyVarObject_HEAD_INIT(NULL, 0)
-    "pyuv.Signal",                                                  /*tp_name*/
+    "pyuv._cpyuv.Signal",                                           /*tp_name*/
     sizeof(Signal),                                                 /*tp_basicsize*/
     0,                                                              /*tp_itemsize*/
     0,                                                              /*tp_dealloc*/

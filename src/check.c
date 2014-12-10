@@ -152,7 +152,7 @@ Check_tp_methods[] = {
 
 static PyTypeObject CheckType = {
     PyVarObject_HEAD_INIT(NULL, 0)
-    "pyuv.Check",                                                   /*tp_name*/
+    "pyuv._cpyuv.Check",                                            /*tp_name*/
     sizeof(Check),                                                  /*tp_basicsize*/
     0,                                                              /*tp_itemsize*/
     0,                                                              /*tp_dealloc*/

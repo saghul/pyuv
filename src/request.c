@@ -135,7 +135,7 @@ Request_tp_clear(Request *self)
 
 static PyTypeObject RequestType = {
     PyVarObject_HEAD_INIT(NULL, 0)
-    "pyuv.Request",                                                 /*tp_name*/
+    "pyuv._cpyuv.Request",                                          /*tp_name*/
     sizeof(Request),                                                /*tp_basicsize*/
     0,                                                              /*tp_itemsize*/
     (destructor)Request_tp_dealloc,                                 /*tp_dealloc*/
@@ -240,7 +240,7 @@ GAIRequest_tp_clear(GAIRequest *self)
 
 static PyTypeObject GAIRequestType = {
     PyVarObject_HEAD_INIT(NULL, 0)
-    "pyuv.GAIRequest",                                              /*tp_name*/
+    "pyuv._cpyuv.GAIRequest",                                       /*tp_name*/
     sizeof(GAIRequest),                                             /*tp_basicsize*/
     0,                                                              /*tp_itemsize*/
     0,                                                              /*tp_dealloc*/
@@ -345,7 +345,7 @@ GNIRequest_tp_clear(GNIRequest *self)
 
 static PyTypeObject GNIRequestType = {
     PyVarObject_HEAD_INIT(NULL, 0)
-    "pyuv.GNIRequest",                                              /*tp_name*/
+    "pyuv._cpyuv.GNIRequest",                                       /*tp_name*/
     sizeof(GNIRequest),                                             /*tp_basicsize*/
     0,                                                              /*tp_itemsize*/
     0,                                                              /*tp_dealloc*/
@@ -457,7 +457,7 @@ WorkRequest_tp_clear(WorkRequest *self)
 
 static PyTypeObject WorkRequestType = {
     PyVarObject_HEAD_INIT(NULL, 0)
-    "pyuv.WorkRequest",                                             /*tp_name*/
+    "pyuv._cpyuv.WorkRequest",                                      /*tp_name*/
     sizeof(WorkRequest),                                            /*tp_basicsize*/
     0,                                                              /*tp_itemsize*/
     0,                                                              /*tp_dealloc*/
@@ -621,7 +621,7 @@ FSRequest_tp_clear(FSRequest *self)
 
 static PyTypeObject FSRequestType = {
     PyVarObject_HEAD_INIT(NULL, 0)
-    "pyuv.FSRequest",                                               /*tp_name*/
+    "pyuv._cpyuv.FSRequest",                                        /*tp_name*/
     sizeof(FSRequest),                                              /*tp_basicsize*/
     0,                                                              /*tp_itemsize*/
     0,                                                              /*tp_dealloc*/

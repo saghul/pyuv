@@ -117,7 +117,7 @@ TTY_tp_methods[] = {
 
 static PyTypeObject TTYType = {
     PyVarObject_HEAD_INIT(NULL, 0)
-    "pyuv.TTY",                                                    /*tp_name*/
+    "pyuv._cpyuv.TTY",                                             /*tp_name*/
     sizeof(TTY),                                                   /*tp_basicsize*/
     0,                                                             /*tp_itemsize*/
     0,                                                             /*tp_dealloc*/

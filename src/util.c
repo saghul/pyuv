@@ -427,7 +427,7 @@ SignalChecker_tp_methods[] = {
 
 static PyTypeObject SignalCheckerType = {
     PyVarObject_HEAD_INIT(NULL, 0)
-    "pyuv.util.SignalChecker",                                      /*tp_name*/
+    "pyuv._cpyuv.util.SignalChecker",                               /*tp_name*/
     sizeof(SignalChecker),                                          /*tp_basicsize*/
     0,                                                              /*tp_itemsize*/
     0,                                                              /*tp_dealloc*/
@@ -470,7 +470,7 @@ static PyTypeObject SignalCheckerType = {
 #ifdef PYUV_PYTHON3
 static PyModuleDef pyuv_util_module = {
     PyModuleDef_HEAD_INIT,
-    "pyuv.util",            /*m_name*/
+    "pyuv._cpyuv.util",     /*m_name*/
     NULL,                   /*m_doc*/
     -1,                     /*m_size*/
     Util_methods,           /*m_methods*/
@@ -484,7 +484,7 @@ init_util(void)
 #ifdef PYUV_PYTHON3
     module = PyModule_Create(&pyuv_util_module);
 #else
-    module = Py_InitModule("pyuv.util", Util_methods);
+    module = Py_InitModule("pyuv._cpyuv.util", Util_methods);
 #endif
     if (module == NULL) {
         return NULL;

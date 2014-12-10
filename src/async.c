@@ -122,7 +122,7 @@ Async_tp_methods[] = {
 
 static PyTypeObject AsyncType = {
     PyVarObject_HEAD_INIT(NULL, 0)
-    "pyuv.Async",                                                   /*tp_name*/
+    "pyuv._cpyuv.Async",                                            /*tp_name*/
     sizeof(Async),                                                  /*tp_basicsize*/
     0,                                                              /*tp_itemsize*/
     0,                                                              /*tp_dealloc*/

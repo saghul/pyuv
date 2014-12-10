@@ -393,7 +393,7 @@ static PyGetSetDef Loop_tp_getsets[] = {
 
 static PyTypeObject LoopType = {
     PyVarObject_HEAD_INIT(NULL, 0)
-    "pyuv.Loop",                                                    /*tp_name*/
+    "pyuv._cpyuv.Loop",                                             /*tp_name*/
     sizeof(Loop),                                                   /*tp_basicsize*/
     0,                                                              /*tp_itemsize*/
     (destructor)Loop_tp_dealloc,                                    /*tp_dealloc*/

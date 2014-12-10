@@ -274,7 +274,7 @@ Dns_methods[] = {
 #ifdef PYUV_PYTHON3
 static PyModuleDef pyuv_dns_module = {
     PyModuleDef_HEAD_INIT,
-    "pyuv.dns",             /*m_name*/
+    "pyuv._cpyuv.dns",      /*m_name*/
     NULL,                   /*m_doc*/
     -1,                     /*m_size*/
     Dns_methods,            /*m_methods*/
@@ -288,7 +288,7 @@ init_dns(void)
 #ifdef PYUV_PYTHON3
     module = PyModule_Create(&pyuv_dns_module);
 #else
-    module = Py_InitModule("pyuv.dns", Dns_methods);
+    module = Py_InitModule("pyuv._cpyuv.dns", Dns_methods);
 #endif
     if (module == NULL) {
         return NULL;

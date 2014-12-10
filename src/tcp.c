@@ -533,7 +533,7 @@ static PyGetSetDef TCP_tp_getsets[] = {
 
 static PyTypeObject TCPType = {
     PyVarObject_HEAD_INIT(NULL, 0)
-    "pyuv.TCP",                                                    /*tp_name*/
+    "pyuv._cpyuv.TCP",                                             /*tp_name*/
     sizeof(TCP),                                                   /*tp_basicsize*/
     0,                                                             /*tp_itemsize*/
     0,                                                             /*tp_dealloc*/

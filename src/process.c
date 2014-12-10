@@ -127,7 +127,7 @@ static PyGetSetDef StdIO_tp_getsets[] = {
 
 static PyTypeObject StdIOType = {
     PyVarObject_HEAD_INIT(NULL, 0)
-    "pyuv.StdIO",                                                   /*tp_name*/
+    "pyuv._cpyuv.StdIO",                                            /*tp_name*/
     sizeof(StdIO),                                                  /*tp_basicsize*/
     0,                                                              /*tp_itemsize*/
     (destructor)StdIO_tp_dealloc,                                   /*tp_dealloc*/
@@ -563,7 +563,7 @@ static PyGetSetDef Process_tp_getsets[] = {
 
 static PyTypeObject ProcessType = {
     PyVarObject_HEAD_INIT(NULL, 0)
-    "pyuv.Process",                                                 /*tp_name*/
+    "pyuv._cpyuv.Process",                                          /*tp_name*/
     sizeof(Process),                                                /*tp_basicsize*/
     0,                                                              /*tp_itemsize*/
     0,                                                              /*tp_dealloc*/

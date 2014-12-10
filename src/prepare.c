@@ -152,7 +152,7 @@ Prepare_tp_methods[] = {
 
 static PyTypeObject PrepareType = {
     PyVarObject_HEAD_INIT(NULL, 0)
-    "pyuv.Prepare",                                                 /*tp_name*/
+    "pyuv._cpyuv.Prepare",                                          /*tp_name*/
     sizeof(Prepare),                                                /*tp_basicsize*/
     0,                                                              /*tp_itemsize*/
     0,                                                              /*tp_dealloc*/

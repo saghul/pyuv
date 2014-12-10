@@ -70,7 +70,7 @@ Barrier_tp_methods[] = {
 
 static PyTypeObject BarrierType = {
     PyVarObject_HEAD_INIT(NULL, 0)
-    "pyuv.thread.Barrier",                                          /*tp_name*/
+    "pyuv._cpyuv.thread.Barrier",                                   /*tp_name*/
     sizeof(Barrier),                                                /*tp_basicsize*/
     0,                                                              /*tp_itemsize*/
     (destructor)Barrier_tp_dealloc,                                 /*tp_dealloc*/
@@ -206,7 +206,7 @@ Mutex_tp_methods[] = {
 
 static PyTypeObject MutexType = {
     PyVarObject_HEAD_INIT(NULL, 0)
-    "pyuv.thread.Mutex",                                            /*tp_name*/
+    "pyuv._cpyuv.thread.Mutex",                                     /*tp_name*/
     sizeof(Mutex),                                                  /*tp_basicsize*/
     0,                                                              /*tp_itemsize*/
     (destructor)Mutex_tp_dealloc,                                   /*tp_dealloc*/
@@ -384,7 +384,7 @@ RWLock_tp_methods[] = {
 
 static PyTypeObject RWLockType = {
     PyVarObject_HEAD_INIT(NULL, 0)
-    "pyuv.thread.RWLock",                                           /*tp_name*/
+    "pyuv._cpyuv.thread.RWLock",                                    /*tp_name*/
     sizeof(RWLock),                                                 /*tp_basicsize*/
     0,                                                              /*tp_itemsize*/
     (destructor)RWLock_tp_dealloc,                                  /*tp_dealloc*/
@@ -550,7 +550,7 @@ Condition_tp_methods[] = {
 
 static PyTypeObject ConditionType = {
     PyVarObject_HEAD_INIT(NULL, 0)
-    "pyuv.thread.Condition",                                        /*tp_name*/
+    "pyuv._cpyuv.thread.Condition",                                 /*tp_name*/
     sizeof(Condition),                                              /*tp_basicsize*/
     0,                                                              /*tp_itemsize*/
     (destructor)Condition_tp_dealloc,                               /*tp_dealloc*/
@@ -691,7 +691,7 @@ Semaphore_tp_methods[] = {
 
 static PyTypeObject SemaphoreType = {
     PyVarObject_HEAD_INIT(NULL, 0)
-    "pyuv.thread.Semaphore",                                        /*tp_name*/
+    "pyuv._cpyuv.thread.Semaphore",                                 /*tp_name*/
     sizeof(Semaphore),                                              /*tp_basicsize*/
     0,                                                              /*tp_itemsize*/
     (destructor)Semaphore_tp_dealloc,                               /*tp_dealloc*/
@@ -734,7 +734,7 @@ static PyTypeObject SemaphoreType = {
 #ifdef PYUV_PYTHON3
 static PyModuleDef pyuv_thread_module = {
     PyModuleDef_HEAD_INIT,
-    "pyuv.thread",          /*m_name*/
+    "pyuv._cpyuv.thread",   /*m_name*/
     NULL,                   /*m_doc*/
     -1,                     /*m_size*/
     NULL,                   /*m_methods*/
@@ -748,7 +748,7 @@ init_thread(void)
 #ifdef PYUV_PYTHON3
     module = PyModule_Create(&pyuv_thread_module);
 #else
-    module = Py_InitModule("pyuv.thread", NULL);
+    module = Py_InitModule("pyuv._cpyuv.thread", NULL);
 #endif
     if (module == NULL) {
         return NULL;

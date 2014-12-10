@@ -794,7 +794,7 @@ static PyGetSetDef UDP_tp_getsets[] = {
 
 static PyTypeObject UDPType = {
     PyVarObject_HEAD_INIT(NULL, 0)
-    "pyuv.UDP",                                                     /*tp_name*/
+    "pyuv._cpyuv.UDP",                                              /*tp_name*/
     sizeof(UDP),                                                    /*tp_basicsize*/
     0,                                                              /*tp_itemsize*/
     0,                                                              /*tp_dealloc*/

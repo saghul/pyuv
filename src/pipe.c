@@ -520,7 +520,7 @@ static PyGetSetDef Pipe_tp_getsets[] = {
 
 static PyTypeObject PipeType = {
     PyVarObject_HEAD_INIT(NULL, 0)
-    "pyuv.Pipe",                                                   /*tp_name*/
+    "pyuv._cpyuv.Pipe",                                            /*tp_name*/
     sizeof(Pipe),                                                  /*tp_basicsize*/
     0,                                                             /*tp_itemsize*/
     0,                                                             /*tp_dealloc*/

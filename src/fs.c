@@ -1721,7 +1721,7 @@ static PyGetSetDef FSEvent_tp_getsets[] = {
 
 static PyTypeObject FSEventType = {
     PyVarObject_HEAD_INIT(NULL, 0)
-    "pyuv.fs.FSEvent",                                              /*tp_name*/
+    "pyuv._cpyuv.fs.FSEvent",                                       /*tp_name*/
     sizeof(FSEvent),                                                /*tp_basicsize*/
     0,                                                              /*tp_itemsize*/
     0,                                                              /*tp_dealloc*/
@@ -1985,7 +1985,7 @@ static PyGetSetDef FSPoll_tp_getsets[] = {
 
 static PyTypeObject FSPollType = {
     PyVarObject_HEAD_INIT(NULL, 0)
-    "pyuv.fs.FSPoll",                                               /*tp_name*/
+    "pyuv._cpyuv.fs.FSPoll",                                        /*tp_name*/
     sizeof(FSPoll),                                                 /*tp_basicsize*/
     0,                                                              /*tp_itemsize*/
     0,                                                              /*tp_dealloc*/
@@ -2029,7 +2029,7 @@ static PyTypeObject FSPollType = {
 #ifdef PYUV_PYTHON3
 static PyModuleDef pyuv_fs_module = {
     PyModuleDef_HEAD_INIT,
-    "pyuv.fs",              /*m_name*/
+    "pyuv._cpyuv.fs",       /*m_name*/
     NULL,                   /*m_doc*/
     -1,                     /*m_size*/
     FS_methods,             /*m_methods*/
@@ -2043,7 +2043,7 @@ init_fs(void)
 #ifdef PYUV_PYTHON3
     module = PyModule_Create(&pyuv_fs_module);
 #else
-    module = Py_InitModule("pyuv.fs", FS_methods);
+    module = Py_InitModule("pyuv._cpyuv.fs", FS_methods);
 #endif
     if (module == NULL) {
         return NULL;

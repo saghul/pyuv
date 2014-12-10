@@ -29,7 +29,7 @@
 #ifdef PYUV_PYTHON3
 static PyModuleDef pyuv_module = {
     PyModuleDef_HEAD_INIT,
-    "pyuv",                 /*m_name*/
+    "pyuv._cpyuv",          /*m_name*/
     NULL,                   /*m_doc*/
     -1,                     /*m_size*/
     NULL,                   /*m_methods*/
@@ -81,7 +81,7 @@ init_pyuv(void)
 #ifdef PYUV_PYTHON3
     pyuv = PyModule_Create(&pyuv_module);
 #else
-    pyuv = Py_InitModule("pyuv", NULL);
+    pyuv = Py_InitModule("pyuv._cpyuv", NULL);
 #endif
 
     /* Errno module */
@@ -259,13 +259,13 @@ fail:
 
 #ifdef PYUV_PYTHON3
 PyMODINIT_FUNC
-PyInit_pyuv(void)
+PyInit__cpyuv(void)
 {
     return init_pyuv();
 }
 #else
 PyMODINIT_FUNC
-initpyuv(void)
+init_cpyuv(void)
 {
     init_pyuv();
 }
