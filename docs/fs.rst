@@ -8,6 +8,15 @@
 :py:mod:`pyuv.fs` --- Asynchronous filesystem operations
 ========================================================
 
+This module provides asynchronous file system operations. All functions return an instance
+of `FSRequest`, which has 3 public members:
+
+* path: the path affecting the operation
+* error: the error code if the operation failed, 0 if it succeeded
+* result: for those operations returning results, it will be stored on this member.
+
+These members will be populated before calling the callback, which has the following
+signature: ``callback(loop, req)``
 
 .. note::
     All functions in the fs module except for the `FSEvent` and `FSPoll` classes support both
@@ -33,8 +42,6 @@
 
     stat syscall.
 
-    Callback signature: ``callback(loop, path, stat_result, errorno)``
-
 
 .. py:function:: pyuv.fs.lstat(path, loop, [callback])
 
@@ -56,8 +63,6 @@
 
     Remove the specified file.
 
-    Callback signature: ``callback(loop, path, errorno)``
-
 
 .. py:function:: pyuv.fs.mkdir(loop, path, [callback])
 
@@ -69,8 +74,6 @@
 
     Create the specified directory.
 
-    Callback signature: ``callback(loop, path, errorno)``
-
 
 .. py:function:: pyuv.fs.rmdir(loop, path, [callback])
 
@@ -81,8 +84,6 @@
     :param callable callback: Function that will be called with the result of the function.
 
     Remove the specified directory.
-
-    Callback signature: ``callback(loop, path, errorno)``
 
 
 .. py:function:: pyuv.fs.rename(loop, path, new_path, [callback])
@@ -97,8 +98,6 @@
 
     Rename file.
 
-    Callback signature: ``callback(loop, path, errorno)``
-
 
 .. py:function:: pyuv.fs.chmod(loop, path, mode, [callback])
 
@@ -111,8 +110,6 @@
     :param callable callback: Function that will be called with the result of the function.
 
     Remove the specified directory.
-
-    Callback signature: ``callback(loop, path, errorno)``
 
 
 .. py:function:: pyuv.fs.fchmod(loop, fd, mode, [callback])
@@ -132,8 +129,6 @@
 
     Create a hard-link.
 
-    Callback signature: ``callback(loop, path, errorno)``
-
 
 .. py:function:: pyuv.fs.symlink(loop, path, new_path, flags, [callback])
 
@@ -151,8 +146,6 @@
 
     Create a symlink.
 
-    Callback signature: ``callback(loop, path, errorno)``
-
 
 .. py:function:: pyuv.fs.readlink(loop, path, [callback])
 
@@ -163,8 +156,6 @@
     :param callable callback: Function that will be called with the result of the function.
 
     Read link file and return the original file path.
-
-    Callback signature: ``callback(loop, path, errorno)``
 
 
 .. py:function:: pyuv.fs.chown(loop, path, uid, gid, [callback])
@@ -180,8 +171,6 @@
     :param callable callback: Function that will be called with the result of the function.
 
     Changes ownership of a file.
-
-    Callback signature: ``callback(loop, path, errorno)``
 
 
 .. py:function:: pyuv.fs.fchown(loop, fd, mode, [callback])
@@ -203,8 +192,6 @@
 
     Open file.
 
-    Callback signature: ``callback(loop, path, fd, errorno)``
-
 
 .. py:function:: pyuv.fs.close(loop, fd, [callback])
 
@@ -215,8 +202,6 @@
     :param callable callback: Function that will be called with the result of the function.
 
     Close file.
-
-    Callback signature: ``callback(loop, path, errorno)``
 
 
 .. py:function:: pyuv.fs.read(loop, fd, length, offset, [callback])
@@ -233,8 +218,6 @@
 
     Read from file.
 
-    Callback signature: ``callback(loop, path, read_data, errorno)``
-
 
 .. py:function:: pyuv.fs.write(loop, fd, write_data, offset, [callback])
 
@@ -250,8 +233,6 @@
 
     Write to file.
 
-    Callback signature: ``callback(loop, path, bytes_written, errorno)``
-
 
 .. py:function:: pyuv.fs.fsync(loop, fd, [callback])
 
@@ -263,8 +244,6 @@
 
     Sync all changes made to file.
 
-    Callback signature: ``callback(loop, path, errorno)``
-
 
 .. py:function:: pyuv.fs.fdatasync(loop, fd, [callback])
 
@@ -275,8 +254,6 @@
     :param callable callback: Function that will be called with the result of the function.
 
     Sync data changes made to file.
-
-    Callback signature: ``callback(loop, path, errorno)``
 
 
 .. py:function:: pyuv.fs.ftruncate(loop, fd, offset, [callback])
@@ -291,8 +268,6 @@
 
     Truncate the contents of a file to the specified offset.
 
-    Callback signature: ``callback(loop, path, errorno)``
-
 
 .. py:function:: pyuv.fs.scandir(loop, path, flags, [callback])
 
@@ -305,8 +280,6 @@
     :param callable callback: Function that will be called with the result of the function.
 
     List files from a directory.
-
-    Callback signature: ``callback(loop, path, files, errorno)``
 
 
 .. py:function:: pyuv.fs.sendfile(loop, out_fd, in_fd, in_offset, length, [callback])
@@ -325,8 +298,6 @@
 
     Send a regular file to a stream socket.
 
-    Callback signature: ``callback(loop, path, bytes_written, errorno)``
-
 
 .. py:function:: pyuv.fs.utime(loop, path, atime, mtime, [callback])
 
@@ -341,8 +312,6 @@
     :param callable callback: Function that will be called with the result of the function.
 
     Update file times.
-
-    Callback signature: ``callback(loop, path, files, errorno)``
 
 
 .. py:function:: pyuv.fs.futime(loop, fd, atime, mtime, [callback])
