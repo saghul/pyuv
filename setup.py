@@ -1,6 +1,7 @@
 # coding=utf-8
 
 import codecs
+import re
 
 try:
     from setuptools import setup, Extension
@@ -9,10 +10,12 @@ except ImportError:
 from setup_libuv import libuv_build_ext, libuv_sdist
 
 
-__version__ = "1.0.1"
+def get_version():
+    return re.search(r"""__version__\s+=\s+(?P<quote>['"])(?P<version>.+?)(?P=quote)""", open('pyuv/_version.py').read()).group('version')
+
 
 setup(name             = "pyuv",
-      version          = __version__,
+      version          = get_version(),
       author           = "Saúl Ibarra Corretgé",
       author_email     = "saghul@gmail.com",
       url              = "http://github.com/saghul/pyuv",
@@ -37,8 +40,6 @@ setup(name             = "pyuv",
       packages     = ['pyuv'],
       ext_modules  = [Extension('pyuv._cpyuv',
                                 sources = ['src/pyuv.c'],
-                                define_macros=[('MODULE_VERSION', __version__),
-                                               ('LIBUV_REVISION', libuv_build_ext.libuv_revision)]
                      )]
      )
 

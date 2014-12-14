@@ -240,11 +240,7 @@ init_pyuv(void)
     UV_HANDLE_TYPE_MAP(XX)
 #undef XX
 
-    /* Module version (the MODULE_VERSION macro is defined by setup.py) */
-    PyModule_AddStringConstant(pyuv, "__version__", PYUV_STRINGIFY(MODULE_VERSION));
-
     /* libuv version */
-    PyModule_AddStringConstant(pyuv, "LIBUV_REVISION", PYUV_STRINGIFY(LIBUV_REVISION));
     PyModule_AddStringConstant(pyuv, "LIBUV_VERSION", uv_version_string());
 
     return pyuv;
