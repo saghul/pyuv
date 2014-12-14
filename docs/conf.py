@@ -14,7 +14,7 @@
 import re
 
 def get_version():
-    return re.search(r"""__version__\s+=\s+(?P<quote>['"])(?P<version>.+?)(?P=quote)""", open('../setup.py').read()).group('version')
+    return re.search(r"""__version__\s+=\s+(?P<quote>['"])(?P<version>.+?)(?P=quote)""", open('../pyuv/_version.py').read()).group('version')
 _version = get_version()
 
 # If extensions (or modules to document with autodoc) are in another directory,
