@@ -5,6 +5,12 @@ import invoke
 
 
 @invoke.task
+def changelog(version):
+    print "Version %s" % version
+    print "============="
+    invoke.run('git log $(git describe --tags --abbrev=0)..HEAD --format=" - %s"')
+
+@invoke.task
 def release(version):
     invoke.run("git tag -a pyuv-{0} -m \"pyuv {0} release\"".format(version))
     invoke.run("git push --tags")
