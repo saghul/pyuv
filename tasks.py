@@ -3,7 +3,7 @@ import invoke
 
 import datetime
 import re
-import subprocess
+import sys
 
 
 cmd = 'git log $(git describe --tags --abbrev=0)..HEAD --format=" - %s" | tac'
@@ -17,23 +17,30 @@ def get_version():
 @invoke.task
 def changelog():
     version = get_version()
-    changelog = subprocess.check_output(cmd, shell=True)
+    changelog = invoke.run(cmd, hide=True).stdout
     print changelog_template % (version, changelog)
 
 @invoke.task
 def release():
     version = get_version()
 
-    changelog = subprocess.check_output(cmd, shell=True)
+    r = invoke.run('git diff-files --quiet', hide=True, warn=True)
+    if r.failed:
+        print 'The repository is not clean'
+        sys.exit(1)
+
+    changelog = invoke.run(cmd, hide=True).stdout
     with open('ChangeLog', 'r+') as f:
         content = f.read()
         f.seek(0)
         f.write(changelog_template % (version, changelog))
         f.write(content)
 
+    invoke.run('git commit -a -m "core: updated changelog"')
+
     dt = datetime.datetime.utcnow().replace(microsecond=0)
     tag = tag_template % (dt, version, changelog)
-    invoke.run("git tag -a pyuv-{0} -m \"{1}\"".format(version, tag))
+    invoke.run('git tag -a pyuv-{0} -m "{1}"'.format(version, tag))
 
 @invoke.task
 def push():
