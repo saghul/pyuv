@@ -1,3 +1,21 @@
+Version 1.0.2
+=============
+
+ - core: rearrange package structure
+ - build: fix verbose output in Python 3
+ - travis: fix testing on TravisCI
+ - travis: run tests using Tox
+ - test: fix tests when running inside Tox
+ - doc: updated fs module documentation
+ - core: move __version__ to a submodule
+ - doc: fix getting the package version
+ - build: using the system provided libuv is unsupported on Windows
+ - build: add invoke task to generate the changelog
+ - core: raised libuv revision to tag 1.2.1
+ - build: enhance release process
+ - core: set version to 1.0.2
+ - build: improve tasks.py
+
 Version 1.0.1
 =============
  - build: add --use-system-libuv build time option
