@@ -1,31 +1,17 @@
 
-static void
-pyuv__getaddrinfo_cb(uv_getaddrinfo_t* req, int status, struct addrinfo* res)
+static int
+pyuv__getaddrinfo_process_result(int status, struct addrinfo* res, PyObject** dns_result)
 {
-    PyGILState_STATE gstate = PyGILState_Ensure();
     struct addrinfo *ptr;
-    Loop *loop;
-    GAIRequest *gai_req;
-    PyObject *addr, *item, *errorno, *dns_result, *result;
-
-    ASSERT(req);
-
-    gai_req = PYUV_CONTAINER_OF(req, GAIRequest, req);
-    loop = REQUEST(gai_req)->loop;
+    PyObject *addr, *item;
 
     if (status != 0) {
-        errorno = PyInt_FromLong((long)status);
-        dns_result = Py_None;
-        Py_INCREF(Py_None);
-        goto callback;
+        return status;
     }
 
-    dns_result = PyList_New(0);
-    if (!dns_result) {
-        errorno = PyInt_FromLong((long)UV_ENOMEM);
-        dns_result = Py_None;
-        Py_INCREF(Py_None);
-        goto callback;
+    *dns_result = PyList_New(0);
+    if (!*dns_result) {
+        return UV_ENOMEM;
     }
 
     for (ptr = res; ptr; ptr = ptr->ai_next) {
@@ -49,13 +35,38 @@ pyuv__getaddrinfo_cb(uv_getaddrinfo_t* req, int status, struct addrinfo* res)
         PyStructSequence_SET_ITEM(item, 3, Py_BuildValue("s", ptr->ai_canonname ? ptr->ai_canonname : ""));
         PyStructSequence_SET_ITEM(item, 4, addr);
 
-        PyList_Append(dns_result, item);
+        PyList_Append(*dns_result, item);
         Py_DECREF(item);
     }
-    errorno = Py_None;
-    Py_INCREF(Py_None);
 
-callback:
+    return 0;
+}
+
+
+static void
+pyuv__getaddrinfo_cb(uv_getaddrinfo_t* req, int status, struct addrinfo* res)
+{
+    PyGILState_STATE gstate = PyGILState_Ensure();
+    Loop *loop;
+    GAIRequest *gai_req;
+    PyObject *errorno, *dns_result, *result;
+    int r;
+
+    ASSERT(req);
+
+    gai_req = PYUV_CONTAINER_OF(req, GAIRequest, req);
+    loop = REQUEST(gai_req)->loop;
+    dns_result = NULL;
+    errorno = NULL;
+
+    r = pyuv__getaddrinfo_process_result(status, res, &dns_result);
+    if (r == 0) {
+        PYUV_SET_NONE(errorno);
+    } else {
+        errorno = PyInt_FromLong((long)r);
+        PYUV_SET_NONE(dns_result);
+    }
+
     result = PyObject_CallFunctionObjArgs(gai_req->callback, dns_result, errorno, NULL);
     if (result == NULL) {
         handle_uncaught_exception(loop);
@@ -131,7 +142,7 @@ Util_func_getaddrinfo(PyObject *obj, PyObject *args, PyObject *kwargs)
     GAIRequest *gai_req;
     PyObject *callback, *host, *service, *idna, *ascii;
 
-    static char *kwlist[] = {"loop", "callback", "host", "port", "family", "socktype", "protocol", "flags", NULL};
+    static char *kwlist[] = {"loop", "host", "port", "family", "socktype", "protocol", "flags", "callback", NULL};
 
     UNUSED_ARG(obj);
     gai_req = NULL;
@@ -139,8 +150,9 @@ Util_func_getaddrinfo(PyObject *obj, PyObject *args, PyObject *kwargs)
     port = socktype = protocol = flags = 0;
     family = AF_UNSPEC;
     service = Py_None;
+    callback = Py_None;
 
-    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!OO|Oiiii:getaddrinfo", kwlist, &LoopType, &loop, &callback, &host, &service, &family, &socktype, &protocol, &flags)) {
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!O|OiiiiO:getaddrinfo", kwlist, &LoopType, &loop, &host, &service, &family, &socktype, &protocol, &flags, &callback)) {
         return NULL;
     }
 
@@ -158,8 +170,8 @@ Util_func_getaddrinfo(PyObject *obj, PyObject *args, PyObject *kwargs)
         goto error;
     }
 
-    if (!PyCallable_Check(callback)) {
-        PyErr_SetString(PyExc_TypeError, "a callable is required");
+    if (callback != Py_None && !PyCallable_Check(callback)) {
+        PyErr_SetString(PyExc_TypeError, "'callback' must be a callable or None");
         goto error;
     }
 
@@ -197,7 +209,12 @@ Util_func_getaddrinfo(PyObject *obj, PyObject *args, PyObject *kwargs)
     hints.ai_protocol = protocol;
     hints.ai_flags = flags;
 
-    err = uv_getaddrinfo(loop->uv_loop, &gai_req->req, &pyuv__getaddrinfo_cb, host_str, service_str, &hints);
+    err = uv_getaddrinfo(loop->uv_loop,
+                         &gai_req->req,
+                         callback != Py_None ? &pyuv__getaddrinfo_cb : NULL,
+                         host_str,
+                         service_str,
+                         &hints);
     if (err < 0) {
         RAISE_UV_EXCEPTION(err, PyExc_UVError);
         goto error;
@@ -206,8 +223,21 @@ Util_func_getaddrinfo(PyObject *obj, PyObject *args, PyObject *kwargs)
     Py_XDECREF(idna);
     Py_XDECREF(ascii);
 
-    Py_INCREF(gai_req);
-    return (PyObject *)gai_req;
+    if (callback == Py_None) {
+        /* synchronous */
+        PyObject *dns_result;
+        err = pyuv__getaddrinfo_process_result(0, gai_req->req.addrinfo, &dns_result);
+        Py_DECREF(gai_req);
+        if (err < 0) {
+            RAISE_UV_EXCEPTION(err, PyExc_UVError);
+            return NULL;
+        }
+        return dns_result;
+    } else {
+        /* async */
+        Py_INCREF(gai_req);
+        return (PyObject *)gai_req;
+    }
 
 error:
     Py_XDECREF(idna);
