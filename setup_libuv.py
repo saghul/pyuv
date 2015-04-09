@@ -111,7 +111,7 @@ class libuv_build_ext(build_ext):
     libuv_dir      = os.path.join('deps', 'libuv')
     libuv_repo     = 'https://github.com/libuv/libuv.git'
     libuv_branch   = 'v1.x'
-    libuv_revision = '4ca78e9'
+    libuv_revision = '1a73913'
     libuv_patches  = []
 
     user_options = build_ext.user_options
