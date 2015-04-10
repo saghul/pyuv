@@ -52,6 +52,7 @@ class PipeTest(PipeTestCase):
 
     def on_client_connection(self, client, error):
         self.assertEqual(error, None)
+        self.assertEqual(client.getpeername(), TEST_PIPE)
         client.start_read(self.on_client_read)
 
     def on_client_read(self, client, data, error):

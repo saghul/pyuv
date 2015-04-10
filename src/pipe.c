@@ -343,6 +343,44 @@ Pipe_func_getsockname(Pipe *self)
 
 
 static PyObject *
+Pipe_func_getpeername(Pipe *self)
+{
+#ifdef _WIN32
+    /* MAX_PATH is in characters, not bytes. Make sure we have enough headroom. */
+    char buf[MAX_PATH * 4];
+#else
+    char buf[PATH_MAX];
+#endif
+    size_t buf_len;
+    int err;
+
+    RAISE_IF_HANDLE_NOT_INITIALIZED(self, NULL);
+    RAISE_IF_HANDLE_CLOSED(self, PyExc_HandleClosedError, NULL);
+
+    buf_len = sizeof(buf);
+    err = uv_pipe_getpeername(&self->pipe_h, buf, &buf_len);
+    if (err < 0) {
+        RAISE_UV_EXCEPTION(err, PyExc_PipeError);
+        return NULL;
+    }
+
+    if (buf_len == 0) {
+        return PyBytes_FromString("");
+    } else if (buf[0] == '\0') {
+        /* Linux abstract namespace */
+        return PyBytes_FromStringAndSize(buf, buf_len);
+    } else {
+#ifdef PYUV_PYTHON3
+        return PyUnicode_DecodeFSDefaultAndSize(buf, buf_len);
+#else
+        return PyBytes_FromStringAndSize(buf, buf_len);
+#endif
+    }
+
+}
+
+
+static PyObject *
 Pipe_sndbuf_get(Pipe *self, void *closure)
 {
     int err;
@@ -507,6 +545,7 @@ Pipe_tp_methods[] = {
     { "pending_handle_type", (PyCFunction)Pipe_func_pending_handle_type, METH_NOARGS, "Returns the type of the next pending handle. Can be called multiple times." },
     { "write", (PyCFunction)Pipe_func_write, METH_VARARGS, "Write data and send handle over a pipe." },
     { "getsockname", (PyCFunction)Pipe_func_getsockname, METH_NOARGS, "Get bound pipe name." },
+    { "getpeername", (PyCFunction)Pipe_func_getpeername, METH_NOARGS, "Get bound pipe name." },
     { NULL }
 };
 
