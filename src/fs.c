@@ -1642,7 +1642,7 @@ FSEvent_path_get(FSEvent *self, void *closure)
         return PyBytes_FromString("");
     }
 
-    return PyBytes_FromStringAndSize(buf, buf_len-1);
+    return PyBytes_FromStringAndSize(buf, buf_len);
 }
 
 
@@ -1906,7 +1906,7 @@ FSPoll_path_get(FSPoll *self, void *closure)
         return PyBytes_FromString("");
     }
 
-    return PyBytes_FromStringAndSize(buf, buf_len-1);
+    return PyBytes_FromStringAndSize(buf, buf_len);
 }
 
 

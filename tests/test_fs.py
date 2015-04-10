@@ -877,6 +877,7 @@ class FSEventTestBasic(FileTestCase):
         self.filename = None
         fs_event = pyuv.fs.FSEvent(self.loop)
         fs_event.start(TEST_FILE, 0, self.on_fsevent_cb)
+        self.assertEqual(fs_event.path, TEST_FILE)
         timer = pyuv.Timer(self.loop)
         timer.start(self.timer_cb, 1, 0)
         self.loop.run()
@@ -985,6 +986,7 @@ class FSPollTest(TestCase):
         self.timer = pyuv.Timer(self.loop)
         self.fs_poll = pyuv.fs.FSPoll(self.loop)
         self.fs_poll.start(TEST_FILE, 0.1, self.on_fspoll)
+        self.assertEqual(self.fs_poll.path, TEST_FILE)
         self.loop.run()
         self.assertEqual(self.poll_cb_called, 5)
 
