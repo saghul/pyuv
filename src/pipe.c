@@ -333,9 +333,9 @@ Pipe_func_getsockname(Pipe *self)
         return PyBytes_FromStringAndSize(buf, buf_len);
     } else {
 #ifdef PYUV_PYTHON3
-        return PyUnicode_DecodeFSDefaultAndSize(buf, buf_len-1);
+        return PyUnicode_DecodeFSDefaultAndSize(buf, buf_len);
 #else
-        return PyBytes_FromStringAndSize(buf, buf_len-1);
+        return PyBytes_FromStringAndSize(buf, buf_len);
 #endif
     }
 

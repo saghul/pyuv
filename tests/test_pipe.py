@@ -64,6 +64,7 @@ class PipeTest(PipeTestCase):
         self.server = pyuv.Pipe(self.loop)
         self.server.pending_instances(100)
         self.server.bind(TEST_PIPE)
+        self.assertEqual(self.server.getsockname(), TEST_PIPE)
         self.server.listen(self.on_connection)
         self.client = pyuv.Pipe(self.loop)
         self.client.connect(TEST_PIPE, self.on_client_connection)
