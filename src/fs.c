@@ -1639,10 +1639,14 @@ FSEvent_path_get(FSEvent *self, void *closure)
     buf_len = sizeof(buf);
     err = uv_fs_event_getpath(&self->fsevent_h, buf, &buf_len);
     if (err < 0) {
-        return PyBytes_FromString("");
+        return Py_BuildValue("s", "");
     }
 
+#ifdef PYUV_PYTHON3
+    return PyUnicode_DecodeFSDefaultAndSize(buf, buf_len);
+#else
     return PyBytes_FromStringAndSize(buf, buf_len);
+#endif
 }
 
 
@@ -1906,7 +1910,11 @@ FSPoll_path_get(FSPoll *self, void *closure)
         return PyBytes_FromString("");
     }
 
+#ifdef PYUV_PYTHON3
+    return PyUnicode_DecodeFSDefaultAndSize(buf, buf_len);
+#else
     return PyBytes_FromStringAndSize(buf, buf_len);
+#endif
 }
 
 
