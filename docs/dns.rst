@@ -9,22 +9,25 @@
 ===============================================================
 
 
-.. py:function:: pyuv.util.getaddrinfo(loop, cb, ...)
+.. py:function:: pyuv.util.getaddrinfo(loop, ... , callback=None)
 
-    Asyncronous equivalent of `socket.getaddrinfo`. This function returns
-    a `GAIRequest` object which has a `cancel()` method that can be called
-    in order to cancel the request.
-
-    Callback signature: ``callback(result, errorno)``.
-
-.. py:function:: pyuv.util.getnameinfo(loop, cb, ...)
-
-    Asyncronous equivalent of `socket.getnameinfo`. This function returns
-    a `GNIRequest` object which has a `cancel()` method that can be called
-    in order to cancel the request.
+    Equivalent of `socket.getaddrinfo`. When `callback` is not None,
+    this function returns a `GAIRequest` object which has a `cancel()`
+    method that can be called in order to cancel the request.
 
     Callback signature: ``callback(result, errorno)``.
 
+    When `callback` is None, this function is synchronous.
+
+.. py:function:: pyuv.util.getnameinfo(loop, ... , callback=None)
+
+    Equivalent of `socket.getnameinfo`. When `callback` is not None,
+    this function returns a `GNIRequest` object which has a `cancel()`
+    method that can be called in order to cancel the request.
+
+    Callback signature: ``callback(result, errorno)``.
+
+    When `callback` is None, this function is synchronous.
 
 .. note::
     libuv used to bundle c-ares in the past, so the c-ares bindings
