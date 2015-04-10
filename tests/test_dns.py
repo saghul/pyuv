@@ -47,14 +47,19 @@ class DnsTest(TestCase):
     def test_getnameinfo_ipv4(self):
         def cb(result, errorno):
             self.assertEqual(errorno, None)
-        pyuv.dns.getnameinfo(self.loop, cb, ('127.0.0.1', 80))
+        pyuv.dns.getnameinfo(self.loop, ('127.0.0.1', 80), callback=cb)
         self.loop.run()
 
     def test_getnameinfo_ipv6(self):
         def cb(result, errorno):
             self.assertEqual(errorno, None)
-            pyuv.dns.getnameinfo(self.loop, cb, ('::1', 80))
+            pyuv.dns.getnameinfo(self.loop, ('::1', 80), callback=cb)
         self.loop.run()
+
+    def test_getnameinfo_sync(self):
+        result = pyuv.dns.getnameinfo(self.loop, ('127.0.0.1', 80))
+        self.loop.run()
+        self.assertNotEqual(result, None)
 
 
 if __name__ == '__main__':

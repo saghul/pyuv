@@ -50,7 +50,7 @@ pyuv__getaddrinfo_cb(uv_getaddrinfo_t* req, int status, struct addrinfo* res)
     Loop *loop;
     GAIRequest *gai_req;
     PyObject *errorno, *dns_result, *result;
-    int r;
+    int err;
 
     ASSERT(req);
 
@@ -59,11 +59,11 @@ pyuv__getaddrinfo_cb(uv_getaddrinfo_t* req, int status, struct addrinfo* res)
     dns_result = NULL;
     errorno = NULL;
 
-    r = pyuv__getaddrinfo_process_result(status, res, &dns_result);
-    if (r == 0) {
+    err = pyuv__getaddrinfo_process_result(status, res, &dns_result);
+    if (err == 0) {
         PYUV_SET_NONE(errorno);
     } else {
-        errorno = PyInt_FromLong((long)r);
+        errorno = PyInt_FromLong((long)err);
         PYUV_SET_NONE(dns_result);
     }
 
@@ -83,6 +83,22 @@ pyuv__getaddrinfo_cb(uv_getaddrinfo_t* req, int status, struct addrinfo* res)
 }
 
 
+static int
+pyuv__getnameinfo_process_result(int status, const char *hostname, const char*service, PyObject **gni_result)
+{
+    if (status != 0) {
+        return status;
+    }
+
+    *gni_result = Py_BuildValue("ss", hostname, service);
+    if (!gni_result) {
+        return UV_ENOMEM;
+    }
+
+    return 0;
+}
+
+
 static void
 pyuv__getnameinfo_cb(uv_getnameinfo_t* req, int status, const char *hostname, const char *service)
 {
@@ -90,31 +106,21 @@ pyuv__getnameinfo_cb(uv_getnameinfo_t* req, int status, const char *hostname, co
     Loop *loop;
     GNIRequest *gni_req;
     PyObject *errorno, *gni_result, *result;
+    int err;
 
     ASSERT(req);
 
     gni_req = PYUV_CONTAINER_OF(req, GNIRequest, req);
     loop = REQUEST(gni_req)->loop;
 
-    if (status != 0) {
-        errorno = PyInt_FromLong((long)status);
-        gni_result = Py_None;
-        Py_INCREF(Py_None);
-        goto callback;
+    err = pyuv__getnameinfo_process_result(status, hostname, service, &gni_result);
+    if (err == 0) {
+        PYUV_SET_NONE(errorno);
+    } else {
+        errorno = PyInt_FromLong((long)err);
+        PYUV_SET_NONE(gni_result);
     }
 
-    gni_result = Py_BuildValue("ss", hostname, service);
-    if (!gni_result) {
-        errorno = PyInt_FromLong((long)UV_ENOMEM);
-        gni_result = Py_None;
-        Py_INCREF(Py_None);
-        goto callback;
-    }
-
-    errorno = Py_None;
-    Py_INCREF(Py_None);
-
-callback:
     result = PyObject_CallFunctionObjArgs(gni_req->callback, gni_result, errorno, NULL);
     if (result == NULL) {
         handle_uncaught_exception(loop);
@@ -256,17 +262,18 @@ Util_func_getnameinfo(PyObject *obj, PyObject *args, PyObject *kwargs)
     GNIRequest *gni_req;
     PyObject *callback, *addr;
 
-    static char *kwlist[] = {"loop", "callback", "address", "flags", NULL};
+    static char *kwlist[] = {"loop", "address", "flags", "callback", NULL};
 
     gni_req = NULL;
     flags = 0;
+    callback = Py_None;
 
-    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!OO|i:getaddrinfo", kwlist, &LoopType, &loop, &callback, &addr, &flags)) {
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!O|iO:getaddrinfo", kwlist, &LoopType, &loop, &addr, &flags, &callback)) {
         return NULL;
     }
 
-    if (!PyCallable_Check(callback)) {
-        PyErr_SetString(PyExc_TypeError, "a callable is required");
+    if (callback != Py_None && !PyCallable_Check(callback)) {
+        PyErr_SetString(PyExc_TypeError, "'callback' must be a callable or None");
         return NULL;
     }
 
@@ -281,15 +288,30 @@ Util_func_getnameinfo(PyObject *obj, PyObject *args, PyObject *kwargs)
         return NULL;
     }
 
-    err = uv_getnameinfo(loop->uv_loop, &gni_req->req, &pyuv__getnameinfo_cb, (struct sockaddr*) &ss, flags);
+    err = uv_getnameinfo(loop->uv_loop,
+                         &gni_req->req,
+                         callback != Py_None ? &pyuv__getnameinfo_cb : NULL,
+                         (struct sockaddr*) &ss, flags);
     if (err < 0) {
         RAISE_UV_EXCEPTION(err, PyExc_UVError);
         Py_XDECREF(gni_req);
         return NULL;
     }
 
-    Py_INCREF(gni_req);
-    return (PyObject *)gni_req;
+    if (callback == Py_None) {
+        /* synchronous */
+        PyObject *gni_result;
+        err = pyuv__getnameinfo_process_result(0, gni_req->req.host, gni_req->req.service, &gni_result);
+        if (err < 0) {
+            RAISE_UV_EXCEPTION(err, PyExc_UVError);
+            return NULL;
+        }
+        return gni_result;
+    } else {
+        /* async */
+        Py_INCREF(gni_req);
+        return (PyObject *)gni_req;
+    }
 }
 
 
