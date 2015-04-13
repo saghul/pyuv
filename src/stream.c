@@ -477,6 +477,29 @@ Stream_func_fileno(Stream *self)
 
 
 static PyObject *
+Stream_func_set_blocking(Stream *self, PyObject *args)
+{
+    int err;
+    PyObject *enable;
+
+    RAISE_IF_HANDLE_NOT_INITIALIZED(self, NULL);
+    RAISE_IF_HANDLE_CLOSED(self, PyExc_HandleClosedError, NULL);
+
+    if (!PyArg_ParseTuple(args, "O!:set_blocking", &PyBool_Type, &enable)) {
+        return NULL;
+    }
+
+    err = uv_stream_set_blocking((uv_stream_t *)UV_HANDLE(self), (enable == Py_True) ? 1 : 0);
+    if (err < 0) {
+        RAISE_STREAM_EXCEPTION(err, UV_HANDLE(self));
+        return NULL;
+    }
+
+    Py_RETURN_NONE;
+}
+
+
+static PyObject *
 Stream_readable_get(Stream *self, void *closure)
 {
     UNUSED_ARG(closure);
@@ -544,6 +567,7 @@ Stream_tp_methods[] = {
     { "start_read", (PyCFunction)Stream_func_start_read, METH_VARARGS, "Start read data from the connected endpoint." },
     { "stop_read", (PyCFunction)Stream_func_stop_read, METH_NOARGS, "Stop read data from the connected endpoint." },
     { "fileno", (PyCFunction)Stream_func_fileno, METH_NOARGS, "Returns the libuv OS handle." },
+    { "set_blocking", (PyCFunction)Stream_func_set_blocking, METH_VARARGS, "Set the stream to be blocking." },
     { NULL }
 };
 

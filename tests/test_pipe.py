@@ -25,6 +25,17 @@ class PipeErrorTest(TestCase):
         self.loop.run()
 
 
+class PipeBlockingTest(TestCase):
+
+    def test_pipe_set_blocking(self):
+        pipe = pyuv.Pipe(self.loop)
+        pipe.bind(TEST_PIPE)
+        pipe.set_blocking(True)
+        pipe.set_blocking(False)
+        pipe.close()
+        self.loop.run()
+
+
 class PipeTestCase(TestCase):
 
     def setUp(self):
