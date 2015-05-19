@@ -196,6 +196,7 @@ Handle_tp_new(PyTypeObject *type, PyObject *args, PyObject *kwargs)
     if (!self) {
         return NULL;
     }
+    self->handle_magic = PYUV_HANDLE_MAGIC;
     self->initialized = False;
     self->uv_handle = NULL;
     self->weakreflist = NULL;
