@@ -219,7 +219,7 @@ class libuv_sdist(sdist):
     libuv_patches  = libuv_build_ext.libuv_patches
 
     gyp_dir = os.path.join(libuv_dir, 'build', 'gyp')
-    gyp_repo = 'https://git.chromium.org/external/gyp.git'
+    gyp_repo = 'https://chromium.googlesource.com/external/gyp.git'
 
     def initialize_options(self):
         sdist.initialize_options(self)
