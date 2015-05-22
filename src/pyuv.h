@@ -166,6 +166,11 @@ typedef int Bool;
     } while(0)                                         \
 
 
+/* Non-pyuv handles are unlikely to contain that exact data, so this is at least
+   somewhat better than a guaranteed SIGSEGV when accessing`loop.handles`. */
+#define IS_PYUV_HANDLE(ptr) (ptr && ((Handle*)ptr)->__handle_magic == PYUV_HANDLE_MAGIC)
+#define PYUV_HANDLE_MAGIC &HandleType
+
 /* Python types definitions */
 
 /* Loop */
@@ -187,6 +192,7 @@ static PyTypeObject LoopType;
 /* Handle */
 typedef struct {
     PyObject_HEAD
+    void *__handle_magic;
     uv_handle_t *uv_handle;
     int flags;
     Bool initialized;

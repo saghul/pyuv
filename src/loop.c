@@ -263,9 +263,11 @@ handles_walk_cb(uv_handle_t* handle, void* arg)
     handles = arg;
     obj = handle->data;
 
-    ASSERT(obj);
-
-    PyList_Append(handles, obj);
+    if (IS_PYUV_HANDLE(obj)) {
+        if (!PyErr_Occurred()) {
+            PyList_Append(handles, obj);
+        }
+    }
 }
 
 static PyObject *
@@ -276,7 +278,16 @@ Loop_handles_get(Loop *self, void *closure)
 
     handles = PyList_New(0);
 
+    if (!handles) {
+        return NULL;
+    }
+
     uv_walk(self->uv_loop, (uv_walk_cb)handles_walk_cb, handles);
+
+    if (PyErr_Occurred()) {
+        Py_DECREF(handles);
+        handles = NULL;
+    }
 
     return handles;
 }
