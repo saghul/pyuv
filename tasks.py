@@ -14,21 +14,23 @@ tag_template = '%s - pyuv version %s\n\n%s\n'
 def get_version():
     return re.search(r"""__version__\s+=\s+(?P<quote>['"])(?P<version>.+?)(?P=quote)""", open('pyuv/_version.py').read()).group('version')
 
+def check_repo():
+    r = invoke.run('git diff-files --quiet', hide=True, warn=True)
+    if r.failed:
+        print 'The repository is not clean'
+        sys.exit(1)
+
 @invoke.task
 def changelog():
+    check_repo()
     version = get_version()
     changelog = invoke.run(cmd, hide=True).stdout
     print changelog_template % (version, changelog)
 
 @invoke.task
 def release():
+    check_repo()
     version = get_version()
-
-    r = invoke.run('git diff-files --quiet', hide=True, warn=True)
-    if r.failed:
-        print 'The repository is not clean'
-        sys.exit(1)
-
     changelog = invoke.run(cmd, hide=True).stdout
     with open('ChangeLog', 'r+') as f:
         content = f.read()
@@ -44,11 +46,13 @@ def release():
 
 @invoke.task
 def push():
+    check_repo()
     invoke.run("git push")
     invoke.run("git push --tags")
 
 @invoke.task
 def upload():
+    check_repo()
     version = get_version()
     invoke.run("python setup.py sdist")
     invoke.run("twine upload -r pypi dist/pyuv-{0}*".format(version))
