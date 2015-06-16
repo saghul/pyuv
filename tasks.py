@@ -24,22 +24,26 @@ def check_repo():
 def changelog():
     check_repo()
     version = get_version()
-    changelog = invoke.run(cmd, hide=True).stdout
+    with open('ChangeLog', 'r+') as f:
+        content = f.read()
+        if content.startswith('Version %s' % version):
+            print 'ChangeLog was already generated'
+            sys.exit(1)
+        changelog = invoke.run(cmd, hide=True).stdout
+        f.seek(0)
+        f.write(changelog_template % (version, changelog))
+        f.write(content)
+    invoke.run('git commit -a -m "core: updated changelog"')
     print changelog_template % (version, changelog)
+    print 'The above ChangeLog was written, please adjust and amend as necessary'
 
 @invoke.task
 def release():
     check_repo()
     version = get_version()
-    changelog = invoke.run(cmd, hide=True).stdout
-    with open('ChangeLog', 'r+') as f:
+    with open('ChangeLog', 'r') as f:
         content = f.read()
-        f.seek(0)
-        f.write(changelog_template % (version, changelog))
-        f.write(content)
-
-    invoke.run('git commit -a -m "core: updated changelog"')
-
+    changelog = content[:content.find('\n\n')]
     dt = datetime.datetime.utcnow().replace(microsecond=0)
     tag = tag_template % (dt, version, changelog)
     invoke.run('git tag -a pyuv-{0} -m "{1}"'.format(version, tag))
