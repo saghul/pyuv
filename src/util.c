@@ -242,6 +242,21 @@ Util_func_getrusage(PyObject *obj)
 }
 
 
+static PyObject *
+Util_func_guess_handle_type(PyObject *obj, PyObject *args)
+{
+    int fd;
+
+    UNUSED_ARG(obj);
+
+    if (!PyArg_ParseTuple(args, "i:guess_handle_type", &fd)) {
+        return NULL;
+    }
+
+    return PyInt_FromLong((long) uv_guess_handle(fd));
+}
+
+
 static PyMethodDef
 Util_methods[] = {
     { "hrtime", (PyCFunction)Util_func_hrtime, METH_NOARGS, "High resolution time." },
@@ -253,6 +268,7 @@ Util_methods[] = {
     { "interface_addresses", (PyCFunction)Util_func_interface_addresses, METH_NOARGS, "Gets network interface addresses." },
     { "cpu_info", (PyCFunction)Util_func_cpu_info, METH_NOARGS, "Gets system CPU information." },
     { "getrusage", (PyCFunction)Util_func_getrusage, METH_NOARGS, "Get information about OS resource utilization for the current process." },
+    { "guess_handle_type", (PyCFunction)Util_func_guess_handle_type, METH_VARARGS, "Guess the handle type, given a file descriptor." },
     { NULL }
 };
 

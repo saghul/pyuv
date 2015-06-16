@@ -47,6 +47,11 @@
     Get information about resource utilization. getrusage(2) implementation
     which always uses RUSAGE_SELF. Limited support on Windows.
 
+.. py:function:: pyuv.util.guess_handle_type
+
+    Given a file descriptor, returns the handle type in the form of a constant (integer).
+    The user can compare it with constants exposed in pyuv.*, such as UV_TTY, UV_TCP, and so on.
+
 .. py:class:: pyuv.util.SignalChecker(loop, fd)
 
     :type loop: :py:class:`Loop`
