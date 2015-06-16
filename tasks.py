@@ -7,7 +7,7 @@ import sys
 
 
 cmd = 'git log $(git describe --tags --abbrev=0)..HEAD --format=" - %s" | tac'
-changelog_template = 'Version %s\n=============\n\n%s\n'
+changelog_template = 'Version %s\n=============\n%s\n'
 tag_template = '%s - pyuv version %s\n\n%s\n'
 
 

@@ -1,6 +1,5 @@
 Version 1.0.2
 =============
-
  - core: rearrange package structure
  - build: fix verbose output in Python 3
  - travis: fix testing on TravisCI
