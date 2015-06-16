@@ -1,3 +1,25 @@
+Version 1.1.0
+=============
+ - test: speed-up TravisCI build process
+ - core: add utf-8 BOM to setup.py
+ - doc: remove no longer needed note about Poll handles
+ - dns: add support for synchronous getaddrinfo
+ - dns: add support for synchronous getnameinfo
+ - doc: update documentation for get{addr,name}info
+ - pipe: fix getsockname
+ - fs: fix FSEvent.path and FSPoll.path
+ - fs: fix FS{Event,Poll}.path on Python 3
+ - pipe: add Pipe.getpeername function
+ - stream: add Stream.set_blocking function
+ - misc: update gitignore
+ - loop: do not iterate over non-pyuv handles in Loop.spawn
+ - build: update GYP repository location
+ - core: raised libuv revision to tag 1.6.1
+ - build: skip VS 2015 if it's in the path
+ - util: add pyuv.util.guess_handle_type function
+ - build: check if repository is clean before running any invoke command
+ - build: fix ChangeLog template
+
 Version 1.0.2
 =============
  - core: rearrange package structure
