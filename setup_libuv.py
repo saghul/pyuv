@@ -46,8 +46,8 @@ def exec_process(cmdline, silent=True, input=None, **kwargs):
         stdout, stderr = sub.communicate(input=input)
         returncode = sub.returncode
         if PY3:
-            stderr = stderr.decode('utf-8')
-            stdout = stdout.decode('utf-8')
+            stderr = stderr.decode(sys.stderr.encoding)
+            stdout = stdout.decode(sys.stdout.encoding)
         if not silent:
             sys.stdout.write(stdout)
             sys.stderr.write(stderr)
@@ -88,7 +88,7 @@ def prepare_windows_env(env):
     try:
         sub = subprocess.Popen(cmd, stdout=subprocess.PIPE)
         stdout, _ = sub.communicate()
-        version = ast.literal_eval(stdout.decode('utf-8').strip())
+        version = ast.literal_eval(stdout.decode(sys.stdout.encoding).strip())
         if version == (2, 7):
             return  # Python on PATH is fine
     except OSError:
