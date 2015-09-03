@@ -1233,19 +1233,19 @@ FS_func_ftruncate(PyObject *obj, PyObject *args, PyObject *kwargs)
 static PyObject *
 FS_func_scandir(PyObject *obj, PyObject *args, PyObject *kwargs)
 {
-    int err, flags;
+    int err;
     char *path;
     Loop *loop;
     FSRequest *fs_req;
     PyObject *callback, *ret;
 
-    static char *kwlist[] = {"loop", "path", "flags", "callback", NULL};
+    static char *kwlist[] = {"loop", "path", "callback", NULL};
 
     UNUSED_ARG(obj);
     fs_req = NULL;
     callback = Py_None;
 
-    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!si|O:scandir", kwlist, &LoopType, &loop, &path, &flags, &callback)) {
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!s|O:scandir", kwlist, &LoopType, &loop, &path, &callback)) {
         return NULL;
     }
 
@@ -1259,7 +1259,7 @@ FS_func_scandir(PyObject *obj, PyObject *args, PyObject *kwargs)
         return NULL;
     }
 
-    err = uv_fs_scandir(loop->uv_loop, &fs_req->req, path, flags, (callback != Py_None) ? pyuv__process_fs_req : NULL);
+    err = uv_fs_scandir(loop->uv_loop, &fs_req->req, path, 0, (callback != Py_None) ? pyuv__process_fs_req : NULL);
     if (err < 0) {
         RAISE_UV_EXCEPTION(err, PyExc_FSError);
         Py_DECREF(fs_req);
