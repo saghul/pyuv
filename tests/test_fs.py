@@ -670,30 +670,30 @@ class FSTestScandir(TestCase):
     def test_bad_scandir(self):
         self.errorno = None
         self.files = None
-        pyuv.fs.scandir(self.loop, BAD_DIR, 0, self.scandir_cb)
+        pyuv.fs.scandir(self.loop, BAD_DIR, self.scandir_cb)
         self.loop.run()
         self.assertEqual(self.errorno, pyuv.errno.UV_ENOENT)
 
     def test_scandir(self):
         self.errorno = None
         self.files = None
-        pyuv.fs.scandir(self.loop, TEST_DIR, 0, self.scandir_cb)
+        pyuv.fs.scandir(self.loop, TEST_DIR, self.scandir_cb)
         self.loop.run()
         self.assertEqual(self.errorno, None)
-        self.assertTrue(TEST_FILE in self.files)
-        self.assertTrue(TEST_FILE2 in self.files)
-        self.assertTrue(TEST_DIR2 in self.files)
+        self.assertTrue(TEST_FILE in [f.name for f in self.files])
+        self.assertTrue(TEST_FILE2 in [f.name for f in self.files])
+        self.assertTrue(TEST_DIR2 in [f.name for f in self.files])
 
     def test_scandir_sync(self):
-        self.files = pyuv.fs.scandir(self.loop, TEST_DIR, 0)
+        self.files = pyuv.fs.scandir(self.loop, TEST_DIR)
         self.assertNotEqual(self.files, None)
-        self.assertTrue(TEST_FILE in self.files)
-        self.assertTrue(TEST_FILE2 in self.files)
-        self.assertTrue(TEST_DIR2 in self.files)
+        self.assertTrue(TEST_FILE in [f.name for f in self.files])
+        self.assertTrue(TEST_FILE2 in [f.name for f in self.files])
+        self.assertTrue(TEST_DIR2 in [f.name for f in self.files])
 
     def test_scandir_error_sync(self):
         try:
-            pyuv.fs.scandir(self.loop, BAD_DIR, 0)
+            pyuv.fs.scandir(self.loop, BAD_DIR)
         except pyuv.error.FSError as e:
             self.errorno = e.args[0]
         else:
