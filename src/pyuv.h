@@ -534,6 +534,23 @@ static PyStructSequence_Desc stat_result_desc = {
 };
 
 
+/* used by scandir */
+static PyTypeObject DirEntType;
+
+static PyStructSequence_Field dirent_fields[] = {
+    {"name", ""},
+    {"type", ""},
+    {NULL}
+};
+
+static PyStructSequence_Desc dirent_desc = {
+    "DirEnt",
+    NULL,
+    dirent_fields,
+    2
+};
+
+
 /* used by interface_addresses */
 static PyTypeObject InterfaceAddressesResultType;
 

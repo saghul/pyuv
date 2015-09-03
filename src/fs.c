@@ -139,7 +139,6 @@ pyuv__process_fs_req(uv_fs_t* req) {
                 PyMem_Free(fs_req->buf.base);
                 break;
             case UV_FS_SCANDIR:
-                /* TODO: add (name, type) tuples instead? */
                 r = PyList_New(0);
                 if (!r) {
                     PyErr_Clear();
@@ -147,7 +146,13 @@ pyuv__process_fs_req(uv_fs_t* req) {
                 } else {
                     uv_dirent_t ent;
                     while (uv_fs_scandir_next(req, &ent) != UV_EOF) {
-                        item = Py_BuildValue("s", ent.name);
+                        item = PyStructSequence_New(&DirEntType);
+                        if (!item) {
+                            PyErr_Clear();
+                            break;
+                        }
+                        PyStructSequence_SET_ITEM(item, 0, Py_BuildValue("s", ent.name));
+                        PyStructSequence_SET_ITEM(item, 1, PyInt_FromLong((long)ent.type));
                         PyList_Append(r, item);
                         Py_DECREF(item);
                     }
@@ -2063,6 +2068,14 @@ init_fs(void)
     PyModule_AddIntMacro(module, UV_FS_EVENT_STAT);
     PyModule_AddIntMacro(module, UV_FS_SYMLINK_DIR);
     PyModule_AddIntMacro(module, UV_FS_SYMLINK_JUNCTION);
+    PyModule_AddIntMacro(module, UV_DIRENT_UNKNOWN);
+    PyModule_AddIntMacro(module, UV_DIRENT_FILE);
+    PyModule_AddIntMacro(module, UV_DIRENT_DIR);
+    PyModule_AddIntMacro(module, UV_DIRENT_LINK);
+    PyModule_AddIntMacro(module, UV_DIRENT_FIFO);
+    PyModule_AddIntMacro(module, UV_DIRENT_SOCKET);
+    PyModule_AddIntMacro(module, UV_DIRENT_CHAR);
+    PyModule_AddIntMacro(module, UV_DIRENT_BLOCK);
 
     FSEventType.tp_base = &HandleType;
     FSPollType.tp_base = &HandleType;
@@ -2073,6 +2086,8 @@ init_fs(void)
     /* initialize PyStructSequence types */
     if (StatResultType.tp_name == 0)
         PyStructSequence_InitType(&StatResultType, &stat_result_desc);
+    if (DirEntType.tp_name == 0)
+        PyStructSequence_InitType(&DirEntType, &dirent_desc);
 
     return module;
 }
