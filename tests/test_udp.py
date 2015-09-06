@@ -448,5 +448,43 @@ class UDPTryTest(TestCase):
         self.assertEqual(self.on_close_called, 3)
 
 
+class UDPEarlyBindTest(TestCase):
+
+    def test_early_bind_unspec(self):
+        client = pyuv.UDP(self.loop, socket.AF_UNSPEC)
+        client.bind(('127.0.0.1', TEST_PORT))
+        client.close()
+        self.loop.run()
+
+    def test_early_bind_unspec2(self):
+        client = pyuv.UDP(self.loop, socket.AF_UNSPEC)
+        client.bind(('::1', TEST_PORT))
+        client.close()
+        self.loop.run()
+
+    def test_early_bind_inet(self):
+        client = pyuv.UDP(self.loop, socket.AF_INET)
+        client.bind(('127.0.0.1', TEST_PORT))
+        client.close()
+        self.loop.run()
+
+    def test_early_bind_inet_error(self):
+        client = pyuv.UDP(self.loop, socket.AF_INET6)
+        self.assertRaises(pyuv.error.UDPError, client.bind, ('127.0.0.1', TEST_PORT))
+        client.close()
+        self.loop.run()
+
+    def test_early_bind_inet6(self):
+        client = pyuv.UDP(self.loop, socket.AF_INET6)
+        client.bind(('::1', TEST_PORT))
+        client.close()
+        self.loop.run()
+
+    def test_early_bind_inet6_error(self):
+        client = pyuv.UDP(self.loop, socket.AF_INET)
+        self.assertRaises(pyuv.error.UDPError, client.bind, ('::1', TEST_PORT))
+        client.close()
+        self.loop.run()
+
 if __name__ == '__main__':
     unittest.main(verbosity=2)
