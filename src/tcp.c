@@ -453,17 +453,20 @@ static int
 TCP_tp_init(TCP *self, PyObject *args, PyObject *kwargs)
 {
     int err;
+    int family;
     Loop *loop;
 
     UNUSED_ARG(kwargs);
 
     RAISE_IF_HANDLE_INITIALIZED(self, -1);
 
-    if (!PyArg_ParseTuple(args, "O!:__init__", &LoopType, &loop)) {
+    family = AF_UNSPEC;
+
+    if (!PyArg_ParseTuple(args, "O!|i:__init__", &LoopType, &loop, &family)) {
         return -1;
     }
 
-    err = uv_tcp_init(loop->uv_loop, &self->tcp_h);
+    err = uv_tcp_init_ex(loop->uv_loop, &self->tcp_h, family);
     if (err < 0) {
         RAISE_UV_EXCEPTION(err, PyExc_TCPError);
         return -1;

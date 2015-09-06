@@ -515,5 +515,44 @@ class TCPTestFileno(TestCase):
         self.loop.run()
 
 
+class TCPEarlyBindTest(TestCase):
+
+    def test_early_bind_unspec(self):
+        client = pyuv.TCP(self.loop, socket.AF_UNSPEC)
+        client.bind(('127.0.0.1', TEST_PORT))
+        client.close()
+        self.loop.run()
+
+    def test_early_bind_unspec2(self):
+        client = pyuv.TCP(self.loop, socket.AF_UNSPEC)
+        client.bind(('::1', TEST_PORT))
+        client.close()
+        self.loop.run()
+
+    def test_early_bind_inet(self):
+        client = pyuv.TCP(self.loop, socket.AF_INET)
+        client.bind(('127.0.0.1', TEST_PORT))
+        client.close()
+        self.loop.run()
+
+    def test_early_bind_inet_error(self):
+        client = pyuv.TCP(self.loop, socket.AF_INET6)
+        self.assertRaises(pyuv.error.TCPError, client.bind, ('127.0.0.1', TEST_PORT))
+        client.close()
+        self.loop.run()
+
+    def test_early_bind_inet6(self):
+        client = pyuv.TCP(self.loop, socket.AF_INET6)
+        client.bind(('::1', TEST_PORT))
+        client.close()
+        self.loop.run()
+
+    def test_early_bind_inet6_error(self):
+        client = pyuv.TCP(self.loop, socket.AF_INET)
+        self.assertRaises(pyuv.error.TCPError, client.bind, ('::1', TEST_PORT))
+        client.close()
+        self.loop.run()
+
+
 if __name__ == '__main__':
     unittest.main(verbosity=2)
