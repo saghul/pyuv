@@ -9,10 +9,13 @@
 ==============================
 
 
-.. py:class:: UDP(loop)
+.. py:class:: UDP(loop, [family])
 
     :type loop: :py:class:`Loop`
     :param loop: loop object where this handle runs (accessible through :py:attr:`UDP.loop`).
+
+    :param int family: Optionally specify the socket family. If specified and not ``AF_UNSPEC``
+        the socket will be created early.
 
     The ``UDP`` handle provides asynchronous UDP functionality both as a client and server.
 
@@ -151,4 +154,10 @@
     .. py:attribute:: receive_buffer_size
 
         Gets / sets the receive buffer size.
+
+    .. py:attribute:: family
+
+        *Read only*
+
+        Returns the socket address family.
 
