@@ -574,12 +574,14 @@ class TCPFamilyTest(TestCase):
         client.close()
         self.loop.run()
 
+    @platform_skip(["win32"])
     def test_family_inet(self):
         client = pyuv.TCP(self.loop, socket.AF_INET)
         self.assertEqual(client.family, socket.AF_INET)
         client.close()
         self.loop.run()
 
+    @platform_skip(["win32"])
     def test_family_inet6(self):
         client = pyuv.TCP(self.loop, socket.AF_INET6)
         self.assertEqual(client.family, socket.AF_INET6)
