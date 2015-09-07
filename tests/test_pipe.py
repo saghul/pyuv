@@ -6,7 +6,7 @@ from common import linesep, platform_skip, TestCase
 import pyuv
 
 if sys.platform == 'win32':
-    TEST_PIPE = '\\\\.\\pipe\\test-pipe'
+    TEST_PIPE = '\\\\?\\pipe\\test-pipe'
 else:
     TEST_PIPE = 'test-pipe'
 
