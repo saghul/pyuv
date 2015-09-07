@@ -34,30 +34,30 @@ signature: ``callback(loop, req)``
 
 .. py:function:: pyuv.fs.stat(loop, path, [callback])
 
-    :param string path: File to stat.
-
     :param loop: loop object where this function runs.
+
+    :param string path: File to stat.
 
     :param callable callback: Function that will be called with the result of the function.
 
     stat syscall.
 
 
-.. py:function:: pyuv.fs.lstat(path, loop, [callback])
+.. py:function:: pyuv.fs.lstat(loop, path, [callback])
 
     Same as :py:func:`pyuv.fs.stat` but it also follows symlinks.
 
 
-.. py:function:: pyuv.fs.fstat(fd, loop, [callback])
+.. py:function:: pyuv.fs.fstat(loop, fd, [callback])
 
     Same as :py:func:`pyuv.fs.stat` but using a file-descriptor instead of the path.
 
 
 .. py:function:: pyuv.fs.unlink(loop, path, [callback])
 
-    :param string path: File to unlink.
-
     :param loop: loop object where this function runs.
+
+    :param string path: File to unlink.
 
     :param callable callback: Function that will be called with the result of the function.
 
@@ -66,9 +66,9 @@ signature: ``callback(loop, req)``
 
 .. py:function:: pyuv.fs.mkdir(loop, path, [callback])
 
-    :param string path: Directory to create.
-
     :param loop: loop object where this function runs.
+
+    :param string path: Directory to create.
 
     :param callable callback: Function that will be called with the result of the function.
 
@@ -77,9 +77,9 @@ signature: ``callback(loop, req)``
 
 .. py:function:: pyuv.fs.rmdir(loop, path, [callback])
 
-    :param string path: Directory to remove.
-
     :param loop: loop object where this function runs.
+
+    :param string path: Directory to remove.
 
     :param callable callback: Function that will be called with the result of the function.
 
@@ -88,11 +88,11 @@ signature: ``callback(loop, req)``
 
 .. py:function:: pyuv.fs.rename(loop, path, new_path, [callback])
 
+    :param loop: loop object where this function runs.
+
     :param string path: Original file.
 
     :param string new_path: New name for the file.
-
-    :param loop: loop object where this function runs.
 
     :param callable callback: Function that will be called with the result of the function.
 
@@ -101,11 +101,11 @@ signature: ``callback(loop, req)``
 
 .. py:function:: pyuv.fs.chmod(loop, path, mode, [callback])
 
+    :param loop: loop object where this function runs.
+
     :param string path: File which permissions will be changed.
 
     :param int mode: File permissions (ex. 0755)
-
-    :param loop: loop object where this function runs.
 
     :param callable callback: Function that will be called with the result of the function.
 
@@ -119,11 +119,11 @@ signature: ``callback(loop, req)``
 
 .. py:function:: pyuv.fs.link(loop, path, new_path, [callback])
 
+    :param loop: loop object where this function runs.
+
     :param string path: Original file.
 
     :param string new_path: Name for the hard-link.
-
-    :param loop: loop object where this function runs.
 
     :param callable callback: Function that will be called with the result of the function.
 
@@ -132,11 +132,11 @@ signature: ``callback(loop, req)``
 
 .. py:function:: pyuv.fs.symlink(loop, path, new_path, flags, [callback])
 
+    :param loop: loop object where this function runs.
+
     :param string path: Original file.
 
     :param string new_path: Name for the symlink.
-
-    :param loop: loop object where this function runs.
 
     :param int flags: flags to be used on Windows platform. If ``UV_FS_SYMLINK_DIR`` is specified the symlink
         will be created to a directory. If ``UV_FS_SYMLINK_JUNCTION`` a junction point will be created instead
@@ -149,9 +149,9 @@ signature: ``callback(loop, req)``
 
 .. py:function:: pyuv.fs.readlink(loop, path, [callback])
 
-    :param string path: Link file to process.
-
     :param loop: loop object where this function runs.
+
+    :param string path: Link file to process.
 
     :param callable callback: Function that will be called with the result of the function.
 
@@ -160,13 +160,13 @@ signature: ``callback(loop, req)``
 
 .. py:function:: pyuv.fs.chown(loop, path, uid, gid, [callback])
 
+    :param loop: loop object where this function runs.
+
     :param string path: File which persmissions will be changed.
 
     :param int uid: User ID.
 
     :param int gid: Group ID.
-
-    :param loop: loop object where this function runs.
 
     :param callable callback: Function that will be called with the result of the function.
 
@@ -180,13 +180,13 @@ signature: ``callback(loop, req)``
 
 .. py:function:: pyuv.fs.open(loop, path, flags, mode, [callback])
 
+    :param loop: loop object where this function runs.
+
     :param string path: File to open.
 
     :param int flags: Flags for opening the file. Check `os.O_` constants.
 
     :param int mode: Mode for opening the file. Check `stat.S_` constants.
-
-    :param loop: loop object where this function runs.
 
     :param callable callback: Function that will be called with the result of the function.
 
@@ -195,9 +195,9 @@ signature: ``callback(loop, req)``
 
 .. py:function:: pyuv.fs.close(loop, fd, [callback])
 
-    :param int fd: File-descriptor to close.
-
     :param loop: loop object where this function runs.
+
+    :param int fd: File-descriptor to close.
 
     :param callable callback: Function that will be called with the result of the function.
 
@@ -206,13 +206,13 @@ signature: ``callback(loop, req)``
 
 .. py:function:: pyuv.fs.read(loop, fd, length, offset, [callback])
 
+    :param loop: loop object where this function runs.
+
     :param int fd: File-descriptor to read from.
 
     :param int length: Amount of bytes to be read.
 
     :param int offset: File offset.
-
-    :param loop: loop object where this function runs.
 
     :param callable callback: Function that will be called with the result of the function.
 
@@ -221,13 +221,13 @@ signature: ``callback(loop, req)``
 
 .. py:function:: pyuv.fs.write(loop, fd, write_data, offset, [callback])
 
+    :param loop: loop object where this function runs.
+
     :param int fd: File-descriptor to read from.
 
     :param string write_data: Data to be written.
 
     :param int offset: File offset.
-
-    :param loop: loop object where this function runs.
 
     :param callable callback: Function that will be called with the result of the function.
 
@@ -236,9 +236,9 @@ signature: ``callback(loop, req)``
 
 .. py:function:: pyuv.fs.fsync(loop, fd, [callback])
 
-    :param int fd: File-descriptor to sync.
-
     :param loop: loop object where this function runs.
+
+    :param int fd: File-descriptor to sync.
 
     :param callable callback: Function that will be called with the result of the function.
 
@@ -247,9 +247,9 @@ signature: ``callback(loop, req)``
 
 .. py:function:: pyuv.fs.fdatasync(loop, fd, [callback])
 
-    :param int fd: File-descriptor to sync.
-
     :param loop: loop object where this function runs.
+
+    :param int fd: File-descriptor to sync.
 
     :param callable callback: Function that will be called with the result of the function.
 
@@ -258,11 +258,11 @@ signature: ``callback(loop, req)``
 
 .. py:function:: pyuv.fs.ftruncate(loop, fd, offset, [callback])
 
+    :param loop: loop object where this function runs.
+
     :param int fd: File-descriptor to truncate.
 
     :param int offset: File offset.
-
-    :param loop: loop object where this function runs.
 
     :param callable callback: Function that will be called with the result of the function.
 
@@ -283,6 +283,8 @@ signature: ``callback(loop, req)``
 
 .. py:function:: pyuv.fs.sendfile(loop, out_fd, in_fd, in_offset, length, [callback])
 
+    :param loop: loop object where this function runs.
+
     :param int in_fd: File-descriptor to read from.
 
     :param int in_fd: File-descriptor to write to.
@@ -291,8 +293,6 @@ signature: ``callback(loop, req)``
 
     :param int offset: File offset.
 
-    :param loop: loop object where this function runs.
-
     :param callable callback: Function that will be called with the result of the function.
 
     Send a regular file to a stream socket.
@@ -300,13 +300,13 @@ signature: ``callback(loop, req)``
 
 .. py:function:: pyuv.fs.utime(loop, path, atime, mtime, [callback])
 
+    :param loop: loop object where this function runs.
+
     :param string path: Directory to list.
 
     :param double atime: New accessed time.
 
     :param double mtime: New modified time.
-
-    :param loop: loop object where this function runs.
 
     :param callable callback: Function that will be called with the result of the function.
 
