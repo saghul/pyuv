@@ -271,15 +271,14 @@ signature: ``callback(loop, req)``
 
 .. py:function:: pyuv.fs.scandir(loop, path, flags, [callback])
 
-    :param string path: Directory to list.
-
-    :param int flags: Unused.
-
     :param loop: loop object where this function runs.
+
+    :param string path: Directory to list.
 
     :param callable callback: Function that will be called with the result of the function.
 
-    List files from a directory.
+    List files from a directory. The return value is a list of ``DirEnt`` object, which
+    has 2 fields: `name` and `type`.
 
 
 .. py:function:: pyuv.fs.sendfile(loop, out_fd, in_fd, in_offset, length, [callback])
@@ -383,4 +382,12 @@ Module constants
 .. py:data:: pyuv.fs.UV_CHANGE
 .. py:data:: pyuv.fs.UV_FS_EVENT_WATCH_ENTRY
 .. py:data:: pyuv.fs.UV_FS_EVENT_STAT
+.. py:data:: pyuv.fs.UV_DIRENT_UNKNOWN
+.. py:data:: pyuv.fs.UV_DIRENT_FILE
+.. py:data:: pyuv.fs.UV_DIRENT_DIR
+.. py:data:: pyuv.fs.UV_DIRENT_LINK
+.. py:data:: pyuv.fs.UV_DIRENT_FIFO
+.. py:data:: pyuv.fs.UV_DIRENT_SOCKET
+.. py:data:: pyuv.fs.UV_DIRENT_CHAR
+.. py:data:: pyuv.fs.UV_DIRENT_BLOCK
 
