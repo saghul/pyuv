@@ -72,6 +72,9 @@ def prepare_windows_env(env):
     else:
         env['GYP_MSVS_VERSION'] = '2010'
 
+    if not env.get('PYTHON', '').endswith('.exe'):
+        env.pop('PYTHON')
+
     if env.get('PYTHON'):
         return  # Already manually set by user.
 
