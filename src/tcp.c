@@ -356,6 +356,26 @@ TCP_func_open(TCP *self, PyObject *args)
 
 
 static PyObject *
+TCP_family_get(TCP *self, void *closure)
+{
+    int err, namelen;
+    struct sockaddr_storage sockname;
+
+    UNUSED_ARG(closure);
+    RAISE_IF_HANDLE_NOT_INITIALIZED(self, NULL);
+
+    namelen = sizeof(sockname);
+    err = uv_tcp_getsockname(&self->tcp_h, (struct sockaddr *)&sockname, &namelen);
+    if (err < 0) {
+        RAISE_UV_EXCEPTION(err, PyExc_TCPError);
+        return NULL;
+    }
+
+    return PyInt_FromLong((long) sockname.ss_family);
+}
+
+
+static PyObject *
 TCP_sndbuf_get(TCP *self, void *closure)
 {
     int err;
@@ -528,6 +548,7 @@ TCP_tp_methods[] = {
 
 
 static PyGetSetDef TCP_tp_getsets[] = {
+    {"family", (getter)TCP_family_get, NULL, "Socket address family.", NULL},
     {"send_buffer_size", (getter)TCP_sndbuf_get, (setter)TCP_sndbuf_set, "Send buffer size.", NULL},
     {"receive_buffer_size", (getter)TCP_rcvbuf_get, (setter)TCP_rcvbuf_set, "Receive buffer size.", NULL},
     {NULL}

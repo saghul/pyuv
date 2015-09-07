@@ -613,6 +613,26 @@ UDP_func_fileno(UDP *self)
 
 
 static PyObject *
+UDP_family_get(UDP *self, void *closure)
+{
+    int err, namelen;
+    struct sockaddr_storage sockname;
+
+    UNUSED_ARG(closure);
+    RAISE_IF_HANDLE_NOT_INITIALIZED(self, NULL);
+
+    namelen = sizeof(sockname);
+    err = uv_udp_getsockname(&self->udp_h, (struct sockaddr *)&sockname, &namelen);
+    if (err < 0) {
+        RAISE_UV_EXCEPTION(err, PyExc_UDPError);
+        return NULL;
+    }
+
+    return PyInt_FromLong((long) sockname.ss_family);
+}
+
+
+static PyObject *
 UDP_sndbuf_get(UDP *self, void *closure)
 {
     int err;
@@ -789,6 +809,7 @@ UDP_tp_methods[] = {
 
 
 static PyGetSetDef UDP_tp_getsets[] = {
+    {"family", (getter)UDP_family_get, NULL, "Socket address family.", NULL},
     {"send_buffer_size", (getter)UDP_sndbuf_get, (setter)UDP_sndbuf_set, "Send buffer size.", NULL},
     {"receive_buffer_size", (getter)UDP_rcvbuf_get, (setter)UDP_rcvbuf_set, "Receive buffer size.", NULL},
     {NULL}

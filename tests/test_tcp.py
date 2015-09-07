@@ -554,5 +554,38 @@ class TCPEarlyBindTest(TestCase):
         self.loop.run()
 
 
+class TCPFamilyTest(TestCase):
+
+    def test_family_unspec(self):
+        client = pyuv.TCP(self.loop, socket.AF_UNSPEC)
+        with self.assertRaises(pyuv.error.TCPError):
+            client.family
+        client.bind(('127.0.0.1', TEST_PORT))
+        self.assertEqual(client.family, socket.AF_INET)
+        client.close()
+        self.loop.run()
+
+    def test_family_unspec2(self):
+        client = pyuv.TCP(self.loop, socket.AF_UNSPEC)
+        with self.assertRaises(pyuv.error.TCPError):
+            client.family
+        client.bind(('::1', TEST_PORT))
+        self.assertEqual(client.family, socket.AF_INET6)
+        client.close()
+        self.loop.run()
+
+    def test_family_inet(self):
+        client = pyuv.TCP(self.loop, socket.AF_INET)
+        self.assertEqual(client.family, socket.AF_INET)
+        client.close()
+        self.loop.run()
+
+    def test_family_inet6(self):
+        client = pyuv.TCP(self.loop, socket.AF_INET6)
+        self.assertEqual(client.family, socket.AF_INET6)
+        client.close()
+        self.loop.run()
+
+
 if __name__ == '__main__':
     unittest.main(verbosity=2)
