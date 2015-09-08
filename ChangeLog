@@ -1,3 +1,27 @@
+Version 1.2.0
+=============
+ - build: fix decoding std{out,err} with the right encoding
+ - build: fix linking problem on Windows
+ - fs: return entity types in pyuv.fs.scandir
+ - fs: remove `flags` argument from scandir
+ - test: fix fs tests
+ - core: raised libuv revision to tag 1.7.3
+ - tcp, udp: add ability to create sockets early
+ - tcp, udp: add 'family' property
+ - docs: update scandir documentation
+ - doc: fix fs functions parameter order
+ - doc: update documentation for TCP and UDP handles
+ - build: add dev-requirements.txt file
+ - build: add AppVeyor integration
+ - build: fix building when PYTHON env variable is incorrect
+ - test: fix test pipe name
+ - test: skip some TCP and UDP tests on Windows
+ - test: add tests for fd duplication using socket.fromfd
+ - udp: add support for '<broadcast>' address, a la Python
+ - common: simplify parsing special address
+ - ci: test on Travis on all branches
+ - doc: updated README
+
 Version 1.1.0
 =============
  - test: speed-up TravisCI build process
