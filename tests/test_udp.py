@@ -544,5 +544,50 @@ class UDPSocketFromfdTest(TestCase):
         self.loop.run()
 
 
+class UDPBroadcastTest(TestCase):
+
+    def setUp(self):
+        super(UDPBroadcastTest, self).setUp()
+        self.server = None
+        self.client = None
+
+    def on_close(self, handle):
+        self.on_close_called += 1
+
+    def on_server_recv(self, handle, ip_port, flags, data, error):
+        self.assertEqual(flags, 0)
+        ip, port = ip_port
+        data = data.strip()
+        self.assertEqual(data, b"PING")
+        self.server.send((ip, port), b"PONG"+linesep)
+
+    def on_client_recv(self, handle, ip_port, flags, data, error):
+        self.assertEqual(flags, 0)
+        ip, port = ip_port
+        data = data.strip()
+        self.assertEqual(data, b"PONG")
+        self.client.close(self.on_close)
+        self.server.close(self.on_close)
+
+    def timer_cb(self, timer):
+        self.client.send(("<broadcast>", TEST_PORT), b"PING"+linesep)
+        timer.close(self.on_close)
+
+    def test_broadcast_pingpong(self):
+        self.on_close_called = 0
+        self.server = pyuv.UDP(self.loop)
+        self.server.bind(("0.0.0.0", TEST_PORT))
+        self.server.set_broadcast(True)
+        self.server.start_recv(self.on_server_recv)
+        self.client = pyuv.UDP(self.loop)
+        self.client.bind(("0.0.0.0", TEST_PORT2))
+        self.client.set_broadcast(True)
+        self.client.start_recv(self.on_client_recv)
+        timer = pyuv.Timer(self.loop)
+        timer.start(self.timer_cb, 0.1, 0)
+        self.loop.run()
+        self.assertEqual(self.on_close_called, 3)
+
+
 if __name__ == '__main__':
     unittest.main(verbosity=2)
