@@ -146,13 +146,13 @@ pyuv_parse_addr_tuple(PyObject *addr, struct sockaddr_storage *ss)
 
     if (host[0] == '\0') {
         /* special case, interpret ('', 1234) as 0.0.0.0:1234 */
-        uv_inet_pton(AF_INET, "0.0.0.0", &addr4);
         sa4 = (struct sockaddr_in *)ss;
         sa4->sin_family = AF_INET;
         sa4->sin_port = htons((short)port);
-        sa4->sin_addr = addr4;
+        sa4->sin_addr.s_addr = INADDR_ANY;
         return 0;
     } else if (host[0] == '<' && strcmp(host, "<broadcast>") == 0) {
+        /* special case, interpret ('<broadcast>', 1234) as 255.255.255.255:1234 */
         sa4 = (struct sockaddr_in *)ss;
         sa4->sin_family = AF_INET;
         sa4->sin_port = htons((short)port);
