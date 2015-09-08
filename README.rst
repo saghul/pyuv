@@ -39,12 +39,12 @@ CI status
 Stable branch (v1.x)
 
 - Travis CI:
-  .. image:: https://travis-ci.org/saghul/pyuv.svg?branch=v1.x
-            :target: http://travis-ci.org/saghul/pyuv
+    .. image:: https://travis-ci.org/saghul/pyuv.svg?branch=v1.x
+               :target: http://travis-ci.org/saghul/pyuv
 
 - AppVeyor:
-  .. image:: https://ci.appveyor.com/api/projects/status/ne2un9br9t0qs5cd?svg=true
-            :target: https://ci.appveyor.com/project/saghul/pyuv
+    .. image:: https://ci.appveyor.com/api/projects/status/ne2un9br9t0qs5cd?svg=true
+               :target: https://ci.appveyor.com/project/saghul/pyuv
 
 
 Versioning
