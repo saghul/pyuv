@@ -522,5 +522,27 @@ class UDPFamilyTest(TestCase):
         self.loop.run()
 
 
+@platform_skip(["win32"])
+class UDPSocketFromfdTest(TestCase):
+
+    def test_fromfd_inet(self):
+        client = pyuv.UDP(self.loop)
+        client.bind(('127.0.0.1', TEST_PORT))
+        sock = socket.fromfd(client.fileno(), client.family, socket.SOCK_DGRAM)
+        self.assertEqual(client.getsockname(), sock.getsockname())
+        client.close()
+        sock.close()
+        self.loop.run()
+
+    def test_fromfd_inet6(self):
+        client = pyuv.UDP(self.loop)
+        client.bind(('::1', TEST_PORT))
+        sock = socket.fromfd(client.fileno(), client.family, socket.SOCK_DGRAM)
+        self.assertEqual(client.getsockname(), sock.getsockname())
+        client.close()
+        sock.close()
+        self.loop.run()
+
+
 if __name__ == '__main__':
     unittest.main(verbosity=2)
