@@ -36,20 +36,15 @@ pyuv's features:
 CI status
 =========
 
-Stable branch (v1.x):
+Stable branch (v1.x)
 
-.. image:: https://travis-ci.org/saghul/pyuv.svg?branch=v1.x
-    :target: http://travis-ci.org/saghul/pyuv
+- Travis CI:
+  .. image:: https://travis-ci.org/saghul/pyuv.svg?branch=v1.x
+            :target: http://travis-ci.org/saghul/pyuv
 
-Old stable branch (v0.10):
-
-.. image:: https://travis-ci.org/saghul/pyuv.svg?branch=v0.10
-    :target: http://travis-ci.org/saghul/pyuv
-
-Development (master):
-
-.. image:: https://travis-ci.org/saghul/pyuv.svg?branch=master
-    :target: http://travis-ci.org/saghul/pyuv
+- AppVeyor:
+  .. image:: https://ci.appveyor.com/api/projects/status/ne2un9br9t0qs5cd?svg=true
+            :target: https://ci.appveyor.com/project/saghul/pyuv
 
 
 Versioning
