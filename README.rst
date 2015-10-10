@@ -51,7 +51,7 @@ Versioning
 ==========
 
 Starting with version 1.0.0, pyuv follows the `Semantic Versioning <http://semver.org/>`_
-spacification, like libuv does.
+specification, like libuv does.
 
 All releases are downloadable from `the GitHub tags page <https://github.com/saghul/pyuv/tags>`_,
 and the latest stable release from `PyPI <https://pypi.python.org/pypi/pyuv>`_.
