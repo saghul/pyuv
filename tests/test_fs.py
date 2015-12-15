@@ -851,6 +851,25 @@ class FSTestAccess(TestCase):
         self.assertEqual(self.errorno, pyuv.errno.UV_ENOENT)
 
 
+class FSTestRealpath(TestCase):
+
+    def realpath_cb(self, req):
+        self.errorno = req.error
+        self.result = req.result
+
+    def test_realpath(self):
+        self.errorno = None
+        self.result = None
+        pyuv.fs.realpath(self.loop, '.', self.realpath_cb)
+        self.loop.run()
+        self.assertEqual(self.errorno, None)
+        self.assertNotEqual(self.result, '.')
+
+    def test_realpath_sync(self):
+        result = pyuv.fs.realpath(self.loop, '.')
+        self.assertNotEqual(result, '.')
+
+
 class FSEventTestBasic(FileTestCase):
 
     def tearDown(self):
