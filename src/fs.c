@@ -51,7 +51,7 @@ stat_to_pyobj(const uv_stat_t *st, PyObject *stat_data) {
 
 
 /*
- * NOTE: This function is called either by lubuv as a callback or by us when a synchronous
+ * NOTE: This function is called either by libuv as a callback or by us when a synchronous
  * operation is performed.
  */
 static void
