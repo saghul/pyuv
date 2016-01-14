@@ -22,7 +22,7 @@ class Connection(object):
         self.address = address
         self.sock.setblocking(0)
         self.buf = ""
-        self.watcher = pyuv.Poll(loop, self.sock._sock)
+        self.watcher = pyuv.Poll(loop, self.sock.fileno())
         self.watcher.start(pyuv.UV_READABLE, self.io_cb)
         logging.debug("{0}: ready".format(self))
 
