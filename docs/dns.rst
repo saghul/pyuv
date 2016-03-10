@@ -9,7 +9,7 @@
 ===============================================================
 
 
-.. py:function:: pyuv.util.getaddrinfo(loop, ... , callback=None)
+.. py:function:: pyuv.dns.getaddrinfo(loop, ... , callback=None)
 
     Equivalent of `socket.getaddrinfo`. When `callback` is not None,
     this function returns a `GAIRequest` object which has a `cancel()`
@@ -19,7 +19,7 @@
 
     When `callback` is None, this function is synchronous.
 
-.. py:function:: pyuv.util.getnameinfo(loop, ... , callback=None)
+.. py:function:: pyuv.dns.getnameinfo(loop, ... , callback=None)
 
     Equivalent of `socket.getnameinfo`. When `callback` is not None,
     this function returns a `GNIRequest` object which has a `cancel()`
