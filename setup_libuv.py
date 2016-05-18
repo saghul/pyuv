@@ -159,6 +159,7 @@ class libuv_build_ext(build_ext):
             self.compiler.add_library('iphlpapi')
             self.compiler.add_library('psapi')
             self.compiler.add_library('shell32')
+            self.compiler.add_library('user32')
             self.compiler.add_library('userenv')
             self.compiler.add_library('ws2_32')
         elif sys.platform.startswith('freebsd'):
