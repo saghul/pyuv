@@ -50,13 +50,16 @@
     .. py:method:: start(events, callback)
 
         :param int events: Mask of events that will be detected. The possible events are `pyuv.UV_READABLE`
-            or `pyuv.UV_WRITABLE`.
+            `pyuv.UV_WRITABLE`, or `pyuv.UV_DISCONNECT`.
         :param callable callback: Function that will be called when the ``Poll``
             handle receives events.
 
         Start or update the event mask of the ``Poll`` handle.
 
         Callback signature: ``callback(poll_handle, events, errorno)``.
+
+        .. note::
+            The ``UV_DISCONNECT`` event might not be triggered on all platforms.
 
     .. py:method:: stop
 

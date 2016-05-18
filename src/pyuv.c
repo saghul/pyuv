@@ -233,6 +233,7 @@ init_pyuv(void)
     /* Poll constants */
     PyModule_AddIntMacro(pyuv, UV_READABLE);
     PyModule_AddIntMacro(pyuv, UV_WRITABLE);
+    PyModule_AddIntMacro(pyuv, UV_DISCONNECT);
 
     /* Handle types */
     PyModule_AddIntMacro(pyuv, UV_UNKNOWN_HANDLE);
