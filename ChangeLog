@@ -1,3 +1,20 @@
+Version 1.3.0
+=============
+ - ci: test Python 3.5 on Travis CI
+ - core: it's Python 3.5 o'clock
+ - doc: fix typo
+ - build: fix build when PYTHON env var is not set
+ - core: raised libuv revision to tag 1.8.0
+ - fs: add pyuv.fs.realpath
+ - samples: fixup Poll handle based example
+ - doc: get{addr,name}info are now in the dns submodule
+ - doc: add livehtml target to docs Makefile
+ - poll: add support for the UV_DISCONNECT event
+ - build: fix build on Windows
+ - core: raised libuv revision to 36a024d
+ - build, ci: fix build of Python 3.5 on Windows and AppVeyor
+ - core: set version to 1.3.0
+
 Version 1.2.0
 =============
  - build: fix decoding std{out,err} with the right encoding
