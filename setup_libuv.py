@@ -63,14 +63,23 @@ def exec_process(cmdline, silent=True, input=None, **kwargs):
 
 
 def prepare_windows_env(env):
-    env.pop('VS140COMNTOOLS', None)
+    # MSVC 2012 and 2013 where not used in any version
     env.pop('VS120COMNTOOLS', None)
     env.pop('VS110COMNTOOLS', None)
-    if sys.version_info < (3, 3):
+    if sys.version_info >= (3, 5):
+        # MSVC 2015
+        env.pop('VS100COMNTOOLS', None)
+        env.pop('VS90COMNTOOLS', None)
+        env['GYP_MSVS_VERSION'] = '2015'
+    elif sys.version_info >= (3, 3):
+        # MSVC 2010
+        env.pop('VS140COMNTOOLS', None)
+        env.pop('VS90COMNTOOLS', None)
+        env['GYP_MSVS_VERSION'] = '2010'
+    else:
+        env.pop('VS140COMNTOOLS', None)
         env.pop('VS100COMNTOOLS', None)
         env['GYP_MSVS_VERSION'] = '2008'
-    else:
-        env['GYP_MSVS_VERSION'] = '2010'
 
     if not env.get('PYTHON', '').endswith('.exe'):
         env.pop('PYTHON', None)
