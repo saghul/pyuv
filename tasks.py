@@ -46,7 +46,7 @@ def release():
     changelog = content[:content.find('\n\n')]
     dt = datetime.datetime.utcnow().replace(microsecond=0)
     tag = tag_template % (dt, version, changelog)
-    invoke.run('git tag -a pyuv-{0} -m "{1}"'.format(version, tag))
+    invoke.run('git tag -s -a pyuv-{0} -m "{1}"'.format(version, tag))
 
 @invoke.task
 def push():
