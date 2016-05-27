@@ -218,8 +218,8 @@ class libuv_build_ext(build_ext):
                     exec_process(['cmd.exe', '/C', 'vcbuild.bat', 'clean'], cwd=self.libuv_dir, env=env, shell=True)
                     rmtree(os.path.join(self.libuv_dir, 'Release'))
                 else:
-                    exec_process(['make', 'clean'], cwd=self.libuv_dir)
-                    exec_process(['make', 'distclean'], cwd=self.libuv_dir)
+                    if os.path.exists(os.path.join(self.libuv_dir, 'Makefile')):
+                        exec_process(['make', 'distclean'], cwd=self.libuv_dir)
             if not os.path.exists(self.libuv_lib):
                 log.info('libuv needs to be compiled.')
                 build_libuv()
