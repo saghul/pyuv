@@ -1,0 +1,11 @@
+#!/bin/bash
+
+
+# Clean tree
+git clean -dfx
+
+# 64 bits
+docker run --rm -ti -v "$(pwd):/pyuv" quay.io/pypa/manylinux1_x86_64 /pyuv/build-manylinux-wheels.sh
+
+# 32 bits
+docker run --rm -ti -v "$(pwd):/pyuv" quay.io/pypa/manylinux1_i686 linux32 /pyuv/build-manylinux-wheels.sh
