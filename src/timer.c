@@ -51,9 +51,23 @@ Timer_func_start(Timer *self, PyObject *args, PyObject *kwargs)
         return NULL;
     }
 
+    if (timeout > 0.0 && timeout < 0.001) {
+        if (PyErr_WarnEx(PyExc_RuntimeWarning, "timers don't have sub-millisecond accuracy, setting timeout to 1ms", 1) < 0) {
+            PyErr_Clear();
+        }
+        timeout = 0.001;
+    }
+
     if (repeat < 0.0) {
         PyErr_SetString(PyExc_ValueError, "a positive value or zero is required");
         return NULL;
+    }
+
+    if (repeat > 0.0 && repeat < 0.001) {
+        if (PyErr_WarnEx(PyExc_RuntimeWarning, "timers don't have sub-millisecond accuracy, setting repeat to 1ms", 1) < 0) {
+            PyErr_Clear();
+        }
+        repeat = 0.001;
     }
 
     err = uv_timer_start(&self->timer_h, pyuv__timer_cb, (uint64_t)(timeout * 1000), (uint64_t)(repeat * 1000));
