@@ -146,9 +146,8 @@ class libuv_build_ext(build_ext):
 
     def build_extensions(self):
         self.force = self.force or self.libuv_force_fetch or self.libuv_clean_compile
-        if self.use_system_libuv:
-            if sys.platform == 'win32':
-                raise DistutilsError('using a system provided libuv is unsupported on Windows')
+
+        if self.compiler.compiler_type == 'mingw32' or self.use_system_libuv:
             self.compiler.add_library('uv')
         else:
             if sys.platform == 'win32':
@@ -163,7 +162,8 @@ class libuv_build_ext(build_ext):
             self.compiler.add_library('rt')
         elif sys.platform == 'win32':
             self.extensions[0].define_macros.append(('WIN32', 1))
-            self.extensions[0].extra_link_args.extend(['/NODEFAULTLIB:libcmt', '/LTCG'])
+            if self.compiler.compiler_type != 'mingw32':
+                self.extensions[0].extra_link_args.extend(['/NODEFAULTLIB:libcmt', '/LTCG'])
             self.compiler.add_library('advapi32')
             self.compiler.add_library('iphlpapi')
             self.compiler.add_library('psapi')
