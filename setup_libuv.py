@@ -146,7 +146,8 @@ class libuv_build_ext(build_ext):
 
     def build_extensions(self):
         self.force = self.force or self.libuv_force_fetch or self.libuv_clean_compile
-        if self.use_system_libuv:
+
+        if self.compiler.compiler_type == 'mingw32' or self.use_system_libuv:
             self.compiler.add_library('uv')
         else:
             if sys.platform == 'win32':
