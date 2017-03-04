@@ -589,5 +589,13 @@ class UDPBroadcastTest(TestCase):
         self.assertEqual(self.on_close_called, 3)
 
 
+class UDPSendQueueTest(TestCase):
+
+    def test_send_queue_size(self):
+        handle = pyuv.UDP(self.loop)
+        self.assertEqual(handle.send_queue_size, 0)
+        handle.close()
+
+
 if __name__ == '__main__':
     unittest.main(verbosity=2)
