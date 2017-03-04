@@ -726,6 +726,17 @@ UDP_rcvbuf_set(UDP *self, PyObject *value, void *closure)
 }
 
 
+static PyObject *
+UDP_send_queue_size_get(UDP *self, void *closure)
+{
+    UNUSED_ARG(closure);
+
+    RAISE_IF_HANDLE_NOT_INITIALIZED(self, NULL);
+
+    return PyLong_FromSize_t(((uv_udp_t *)UV_HANDLE(self))->send_queue_size);
+}
+
+
 static int
 UDP_tp_init(UDP *self, PyObject *args, PyObject *kwargs)
 {
@@ -812,6 +823,7 @@ static PyGetSetDef UDP_tp_getsets[] = {
     {"family", (getter)UDP_family_get, NULL, "Socket address family.", NULL},
     {"send_buffer_size", (getter)UDP_sndbuf_get, (setter)UDP_sndbuf_set, "Send buffer size.", NULL},
     {"receive_buffer_size", (getter)UDP_rcvbuf_get, (setter)UDP_rcvbuf_set, "Receive buffer size.", NULL},
+    {"send_queue_size", (getter)UDP_send_queue_size_get, 0, "Returns the size of the send queue.", NULL},
     {NULL}
 };
 
