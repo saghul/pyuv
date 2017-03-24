@@ -54,7 +54,7 @@ class TestExcepthookDefault(ExcepthookTestCase):
         self.setup_idle(RuntimeError("Bad"))
         self.loop.run()
         self.assertOutput("(?s)^Unhandled exception in callback\n"
-                          "Traceback.*\nRuntimeError: Bad\n$")
+                          "(Traceback.*\n)?RuntimeError: Bad\n$")
         self.assertNotIn('AttributeError', sys.stderr.getvalue())
 
 
@@ -98,9 +98,9 @@ class TestExcepthookBadAttr(ExcepthookTestCase):
         self.setup_idle(RuntimeError("Bad"))
         self.loop.run()
         self.assertOutput("(?s)^Exception while getting excepthook\n"
-                          "Traceback.*\nTypeError: oops\n\n"
+                          "(Traceback.*\n)?TypeError: oops\n\n"
                           "Unhandled exception in callback\n"
-                          "Traceback.*\nRuntimeError: Bad\n$")
+                          "(Traceback.*\n)?RuntimeError: Bad\n$")
 
 
 class TestExcepthookAttribute(ExcepthookTestCase):
@@ -130,9 +130,9 @@ class TestExcepthookAttribute(ExcepthookTestCase):
         self.loop.exception = NameError("abc")
         self.loop.run()
         self.assertOutput("(?s)^Unhandled exception in excepthook\n"
-                          "Traceback.*\nNameError: abc\n\n"
+                          "(Traceback.*\n)?NameError: abc\n\n"
                           "Unhandled exception in callback\n"
-                          "Traceback.*\nRuntimeError: Bad\n$")
+                          "(Traceback.*\n)?RuntimeError: Bad\n$")
 
 
 class LoopOverride(pyuv.Loop):
