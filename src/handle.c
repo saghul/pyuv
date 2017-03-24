@@ -17,7 +17,9 @@ resurrect_object(PyObject *self)
     Py_REFCNT(self) = refcnt;
     /* If Py_REF_DEBUG, _Py_NewReference bumped _Py_RefTotal, so
      * we need to undo that. */
+#ifdef _Py_DEC_REFTOTAL
     _Py_DEC_REFTOTAL;
+#endif
     /* If Py_TRACE_REFS, _Py_NewReference re-added self to the object
      * chain, so no more to do there.
      * If COUNT_ALLOCS, the original decref bumped tp_frees, and
