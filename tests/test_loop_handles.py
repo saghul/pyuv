@@ -12,6 +12,7 @@ class HandlesTest(TestCase):
     def test_handles(self):
         timer = pyuv.Timer(self.loop)
         self.assertTrue(timer in self.loop.handles)
+        timer.close()
         timer = None
         self.loop.run()
         self.assertFalse(self.loop.handles)
