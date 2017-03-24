@@ -181,6 +181,26 @@ pyuv_parse_addr_tuple(PyObject *addr, struct sockaddr_storage *ss)
 }
 
 
+/* Modified from Python Objects/typeobject.c to find the first non-NULL tp_clear */
+static int
+subtype_clear(PyObject *self)
+{
+  PyTypeObject *type, *base;
+  inquiry baseclear;
+
+  type = Py_TYPE(self);
+  base = type;
+  while ((baseclear = base->tp_clear) == NULL) {
+    base = base->tp_base;
+    assert(base);
+  }
+
+  if (baseclear)
+      return baseclear(self);
+  return 0;
+}
+
+
 /* Modified from Python Modules/socketmodule.c */
 static PyObject *
 makesockaddr(struct sockaddr *addr)

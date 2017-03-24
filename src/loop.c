@@ -334,7 +334,7 @@ Loop_tp_dealloc(Loop *self)
     if (self->weakreflist != NULL) {
         PyObject_ClearWeakRefs((PyObject *)self);
     }
-    Py_TYPE(self)->tp_clear((PyObject *)self);
+    subtype_clear((PyObject *)self);
     Py_TYPE(self)->tp_free((PyObject *)self);
 }
 
