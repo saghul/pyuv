@@ -70,3 +70,10 @@ class TestCase(unittest.TestCase):
     def setUp(self):
         self.loop = TestLoop()
 
+    def tearDown(self):
+        for handle in self.loop.handles:
+            try:
+                handle.close()
+            except:
+                pass
+        self.loop.run()
