@@ -175,12 +175,12 @@ Util_func_cpu_info(PyObject *obj)
             PyStructSequence_SET_ITEM(item, 0, Py_BuildValue("s", cpus[i].model));
             PyStructSequence_SET_ITEM(item, 1, PyInt_FromLong((long)cpus[i].speed));
             PyStructSequence_SET_ITEM(item, 2, times);
-            PyList_SET_ITEM(result, i, item);
             PyStructSequence_SET_ITEM(times, 0, PyLong_FromUnsignedLongLong((unsigned PY_LONG_LONG)cpus[i].cpu_times.sys));
             PyStructSequence_SET_ITEM(times, 1, PyLong_FromUnsignedLongLong((unsigned PY_LONG_LONG)cpus[i].cpu_times.user));
             PyStructSequence_SET_ITEM(times, 2, PyLong_FromUnsignedLongLong((unsigned PY_LONG_LONG)cpus[i].cpu_times.idle));
             PyStructSequence_SET_ITEM(times, 3, PyLong_FromUnsignedLongLong((unsigned PY_LONG_LONG)cpus[i].cpu_times.irq));
             PyStructSequence_SET_ITEM(times, 4, PyLong_FromUnsignedLongLong((unsigned PY_LONG_LONG)cpus[i].cpu_times.nice));
+            PyList_SET_ITEM(result, i, item);
         }
         uv_free_cpu_info(cpus, count);
         return result;
