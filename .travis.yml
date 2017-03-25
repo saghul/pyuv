@@ -10,6 +10,12 @@ matrix:
           env: TOX_ENV=py34
         - python: 3.5
           env: TOX_ENV=py35
+        - python: pypy
+          env: TOX_ENV=pypy
+        - python: pypy3
+          env: TOX_ENV=pypy3
+before_install:
+    - source .travis/before_install.sh
 install:
     - pip install tox
 script:
