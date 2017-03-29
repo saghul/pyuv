@@ -20,7 +20,10 @@ if sys.version_info >= (3,):
         raise value
 else:
     linesep = os.linesep
-    StdBufferIO = io.BytesIO
+
+    class StdBufferIO(io.BytesIO):
+        def write(self, data):
+            return super(StdBufferIO, self).write(data.encode('utf-8'))
 
     exec("""\
 def reraise(typ, value, tb):
