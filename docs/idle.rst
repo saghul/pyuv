@@ -14,9 +14,18 @@
     :type loop: :py:class:`Loop`
     :param loop: loop object where this handle runs (accessible through :py:attr:`Idle.loop`).
 
-    ``Idle`` handles run when the event loop is *idle*, that is, there are no
-    other events pending to be run. It is usually used to defer operations to
-    be run at a later loop iteration.
+    ``Idle`` handles will run the given callback *once per loop iteration*, right
+    before the :py:class:`Prepare` handles.
+
+    .. note::
+        The notable difference with :py:class:`Prepare` handles is that
+        when there are active idle handles, the loop will perform a zero
+        timeout poll instead of blocking for I/O.
+
+    .. warning::
+        Despite the name, :py:class:`Idle` handles will get their callbacks
+        called on **every** loop iteration, not when the loop is actually
+        "idle".
 
 
     .. py:method:: start(callback)
