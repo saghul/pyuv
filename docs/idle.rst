@@ -19,8 +19,8 @@
 
     .. note::
         The notable difference with :py:class:`Prepare` handles is that
-        when there are active idle handles, the loop will perform a zero
-        timeout poll instead of blocking for I/O.
+        when there are active :py:class:`Idle` handles, the loop will perform
+        a zero timeout poll instead of blocking for I/O.
 
     .. warning::
         Despite the name, :py:class:`Idle` handles will get their callbacks
