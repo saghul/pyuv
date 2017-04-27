@@ -77,7 +77,7 @@
 
         Open the given file descriptor (or SOCKET in Windows) as a ``TCP`` handle.
 
-        ..note::
+        .. note::
             The file descriptor will be closed when the `TCP` handle is closed, so if it
             was tasken from a Python socket object, it will be useless afterwards.
 

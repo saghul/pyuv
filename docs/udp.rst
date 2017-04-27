@@ -42,7 +42,7 @@
 
         Open the given file descriptor (or SOCKET in Windows) as a ``UDP`` handle.
 
-        ..note::
+        .. note::
             The file descriptor will be closed when the `UDP` handle is closed, so if it
             was tasken from a Python socket object, it will be useless afterwards.
 
