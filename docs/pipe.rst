@@ -45,8 +45,8 @@
 
         Open the given file descriptor (or HANDLE in Windows) as a ``Pipe``.
 
-        ..note::
-            The file descriptor will be closed when the `UDP` handle is closed, so if it
+        .. note::
+            The file descriptor will be closed when the `Pipe` handle is closed, so if it
             was tasken from a Python socket object, it will be useless afterwards.
 
         .. note::
