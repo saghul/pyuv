@@ -2,7 +2,6 @@
 
 import os
 import socket
-import sys
 import unittest
 
 from common import linesep, platform_skip, TestCase
@@ -10,6 +9,7 @@ import pyuv
 
 
 TEST_PORT = 1234
+
 
 class TCPErrorTest(TestCase):
 
@@ -35,7 +35,6 @@ class TCPErrorTest(TestCase):
         client.open(sock.fileno())
         client.connect(("127.0.0.1", TEST_PORT), self.on_client_connect_error)
         self.loop.run()
-        sock.close()
 
     def test_raise(self):
         tcp = pyuv.TCP(self.loop)
