@@ -46,8 +46,8 @@ def exec_process(cmdline, silent=True, input=None, **kwargs):
         stdout, stderr = sub.communicate(input=input)
         returncode = sub.returncode
         if PY3:
-            stderr = stderr.decode(sys.stderr.encoding)
-            stdout = stdout.decode(sys.stdout.encoding)
+            stderr = stderr.decode(sys.stderr.encoding, errors='replace')
+            stdout = stdout.decode(sys.stdout.encoding, errors='replace')
         if not silent:
             sys.stdout.write(stdout)
             sys.stderr.write(stderr)
