@@ -17,7 +17,6 @@ __pycache__/
 *.out
 
 .tox/
-deps/
 docs/_build/
 
 wheelhouse/
