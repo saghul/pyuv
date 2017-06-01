@@ -1,169 +1,167 @@
 
-import ast
-import errno
 import os
-import platform
-import shutil
-import stat
-import subprocess
 import sys
 
-from distutils import log
 from distutils.command.build_ext import build_ext
-from distutils.command.sdist import sdist
-from distutils.errors import DistutilsError
 
 
-PY3 = sys.version_info[0] == 3
+SOURCES = [
+    'deps/libuv/src/fs-poll.c',
+    'deps/libuv/src/inet.c',
+    'deps/libuv/src/threadpool.c',
+    'deps/libuv/src/uv-common.c',
+    'deps/libuv/src/version.c',
+]
+
+if sys.platform == 'win32':
+    SOURCES += [
+        'deps/libuv/src/win/async.c',
+        'deps/libuv/src/win/core.c',
+        'deps/libuv/src/win/detect-wakeup.c',
+        'deps/libuv/src/win/dl.c',
+        'deps/libuv/src/win/error.c',
+        'deps/libuv/src/win/fs-event.c',
+        'deps/libuv/src/win/fs.c',
+        'deps/libuv/src/win/getaddrinfo.c',
+        'deps/libuv/src/win/getnameinfo.c',
+        'deps/libuv/src/win/handle.c',
+        'deps/libuv/src/win/loop-watcher.c',
+        'deps/libuv/src/win/pipe.c',
+        'deps/libuv/src/win/poll.c',
+        'deps/libuv/src/win/process-stdio.c',
+        'deps/libuv/src/win/process.c',
+        'deps/libuv/src/win/req.c',
+        'deps/libuv/src/win/signal.c',
+        'deps/libuv/src/win/snprintf.c',
+        'deps/libuv/src/win/stream.c',
+        'deps/libuv/src/win/tcp.c',
+        'deps/libuv/src/win/thread.c',
+        'deps/libuv/src/win/timer.c',
+        'deps/libuv/src/win/tty.c',
+        'deps/libuv/src/win/udp.c',
+        'deps/libuv/src/win/util.c',
+        'deps/libuv/src/win/winapi.c',
+        'deps/libuv/src/win/winsock.c',
+    ]
+else:
+    SOURCES += [
+        'deps/libuv/src/unix/async.c',
+        'deps/libuv/src/unix/core.c',
+        'deps/libuv/src/unix/dl.c',
+        'deps/libuv/src/unix/fs.c',
+        'deps/libuv/src/unix/getaddrinfo.c',
+        'deps/libuv/src/unix/getnameinfo.c',
+        'deps/libuv/src/unix/loop-watcher.c',
+        'deps/libuv/src/unix/loop.c',
+        'deps/libuv/src/unix/pipe.c',
+        'deps/libuv/src/unix/poll.c',
+        'deps/libuv/src/unix/process.c',
+        'deps/libuv/src/unix/signal.c',
+        'deps/libuv/src/unix/stream.c',
+        'deps/libuv/src/unix/tcp.c',
+        'deps/libuv/src/unix/thread.c',
+        'deps/libuv/src/unix/timer.c',
+        'deps/libuv/src/unix/tty.c',
+        'deps/libuv/src/unix/udp.c',
+    ]
 
 
-def makedirs(path):
-    try:
-        os.makedirs(path)
-    except OSError as e:
-        if e.errno==errno.EEXIST and os.path.isdir(path) and os.access(path, os.R_OK | os.W_OK | os.X_OK):
-            return
-        raise
+if sys.platform.startswith('linux'):
+    SOURCES += [
+        'deps/libuv/src/unix/linux-core.c',
+        'deps/libuv/src/unix/linux-inotify.c',
+        'deps/libuv/src/unix/linux-syscalls.c',
+        'deps/libuv/src/unix/procfs-exepath.c',
+        'deps/libuv/src/unix/proctitle.c',
+        'deps/libuv/src/unix/sysinfo-loadavg.c',
+        'deps/libuv/src/unix/sysinfo-memory.c',
+    ]
+elif sys.platform == 'darwin':
+    SOURCES += [
+        'deps/libuv/src/unix/bsd-ifaddrs.c',
+        'deps/libuv/src/unix/darwin.c',
+        'deps/libuv/src/unix/darwin-proctitle.c',
+        'deps/libuv/src/unix/fsevents.c',
+        'deps/libuv/src/unix/kqueue.c',
+        'deps/libuv/src/unix/proctitle.c',
+        'deps/libuv/src/unix/pthread-barrier.c',
+    ]
+elif sys.platform.startswith(('freebsd', 'dragonfly')):
+    SOURCES += [
+        'deps/libuv/src/unix/bsd-ifaddrs.c',
+        'deps/libuv/src/unix/freebsd.c',
+        'deps/libuv/src/unix/kqueue.c',
+        'deps/libuv/src/unix/posix-hrtime.c',
+    ]
+elif sys.platform.startswith('openbsd'):
+    SOURCES += [
+        'deps/libuv/src/unix/bsd-ifaddrs.c',
+        'deps/libuv/src/unix/kqueue.c',
+        'deps/libuv/src/unix/openbsd.c',
+        'deps/libuv/src/unix/posix-hrtime.c',
+    ]
+elif sys.platform.startswith('netbsd'):
+    SOURCES += [
+        'deps/libuv/src/unix/bsd-ifaddrs.c',
+        'deps/libuv/src/unix/kqueue.c',
+        'deps/libuv/src/unix/netbsd.c',
+        'deps/libuv/src/unix/posix-hrtime.c',
+    ]
 
-
-def rmtree(path):
-    def remove_readonly(func, path, excinfo):
-        os.chmod(path, stat.S_IWRITE)
-        func(path)
-
-    try:
-        shutil.rmtree(path, onerror=remove_readonly)
-    except OSError as e:
-        if e.errno != errno.ENOENT:
-            raise
-
-
-def exec_process(cmdline, silent=True, input=None, **kwargs):
-    """Execute a subprocess and returns the returncode, stdout buffer and stderr buffer.
-    Optionally prints stdout and stderr while running."""
-    try:
-        sub = subprocess.Popen(args=cmdline, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, **kwargs)
-        stdout, stderr = sub.communicate(input=input)
-        returncode = sub.returncode
-        if PY3:
-            stderr = stderr.decode(sys.stderr.encoding, errors='replace')
-            stdout = stdout.decode(sys.stdout.encoding, errors='replace')
-        if not silent:
-            sys.stdout.write(stdout)
-            sys.stderr.write(stderr)
-    except OSError as e:
-        if e.errno == errno.ENOENT:
-            raise DistutilsError('"%s" is not present on this system' % cmdline[0])
-        else:
-            raise
-    if returncode != 0:
-        output = 'stderr:\n%s\nstdout:\n%s' % (stderr.rstrip("\n"), stdout.rstrip("\n"))
-        raise DistutilsError('Got return value %d while executing "%s", output was:\n%s' % (returncode, " ".join(cmdline), output))
-    return stdout
-
-
-def prepare_windows_env(env):
-    # MSVC 2012 and 2013 where not used in any version
-    env.pop('VS120COMNTOOLS', None)
-    env.pop('VS110COMNTOOLS', None)
-    if sys.version_info >= (3, 5):
-        # MSVC 2015
-        env.pop('VS100COMNTOOLS', None)
-        env.pop('VS90COMNTOOLS', None)
-        env['GYP_MSVS_VERSION'] = '2015'
-    elif sys.version_info >= (3, 3):
-        # MSVC 2010
-        env.pop('VS140COMNTOOLS', None)
-        env.pop('VS90COMNTOOLS', None)
-        env['GYP_MSVS_VERSION'] = '2010'
-    else:
-        env.pop('VS140COMNTOOLS', None)
-        env.pop('VS100COMNTOOLS', None)
-        env['GYP_MSVS_VERSION'] = '2008'
-
-    if not env.get('PYTHON', '').endswith('.exe'):
-        env.pop('PYTHON', None)
-
-    if env.get('PYTHON'):
-        return  # Already manually set by user.
-
-    if sys.version_info[:2] == (2, 7):
-        env['PYTHON'] = sys.executable
-        return  # The current executable is fine.
-
-    # Try if `python` on PATH is the right one. If we would execute
-    # `python` directly the current executable might be used so we
-    # delegate this to cmd.
-    cmd = ['cmd.exe', '/C',  'python', '-c', 'import sys; '
-           'v = str(sys.version_info[:2]); sys.stdout.write(v); '
-           'sys.stdout.flush()']
-    try:
-        sub = subprocess.Popen(cmd, stdout=subprocess.PIPE)
-        stdout, _ = sub.communicate()
-        version = ast.literal_eval(stdout.decode(sys.stdout.encoding).strip())
-        if version == (2, 7):
-            return  # Python on PATH is fine
-    except OSError:
-        pass
-
-    # Check default install locations
-    path = os.path.join('%SYSTEMDRIVE%', 'Python27', 'python.exe')
-    path = os.path.expandvars(path)
-    if os.path.isfile(path):
-        log.info('Using "%s" to build libuv...' % path)
-        env['PYTHON'] = path
-    else:
-        raise DistutilsError('No appropriate Python version found. An '
-                             'installation of 2.7 is required to '
-                             'build libuv. You can set the environment '
-                             'variable "PYTHON" to point to a custom '
-                             'installation location.')
+elif sys.platform.startswith('sunos'):
+    SOURCES += [
+        'deps/libuv/src/unix/no-proctitle.c',
+        'deps/libuv/src/unix/sunos.c',
+    ]
 
 
 class libuv_build_ext(build_ext):
-    libuv_dir      = os.path.join('deps', 'libuv')
-    libuv_repo     = 'https://github.com/libuv/libuv.git'
-    libuv_branch   = 'v1.x'
-    libuv_revision = 'd6ac141'
-    libuv_patches  = []
+    libuv_dir = os.path.join('deps', 'libuv')
 
     user_options = build_ext.user_options
     user_options.extend([
-        ("libuv-clean-compile", None, "Clean libuv tree before compilation"),
-        ("libuv-force-fetch", None, "Remove libuv (if present) and fetch it again"),
-        ("libuv-verbose-build", None, "Print output of libuv build process"),
-        ("use-system-libuv", None, "Use the system provided libuv, instead of the bundled one")
+        ("use-system-libuv", None, "Use the system provided libuv, instead of the bundled one"),
     ])
     boolean_options = build_ext.boolean_options
-    boolean_options.extend(["libuv-clean-compile", "libuv-force-fetch", "libuv-verbose-build", "use-system-libuv"])
+    boolean_options.extend(["use-system-libuv"])
 
     def initialize_options(self):
         build_ext.initialize_options(self)
-        self.libuv_clean_compile = 0
-        self.libuv_force_fetch = 0
-        self.libuv_verbose_build = 0
         self.use_system_libuv = 0
 
     def build_extensions(self):
-        self.force = self.force or self.libuv_force_fetch or self.libuv_clean_compile
-
-        if self.compiler.compiler_type == 'mingw32' or self.use_system_libuv:
+        if self.use_system_libuv:
             self.compiler.add_library('uv')
         else:
-            if sys.platform == 'win32':
-                self.libuv_lib = os.path.join(self.libuv_dir, 'Release', 'lib', 'libuv.lib')
-            else:
-                self.libuv_lib = os.path.join(self.libuv_dir, '.libs', 'libuv.a')
-            self.get_libuv()
-            # Set compiler options
-            self.extensions[0].extra_objects.extend([self.libuv_lib])
             self.compiler.add_include_dir(os.path.join(self.libuv_dir, 'include'))
+            self.compiler.add_include_dir(os.path.join(self.libuv_dir, 'src'))
+            self.extensions[0].sources += SOURCES
+
+        if sys.platform != 'win32':
+            self.compiler.define_macro('_LARGEFILE_SOURCE', 1)
+            self.compiler.define_macro('_FILE_OFFSET_BITS', 64)
+
         if sys.platform.startswith('linux'):
+            self.compiler.add_library('dl')
             self.compiler.add_library('rt')
+        elif sys.platform == 'darwin':
+            self.compiler.define_macro('_DARWIN_USE_64_BIT_INODE', 1)
+            self.compiler.define_macro('_DARWIN_UNLIMITED_SELECT', 1)
+        elif sys.platform.startswith(('freebsd', 'dragonfly', 'openbsd', 'netbsd')):
+            self.compiler.add_library('kvm')
+        elif sys.platform.startswith('sunos'):
+            self.compiler.define_macro('__EXTENSIONS__', 1)
+            self.compiler.define_macro('_XOPEN_SOURCE', 500)
+            self.compiler.add_library('kstat')
+            self.compiler.add_library('nsl')
+            self.compiler.add_library('sendfile')
+            self.compiler.add_library('socket')
         elif sys.platform == 'win32':
-            self.extensions[0].define_macros.append(('WIN32', 1))
-            if self.compiler.compiler_type != 'mingw32':
-                self.extensions[0].extra_link_args.extend(['/NODEFAULTLIB:libcmt', '/LTCG'])
+            self.compiler.define_macro('_GNU_SOURCE', 1)
+            self.compiler.define_macro('WIN32', 1)
+            self.compiler.define_macro('_CRT_SECURE_NO_DEPRECATE', 1)
+            self.compiler.define_macro('_CRT_NONSTDC_NO_DEPRECATE', 1)
+            self.compiler.define_macro('_WIN32_WINNT', '0x0600')
             self.compiler.add_library('advapi32')
             self.compiler.add_library('iphlpapi')
             self.compiler.add_library('psapi')
@@ -171,87 +169,5 @@ class libuv_build_ext(build_ext):
             self.compiler.add_library('user32')
             self.compiler.add_library('userenv')
             self.compiler.add_library('ws2_32')
-        elif sys.platform.startswith('freebsd'):
-            self.compiler.add_library('kvm')
+
         build_ext.build_extensions(self)
-
-    def get_libuv(self):
-        #self.debug_mode =  bool(self.debug) or hasattr(sys, 'gettotalrefcount')
-        def download_libuv():
-            log.info('Downloading libuv...')
-            makedirs(self.libuv_dir)
-            exec_process(['git', 'clone', '-b', self.libuv_branch, self.libuv_repo, self.libuv_dir])
-            exec_process(['git', 'reset', '--hard', self.libuv_revision], cwd=self.libuv_dir)
-        def patch_libuv():
-            if self.libuv_patches:
-                log.info('Patching libuv...')
-                for patch_file in self.libuv_patches:
-                    exec_process(['patch', '--forward', '-d', self.libuv_dir, '-p0', '-i', os.path.abspath(patch_file)])
-        def build_libuv():
-            cflags = '-fPIC'
-            env = os.environ.copy()
-            env['CFLAGS'] = ' '.join(x for x in (cflags, env.get('CFLAGS', None), env.get('ARCHFLAGS', None)) if x)
-            log.info('Building libuv...')
-            if sys.platform == 'win32':
-                prepare_windows_env(env)
-                libuv_arch = {'32bit': 'x86', '64bit': 'x64'}[platform.architecture()[0]]
-                exec_process(['cmd.exe', '/C', 'vcbuild.bat', libuv_arch, 'release'], cwd=self.libuv_dir, env=env, shell=True, silent=not self.libuv_verbose_build)
-            else:
-                exec_process(['sh', 'autogen.sh'], cwd=self.libuv_dir, env=env, silent=not self.libuv_verbose_build)
-                exec_process(['./configure'], cwd=self.libuv_dir, env=env, silent=not self.libuv_verbose_build)
-                exec_process(['make'], cwd=self.libuv_dir, env=env, silent=not self.libuv_verbose_build)
-        if self.libuv_force_fetch:
-            rmtree('deps')
-        if not os.path.exists(self.libuv_dir):
-            try:
-                download_libuv()
-            except BaseException:
-                rmtree('deps')
-                raise
-            patch_libuv()
-            build_libuv()
-        else:
-            if self.libuv_clean_compile:
-                if sys.platform == 'win32':
-                    env = os.environ.copy()
-                    prepare_windows_env(env)
-                    exec_process(['cmd.exe', '/C', 'vcbuild.bat', 'clean'], cwd=self.libuv_dir, env=env, shell=True)
-                    rmtree(os.path.join(self.libuv_dir, 'Release'))
-                else:
-                    if os.path.exists(os.path.join(self.libuv_dir, 'Makefile')):
-                        exec_process(['make', 'distclean'], cwd=self.libuv_dir)
-            if not os.path.exists(self.libuv_lib):
-                log.info('libuv needs to be compiled.')
-                build_libuv()
-            else:
-                log.info('No need to build libuv.')
-
-
-class libuv_sdist(sdist):
-    libuv_dir      = os.path.join('deps', 'libuv')
-    libuv_repo     = libuv_build_ext.libuv_repo
-    libuv_branch   = libuv_build_ext.libuv_branch
-    libuv_revision = libuv_build_ext.libuv_revision
-    libuv_patches  = libuv_build_ext.libuv_patches
-
-    gyp_dir = os.path.join(libuv_dir, 'build', 'gyp')
-    gyp_repo = 'https://chromium.googlesource.com/external/gyp.git'
-
-    def initialize_options(self):
-        sdist.initialize_options(self)
-        rmtree('deps')
-        makedirs(self.libuv_dir)
-        log.info('Downloading libuv...')
-        exec_process(['git', 'clone', '-b', self.libuv_branch, self.libuv_repo, self.libuv_dir])
-        exec_process(['git', 'checkout', self.libuv_revision], cwd=self.libuv_dir)
-        if self.libuv_patches:
-            log.info('Patching libuv...')
-            for patch_file in self.libuv_patches:
-                exec_process(['patch', '--forward', '-d', self.libuv_dir, '-p0', '-i', os.path.abspath(patch_file)])
-        rmtree(os.path.join(self.libuv_dir, '.git'))
-
-        log.info('Downloading gyp...')
-        exec_process(['git', 'clone', self.gyp_repo, self.gyp_dir])
-        rmtree(os.path.join(self.gyp_dir, 'test'))
-        rmtree(os.path.join(self.gyp_dir, '.git'))
-

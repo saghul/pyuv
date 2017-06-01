@@ -7,7 +7,7 @@ try:
     from setuptools import setup, Extension
 except ImportError:
     from distutils.core import setup, Extension
-from setup_libuv import libuv_build_ext, libuv_sdist
+from setup_libuv import libuv_build_ext
 
 
 def get_version():
@@ -38,8 +38,7 @@ setup(name             = 'pyuv',
           'Programming Language :: Python :: Implementation :: CPython',
           'Programming Language :: Python :: Implementation :: PyPy',
       ],
-      cmdclass     = {'build_ext': libuv_build_ext,
-                      'sdist'    : libuv_sdist},
+      cmdclass     = {'build_ext': libuv_build_ext},
       packages     = ['pyuv'],
       ext_modules  = [Extension('pyuv._cpyuv',
                                 sources = ['src/pyuv.c'],
