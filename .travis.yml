@@ -17,3 +17,8 @@ install:
     - pip install tox
 script:
     - tox -e py
+
+notifications:
+  email:
+    on_success: never
+    on_failure: change
