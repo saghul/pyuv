@@ -10,6 +10,12 @@ python:
     - 'pypy'
     - 'pypy3'
 
+branches:
+  only:
+    - master
+    - v0.10
+    - v1.x
+
 cache: pip
 before_install:
     - source .travis/before_install.sh
