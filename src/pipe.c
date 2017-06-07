@@ -474,6 +474,19 @@ Pipe_rcvbuf_set(Pipe *self, PyObject *value, void *closure)
 }
 
 
+static PyObject *
+Pipe_ipc_get(Pipe *self, void *closure)
+{
+    int ipc_value;
+
+    UNUSED_ARG(closure);
+    RAISE_IF_HANDLE_NOT_INITIALIZED(self, NULL);
+
+    ipc_value = ((uv_pipe_t *) UV_HANDLE(self))->ipc;
+    return PyBool_FromLong((long) ipc_value);
+}
+
+
 static int
 Pipe_tp_init(Pipe *self, PyObject *args, PyObject *kwargs)
 {
@@ -553,6 +566,7 @@ Pipe_tp_methods[] = {
 static PyGetSetDef Pipe_tp_getsets[] = {
     {"send_buffer_size", (getter)Pipe_sndbuf_get, (setter)Pipe_sndbuf_set, "Send buffer size.", NULL},
     {"receive_buffer_size", (getter)Pipe_rcvbuf_get, (setter)Pipe_rcvbuf_set, "Receive buffer size.", NULL},
+    {"ipc", (getter)Pipe_ipc_get, NULL, "Indicates if IPC is enabled.", NULL},
     {NULL}
 };
 
