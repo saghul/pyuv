@@ -279,5 +279,21 @@ class PipeBytesBind(TestCase):
         self.loop.run()
 
 
+class PipeTestIPC(TestCase):
+
+    def check_ipc(self, handle, ipc):
+        self.assertTrue(hasattr(handle, 'ipc'))
+        self.assertIsInstance(handle.ipc, bool)
+        self.assertEqual(handle.ipc, ipc)
+
+    def test_ipc_attr(self):
+        handle = pyuv.Pipe(self.loop)
+        self.check_ipc(handle, False)
+        handle = pyuv.Pipe(self.loop, False)
+        self.check_ipc(handle, False)
+        handle = pyuv.Pipe(self.loop, True)
+        self.check_ipc(handle, True)
+
+
 if __name__ == '__main__':
     unittest.main(verbosity=2)
