@@ -14,7 +14,7 @@
     :type loop: :py:class:`Loop`
     :param loop: loop object where this handle runs (accessible through :py:attr:`Pipe.loop`).
 
-    :param boolean ipc: Indicate if this ``Pipe`` will be used for IPC connection.
+    :param boolean ipc: Indicates if this ``Pipe`` will be used for sharing handles.
 
     The ``Pipe`` handle provides asynchronous named pipe functionality both as a client and server,
     supporting cross-process communication and handle sharing.
@@ -63,8 +63,10 @@
         :param object client: Client object where to accept the connection.
 
         Accept a new incoming connection which was pending. This function needs to be
-        called in the callback given to the :py:meth:`listen` function or in the callback
-        given to the :py:meth:`start_read2` is there is any pending handle.
+        called in the callback given to the :py:meth:`listen` function, or when the
+        remote endpoint has shared a handle using the *handle* argument of
+        :py:meth:`write`. In either case the method :py:meth:`pending_handle_type`
+        tells you the type of handle to pass as the *client* argument.
 
     .. py:method:: connect(name, callback)
 
@@ -117,15 +119,6 @@
 
         Callback signature: ``callback(pipe_handle, data, error)``.
 
-    .. py:method:: start_read2(callback)
-
-        :param callable callback: Callback to be called when data is read from the
-            remote endpoint.
-
-        Start reading for incoming data or a handle from the remote endpoint.
-
-        Callback signature: ``callback(pipe_handle, data, pending, error)``.
-
     .. py:method:: stop_read
 
         Stop reading data from the remote endpoint.
@@ -137,6 +130,18 @@
         This setting applies to Windows only. Set the number of pending pipe instance
         handles when the pipe server is waiting for connections.
 
+    .. py:method:: pending_handle_type()
+
+        Return the type of handle that is pending. The possible return values are
+        ``UV_TCP``, ``UV_UDP`` and ``UV_NAMED_PIPE``, corresponding to a
+        :py:class:`TCP`, a :py:class:`UDP` and a :py:class:`Pipe` handle
+        respectively. The special value ``UV_UNKNOWN_HANDLE`` means no handle is
+        pending.
+
+        There are two situations when a handle becomes pending: a new connection is
+        available on a listening socket, or a handle was shared by the remote
+        endpoint using the *handle* argument to :py:meth:`write`.
+
     .. py:method:: fileno
 
         Return the internal file descriptor (or HANDLE in Windows) used by the
@@ -145,6 +150,12 @@
         .. warning::
             libuv expects you not to modify the file descriptor in any way, and
             if you do, things will very likely break.
+
+    .. py:attribute:: ipc
+
+        *Read only*
+
+        Indicates if this pipe is enabled for sharing handles.
 
     .. py:attribute:: send_buffer_size
 
