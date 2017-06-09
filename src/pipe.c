@@ -82,6 +82,12 @@ Pipe_func_bind(Pipe *self, PyObject *args)
         return NULL;
     }
 
+#if defined(__linux__)
+    if (len > 0 && name[0] == '\0') {
+        return Pipe_func_bind_abstract(self, name, len);
+    }
+#endif
+
     err = uv_pipe_bind(&self->pipe_h, name);
     if (err < 0) {
         RAISE_UV_EXCEPTION(err, PyExc_PipeError);
@@ -174,11 +180,12 @@ Pipe_func_connect(Pipe *self, PyObject *args)
     char *name;
     uv_connect_t *connect_req = NULL;
     PyObject *callback;
+    Py_ssize_t len;
 
     RAISE_IF_HANDLE_NOT_INITIALIZED(self, NULL);
     RAISE_IF_HANDLE_CLOSED(self, PyExc_HandleClosedError, NULL);
 
-    if (!PyArg_ParseTuple(args, "sO:connect", &name, &callback)) {
+    if (!PyArg_ParseTuple(args, "s#O:connect", &name, &len, &callback)) {
         return NULL;
     }
 
@@ -186,6 +193,12 @@ Pipe_func_connect(Pipe *self, PyObject *args)
         PyErr_SetString(PyExc_TypeError, "a callable is required");
         return NULL;
     }
+
+#if defined(__linux__)
+    if (len > 0 && name[0] == '\0') {
+        return Pipe_func_connect_abstract(self, name, len, callback);
+    }
+#endif
 
     Py_INCREF(callback);
 
@@ -326,19 +339,11 @@ Pipe_func_getsockname(Pipe *self)
         return NULL;
     }
 
-    if (buf_len == 0) {
-        return PyBytes_FromString("");
-    } else if (buf[0] == '\0') {
-        /* Linux abstract namespace */
-        return PyBytes_FromStringAndSize(buf, buf_len);
-    } else {
 #ifdef PYUV_PYTHON3
-        return PyUnicode_DecodeFSDefaultAndSize(buf, buf_len);
+    return PyUnicode_DecodeFSDefaultAndSize(buf, buf_len);
 #else
-        return PyBytes_FromStringAndSize(buf, buf_len);
+    return PyBytes_FromStringAndSize(buf, buf_len);
 #endif
-    }
-
 }
 
 
@@ -364,19 +369,11 @@ Pipe_func_getpeername(Pipe *self)
         return NULL;
     }
 
-    if (buf_len == 0) {
-        return PyBytes_FromString("");
-    } else if (buf[0] == '\0') {
-        /* Linux abstract namespace */
-        return PyBytes_FromStringAndSize(buf, buf_len);
-    } else {
 #ifdef PYUV_PYTHON3
-        return PyUnicode_DecodeFSDefaultAndSize(buf, buf_len);
+    return PyUnicode_DecodeFSDefaultAndSize(buf, buf_len);
 #else
-        return PyBytes_FromStringAndSize(buf, buf_len);
+    return PyBytes_FromStringAndSize(buf, buf_len);
 #endif
-    }
-
 }
 
 
