@@ -41,6 +41,14 @@ def platform_skip(platform_list):
         return unittest.skip("Test disabled in the current platform")
     return _noop
 
+# decorator for class
+def platform_only(platform_list):
+    def _noop(obj):
+        return obj
+    if platform not in platform_list:
+        return unittest.skip("Test disabled in the current platform")
+    return _noop
+
 
 class TestLoop(pyuv.Loop):
 
