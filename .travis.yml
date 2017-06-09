@@ -20,6 +20,8 @@ cache: pip
 before_install:
     - source .travis/before_install.sh
 install:
+    - python --version
+    - pip --version
     - pip install tox
 script:
     - tox -e py
