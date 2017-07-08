@@ -147,7 +147,7 @@ class libuv_build_ext(build_ext):
         elif sys.platform == 'darwin':
             self.compiler.define_macro('_DARWIN_USE_64_BIT_INODE', 1)
             self.compiler.define_macro('_DARWIN_UNLIMITED_SELECT', 1)
-        elif sys.platform.startswith(('freebsd', 'dragonfly', 'openbsd', 'netbsd')):
+        elif sys.platform.startswith('netbsd'):
             self.compiler.add_library('kvm')
         elif sys.platform.startswith('sunos'):
             self.compiler.define_macro('__EXTENSIONS__', 1)
