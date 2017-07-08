@@ -8,10 +8,12 @@ set -e -x
 cd /pyuv
 rm -rf wheeltmp
 
+VERSIONS="cp27-cp27mu cp33-cp33m cp34-cp34m cp35-cp35m cp36-cp36m"
+
 # Build
-for PYBIN in /opt/python/*/bin; do
-    "$PYBIN/python" setup.py build_ext
-    "$PYBIN/pip" wheel . -w wheeltmp
+for version in $VERSIONS; do
+    /opt/python/${version}/bin/python setup.py build_ext
+    /opt/python/${version}/bin/pip wheel . -w wheeltmp
 done
 for whl in wheeltmp/*.whl; do
     auditwheel repair $whl -w wheelhouse
@@ -22,10 +24,10 @@ rm -rf wheeltmp
 cd ..
 
 # Test (ignore if some fail, we just want to know that the module works)
-for PYBIN in /opt/python/*/bin; do
-    "$PYBIN/python" --version
-    "$PYBIN/pip" install pyuv --no-index -f /pyuv/wheelhouse
-    "$PYBIN/python" -c "import pyuv; print('%s - %s' % (pyuv.__version__, pyuv.LIBUV_VERSION));"
+for version in $VERSIONS; do
+    /opt/python/${version}/bin/python --version
+    /opt/python/${version}/bin/pip install pyuv --no-index -f /pyuv/wheelhouse
+    /opt/python/${version}/bin/python -c "import pyuv; print('%s - %s' % (pyuv.__version__, pyuv.LIBUV_VERSION));"
 done
 
 exit 0
