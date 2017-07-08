@@ -1,3 +1,41 @@
+Version 1.4.0
+=============
+ - misc: sign tags
+ - build: fix libuv cleanup if it was already clean
+ - build: add scripts to build manylinux wheels using Docker
+ - timers: emit warning if sub-millisecond accuracy is requested
+ - udp: add .send_queue_size
+ - core: avoid _Py_DEC_REFTOTAL when not defined
+ - core: do not rely on tp_clear being non-NULL
+ - core: work around cpyext tuple restrictions
+ - test: account for pypy in traceback tests
+ - test: close loop handles
+ - test: convert weakref into handle lifetime test
+ - test: encode stderr as utf-8 under python 2
+ - test: delete handles and clean up in teardown
+ - ci: add pypy to tox and travis
+ - build: support building with MinGW-w64
+ - misc: update classifiers in setup.py
+ - misc: use single quotes in setup.py
+ - doc: fix  documentation on Idle handles
+ - doc: fix note directive usage.
+ - build: raised libuv revision to tag 1.12.0
+ - build: fix unicode errors on Windows 10
+ - ci: add Python 3.6
+ - tests: fix TCP test (socket is already closed)
+ - ci: turn off annoying Travis notifications
+ - ci: run only on long-term branches
+ - ci: use new PyPy version on Travis
+ - deps: add libuv sources v1.12.0
+ - build: use setuptools to build libuv
+ - pipe: expose Pipe.ipc attribute
+ - docs: update IPC docs
+ - pipe: add abstract namespace support
+ - misc: update classifiers
+ - core: set version to 1.4.0
+ - core: update libuv to version 1.13.1
+ - build: only link with kvm on netbsd
+
 Version 1.3.0
 =============
  - ci: test Python 3.5 on Travis CI
