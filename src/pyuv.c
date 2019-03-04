@@ -26,7 +26,6 @@
 #include "process.c"
 #include "dns.c"
 #include "util.c"
-#include "thread.c"
 
 
 static PyModuleDef pyuv_module = {
@@ -67,7 +66,6 @@ init_pyuv(void)
     PyObject *fs_module;
     PyObject *dns_module;
     PyObject *util_module;
-    PyObject *thread_module;
 
     /* Initialize GIL */
     PyEval_InitThreads();
@@ -125,15 +123,6 @@ init_pyuv(void)
     PyUVModule_AddObject(pyuv, "util", util_module);
     PyDict_SetItemString(PyImport_GetModuleDict(), pyuv_util_module.m_name, util_module);
     Py_DECREF(util_module);
-
-    /* Thread module */
-    thread_module = init_thread();
-    if (thread_module == NULL) {
-        goto fail;
-    }
-    PyUVModule_AddObject(pyuv, "thread", thread_module);
-    PyDict_SetItemString(PyImport_GetModuleDict(), pyuv_thread_module.m_name, thread_module);
-    Py_DECREF(thread_module);
 
     /* Types */
     AsyncType.tp_base = &HandleType;
