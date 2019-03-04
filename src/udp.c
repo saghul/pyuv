@@ -44,10 +44,10 @@ pyuv__udp_recv_cd(uv_udp_t* handle, int nread, const uv_buf_t* buf, struct socka
         Py_INCREF(Py_None);
         data = Py_None;
         Py_INCREF(Py_None);
-        py_errorno = PyInt_FromLong((long)nread);
+        py_errorno = PyLong_FromLong((long)nread);
     }
 
-    result = PyObject_CallFunctionObjArgs(self->on_read_cb, self, address_tuple, PyInt_FromLong((long)flags), data, py_errorno, NULL);
+    result = PyObject_CallFunctionObjArgs(self->on_read_cb, self, address_tuple, PyLong_FromLong((long)flags), data, py_errorno, NULL);
     if (result == NULL) {
         handle_uncaught_exception(HANDLE(self)->loop);
     }
@@ -86,7 +86,7 @@ pyuv__udp_send_cb(uv_udp_send_t* req, int status)
 
     if (callback != Py_None) {
         if (status < 0) {
-            py_errorno = PyInt_FromLong((long)status);
+            py_errorno = PyLong_FromLong((long)status);
         } else {
             py_errorno = Py_None;
             Py_INCREF(Py_None);
@@ -217,7 +217,7 @@ UDP_func_try_send(UDP *self, PyObject *args)
     RAISE_IF_HANDLE_NOT_INITIALIZED(self, NULL);
     RAISE_IF_HANDLE_CLOSED(self, PyExc_HandleClosedError, NULL);
 
-    if (!PyArg_ParseTuple(args, "O"PYUV_BYTES"*:try_send", &addr, &view)) {
+    if (!PyArg_ParseTuple(args, "Oy*:try_send", &addr, &view)) {
         return NULL;
     }
 
@@ -236,7 +236,7 @@ UDP_func_try_send(UDP *self, PyObject *args)
     }
 
     PyBuffer_Release(&view);
-    return PyInt_FromLong((long)err);
+    return PyLong_FromLong((long)err);
 }
 
 
@@ -608,7 +608,7 @@ UDP_func_fileno(UDP *self)
     }
 
     /* This is safe. See note in Stream_func_fileno() */
-    return PyInt_FromLong((long) fd);
+    return PyLong_FromLong((long) fd);
 }
 
 
@@ -628,7 +628,7 @@ UDP_family_get(UDP *self, void *closure)
         return NULL;
     }
 
-    return PyInt_FromLong((long) sockname.ss_family);
+    return PyLong_FromLong((long) sockname.ss_family);
 }
 
 
@@ -647,7 +647,7 @@ UDP_sndbuf_get(UDP *self, void *closure)
         RAISE_UV_EXCEPTION(err, PyExc_UDPError);
         return NULL;
     }
-    return PyInt_FromLong((long) sndbuf_value);
+    return PyLong_FromLong((long) sndbuf_value);
 }
 
 
@@ -665,7 +665,7 @@ UDP_sndbuf_set(UDP *self, PyObject *value, void *closure)
         return -1;
     }
 
-    sndbuf_value = (int) PyInt_AsLong(value);
+    sndbuf_value = (int) PyLong_AsLong(value);
     if (sndbuf_value == -1 && PyErr_Occurred()) {
         return -1;
     }
@@ -694,7 +694,7 @@ UDP_rcvbuf_get(UDP *self, void *closure)
         RAISE_UV_EXCEPTION(err, PyExc_UDPError);
         return NULL;
     }
-    return PyInt_FromLong((long) rcvbuf_value);
+    return PyLong_FromLong((long) rcvbuf_value);
 }
 
 
@@ -712,7 +712,7 @@ UDP_rcvbuf_set(UDP *self, PyObject *value, void *closure)
         return -1;
     }
 
-    rcvbuf_value = (int) PyInt_AsLong(value);
+    rcvbuf_value = (int) PyLong_AsLong(value);
     if (rcvbuf_value == -1 && PyErr_Occurred()) {
         return -1;
     }

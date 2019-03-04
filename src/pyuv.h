@@ -9,18 +9,6 @@
 #include "structseq.h"
 #include "bytesobject.h"
 
-/* Python3 */
-#if PY_MAJOR_VERSION >= 3
-    #define PYUV_PYTHON3
-    #define PyInt_FromSsize_t PyLong_FromSsize_t
-    #define PyInt_FromLong PyLong_FromLong
-    #define PyInt_Check PyLong_Check
-    #define PyInt_AsLong PyLong_AsLong
-    #define PYUV_BYTES "y"
-#else
-    #define PYUV_BYTES "s"
-#endif
-
 /* libuv */
 #include "uv.h"
 

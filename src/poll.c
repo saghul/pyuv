@@ -14,13 +14,13 @@ pyuv__poll_cb(uv_poll_t *handle, int status, int events)
     Py_INCREF(self);
 
     if (status == 0) {
-        py_events = PyInt_FromLong((long)events);
+        py_events = PyLong_FromLong((long)events);
         py_errorno = Py_None;
         Py_INCREF(Py_None);
     } else  {
         py_events = Py_None;
         Py_INCREF(Py_None);
-        py_errorno = PyInt_FromLong((long)status);
+        py_errorno = PyLong_FromLong((long)status);
     }
 
     result = PyObject_CallFunctionObjArgs(self->callback, self, py_events, py_errorno, NULL);
@@ -110,7 +110,7 @@ Poll_func_fileno(Poll *self)
     }
 
     /* This is safe. See note in Stream_func_fileno() */
-    return PyInt_FromLong((long) fd);
+    return PyLong_FromLong((long) fd);
 }
 
 

@@ -731,7 +731,6 @@ static PyTypeObject SemaphoreType = {
 };
 
 
-#ifdef PYUV_PYTHON3
 static PyModuleDef pyuv_thread_module = {
     PyModuleDef_HEAD_INIT,
     "pyuv._cpyuv.thread",   /*m_name*/
@@ -739,17 +738,12 @@ static PyModuleDef pyuv_thread_module = {
     -1,                     /*m_size*/
     NULL,                   /*m_methods*/
 };
-#endif
 
 PyObject *
 init_thread(void)
 {
     PyObject *module;
-#ifdef PYUV_PYTHON3
     module = PyModule_Create(&pyuv_thread_module);
-#else
-    module = Py_InitModule("pyuv._cpyuv.thread", NULL);
-#endif
     if (module == NULL) {
         return NULL;
     }

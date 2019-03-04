@@ -1,5 +1,4 @@
 
-#ifdef PYUV_PYTHON3
 static PyModuleDef pyuv_error_module = {
     PyModuleDef_HEAD_INIT,
     "pyuv._cpyuv.error",    /*m_name*/
@@ -7,17 +6,12 @@ static PyModuleDef pyuv_error_module = {
     -1,                     /*m_size*/
     NULL,                   /*m_methods*/
 };
-#endif
 
 PyObject *
 init_error(void)
 {
     PyObject *module;
-#ifdef PYUV_PYTHON3
     module = PyModule_Create(&pyuv_error_module);
-#else
-    module = Py_InitModule("pyuv._cpyuv.error", NULL);
-#endif
     if (module == NULL) {
         return NULL;
     }

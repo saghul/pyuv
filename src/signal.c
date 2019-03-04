@@ -13,7 +13,7 @@ pyuv__signal_cb(uv_signal_t *handle, int signum)
     /* Object could go out of scope in the callback, increase refcount to avoid it */
     Py_INCREF(self);
 
-    result = PyObject_CallFunctionObjArgs(self->callback, self, PyInt_FromLong((long)signum), NULL);
+    result = PyObject_CallFunctionObjArgs(self->callback, self, PyLong_FromLong((long)signum), NULL);
     if (result == NULL) {
         handle_uncaught_exception(HANDLE(self)->loop);
     }

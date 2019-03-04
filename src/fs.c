@@ -49,7 +49,7 @@ pyuv__process_fs_req(uv_fs_t* req) {
     }
 
     if (req->result < 0) {
-        errorno = PyInt_FromLong((long)req->result);
+        errorno = PyLong_FromLong((long)req->result);
         PYUV_SET_NONE(r);
     } else {
         PYUV_SET_NONE(errorno);
@@ -93,7 +93,7 @@ pyuv__process_fs_req(uv_fs_t* req) {
                 }
                 break;
             case UV_FS_WRITE:
-                r = PyInt_FromLong((long)req->result);
+                r = PyLong_FromLong((long)req->result);
                 if (!r) {
                     PyErr_Clear();
                     PYUV_SET_NONE(r);
@@ -102,7 +102,7 @@ pyuv__process_fs_req(uv_fs_t* req) {
                 break;
             case UV_FS_OPEN:
             case UV_FS_SENDFILE:
-                r = PyInt_FromLong((long)req->result);
+                r = PyLong_FromLong((long)req->result);
                 if (!r) {
                     PyErr_Clear();
                     PYUV_SET_NONE(r);
@@ -130,7 +130,7 @@ pyuv__process_fs_req(uv_fs_t* req) {
                             break;
                         }
                         PyStructSequence_SET_ITEM(item, 0, Py_BuildValue("s", ent.name));
-                        PyStructSequence_SET_ITEM(item, 1, PyInt_FromLong((long)ent.type));
+                        PyStructSequence_SET_ITEM(item, 1, PyLong_FromLong((long)ent.type));
                         PyList_Append(r, item);
                         Py_DECREF(item);
                     }
@@ -1014,7 +1014,7 @@ FS_func_write(PyObject *obj, PyObject *args, PyObject *kwargs)
     fs_req = NULL;
     callback = Py_None;
 
-    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!l"PYUV_BYTES"*L|O:write", kwlist, &LoopType, &loop, &fd, &view, &offset, &callback)) {
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!ly*L|O:write", kwlist, &LoopType, &loop, &fd, &view, &offset, &callback)) {
         return NULL;
     }
 
@@ -1568,13 +1568,13 @@ pyuv__fsevent_cb(uv_fs_event_t *handle, const char *filename, int events, int st
     }
 
     if (status < 0) {
-        errorno = PyInt_FromLong((long)status);
+        errorno = PyLong_FromLong((long)status);
     } else {
         errorno = Py_None;
         Py_INCREF(Py_None);
     }
 
-    py_events = PyInt_FromLong((long)events);
+    py_events = PyLong_FromLong((long)events);
 
     result = PyObject_CallFunctionObjArgs(self->callback, self, py_filename, py_events, errorno, NULL);
     if (result == NULL) {
@@ -1675,11 +1675,7 @@ FSEvent_path_get(FSEvent *self, void *closure)
         return Py_BuildValue("s", "");
     }
 
-#ifdef PYUV_PYTHON3
     return PyUnicode_DecodeFSDefaultAndSize(buf, buf_len);
-#else
-    return PyBytes_FromStringAndSize(buf, buf_len);
-#endif
 }
 
 
@@ -1815,7 +1811,7 @@ pyuv__fspoll_cb(uv_fs_poll_t *handle, int status, const uv_stat_t *prev, const u
     Py_INCREF(self);
 
     if (status < 0) {
-        errorno = PyInt_FromLong((long)status);
+        errorno = PyLong_FromLong((long)status);
         prev_stat_data = Py_None;
         curr_stat_data = Py_None;
         Py_INCREF(Py_None);
@@ -1943,11 +1939,7 @@ FSPoll_path_get(FSPoll *self, void *closure)
         return PyBytes_FromString("");
     }
 
-#ifdef PYUV_PYTHON3
     return PyUnicode_DecodeFSDefaultAndSize(buf, buf_len);
-#else
-    return PyBytes_FromStringAndSize(buf, buf_len);
-#endif
 }
 
 
@@ -2066,8 +2058,6 @@ static PyTypeObject FSPollType = {
 };
 
 
-
-#ifdef PYUV_PYTHON3
 static PyModuleDef pyuv_fs_module = {
     PyModuleDef_HEAD_INIT,
     "pyuv._cpyuv.fs",       /*m_name*/
@@ -2075,17 +2065,12 @@ static PyModuleDef pyuv_fs_module = {
     -1,                     /*m_size*/
     FS_methods,             /*m_methods*/
 };
-#endif
 
 PyObject *
 init_fs(void)
 {
     PyObject *module;
-#ifdef PYUV_PYTHON3
     module = PyModule_Create(&pyuv_fs_module);
-#else
-    module = Py_InitModule("pyuv._cpyuv.fs", FS_methods);
-#endif
     if (module == NULL) {
         return NULL;
     }

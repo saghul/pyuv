@@ -31,7 +31,7 @@ pyuv__stream_shutdown_cb(uv_shutdown_t* req, int status)
 
     if (callback != Py_None) {
         if (status < 0) {
-            py_errorno = PyInt_FromLong((long)status);
+            py_errorno = PyLong_FromLong((long)status);
         } else {
             py_errorno = Py_None;
             Py_INCREF(Py_None);
@@ -76,7 +76,7 @@ pyuv__stream_read_cb(uv_stream_t* handle, int nread, const uv_buf_t* buf)
     } else {
         data = Py_None;
         Py_INCREF(Py_None);
-        py_errorno = PyInt_FromLong((long)nread);
+        py_errorno = PyLong_FromLong((long)nread);
         /* Stop reading, otherwise an assert blows up on unix */
         uv_read_stop(handle);
     }
@@ -117,7 +117,7 @@ pyuv__stream_write_cb(uv_write_t* req, int status)
 
     if (callback != Py_None) {
         if (status < 0) {
-            py_errorno = PyInt_FromLong((long)status);
+            py_errorno = PyLong_FromLong((long)status);
         } else {
             py_errorno = Py_None;
             Py_INCREF(Py_None);
@@ -262,7 +262,7 @@ Stream_func_try_write(Stream *self, PyObject *args)
     RAISE_IF_HANDLE_NOT_INITIALIZED(self, NULL);
     RAISE_IF_HANDLE_CLOSED(self, PyExc_HandleClosedError, NULL);
 
-    if (!PyArg_ParseTuple(args, PYUV_BYTES"*:try_write", &view)) {
+    if (!PyArg_ParseTuple(args, "y*:try_write", &view)) {
         return NULL;
     }
 
@@ -275,7 +275,7 @@ Stream_func_try_write(Stream *self, PyObject *args)
     }
 
     PyBuffer_Release(&view);
-    return PyInt_FromLong((long)err);
+    return PyLong_FromLong((long)err);
 }
 
 
@@ -472,7 +472,7 @@ Stream_func_fileno(Stream *self)
     /* us_os_fd_t is a HANDLE on Windows which is a 64-bit data type but which
      * is guaranteed to contain only values < 2^24.
      * For more information, see: http://www.viva64.com/en/k/0005/ */
-    return PyInt_FromLong((long) fd);
+    return PyLong_FromLong((long) fd);
 }
 
 

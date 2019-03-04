@@ -29,9 +29,9 @@ pyuv__getaddrinfo_process_result(int status, struct addrinfo* res, PyObject** dn
             PyErr_Clear();
             break;
         }
-        PyStructSequence_SET_ITEM(item, 0, PyInt_FromLong((long)ptr->ai_family));
-        PyStructSequence_SET_ITEM(item, 1, PyInt_FromLong((long)ptr->ai_socktype));
-        PyStructSequence_SET_ITEM(item, 2, PyInt_FromLong((long)ptr->ai_protocol));
+        PyStructSequence_SET_ITEM(item, 0, PyLong_FromLong((long)ptr->ai_family));
+        PyStructSequence_SET_ITEM(item, 1, PyLong_FromLong((long)ptr->ai_socktype));
+        PyStructSequence_SET_ITEM(item, 2, PyLong_FromLong((long)ptr->ai_protocol));
         PyStructSequence_SET_ITEM(item, 3, Py_BuildValue("s", ptr->ai_canonname ? ptr->ai_canonname : ""));
         PyStructSequence_SET_ITEM(item, 4, addr);
 
@@ -63,7 +63,7 @@ pyuv__getaddrinfo_cb(uv_getaddrinfo_t* req, int status, struct addrinfo* res)
     if (err == 0) {
         PYUV_SET_NONE(errorno);
     } else {
-        errorno = PyInt_FromLong((long)err);
+        errorno = PyLong_FromLong((long)err);
         PYUV_SET_NONE(dns_result);
     }
 
@@ -117,7 +117,7 @@ pyuv__getnameinfo_cb(uv_getnameinfo_t* req, int status, const char *hostname, co
     if (err == 0) {
         PYUV_SET_NONE(errorno);
     } else {
-        errorno = PyInt_FromLong((long)err);
+        errorno = PyLong_FromLong((long)err);
         PYUV_SET_NONE(gni_result);
     }
 
@@ -190,8 +190,8 @@ Util_func_getaddrinfo(PyObject *obj, PyObject *args, PyObject *kwargs)
         service_str = PyBytes_AS_STRING(ascii);
     } else if (PyBytes_Check(service)) {
         service_str = PyBytes_AS_STRING(service);
-    } else if (PyInt_Check(service)) {
-        port = PyInt_AsLong(service);
+    } else if (PyLong_Check(service)) {
+        port = PyLong_AsLong(service);
         if (port < 0 || port > 0xffff) {
             PyErr_SetString(PyExc_ValueError, "port must be between 0 and 65535");
             goto error;
@@ -323,7 +323,6 @@ Dns_methods[] = {
 };
 
 
-#ifdef PYUV_PYTHON3
 static PyModuleDef pyuv_dns_module = {
     PyModuleDef_HEAD_INIT,
     "pyuv._cpyuv.dns",      /*m_name*/
@@ -331,17 +330,12 @@ static PyModuleDef pyuv_dns_module = {
     -1,                     /*m_size*/
     Dns_methods,            /*m_methods*/
 };
-#endif
 
 PyObject *
 init_dns(void)
 {
     PyObject *module;
-#ifdef PYUV_PYTHON3
     module = PyModule_Create(&pyuv_dns_module);
-#else
-    module = Py_InitModule("pyuv._cpyuv.dns", Dns_methods);
-#endif
     if (module == NULL) {
         return NULL;
     }

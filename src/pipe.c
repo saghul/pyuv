@@ -13,7 +13,7 @@ pyuv__pipe_listen_cb(uv_stream_t* handle, int status)
     Py_INCREF(self);
 
     if (status != 0) {
-        py_errorno = PyInt_FromLong((long)status);
+        py_errorno = PyLong_FromLong((long)status);
     } else {
         py_errorno = Py_None;
         Py_INCREF(Py_None);
@@ -45,7 +45,7 @@ pyuv__pipe_connect_cb(uv_connect_t *req, int status)
     ASSERT(self);
 
     if (status != 0) {
-        py_errorno = PyInt_FromLong(status);
+        py_errorno = PyLong_FromLong(status);
     } else {
         py_errorno = Py_None;
         Py_INCREF(Py_None);
@@ -268,7 +268,7 @@ Pipe_func_pending_handle_type(Pipe *self)
     RAISE_IF_HANDLE_NOT_INITIALIZED(self, NULL);
     RAISE_IF_HANDLE_CLOSED(self, PyExc_HandleClosedError, NULL);
 
-    return PyInt_FromLong(uv_pipe_pending_type(&self->pipe_h));
+    return PyLong_FromLong(uv_pipe_pending_type(&self->pipe_h));
 }
 
 
@@ -339,11 +339,7 @@ Pipe_func_getsockname(Pipe *self)
         return NULL;
     }
 
-#ifdef PYUV_PYTHON3
     return PyUnicode_DecodeFSDefaultAndSize(buf, buf_len);
-#else
-    return PyBytes_FromStringAndSize(buf, buf_len);
-#endif
 }
 
 
@@ -369,11 +365,7 @@ Pipe_func_getpeername(Pipe *self)
         return NULL;
     }
 
-#ifdef PYUV_PYTHON3
     return PyUnicode_DecodeFSDefaultAndSize(buf, buf_len);
-#else
-    return PyBytes_FromStringAndSize(buf, buf_len);
-#endif
 }
 
 
@@ -392,7 +384,7 @@ Pipe_sndbuf_get(Pipe *self, void *closure)
         RAISE_UV_EXCEPTION(err, PyExc_PipeError);
         return NULL;
     }
-    return PyInt_FromLong((long) sndbuf_value);
+    return PyLong_FromLong((long) sndbuf_value);
 }
 
 
@@ -410,7 +402,7 @@ Pipe_sndbuf_set(Pipe *self, PyObject *value, void *closure)
         return -1;
     }
 
-    sndbuf_value = (int) PyInt_AsLong(value);
+    sndbuf_value = (int) PyLong_AsLong(value);
     if (sndbuf_value == -1 && PyErr_Occurred()) {
         return -1;
     }
@@ -439,7 +431,7 @@ Pipe_rcvbuf_get(Pipe *self, void *closure)
         RAISE_UV_EXCEPTION(err, PyExc_PipeError);
         return NULL;
     }
-    return PyInt_FromLong((long) rcvbuf_value);
+    return PyLong_FromLong((long) rcvbuf_value);
 }
 
 
@@ -457,7 +449,7 @@ Pipe_rcvbuf_set(Pipe *self, PyObject *value, void *closure)
         return -1;
     }
 
-    rcvbuf_value = (int) PyInt_AsLong(value);
+    rcvbuf_value = (int) PyLong_AsLong(value);
     if (rcvbuf_value == -1 && PyErr_Occurred()) {
         return -1;
     }
