@@ -196,11 +196,14 @@ init_pyuv(void)
     PyModule_AddIntMacro(pyuv, UV_PROCESS_SETGID);
     PyModule_AddIntMacro(pyuv, UV_PROCESS_DETACHED);
     PyModule_AddIntMacro(pyuv, UV_PROCESS_WINDOWS_HIDE);
+    PyModule_AddIntMacro(pyuv, UV_PROCESS_WINDOWS_HIDE_CONSOLE);
+    PyModule_AddIntMacro(pyuv, UV_PROCESS_WINDOWS_HIDE_GUI);
     PyModule_AddIntMacro(pyuv, UV_PROCESS_WINDOWS_VERBATIM_ARGUMENTS);
     PyModule_AddIntMacro(pyuv, UV_IGNORE);
     PyModule_AddIntMacro(pyuv, UV_CREATE_PIPE);
     PyModule_AddIntMacro(pyuv, UV_READABLE_PIPE);
     PyModule_AddIntMacro(pyuv, UV_WRITABLE_PIPE);
+    PyModule_AddIntMacro(pyuv, UV_OVERLAPPED_PIPE);
     PyModule_AddIntMacro(pyuv, UV_INHERIT_FD);
     PyModule_AddIntMacro(pyuv, UV_INHERIT_STREAM);
 
@@ -208,6 +211,7 @@ init_pyuv(void)
     PyModule_AddIntMacro(pyuv, UV_READABLE);
     PyModule_AddIntMacro(pyuv, UV_WRITABLE);
     PyModule_AddIntMacro(pyuv, UV_DISCONNECT);
+    PyModule_AddIntMacro(pyuv, UV_PRIORITIZED);
 
     /* Handle types */
     PyModule_AddIntMacro(pyuv, UV_UNKNOWN_HANDLE);

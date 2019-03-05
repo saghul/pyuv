@@ -733,7 +733,7 @@ UDP_send_queue_size_get(UDP *self, void *closure)
 
     RAISE_IF_HANDLE_NOT_INITIALIZED(self, NULL);
 
-    return PyLong_FromSize_t(((uv_udp_t *)UV_HANDLE(self))->send_queue_size);
+    return PyLong_FromSize_t(uv_udp_get_send_queue_size((uv_udp_t *)UV_HANDLE(self)));
 }
 
 

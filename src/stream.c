@@ -528,7 +528,7 @@ Stream_write_queue_size_get(Stream *self, void *closure)
 
     RAISE_IF_HANDLE_NOT_INITIALIZED(self, NULL);
 
-    return PyLong_FromSize_t(((uv_stream_t *)UV_HANDLE(self))->write_queue_size);
+    return PyLong_FromSize_t(uv_stream_get_write_queue_size((uv_stream_t *)UV_HANDLE(self)));
 }
 
 

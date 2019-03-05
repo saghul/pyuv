@@ -497,7 +497,7 @@ Process_pid_get(Process *self, void *closure)
     if (!HANDLE(self)->initialized) {
         Py_RETURN_NONE;
     }
-    return PyLong_FromLong((long)self->process_h.pid);
+    return PyLong_FromLong((long)uv_process_get_pid(&(self->process_h)));
 }
 
 
