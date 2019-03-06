@@ -83,6 +83,7 @@ pyuv__process_fs_req(uv_fs_t* req) {
             case UV_FS_UTIME:
             case UV_FS_FUTIME:
             case UV_FS_ACCESS:
+            case UV_FS_COPYFILE:
                 PYUV_SET_NONE(r);
                 break;
             case UV_FS_READLINK:
@@ -1532,6 +1533,56 @@ FS_func_realpath(PyObject *obj, PyObject *args, PyObject *kwargs)
 }
 
 
+static PyObject *
+FS_func_copyfile(PyObject *obj, PyObject *args, PyObject *kwargs)
+{
+    int err, flags;
+    char *path, *new_path;
+    Loop *loop;
+    FSRequest *fs_req;
+    PyObject *callback, *ret;
+
+    static char *kwlist[] = {"loop", "path", "new_path", "flags", "callback", NULL};
+
+    UNUSED_ARG(obj);
+    fs_req = NULL;
+    callback = Py_None;
+
+    if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!ssi|O:copyfile", kwlist, &LoopType, &loop, &path, &new_path, &flags, &callback)) {
+        return NULL;
+    }
+
+    if (callback != Py_None && !PyCallable_Check(callback)) {
+        PyErr_SetString(PyExc_TypeError, "a callable is required");
+        return NULL;
+    }
+
+    fs_req = (FSRequest *)PyObject_CallFunctionObjArgs((PyObject *)&FSRequestType, loop, callback, NULL);
+    if (!fs_req) {
+        return NULL;
+    }
+
+    err = uv_fs_copyfile(loop->uv_loop, &fs_req->req, path, new_path, flags, (callback != Py_None) ? pyuv__process_fs_req : NULL);
+    if (err < 0) {
+        RAISE_UV_EXCEPTION(err, PyExc_FSError);
+        Py_DECREF(fs_req);
+        return NULL;
+    }
+
+    Py_INCREF(fs_req);
+    if (callback != Py_None) {
+        /* No need to cleanup, it will be done in the callback */
+        return (PyObject *)fs_req;
+    } else {
+        pyuv__process_fs_req(&fs_req->req);
+        Py_INCREF(fs_req->result);
+        ret = fs_req->result;
+        Py_DECREF(fs_req);
+        return ret;
+    }
+}
+
+
 static PyMethodDef
 FS_methods[] = {
     { "stat", (PyCFunction)FS_func_stat, METH_VARARGS|METH_KEYWORDS, "stat" },
@@ -1562,6 +1613,7 @@ FS_methods[] = {
     { "futime", (PyCFunction)FS_func_futime, METH_VARARGS|METH_KEYWORDS, "Update file times." },
     { "access", (PyCFunction)FS_func_access, METH_VARARGS|METH_KEYWORDS, "Check access to file." },
     { "realpath", (PyCFunction)FS_func_realpath, METH_VARARGS|METH_KEYWORDS, "Returns the canonicalized absolute path." },
+    { "copyfile", (PyCFunction)FS_func_copyfile, METH_VARARGS|METH_KEYWORDS, "Copies a file to another destination." },
     { NULL }
 };
 
@@ -2111,6 +2163,9 @@ init_fs(void)
     PyModule_AddIntMacro(module, UV_DIRENT_SOCKET);
     PyModule_AddIntMacro(module, UV_DIRENT_CHAR);
     PyModule_AddIntMacro(module, UV_DIRENT_BLOCK);
+    PyModule_AddIntMacro(module, UV_FS_COPYFILE_EXCL);
+    PyModule_AddIntMacro(module, UV_FS_COPYFILE_FICLONE);
+    PyModule_AddIntMacro(module, UV_FS_COPYFILE_FICLONE_FORCE);
 
     FSEventType.tp_base = &HandleType;
     FSPollType.tp_base = &HandleType;

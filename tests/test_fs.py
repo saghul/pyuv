@@ -865,6 +865,30 @@ class FSTestRealpath(TestCase):
         self.assertNotEqual(result, '.')
 
 
+class FSTestCopyfile(FileTestCase):
+
+    def tearDown(self):
+        try:
+            os.remove(TEST_FILE2)
+        except OSError:
+            pass
+        super(FSTestCopyfile, self).tearDown()
+
+    def copyfile_cb(self, req):
+        self.errorno = req.error
+
+    def test_copyfile(self):
+        self.errorno = None
+        pyuv.fs.copyfile(self.loop, TEST_FILE, TEST_FILE2, 0, self.copyfile_cb)
+        self.loop.run()
+        self.assertEqual(self.errorno, None)
+        self.assertTrue(os.stat(TEST_FILE2).st_size == os.stat(TEST_FILE).st_size)
+
+    def test_copyfile_sync(self):
+        pyuv.fs.copyfile(self.loop, TEST_FILE, TEST_FILE2, 0)
+        self.assertTrue(os.stat(TEST_FILE2).st_size == os.stat(TEST_FILE).st_size)
+
+
 class FSEventTestBasic(FileTestCase):
 
     def tearDown(self):
