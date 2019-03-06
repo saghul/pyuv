@@ -74,6 +74,7 @@ pyuv__process_fs_req(uv_fs_t* req) {
             case UV_FS_LINK:
             case UV_FS_SYMLINK:
             case UV_FS_CHOWN:
+            case UV_FS_LCHOWN:
             case UV_FS_FCHOWN:
             case UV_FS_CLOSE:
             case UV_FS_FSYNC:
@@ -732,8 +733,8 @@ FS_func_readlink(PyObject *obj, PyObject *args, PyObject *kwargs)
 }
 
 
-static PyObject *
-FS_func_chown(PyObject *obj, PyObject *args, PyObject *kwargs)
+static INLINE PyObject *
+pyuv__fs_chown(PyObject *args, PyObject *kwargs, int type)
 {
     int err, uid, gid;
     char *path;
@@ -743,7 +744,6 @@ FS_func_chown(PyObject *obj, PyObject *args, PyObject *kwargs)
 
     static char *kwlist[] = {"loop", "path", "uid", "gid", "callback", NULL};
 
-    UNUSED_ARG(obj);
     fs_req = NULL;
     callback = Py_None;
 
@@ -761,7 +761,12 @@ FS_func_chown(PyObject *obj, PyObject *args, PyObject *kwargs)
         return NULL;
     }
 
-    err = uv_fs_chown(loop->uv_loop, &fs_req->req, path, uid, gid, (callback != Py_None) ? pyuv__process_fs_req : NULL);
+    if (type == UV_FS_CHOWN) {
+        err = uv_fs_chown(loop->uv_loop, &fs_req->req, path, uid, gid, (callback != Py_None) ? pyuv__process_fs_req : NULL);
+    } else {
+        err = uv_fs_lchown(loop->uv_loop, &fs_req->req, path, uid, gid, (callback != Py_None) ? pyuv__process_fs_req : NULL);
+    }
+
     if (err < 0) {
         RAISE_UV_EXCEPTION(err, PyExc_FSError);
         Py_DECREF(fs_req);
@@ -779,6 +784,22 @@ FS_func_chown(PyObject *obj, PyObject *args, PyObject *kwargs)
         Py_DECREF(fs_req);
         return ret;
     }
+}
+
+
+static PyObject *
+FS_func_chown(PyObject *obj, PyObject *args, PyObject *kwargs)
+{
+    UNUSED_ARG(obj);
+    return pyuv__fs_chown(args, kwargs, UV_FS_CHOWN);
+}
+
+
+static PyObject *
+FS_func_lchown(PyObject *obj, PyObject *args, PyObject *kwargs)
+{
+    UNUSED_ARG(obj);
+    return pyuv__fs_chown(args, kwargs, UV_FS_LCHOWN);
 }
 
 
@@ -1526,6 +1547,7 @@ FS_methods[] = {
     { "symlink", (PyCFunction)FS_func_symlink, METH_VARARGS|METH_KEYWORDS, "Create symbolic link." },
     { "readlink", (PyCFunction)FS_func_readlink, METH_VARARGS|METH_KEYWORDS, "Get the path to which the symbolic link points." },
     { "chown", (PyCFunction)FS_func_chown, METH_VARARGS|METH_KEYWORDS, "Change file ownership." },
+    { "lchown", (PyCFunction)FS_func_lchown, METH_VARARGS|METH_KEYWORDS, "Change file ownership." },
     { "fchown", (PyCFunction)FS_func_fchown, METH_VARARGS|METH_KEYWORDS, "Change file ownership." },
     { "open", (PyCFunction)FS_func_open, METH_VARARGS|METH_KEYWORDS, "Open file." },
     { "close", (PyCFunction)FS_func_close, METH_VARARGS|METH_KEYWORDS, "Close file." },
