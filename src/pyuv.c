@@ -14,9 +14,6 @@
 #include "check.c"
 #include "signal.c"
 #include "stream.c"
-#if defined(__linux__)
-#include "abstract.c"
-#endif
 #include "pipe.c"
 #include "tcp.c"
 #include "tty.c"
