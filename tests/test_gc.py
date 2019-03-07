@@ -7,7 +7,7 @@ from common import TestCase
 import pyuv
 
 
-class Foo(object): pass
+class Foo: pass
 
 class GCTest(TestCase):
 
