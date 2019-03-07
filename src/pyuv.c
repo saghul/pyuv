@@ -20,6 +20,8 @@
 #include "udp.c"
 #include "poll.c"
 #include "fs.c"
+#include "fsevent.c"
+#include "fspoll.c"
 #include "process.c"
 #include "dns.c"
 #include "util.c"
