@@ -60,15 +60,6 @@ Examples
     examples
 
 
-ToDo
-####
-
-.. toctree::
-    :maxdepth: 1
-
-    TODO
-
-
 Indices and tables
 ##################
 
