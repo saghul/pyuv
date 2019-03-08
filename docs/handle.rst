@@ -30,6 +30,8 @@
         a handle will ensure that the loop is maintained alive while the handle is active. Likewise,
         if all handles are unref'd, the loop would finish enven if they were all active.
 
+        This is not related to CPython's reference counting model in any way.
+
     .. py:attribute:: loop
 
         *Read only*

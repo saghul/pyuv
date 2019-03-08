@@ -173,6 +173,11 @@ signature: ``callback(loop, req)``
     Changes ownership of a file.
 
 
+.. py:function:: pyuv.fs.lchown(loop, path, uid, gid, [callback])
+
+    Same as :py:func:`pyuv.fs.chown` but will not dereference symbolic links.
+
+
 .. py:function:: pyuv.fs.fchown(loop, fd, mode, [callback])
 
     Same as :py:func:`pyuv.fs.chown` but using a file-descriptor instead of the path.
@@ -316,6 +321,27 @@ signature: ``callback(loop, req)``
 .. py:function:: pyuv.fs.futime(loop, fd, atime, mtime, [callback])
 
     Same as :py:func:`pyuv.fs.utime` but using a file-descriptor instead of the path.
+
+
+.. py:function:: pyuv.fs.copyfile(loop, path, new_path, flags, [callback])
+
+    :param loop: loop object where this function runs.
+
+    :param string path: Original file.
+
+    :param string new_path: Name for the new file.
+
+    :param int flags: Indicate how the copying should be done:
+      - ``UV_FS_COPYFILE_EXCL``: if set, the operation will fail if the destination already
+        exists. The default behavior is to overwrite the destination if it exists.
+      - ``UV_FS_COPYFILE_FICLONE``: if set, attempt to create a copy-on-write reflink.
+      - ``UV_FS_COPYFILE_FICLONE_FORCE``: same as above, but if the platform doesn't
+        natively support copy-on-write reflinks, no fallback mechanism will be employed
+        and the operation will fail.
+
+    :param callable callback: Function that will be called with the result of the function.
+
+    Copies a file from one destination to another.
 
 
 .. py:class:: pyuv.fs.FSEvent(loop)
