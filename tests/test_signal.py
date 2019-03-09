@@ -15,17 +15,17 @@ class SignalTest(TestCase):
     def signal_cb(self, handle, signum):
         self.assertEqual(signum, signal.SIGUSR1)
         self.signal_cb_called += 1
-        self.async.send()
+        self.async_h.send()
 
-    def async_cb(self, async):
+    def async_cb(self, async_h):
         self.async_cb_called += 1
-        self.async.close()
+        self.async_h.close()
         self.signal_h.close()
 
     def test_signal1(self):
         self.async_cb_called = 0
         self.signal_cb_called = 0
-        self.async = pyuv.Async(self.loop, self.async_cb)
+        self.async_h = pyuv.Async(self.loop, self.async_cb)
         self.signal_h = pyuv.Signal(self.loop)
         self.signal_h.start(self.signal_cb, signal.SIGUSR1)
         thread = threading.Thread(target=self.loop.run)

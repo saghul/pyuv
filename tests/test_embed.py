@@ -3,7 +3,7 @@ import errno
 import select
 import unittest
 
-from threading import Thread
+from threading import Semaphore, Thread
 
 import common; common
 import pyuv
@@ -23,7 +23,7 @@ class EmbedTest(unittest.TestCase):
 
     def embed_cb(self, handle):
         self.loop.run(pyuv.UV_RUN_ONCE)
-        self.sem.post()
+        self.sem.release()
 
     def timer_cb(self, handle):
         self.embed_timer_called += 1
@@ -52,7 +52,7 @@ class EmbedTest(unittest.TestCase):
                         continue
                 break
             self.embed_async.send()
-            self.sem.wait()
+            self.sem.acquire()
 
     def test_embed(self):
         if poller is None:
@@ -67,7 +67,7 @@ class EmbedTest(unittest.TestCase):
         timer = pyuv.Timer(self.loop)
         timer.start(self.timer_cb, 0.25, 0)
 
-        self.sem = pyuv.thread.Semaphore(0)
+        self.sem = Semaphore(0)
         t = Thread(target=self.embed_runner)
         t.start()
         self.external.run()

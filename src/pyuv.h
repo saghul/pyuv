@@ -9,18 +9,6 @@
 #include "structseq.h"
 #include "bytesobject.h"
 
-/* Python3 */
-#if PY_MAJOR_VERSION >= 3
-    #define PYUV_PYTHON3
-    #define PyInt_FromSsize_t PyLong_FromSsize_t
-    #define PyInt_FromLong PyLong_FromLong
-    #define PyInt_Check PyLong_Check
-    #define PyInt_AsLong PyLong_AsLong
-    #define PYUV_BYTES "y"
-#else
-    #define PYUV_BYTES "s"
-#endif
-
 /* libuv */
 #include "uv.h"
 
@@ -357,51 +345,6 @@ typedef struct {
 
 static PyTypeObject FSPollType;
 
-/* Barrier */
-typedef struct {
-    PyObject_HEAD
-    Bool initialized;
-    uv_barrier_t uv_barrier;
-} Barrier;
-
-static PyTypeObject BarrierType;
-
-/* Condition */
-typedef struct {
-    PyObject_HEAD
-    Bool initialized;
-    uv_cond_t uv_condition;
-} Condition;
-
-static PyTypeObject ConditionType;
-
-/* Mutex */
-typedef struct {
-    PyObject_HEAD
-    Bool initialized;
-    uv_mutex_t uv_mutex;
-} Mutex;
-
-static PyTypeObject MutexType;
-
-/* RWLock */
-typedef struct {
-    PyObject_HEAD
-    Bool initialized;
-    uv_rwlock_t uv_rwlock;
-} RWLock;
-
-static PyTypeObject RWLockType;
-
-/* Semaphore */
-typedef struct {
-    PyObject_HEAD
-    Bool initialized;
-    uv_sem_t uv_semaphore;
-} Semaphore;
-
-static PyTypeObject SemaphoreType;
-
 /* Request */
 typedef struct {
     PyObject_HEAD
@@ -474,7 +417,6 @@ static PyObject* PyExc_ProcessError;
 static PyObject* PyExc_SignalError;
 static PyObject* PyExc_StreamError;
 static PyObject* PyExc_TCPError;
-static PyObject* PyExc_ThreadError;
 static PyObject* PyExc_TimerError;
 static PyObject* PyExc_TTYError;
 static PyObject* PyExc_UDPError;

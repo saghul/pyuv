@@ -6,30 +6,6 @@ environment:
     CMD_IN_ENV: "cmd /E:ON /V:ON /C .\\appveyor\\run_with_env.cmd"
 
   matrix:
-    - PYTHON: "C:\\Python27"
-      PYTHON_VERSION: "2.7.x" # currently 2.7.9
-      PYTHON_ARCH: "32"
-
-    - PYTHON: "C:\\Python27-x64"
-      PYTHON_VERSION: "2.7.x" # currently 2.7.9
-      PYTHON_ARCH: "64"
-
-    - PYTHON: "C:\\Python33"
-      PYTHON_VERSION: "3.3.x" # currently 3.3.5
-      PYTHON_ARCH: "32"
-
-    - PYTHON: "C:\\Python33-x64"
-      PYTHON_VERSION: "3.3.x" # currently 3.3.5
-      PYTHON_ARCH: "64"
-
-    - PYTHON: "C:\\Python34"
-      PYTHON_VERSION: "3.4.x" # currently 3.4.3
-      PYTHON_ARCH: "32"
-
-    - PYTHON: "C:\\Python34-x64"
-      PYTHON_VERSION: "3.4.x" # currently 3.4.3
-      PYTHON_ARCH: "64"
-
     - PYTHON: "C:\\Python35"
       PYTHON_VERSION: "3.5.x" # currently 3.5.1
       PYTHON_ARCH: "32"
@@ -44,6 +20,14 @@ environment:
 
     - PYTHON: "C:\\Python36-x64"
       PYTHON_VERSION: "3.6.x"
+      PYTHON_ARCH: "64"
+
+    - PYTHON: "C:\\Python37"
+      PYTHON_VERSION: "3.7.x"
+      PYTHON_ARCH: "32"
+
+    - PYTHON: "C:\\Python37-x64"
+      PYTHON_VERSION: "3.7.x"
       PYTHON_ARCH: "64"
 
 branches:

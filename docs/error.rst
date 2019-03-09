@@ -17,10 +17,6 @@ are used throughout `puyv`.
 
     Base exception class. Parent of all other exception classes.
 
-.. py:exception:: ThreadError()
-
-    Exception raised by thread module operations.
-
 .. py:exception:: HandleError()
 
     Base exception class. Parent of all other handle exception classes.

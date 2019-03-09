@@ -7,9 +7,13 @@ from distutils.command.build_ext import build_ext
 
 SOURCES = [
     'deps/libuv/src/fs-poll.c',
+    'deps/libuv/src/idna.c',
     'deps/libuv/src/inet.c',
+    'deps/libuv/src/strscpy.c',
     'deps/libuv/src/threadpool.c',
+    'deps/libuv/src/timer.c',
     'deps/libuv/src/uv-common.c',
+    'deps/libuv/src/uv-data-getter-setters.c',
     'deps/libuv/src/version.c',
 ]
 
@@ -20,23 +24,21 @@ if sys.platform == 'win32':
         'deps/libuv/src/win/detect-wakeup.c',
         'deps/libuv/src/win/dl.c',
         'deps/libuv/src/win/error.c',
-        'deps/libuv/src/win/fs-event.c',
         'deps/libuv/src/win/fs.c',
+        'deps/libuv/src/win/fs-event.c',
         'deps/libuv/src/win/getaddrinfo.c',
         'deps/libuv/src/win/getnameinfo.c',
         'deps/libuv/src/win/handle.c',
         'deps/libuv/src/win/loop-watcher.c',
         'deps/libuv/src/win/pipe.c',
         'deps/libuv/src/win/poll.c',
-        'deps/libuv/src/win/process-stdio.c',
         'deps/libuv/src/win/process.c',
-        'deps/libuv/src/win/req.c',
+        'deps/libuv/src/win/process-stdio.c',
         'deps/libuv/src/win/signal.c',
         'deps/libuv/src/win/snprintf.c',
         'deps/libuv/src/win/stream.c',
         'deps/libuv/src/win/tcp.c',
         'deps/libuv/src/win/thread.c',
-        'deps/libuv/src/win/timer.c',
         'deps/libuv/src/win/tty.c',
         'deps/libuv/src/win/udp.c',
         'deps/libuv/src/win/util.c',
@@ -60,7 +62,6 @@ else:
         'deps/libuv/src/unix/stream.c',
         'deps/libuv/src/unix/tcp.c',
         'deps/libuv/src/unix/thread.c',
-        'deps/libuv/src/unix/timer.c',
         'deps/libuv/src/unix/tty.c',
         'deps/libuv/src/unix/udp.c',
     ]
@@ -83,8 +84,7 @@ elif sys.platform == 'darwin':
         'deps/libuv/src/unix/darwin-proctitle.c',
         'deps/libuv/src/unix/fsevents.c',
         'deps/libuv/src/unix/kqueue.c',
-        'deps/libuv/src/unix/proctitle.c',
-        'deps/libuv/src/unix/pthread-barrier.c',
+        'deps/libuv/src/unix/proctitle.c'
     ]
 elif sys.platform.startswith(('freebsd', 'dragonfly')):
     SOURCES += [

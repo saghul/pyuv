@@ -524,7 +524,7 @@ class TCPEarlyBindTest(TestCase):
 
     def test_early_bind_unspec2(self):
         client = pyuv.TCP(self.loop, socket.AF_UNSPEC)
-        client.bind(('::1', TEST_PORT))
+        client.bind(('::', TEST_PORT))
         client.close()
         self.loop.run()
 
@@ -542,7 +542,7 @@ class TCPEarlyBindTest(TestCase):
 
     def test_early_bind_inet6(self):
         client = pyuv.TCP(self.loop, socket.AF_INET6)
-        client.bind(('::1', TEST_PORT))
+        client.bind(('::', TEST_PORT))
         client.close()
         self.loop.run()
 
@@ -568,7 +568,7 @@ class TCPFamilyTest(TestCase):
         client = pyuv.TCP(self.loop, socket.AF_UNSPEC)
         with self.assertRaises(pyuv.error.TCPError):
             client.family
-        client.bind(('::1', TEST_PORT))
+        client.bind(('::', TEST_PORT))
         self.assertEqual(client.family, socket.AF_INET6)
         client.close()
         self.loop.run()
@@ -602,7 +602,7 @@ class TCPSocketFromfdTest(TestCase):
 
     def test_fromfd_inet6(self):
         client = pyuv.TCP(self.loop)
-        client.bind(('::1', TEST_PORT))
+        client.bind(('::', TEST_PORT))
         sock = socket.fromfd(client.fileno(), client.family, socket.SOCK_STREAM)
         self.assertEqual(client.getsockname(), sock.getsockname())
         client.close()

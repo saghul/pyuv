@@ -69,7 +69,7 @@ Util_func_resident_set_memory(PyObject *obj)
 
     err = uv_resident_set_memory(&rss);
     if (err == 0) {
-        return PyInt_FromSsize_t(rss);
+        return PyLong_FromSsize_t(rss);
     } else {
         exc_data = Py_BuildValue("(is)", err, uv_strerror(err));
         if (exc_data != NULL) {
@@ -173,7 +173,7 @@ Util_func_cpu_info(PyObject *obj)
                 return NULL;
             }
             PyStructSequence_SET_ITEM(item, 0, Py_BuildValue("s", cpus[i].model));
-            PyStructSequence_SET_ITEM(item, 1, PyInt_FromLong((long)cpus[i].speed));
+            PyStructSequence_SET_ITEM(item, 1, PyLong_FromLong((long)cpus[i].speed));
             PyStructSequence_SET_ITEM(item, 2, times);
             PyStructSequence_SET_ITEM(times, 0, PyLong_FromUnsignedLongLong((unsigned PY_LONG_LONG)cpus[i].cpu_times.sys));
             PyStructSequence_SET_ITEM(times, 1, PyLong_FromUnsignedLongLong((unsigned PY_LONG_LONG)cpus[i].cpu_times.user));
@@ -253,7 +253,7 @@ Util_func_guess_handle_type(PyObject *obj, PyObject *args)
         return NULL;
     }
 
-    return PyInt_FromLong((long) uv_guess_handle(fd));
+    return PyLong_FromLong((long) uv_guess_handle(fd));
 }
 
 
@@ -483,7 +483,6 @@ static PyTypeObject SignalCheckerType = {
 };
 
 
-#ifdef PYUV_PYTHON3
 static PyModuleDef pyuv_util_module = {
     PyModuleDef_HEAD_INIT,
     "pyuv._cpyuv.util",     /*m_name*/
@@ -491,17 +490,12 @@ static PyModuleDef pyuv_util_module = {
     -1,                     /*m_size*/
     Util_methods,           /*m_methods*/
 };
-#endif
 
 PyObject *
 init_util(void)
 {
     PyObject *module;
-#ifdef PYUV_PYTHON3
     module = PyModule_Create(&pyuv_util_module);
-#else
-    module = Py_InitModule("pyuv._cpyuv.util", Util_methods);
-#endif
     if (module == NULL) {
         return NULL;
     }

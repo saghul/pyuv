@@ -1,14 +1,16 @@
 language: python
 sudo: false
-python:
-    - '2.7'
-    - '3.3'
-    - '3.4'
-    - '3.5'
-    - '3.6'
-    - '3.7-dev'
-    - 'pypy'
-    - 'pypy3'
+matrix:
+  include:
+    - python: 3.5
+    - python: 3.6
+    - python: 3.7
+      dist: xenial
+      sudo: true
+    - python: pypy3
+    - os: osx
+      name: Python (macOS)
+      language: generic
 
 branches:
   only:
@@ -17,13 +19,14 @@ branches:
 
 cache: pip
 before_install:
-    - source .travis/before_install.sh
+    - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew list python3 &>/dev/null || brew install python3; fi
+    - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then ulimit -n 10000; fi
 install:
-    - python --version
-    - pip --version
-    - pip install tox
+    - python3 --version
+    - pip3 --version
+    - pip3 install tox
 script:
-    - tox -e py
+    - tox -e py3
 
 notifications:
   email:

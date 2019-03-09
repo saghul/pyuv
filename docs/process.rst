@@ -51,8 +51,10 @@ stdout) with ``Pipe`` handles within an event loop.
 
             - ``UV_PROCESS_SETUID``: set child UID
             - ``UV_PROCESS_SETGID``: set child GID
-            - ``UV_PROCESS_WINDOWS_HIDE``: hide the subprocess console window that would normally be created.
+            - ``UV_PROCESS_WINDOWS_HIDE``: hide the subprocess window (console or GUI) that would normally be created.
               This option is only meaningful on Windows systems. On unix it is silently ignored.
+            - ``UV_PROCESS_WINDOWS_HIDE_CONSOLE``: same as above, but for console windows only.
+            - ``UV_PROCESS_WINDOWS_HIDE_GUI``: same as above, but for GUI windows only.
             - ``UV_PROCESS_WINDOWS_VERBATIM_ARGUMENTS``: pass arguments verbatim, that is, not enclosed
               in double quotes (Windows)
             - ``UV_PROCESS_DETACHED``: detach child process from parent
@@ -93,6 +95,7 @@ stdout) with ``Pipe`` handles within an event loop.
 
     - UV_IGNORE: this container should be ignored.
     - UV_CREATE_PIPE: indicates a pipe should be created. UV_READABLE_PIPE and UV_WRITABLE_PIPE determine the direction of flow, from the child process' perspective. Both flags may be specified to create a duplex data stream.
+    - UV_OVERLAPPED_PIPE: indicates that the created pipe will be created in overlapped mode. Windows only.
     - UV_INHERIT_FD: inherit the given file descriptor in the child.
     - UV_INHERIT_STREAM: inherit the file descriptor of the given stream in the child.
 

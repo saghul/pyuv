@@ -11,7 +11,7 @@
 
 .. seealso::
     `libuv's source code
-    <http://github.com/joyent/libuv>`_.
+    <https://github.com/libuv/libuv>`_.
 
 
 Objects
@@ -39,6 +39,5 @@ Objects
     fs
     error
     errno
-    thread
     util
 

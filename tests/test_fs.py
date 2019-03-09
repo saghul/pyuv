@@ -8,11 +8,6 @@ from common import TestCase
 import pyuv
 
 
-# Make stat return integers
-os.stat_float_times(False)
-pyuv.fs.stat_float_times(False)
-
-
 BAD_FILE = 'test_file_bad'
 TEST_FILE = 'test_file_1234'
 TEST_FILE2 = 'test_file_1234_2'
@@ -868,6 +863,30 @@ class FSTestRealpath(TestCase):
     def test_realpath_sync(self):
         result = pyuv.fs.realpath(self.loop, '.')
         self.assertNotEqual(result, '.')
+
+
+class FSTestCopyfile(FileTestCase):
+
+    def tearDown(self):
+        try:
+            os.remove(TEST_FILE2)
+        except OSError:
+            pass
+        super(FSTestCopyfile, self).tearDown()
+
+    def copyfile_cb(self, req):
+        self.errorno = req.error
+
+    def test_copyfile(self):
+        self.errorno = None
+        pyuv.fs.copyfile(self.loop, TEST_FILE, TEST_FILE2, 0, self.copyfile_cb)
+        self.loop.run()
+        self.assertEqual(self.errorno, None)
+        self.assertTrue(os.stat(TEST_FILE2).st_size == os.stat(TEST_FILE).st_size)
+
+    def test_copyfile_sync(self):
+        pyuv.fs.copyfile(self.loop, TEST_FILE, TEST_FILE2, 0)
+        self.assertTrue(os.stat(TEST_FILE2).st_size == os.stat(TEST_FILE).st_size)
 
 
 class FSEventTestBasic(FileTestCase):

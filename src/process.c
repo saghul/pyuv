@@ -70,7 +70,7 @@ static PyObject *
 StdIO_fd_get(StdIO *self, void *closure)
 {
     UNUSED_ARG(closure);
-    return PyInt_FromLong((long)self->fd);
+    return PyLong_FromLong((long)self->fd);
 }
 
 
@@ -78,7 +78,7 @@ static PyObject *
 StdIO_flags_get(StdIO *self, void *closure)
 {
     UNUSED_ARG(closure);
-    return PyInt_FromLong((long)self->flags);
+    return PyLong_FromLong((long)self->flags);
 }
 
 
@@ -184,8 +184,8 @@ pyuv__process_exit_cb(uv_process_t *handle, int64_t exit_status, int term_signal
 
     self = PYUV_CONTAINER_OF(handle, Process, process_h);
 
-    py_exit_status = PyInt_FromLong(exit_status);
-    py_term_signal = PyInt_FromLong(term_signal);
+    py_exit_status = PyLong_FromLong(exit_status);
+    py_term_signal = PyLong_FromLong(term_signal);
 
     if (self->on_exit_cb != Py_None) {
         result = PyObject_CallFunctionObjArgs(self->on_exit_cb, self, py_exit_status, py_term_signal, NULL);
@@ -497,7 +497,7 @@ Process_pid_get(Process *self, void *closure)
     if (!HANDLE(self)->initialized) {
         Py_RETURN_NONE;
     }
-    return PyInt_FromLong((long)self->process_h.pid);
+    return PyLong_FromLong((long)uv_process_get_pid(&(self->process_h)));
 }
 
 

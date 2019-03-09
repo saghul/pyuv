@@ -15,7 +15,7 @@
     :param loop: loop object where this handle runs (accessible through :py:attr:`Prepare.loop`).
 
     ``Prepare`` handles are usually used together with :py:class:`Check` handles.
-    They run just before the event loop ia about to block for I/O. The callback will be 
+    They run just before the event loop ia about to block for I/O. The callback will be
     called *once* each loop iteration, before I/O.
 
     .. py:method:: start(callback)

@@ -5,7 +5,7 @@ static void
 inscode(PyObject *module_dict, PyObject *other_dict, const char *name, int code)
 {
     PyObject *error_name = Py_BuildValue("s", name);
-    PyObject *error_code = PyInt_FromLong((long) code);
+    PyObject *error_code = PyLong_FromLong((long) code);
 
     /* Don't bother checking for errors; they'll be caught at the end
      * of the module initialization function by the caller of
@@ -40,7 +40,6 @@ Errno_methods[] = {
 };
 
 
-#ifdef PYUV_PYTHON3
 static PyModuleDef pyuv_errno_module = {
     PyModuleDef_HEAD_INIT,
     "pyuv._cpyuv.errno",    /*m_name*/
@@ -48,7 +47,6 @@ static PyModuleDef pyuv_errno_module = {
     -1,                     /*m_size*/
     Errno_methods,          /*m_methods*/
 };
-#endif
 
 PyObject *
 init_errno(void)
@@ -56,11 +54,7 @@ init_errno(void)
     PyObject *module;
     PyObject *module_dict;
     PyObject *errorcode_dict;
-#ifdef PYUV_PYTHON3
     module = PyModule_Create(&pyuv_errno_module);
-#else
-    module = Py_InitModule("pyuv._cpyuv.errno", Errno_methods);
-#endif
     if (module == NULL) {
         return NULL;
     }
