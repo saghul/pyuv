@@ -339,13 +339,13 @@ pyuv__stream_write_sequence(Stream *self, PyObject *data, PyObject *callback, Py
     int err;
     stream_write_ctx *ctx;
     PyObject *data_fast, *item;
-    Py_ssize_t i, j, buf_count;
+    size_t i, j, buf_count;
 
     data_fast = PySequence_Fast(data, "data must be an iterable");
     if (data_fast == NULL)
         return NULL;
 
-    buf_count = PySequence_Fast_GET_SIZE(data_fast);
+    buf_count = (size_t)PySequence_Fast_GET_SIZE(data_fast);
     if (buf_count > INT_MAX) {
         PyErr_SetString(PyExc_ValueError, "iterable is too long");
         Py_DECREF(data_fast);
