@@ -9,7 +9,10 @@ import pyuv
 
 
 # Make stat return integers
-os.stat_float_times(False)
+try:
+    os.stat_float_times(False)
+except AttributeError:
+    pass
 pyuv.fs.stat_float_times(False)
 
 
