@@ -12,12 +12,12 @@ class AsyncTest(TestCase):
     def test_async1(self):
         self.async_cb_called = 0
         self.prepare_cb_called = 0
-        def async_cb(async):
+        def async_cb(async_):
             with self.lock:
                 self.async_cb_called += 1
                 n = self.async_cb_called
             if n == 3:
-                self.async.close()
+                self.async_.close()
                 self.prepare.close()
         def prepare_cb(prepare):
             if self.prepare_cb_called:
@@ -31,8 +31,8 @@ class AsyncTest(TestCase):
                     n = self.async_cb_called
                     if n == 3:
                         break
-                    self.async.send()
-        self.async = pyuv.Async(self.loop, async_cb)
+                    self.async_.send()
+        self.async_ = pyuv.Async(self.loop, async_cb)
         self.prepare = pyuv.Prepare(self.loop)
         self.prepare.start(prepare_cb)
         self.lock = threading.Lock()
@@ -52,8 +52,8 @@ class AsyncTest(TestCase):
             self.loop.stop()
         def thread_cb():
             time.sleep(0.01)
-            self.async.send()
-        self.async = pyuv.Async(self.loop)
+            self.async_.send()
+        self.async_ = pyuv.Async(self.loop)
         self.prepare = pyuv.Prepare(self.loop)
         self.prepare.start(prepare_cb)
         self.check = pyuv.Check(self.loop)
