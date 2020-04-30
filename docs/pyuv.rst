@@ -11,7 +11,7 @@
 
 .. seealso::
     `libuv's source code
-    <http://github.com/joyent/libuv>`_.
+    <http://github.com/libuv/libuv>`_.
 
 
 Objects
