@@ -39,7 +39,7 @@ pyuv_PyUnicode_EncodeFSDefault(PyObject *unicode)
         return PyUnicode_AsEncodedString(unicode, Py_FileSystemDefaultEncoding, "surrogateescape");
     else
 #endif
-        return PyUnicode_EncodeUTF8(PyUnicode_AS_UNICODE(unicode), PyUnicode_GET_SIZE(unicode), "surrogateescape");
+        return PyUnicode_AsUTF8String(unicode);
 }
 
 
@@ -48,7 +48,7 @@ static int
 pyuv_PyUnicode_FSConverter(PyObject *arg, void* addr)
 {
     PyObject *output;
-    Py_ssize_t size;
+    size_t size;
     void *data;
 
     if (arg == NULL)
@@ -71,7 +71,7 @@ pyuv_PyUnicode_FSConverter(PyObject *arg, void* addr)
             return 0;
         }
     }
-    size = PyBytes_GET_SIZE(output);
+    size = (size_t)PyBytes_GET_SIZE(output);
     data = PyBytes_AS_STRING(output);
     if (size != strlen(data)) {
         PyErr_SetString(PyExc_TypeError, "embedded NUL character");

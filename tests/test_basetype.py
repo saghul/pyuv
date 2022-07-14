@@ -58,21 +58,6 @@ class TestBasetype(TestCase):
     def test_inherit_fs_fspoll(self):
         self._inheritance_test(pyuv.fs.FSPoll, self.loop)
 
-    def test_inherit_thread_barrier(self):
-        self._inheritance_test(pyuv.thread.Barrier, 1)
-
-    def test_inherit_thread_condition(self):
-        self._inheritance_test(pyuv.thread.Condition)
-
-    def test_inherit_thread_mutex(self):
-        self._inheritance_test(pyuv.thread.Mutex)
-
-    def test_inherit_thread_rwlock(self):
-        self._inheritance_test(pyuv.thread.RWLock)
-
-    def test_inherit_thread_semaphore(self):
-        self._inheritance_test(pyuv.thread.Semaphore, 1)
-
 
 if __name__ == '__main__':
     unittest.main(verbosity=2)

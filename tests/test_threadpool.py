@@ -9,8 +9,7 @@ from common import TestCase
 import pyuv
 
 
-class WorkItem(object):
-
+class WorkItem:
     def __init__(self, func, *args, **kw):
         self._cb = functools.partial(func, *args, **kw)
         self.result = None

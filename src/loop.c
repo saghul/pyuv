@@ -92,7 +92,7 @@ Loop_func_update_time(Loop *self)
 static PyObject *
 Loop_func_fileno(Loop *self)
 {
-    return PyInt_FromLong((long)uv_backend_fd(self->uv_loop));
+    return PyLong_FromLong((long)uv_backend_fd(self->uv_loop));
 }
 
 
@@ -138,7 +138,7 @@ pyuv__tp_done_cb(uv_work_t *req, int status)
 
     if (work_req->done_cb != Py_None) {
         if (status < 0) {
-            errorno = PyInt_FromLong((long)status);
+            errorno = PyLong_FromLong((long)status);
         } else {
             errorno = Py_None;
             Py_INCREF(Py_None);

@@ -14,7 +14,7 @@ pyuv__tcp_listen_cb(uv_stream_t *handle, int status)
     Py_INCREF(self);
 
     if (status != 0) {
-        py_errorno = PyInt_FromLong((long)status);
+        py_errorno = PyLong_FromLong((long)status);
     } else {
         py_errorno = Py_None;
         Py_INCREF(Py_None);
@@ -44,7 +44,7 @@ pyuv__tcp_connect_cb(uv_connect_t *req, int status)
     callback = (PyObject *)req->data;
 
     if (status != 0) {
-        py_errorno = PyInt_FromLong(status);
+        py_errorno = PyLong_FromLong(status);
     } else {
         py_errorno = Py_None;
         Py_INCREF(Py_None);
@@ -371,7 +371,7 @@ TCP_family_get(TCP *self, void *closure)
         return NULL;
     }
 
-    return PyInt_FromLong((long) sockname.ss_family);
+    return PyLong_FromLong((long) sockname.ss_family);
 }
 
 
@@ -390,7 +390,7 @@ TCP_sndbuf_get(TCP *self, void *closure)
         RAISE_UV_EXCEPTION(err, PyExc_TCPError);
         return NULL;
     }
-    return PyInt_FromLong((long) sndbuf_value);
+    return PyLong_FromLong((long) sndbuf_value);
 }
 
 
@@ -408,7 +408,7 @@ TCP_sndbuf_set(TCP *self, PyObject *value, void *closure)
         return -1;
     }
 
-    sndbuf_value = (int) PyInt_AsLong(value);
+    sndbuf_value = (int) PyLong_AsLong(value);
     if (sndbuf_value == -1 && PyErr_Occurred()) {
         return -1;
     }
@@ -437,7 +437,7 @@ TCP_rcvbuf_get(TCP *self, void *closure)
         RAISE_UV_EXCEPTION(err, PyExc_TCPError);
         return NULL;
     }
-    return PyInt_FromLong((long) rcvbuf_value);
+    return PyLong_FromLong((long) rcvbuf_value);
 }
 
 
@@ -455,7 +455,7 @@ TCP_rcvbuf_set(TCP *self, PyObject *value, void *closure)
         return -1;
     }
 
-    rcvbuf_value = (int) PyInt_AsLong(value);
+    rcvbuf_value = (int) PyLong_AsLong(value);
     if (rcvbuf_value == -1 && PyErr_Occurred()) {
         return -1;
     }

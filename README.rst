@@ -30,7 +30,6 @@ pyuv's features:
 - File system events (inotify style and stat based)
 - IPC and TCP socket sharing between processes
 - Arbitrary file descriptor polling
-- Thread synchronization primitives
 
 
 CI status
@@ -83,19 +82,12 @@ Get the source:
     git clone https://github.com/saghul/pyuv
 
 
-Linux:
+Unix systems (Linux, macOS, etc.):
 
 ::
 
     ./build_inplace
 
-Mac OSX:
-
-::
-
-    (XCode needs to be installed)
-    export ARCHFLAGS="-arch x86_64"
-    ./build_inplace
 
 Microsoft Windows (with Visual Studio):
 
@@ -116,13 +108,13 @@ There are several ways of running the test ruite:
 - Use Tox to run the test suite in several virtualenvs with several interpreters
 
   From the toplevel directory, run: ``tox`` this will run the test suite
-  on Python 2.7, 3.3 and 3.4 (you'll need to have them installed beforehand)
+  on several Python versions (you'll need to have them installed beforehand)
 
 
 Author
 ======
 
-Saúl Ibarra Corretgé <saghul@gmail.com>
+Saúl Ibarra Corretgé <s@saghul.net>
 
 
 License
@@ -134,7 +126,7 @@ Unless stated otherwise on-file pyuv uses the MIT license, check LICENSE file.
 Python versions
 ===============
 
-Python 2.7, and Python >= 3.3 versions are supported.
+Python >= 3.5 versions are supported.
 
 
 Contributing

@@ -98,5 +98,5 @@
         *Read only*
 
         Checks whether the reference count, that is, the number of active handles or requests left in the event
-        loop is non-zero aka if the loop is currently running.
+        loop is non-zero, that is, if the loop is currently running.
 
